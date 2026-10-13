@@ -289,7 +289,7 @@ export function interpretar(texto,opt){
     else if(esF&&dw>=1&&dw<=5){
       /* Es un día común: si dijiste el turno entero, cuenta solo lo que pasa la jornada (como "por presencia") */
       var R=Object.assign({umbral:555,jornada:540},opt.horas||{}),total=r.min;
-      if(total>=4*60){r.min=total>R.umbral?Math.max(0,Math.round(total-R.jornada)):0;r.presencia=total}
+      if(total>=4*60){r.min=total>=R.umbral?Math.max(0,Math.round(total-R.jornada)):0;r.presencia=total}
       r.avisos.push('El '+fechaCorta(fecha)+' es feriado laborable: se paga como un día común.'+(r.presencia?' Estuviste '+fmtMin(total)+(r.min>0?', así que suma '+fmtMin(r.min)+' de extra.':', no pasa de la jornada: no suma extra.'):''));
       r.alternativas.push({etiqueta:'Como feriado',cambios:{tipo:'fin',min:total}});
     }

@@ -8,3 +8,7 @@ PROMPT-ETAPA-2.md
 ver-app.ps1
 Ver la app.bat
 Publicar.bat
+*.xlsx
+*.xls
+*.csv
+!tests/fixtures/*.xlsx

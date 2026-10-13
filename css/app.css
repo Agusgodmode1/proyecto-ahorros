@@ -621,3 +621,17 @@ html.discreto .hero-eye{background:var(--sun);color:var(--on-sun)}
 .ag-n span{font-size:14px;color:var(--muted)}
 .sv-row{display:grid;grid-template-columns:minmax(120px,180px) minmax(0,1fr);gap:12px;align-items:end;border-top:1px solid var(--line);padding-top:14px}
 @media (max-width:520px){.sv-row{grid-template-columns:1fr}}
+
+/* Planilla del trabajo y carga por horario */
+.pl-box{background:var(--surface-2);border-radius:16px;padding:14px}
+.pl-top{display:flex;justify-content:space-between;align-items:center;gap:10px 14px;flex-wrap:wrap}
+.pl-top>div{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 200px}
+.pl-res{font-size:17px}
+.pl-dias{max-height:320px;overflow:auto}
+.pl-o{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px}
+.pl-o::before,.pl-o::after{content:"";flex:1;height:1px;background:var(--line)}
+.hor .field{flex:1}
+.hor-res{font-size:15px;min-height:1.4em}
+.hor-res b{color:var(--c-ink,var(--ink))}
+input[type=time]{width:100%;min-width:0;background:var(--surface-2);color:var(--ink);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;font:600 17px/1.3 var(--f-body);font-variant-numeric:tabular-nums;color-scheme:dark}
+:root[data-theme="light"] input[type=time]{color-scheme:light}

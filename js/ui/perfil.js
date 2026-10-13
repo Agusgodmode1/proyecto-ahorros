@@ -5,6 +5,7 @@ import {horasPorDefecto,tarifas} from '../logica/sueldo.js';
 import {cobroDesde} from '../logica/plan.js';
 import {ctx,$,today,esc,money2,fLarga,fMin} from './comun.js';
 import {aplicarFeriados} from './feriados.js';
+import {PUESTOS,puesto} from '../logica/puestos.js';
 
 var d=null,paso=1,opciones=null,vio3=false;
 var PASOS=['Tu nombre','Cómo cobrás','Horas extra','Descuentos'];
@@ -14,7 +15,7 @@ export function abrirPerfil(n,opt){
   opciones=opt;
   var st=opt.estado,p=st.perfil,s=st.sueldo;
   d={nombre:p.nombre||'',cobro:Object.assign({tipo:'habil5',dia:30,laborableHabil:true},p.cobro),horas:Object.assign(horasPorDefecto(),{feriadoLaborable:'comun'},p.horas),
-     nominal:num(s.nominal)||'',hijos:num(s.hijos),conyuge:!!s.conyuge,otros:num(s.otros)||'',bpc:num(s.bpc)||6864,manual:!!s.tarifaManual};
+     puesto:p.puesto||'otro',nominal:num(s.nominal)||'',hijos:num(s.hijos),conyuge:!!s.conyuge,otros:num(s.otros)||'',bpc:num(s.bpc)||6864,manual:!!s.tarifaManual};
   paso=n||1;vio3=false;
   $('#wiz').hidden=false;document.documentElement.classList.add('voz-abierta');
   pintar();
@@ -46,7 +47,13 @@ function pintar(){
     h+='<h1 id="wiz-t">Horas extra</h1>'
       +'<label class="check wiz-big"><input id="w-sinhoras" type="checkbox"'+(on?'':' checked')+'> No hago horas extra</label>';
     if(on){
-      h+='<p class="note">Te dejo como sugerencia las reglas más comunes. Cambialas si tu recibo dice otra cosa.</p>'
+      var P=puesto(d.puesto);
+      h+='<div class="field"><span class="lab">¿Cuál es tu puesto?</span>'+seg('puesto',d.puesto,PUESTOS.map(function(x){return [x.id,x.nombre]}).concat([['otro','Otro (a medida)']]))
+        +'<small>'+(P?esc(P.detalle)+' Ya cargué esas reglas; cambialas abajo si tu recibo dice otra cosa.':'Te dejo como sugerencia las reglas más comunes. Cambialas si tu recibo dice otra cosa.')+'</small></div>'
+        +'<div class="grid2 wiz-grid">'
+        +campo('w-ent','Entrás a las','<input id="w-ent" type="time" value="'+esc(H.entrada||'12:00')+'">')
+        +campo('w-sal','Salís a las','<input id="w-sal" type="time" value="'+esc(H.salida||'21:00')+'">')
+        +'</div>'
         +'<div class="grid2 wiz-grid">'
         +campo('w-div','Divisor de la hora normal','<input id="w-div" type="number" inputmode="numeric" min="1" step="1" value="'+H.divisor+'">','Hora normal = sueldo ÷ este número. 240 = 30 días de 8 horas.')
         +campo('w-msem','Entre semana, la hora vale','<div class="money suf"><input id="w-msem" type="number" inputmode="decimal" min="0" step="any" value="'+H.multSem+'"><span>veces</span></div>','2 = el doble de la hora normal.')
@@ -54,8 +61,7 @@ function pintar(){
         +'</div>'
         +'<div class="field"><span class="lab">En el recibo, el fin de semana viene partido en "descanso trabajado" + "bono"</span>'+seg('dividido',H.finDividido!==false,[[true,'Sí'],[false,'No']])+'</div>'
         +'<div class="field"><span class="lab">Los minutos de semana del mes se pagan</span>'+seg('redondeo',H.redondeo,[['media','A la media hora'],['cuarto','Al cuarto de hora'],['no','Sin redondear']])+'</div>'
-        +'<div class="grid2 wiz-grid"><div class="field"><span class="lab">Un día cuenta como extra si estás más de</span>'+hm('w-umb',num(H.umbral))+'</div>'
-        +'<div class="field"><span class="lab">y se cuenta lo que pasa de</span>'+hm('w-jor',num(H.jornada))+'</div></div>'
+        +campo('w-min','Entre semana, las extras cuentan desde','<div class="money suf"><input id="w-min" type="number" inputmode="numeric" min="0" max="120" step="1" value="'+Math.max(0,num(H.umbral)-num(H.jornada))+'"><span>min</span></div>','Sumando lo que llegás antes y lo que te quedás después, en el día.')
         +'<div class="field"><span class="lab">Si trabajás un feriado laborable (como el 12 de octubre), se paga como</span>'+seg('labpago',H.feriadoLaborable==='feriado'?'feriado':'comun',[['comun','Día común'],['feriado','Feriado']])+'</div>'
         +'<div class="field"><span class="lab">Las horas de un mes las cobrás</span>'+seg('mescobro',H.mesCobro,[['siguiente','El mes siguiente'],['mismo','Ese mismo mes']])+'</div>'
         +(d.manual?'<p class="voz-msg">Tenías valores por hora cargados a mano. Al guardar, se calculan con estas reglas.</p>':'')
@@ -88,7 +94,11 @@ function leer(){
   if(paso===3&&d.horas.activo!==false&&$('#w-div')){
     var H=d.horas;
     H.divisor=num(v('w-div'))||240;H.multSem=num(v('w-msem'));H.multFin=num(v('w-mfin'));
-    H.umbral=leerHM('w-umb');H.jornada=leerHM('w-jor');
+    if($('#w-ent'))H.entrada=v('w-ent')||'12:00';if($('#w-sal'))H.salida=v('w-sal')||'21:00';
+    /* La jornada sale del horario; el umbral es jornada + el mínimo de minutos extra */
+    var e=String(H.entrada).split(':'),sa=String(H.salida).split(':'),jor=(Number(sa[0])*60+Number(sa[1]))-(Number(e[0])*60+Number(e[1]));
+    if(jor<=0)jor+=1440;
+    H.jornada=jor;H.umbral=jor+Math.max(0,Math.round(num(v('w-min'))));
   }
   if(paso===4){d.hijos=Math.max(0,Math.round(num(v('w-hijos'))));d.otros=num(v('w-otros'));d.bpc=num(v('w-bpc'))||6864;d.conyuge=$('#w-cony').checked}
 }
@@ -114,7 +124,7 @@ function valida(){
 function terminar(){
   var st=opciones.estado,p=st.perfil,s=st.sueldo;
   var reglasAntes=JSON.stringify(p.horas),cobroAntes=JSON.stringify(p.cobro);
-  p.nombre=d.nombre;p.cobro=d.cobro;p.horas=d.horas;p.hecho=true;
+  p.nombre=d.nombre;p.cobro=d.cobro;p.horas=d.horas;p.puesto=d.puesto;p.hecho=true;
   s.nominal=num(d.nominal);s.hijos=d.hijos;s.conyuge=d.conyuge;s.otros=num(d.otros);s.bpc=d.bpc;
   if(s.tarifaManual&&vio3)s.tarifaManual=null;
   aplicarFeriados(st);
@@ -134,6 +144,7 @@ export function initPerfil(){
       if(k==='dividido')d.horas.finDividido=val==='true';
       if(k==='redondeo')d.horas.redondeo=val;
       if(k==='mescobro')d.horas.mesCobro=val;
+      if(k==='puesto'){d.puesto=val;var P=puesto(val);if(P){d.horas=Object.assign(d.horas,P.horas);d.cobro=Object.assign(d.cobro,P.cobro)}}
       if(k==='labhabil')d.cobro.laborableHabil=val==='true';
       if(k==='labpago')d.horas.feriadoLaborable=val;
       pintar();return;

@@ -9,7 +9,7 @@ import {num} from './util.js';
 
 /* Reglas por defecto: las de Agus, validadas con sus recibos. */
 export function horasPorDefecto(){
-  return {activo:true,divisor:240,multSem:2,multFin:1.5,finDividido:true,redondeo:'media',umbral:555,jornada:540,mesCobro:'siguiente'};
+  return {activo:true,divisor:240,multSem:2,multFin:1.5,finDividido:true,redondeo:'media',umbral:555,jornada:540,mesCobro:'siguiente',entrada:'12:00',salida:'21:00'};
 }
 export function reglasHoras(state){return Object.assign(horasPorDefecto(),(state.perfil&&state.perfil.horas)||{})}
 function r2(x){return Math.round(x*100)/100}
@@ -63,10 +63,11 @@ export function pagoSem(state){
   if(r==='cuarto')return Math.floor(m/15+0.5)*15;
   return m;
 }
-/* Minutos extra de un día según la presencia: cuentan solo si pasa el umbral, y se cuenta todo lo que pasa la jornada. */
+/* Minutos extra de un día según la presencia: se cuenta todo lo que pasa la jornada (antes + después),
+   si llega al umbral (jornada + 15 min por defecto; 15 justos ya cuentan). */
 export function extraDelDia(state,presenciaMin){
   var h=reglasHoras(state);
-  return presenciaMin>num(h.umbral)?Math.max(0,Math.round(presenciaMin-num(h.jornada))):0;
+  return presenciaMin>=num(h.umbral)&&presenciaMin>num(h.jornada)?Math.max(0,Math.round(presenciaMin-num(h.jornada))):0;
 }
 export function liq(state,conExtras){
   var s=state.sueldo,t=tarifas(state);

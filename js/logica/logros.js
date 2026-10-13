@@ -1,7 +1,7 @@
 /* Historial, rachas, logros y cierre del mes (puro, sin DOM). */
 import {num} from './util.js';
-import {liq} from './sueldo.js';
-import {fijosPeriodo,isPagado,nextCobro} from './plan.js';
+import {liq,reglasHoras} from './sueldo.js';
+import {fijosPeriodo,isPagado,nextCobro,cfgCobro} from './plan.js';
 
 export function mesKey(s){return s.slice(0,7)}
 export function difMeses(a,b){return (Number(b.slice(0,4))-Number(a.slice(0,4)))*12+(Number(b.slice(5,7))-Number(a.slice(5,7)))}
@@ -34,7 +34,7 @@ export function logrosLista(state,pc,hoy,A){
   var fijosAhora=fp.length>0&&fp.every(function(o){return isPagado(state,o.f.id)});
   var rq=reciboVal(state,'liq'),reciboOk=(rq!==null&&rq>0&&Math.abs(rq-L.liquido)<=300)?1:0;
   var det=(A&&A.hor.n>0)?1:0;
-  return [
+  var lista=[
     {id:'primer-cierre',ic:'flag',t:'Primer mes cerrado',d:'Cerraste tu primer mes en la app.',need:1,val:S.hs.length},
     {id:'meta-1',ic:'medal',t:'Meta cumplida',d:'Guardaste lo que te propusiste en un mes.',need:1,val:S.met},
     {id:'racha-2',ic:'flame',t:'Racha de 2',d:'Dos meses seguidos cumpliendo la meta.',need:2,val:S.best},
@@ -51,6 +51,9 @@ export function logrosLista(state,pc,hoy,A){
     {id:'total-50',ic:'coins',t:'$ 50.000 guardados',d:'Juntaste $ 50.000 entre todos los meses cerrados.',need:50000,val:Math.round(S.tot),money:true},
     {id:'total-100',ic:'coins',t:'$ 100.000 guardados',d:'Juntaste $ 100.000 entre todos los meses cerrados.',need:100000,val:Math.round(S.tot),money:true}
   ];
+  /* Sin horas extra en el perfil, el logro de horas no aplica */
+  if(reglasHoras(state).activo===false)lista=lista.filter(function(l){return l.id!=='horas'});
+  return lista;
 }
 /* Marca con la fecha de hoy los logros recién alcanzados y los devuelve. */
 export function nuevosLogros(state,pc,hoy,A){
@@ -67,7 +70,7 @@ export function cerrarMes(state,pc,ahorrado,monto){
   pc.weeks.forEach(function(w){if(w.left>=0)semOk++});
   var rec={k:k,desde:p.inicio,hasta:p.cobro,meta:Math.round(pc.ahorro),ahorrado:Math.round(ah),gastado:Math.round(pc.spentInPlan),presupuesto:Math.round(pc.gastar),semanas:pc.weeks.length,semanasOk:semOk,conGastos:pc.spentInPlan>0,fijosN:fp.length,fijosPagados:fp.filter(function(o){return isPagado(state,o.f.id)}).length};
   state.hist=state.hist.filter(function(x){return x.k!==k});state.hist.push(rec);
-  var nc=nextCobro(p.cobro);
+  var nc=nextCobro(p.cobro,cfgCobro(state));
   p.inicio=p.cobro;p.cobro=nc;if(monto>0)p.monto=Math.round(monto);
   state.recibo={};
   return nc;

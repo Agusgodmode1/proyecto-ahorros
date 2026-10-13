@@ -1,6 +1,6 @@
 /* Arranque, pestañas y render general. */
 import {curWeek} from './logica/plan.js';
-import {migrar,cargar,guardar,pedirPersistencia} from './estado.js';
+import {migrar,cargar,guardar,pedirPersistencia,defaults} from './estado.js';
 import {ctx,$,today,planNow,ICON} from './ui/comun.js';
 import {renderCountdown,renderResumen,syncPlan,initPlan} from './ui/plan.js';
 import {renderWeek,initSemanas} from './ui/semanas.js';
@@ -11,6 +11,8 @@ import {renderLogros,evalLogros,initLogros} from './ui/logros.js';
 import {renderAjustes,renderAvisoRespaldo,initAjustes,mostrarBienvenida} from './ui/respaldo.js';
 import {registrarSW} from './pwa.js';
 import {initVoz} from './ui/voz.js';
+import {abrirPerfil,initPerfil,resumenPerfil} from './ui/perfil.js';
+import {aplicarFeriados,renderFeriados,initFeriados} from './ui/feriados.js';
 
 /* ---------- Guardado en IndexedDB ---------- */
 var timer=null,saving=false,pending=false,guardado={donde:null,persistente:null};
@@ -61,11 +63,12 @@ function renderAll(){
   if(/^w\d+$/.test(ctx.tab)&&Number(ctx.tab.slice(1))>=pc.weeks.length)ctx.tab='resumen';
   try{localStorage.setItem(TK,ctx.tab)}catch(e){}
   evalLogros(pc);
+  var n=ctx.state.perfil.nombre;$('#saludo').textContent=n?'Hola, '+n:'Hola';
   renderCountdown();renderTabs(pc);showPanels();renderAvisoRespaldo();renderResumen(pc);renderWeek(pc);renderSueldo();
   if(ctx.tab==='gastos')renderGastos();
   if(ctx.tab==='fijos')renderFijos(pc);
   if(ctx.tab==='logros')renderLogros(pc);
-  if(ctx.tab==='ajustes')renderAjustes(guardado);
+  if(ctx.tab==='ajustes'){renderAjustes(guardado);renderFeriados();$('#aj-perfil').innerHTML=resumenPerfil(ctx.state)}
 }
 function go(t){
   if(t==='semanas')t='w'+curWeek(planNow(),today());
@@ -78,7 +81,7 @@ function syncInputs(){syncPlan();syncSueldo();syncGastos()}
 /* Reemplaza todos los datos (importar un respaldo). */
 function reemplazar(st){
   if(!st.meta.creado)st.meta.creado=today();
-  ctx.state=st;ctx.tab='resumen';
+  ctx.state=st;ctx.tab='resumen';aplicarFeriados();
   syncInputs();renderAll();flush();
   window.scrollTo(0,0);
 }
@@ -107,6 +110,16 @@ function initGlobal(){
   });
   document.addEventListener('click',function(e){
     var g=e.target.closest('[data-goto]');if(g)go(g.getAttribute('data-goto'));
+    /* Mi perfil, en el paso que corresponda */
+    var pf=e.target.closest('[data-perfil]');
+    if(pf)abrirPerfil(Number(pf.getAttribute('data-perfil'))||1,{nuevo:false,estado:ctx.state,alTerminar:function(){syncInputs();persist();renderAll()}});
+    /* Borrar los datos de ejemplo y crear el perfil (dos toques) */
+    var c=e.target.closest('[data-cero]');
+    if(c){
+      if(c.getAttribute('data-armed')!=='1'){c.setAttribute('data-armed','1');c.textContent='¿Seguro? Se borra todo lo de ejemplo';return}
+      var meta=ctx.state.meta,nuevo=defaults();nuevo.meta=meta;
+      abrirPerfil(1,{nuevo:true,estado:nuevo,alTerminar:function(st){reemplazar(st)},alCancelar:function(){renderAll()}});
+    }
   });
   document.addEventListener('visibilitychange',function(){
     if(document.visibilityState==='hidden')flushPendiente();
@@ -117,10 +130,10 @@ function initGlobal(){
 
 /* ---------- Arranque ---------- */
 function arrancar(st){
-  ctx.state=st;
+  ctx.state=st;aplicarFeriados();
   if(!st.meta.creado){st.meta.creado=today();persist()}
   try{var t=localStorage.getItem(TK);if(t)ctx.tab=t}catch(e){}
-  guiaInit();initGlobal();initPlan();initSemanas();initSueldo();initTarjeta();initFijos();initLogros();initAjustes(reemplazar);initVoz();
+  guiaInit();initGlobal();initPlan();initSemanas();initSueldo();initTarjeta();initFijos();initLogros();initAjustes(reemplazar);initVoz();initFeriados();
   ctx.booted=true;
   $('#app').hidden=false;
   syncInputs();renderAll();
@@ -128,6 +141,7 @@ function arrancar(st){
 ctx.persist=persist;ctx.renderAll=renderAll;ctx.go=go;ctx.syncInputs=syncInputs;
 
 (async function boot(){
+  initPerfil();
   registrarSW(function(){return ctx.state?flush():null});
   pedirPersistencia().then(function(p){guardado.persistente=p});
   var d=await cargar();

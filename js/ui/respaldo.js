@@ -1,5 +1,6 @@
 /* Ajustes y respaldo: exportar, importar (con resumen y confirmación), recordatorio y bienvenida. */
-import {armarRespaldo,leerRespaldo,resumenDatos,diasSinRespaldo,defaults} from '../estado.js';
+import {armarRespaldo,leerRespaldo,resumenDatos,diasSinRespaldo,defaults,ejemplo} from '../estado.js';
+import {abrirPerfil} from './perfil.js';
 import {ctx,$,today,esc,fCorta,toast,row} from './comun.js';
 import {VERSION} from '../version.js';
 
@@ -106,5 +107,9 @@ export function mostrarBienvenida(listo){
   var el=$('#bienvenida');el.hidden=false;
   $('#bv-importar').addEventListener('click',function(){$('#bv-imp-wrap').hidden=false;this.hidden=true});
   montarImportador($('#bv-import'),function(st){el.hidden=true;listo(st)},'Usar estos datos');
-  $('#bv-ejemplo').addEventListener('click',function(){el.hidden=true;var st=defaults();listo(st)});
+  $('#bv-ejemplo').addEventListener('click',function(){el.hidden=true;listo(ejemplo())});
+  $('#bv-perfil').addEventListener('click',function(){
+    el.hidden=true;
+    abrirPerfil(1,{nuevo:true,estado:defaults(),alTerminar:listo,alCancelar:function(){el.hidden=false}});
+  });
 }

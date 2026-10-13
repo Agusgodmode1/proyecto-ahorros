@@ -4,7 +4,7 @@
 import {interpretar,responder,aprender,fechaTxt,FIJO_CATS} from '../logica/voz.js';
 import {CAT_NAMES} from '../logica/extracto.js';
 import {semanaDe,fijosPeriodo,totalFijos,isPagado,marcarPagado} from '../logica/plan.js';
-import {mins,mesTrabajo} from '../logica/sueldo.js';
+import {mins,mesTrabajo,reglasHoras} from '../logica/sueldo.js';
 import {diffDays,esFeriado,parse,MESL} from '../logica/fechas.js';
 import {num,uid} from '../logica/util.js';
 import {ctx,$,today,planNow,liqNow,money,esc,fMin,fLarga,toast} from './comun.js';
@@ -88,6 +88,7 @@ function entender(txt){
   catSugerida=r.cat||null;pesosOk=!r.dolares;
   if(r.intencion==='consulta'){responderConsulta();return}
   if(r.intencion==='nada'){escribir('No entendí «'+txt+'». Corregí el texto o probá con otras palabras.',txt);return}
+  if(r.intencion==='horas'&&reglasHoras(st).activo===false)r.avisos.unshift('En tu perfil dice que no hacés horas extra: se guardan, pero no suman al sueldo hasta que lo cambies en Mi perfil.');
   tarjeta();
 }
 function opts(lista,sel){return lista.map(function(c){return '<option'+(c===sel?' selected':'')+'>'+esc(c)+'</option>'}).join('')}
@@ -155,7 +156,7 @@ function resumen(){
     p=['Marcar como pagado',f?f.nombre:'elegí el fijo',f?(fp?'vence el '+fLarga(fp.fecha):'no vence en este período'):'',f&&isPagado(ctx.state,f.id)?'ya estaba marcado':''];
     ok=!!f;
   }else if(r.intencion==='horas'){
-    var mt=mesTrabajo(ctx.state.plan),otroMes=r.fecha&&r.fecha.slice(0,7)!==mt;
+    var mt=mesTrabajo(ctx.state),otroMes=r.fecha&&r.fecha.slice(0,7)!==mt;
     p=['Horas extra',fMin(r.min),r.tipo==='fin'?(esFeriado(r.fecha)?'feriado':'fin de semana o feriado'):'entre semana',fechaTxt(r.fecha,hoy),otroMes?'son de '+MESL[parse(r.fecha).getMonth()]+', no de este cobro':'se cobran el '+fLarga(ctx.state.plan.cobro)];
     ok=r.min>0&&!!r.fecha&&r.fecha<=hoy;
   }

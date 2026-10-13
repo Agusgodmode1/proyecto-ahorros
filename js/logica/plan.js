@@ -52,17 +52,34 @@ export function curWeek(pc,hoy){var idx=0;pc.weeks.forEach(function(w,i){if(hoy>
 /* Índice de la semana del plan donde cae una fecha, o -1 si queda afuera. */
 export function semanaDe(pc,fecha){for(var i=0;i<pc.weeks.length;i++){var w=pc.weeks[i];if(fecha>=w.start&&fecha<=w.end)return i}return -1}
 
-/* Próximo cobro: 5.º día hábil del mes (lunes a viernes, sin feriados). */
+/* Día de cobro según el perfil: cfg = {tipo:'habil5'|'ultimoHabil'|'fijo', dia:N}.
+   5.º día hábil = lunes a viernes, sin feriados. */
 export function quintoHabil(y,m){
   var base=new Date(y,m,1,12);y=base.getFullYear();m=base.getMonth();
   for(var d=1;d<=31;d++){var dt=new Date(y,m,d,12);if(dt.getMonth()!==m)break;var s=iso(dt);if(bizRank(s)===5)return s}
   return iso(new Date(y,m,7,12));
 }
-export function nextCobro(s){var p=parse(s);return quintoHabil(p.getFullYear(),p.getMonth()+1)}
+export function ultimoHabil(y,m){
+  var base=new Date(y,m+1,0,12);
+  while(bizRank(iso(base))===null)base=addDays(base,-1);
+  return iso(base);
+}
+/* Fecha de cobro del mes m (0 = enero; se aceptan desbordes, 12 = enero del año siguiente). */
+export function fechaCobro(y,m,cfg){
+  var t=cfg&&cfg.tipo;
+  if(t==='ultimoHabil')return ultimoHabil(y,m);
+  if(t==='fijo'){var base=new Date(y,m,1,12),last=new Date(base.getFullYear(),base.getMonth()+1,0,12).getDate();
+    return iso(new Date(base.getFullYear(),base.getMonth(),Math.min(Math.max(1,Math.round(num(cfg.dia))||1),last),12))}
+  return quintoHabil(y,m);
+}
+export function nextCobro(s,cfg){var p=parse(s);return fechaCobro(p.getFullYear(),p.getMonth()+1,cfg)}
+/* Primer cobro después de hoy (para arrancar un plan nuevo). */
+export function cobroDesde(hoy,cfg){var p=parse(hoy),f=fechaCobro(p.getFullYear(),p.getMonth(),cfg);return f>hoy?f:fechaCobro(p.getFullYear(),p.getMonth()+1,cfg)}
+export function cfgCobro(state){return (state.perfil&&state.perfil.cobro)||{tipo:'habil5'}}
 
 /* "Cuando cobres": líquido estimado − fijos del mes − meta = libre para el mes siguiente. */
 export function proximo(state,L){
-  var p=state.plan,nc=nextCobro(p.cobro),dias=Math.max(1,diffDays(p.cobro,nc));
+  var p=state.plan,nc=nextCobro(p.cobro,cfgCobro(state)),dias=Math.max(1,diffDays(p.cobro,nc));
   var fij=totalFijos(state.fijos),meta=p.modo==='monto'?Math.max(0,Math.round(num(p.ahorro))):Math.round(L.liquido*num(p.pct)/100);
   var libre=L.liquido-fij-meta;
   return {nc:nc,dias:dias,fij:fij,meta:meta,libre:libre,dia:libre/dias,semana:libre*7/dias};

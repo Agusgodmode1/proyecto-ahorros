@@ -55,8 +55,11 @@ La primera vez se abre una ventana para iniciar sesión en GitHub. Iniciá sesi�
 
 La app te pregunta:
 
+- **Empezar: crear mi perfil**: tu nombre, tu sueldo, qué día cobrás, tus reglas de horas extra y tus descuentos. Así la puede usar cualquier persona con sus propios números.
 - **Importar mis datos**: si usabas la página anterior (`proyecto-ahorros.html`), abrila, tocá **Copiar mis datos (respaldo)** abajo de todo, volvé a la app y pegalo. También podés elegir un archivo de respaldo que hayas exportado. Antes de cargar te muestra un resumen ("12 gastos, 10 registros de horas, 3 fijos…") y te pide que confirmes.
-- **Empezar con datos de ejemplo**: tu sueldo, tus horas de octubre y un plan de $ 40.000. Los cambiás cuando quieras.
+- **Solo mirar, con datos de ejemplo**: datos de muestra, marcados como ejemplo. Cuando quieras los borrás y creás tu perfil.
+
+El perfil se cambia después en **Ajustes → Mi perfil**.
 
 ### Cargar por voz
 
@@ -130,7 +133,7 @@ tests/                  pruebas (node --test)
 
 ### Feriados
 
-Están en un solo lugar: `FERIADOS` en `js/logica/fechas.js`. Para sumar uno, agregá la fecha (`'2027-05-01'`) a la lista.
+Los de Uruguay 2026 y 2027 están en `js/logica/feriados.js`. Desde la app, en **Ajustes → Feriados**, podés sacar los que tu trabajo no toma y agregar otros. Para sumar un año nuevo, agregá sus fechas a `feriados.js`.
 
 ### Pruebas
 

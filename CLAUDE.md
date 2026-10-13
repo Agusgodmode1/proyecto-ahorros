@@ -17,7 +17,8 @@ PWA para iPhone de finanzas personales de Agus (Uruguay). La publica GitHub Page
 ## Lógica de negocio validada (no tocar sin pedido explícito)
 - `js/logica/sueldo.js`: liquidación validada con recibos reales (las pruebas de `tests/sueldo.test.js` tienen que dar ±$1).
 - `js/logica/plan.js`, `extracto.js` y `logros.js`: copiados tal cual del archivo original `proyecto-ahorros.html`.
-- Feriados: solo en `FERIADOS` de `js/logica/fechas.js`.
+- Las reglas de horas y el día de cobro salen del perfil (`state.perfil`), nunca de números fijos en el código. Con el perfil de Agus los resultados tienen que ser idénticos (`tests/perfil.test.js`).
+- Feriados: lista base en `js/logica/feriados.js`; los cambios del usuario en `state.feriados`; la app los aplica con `usarFeriados()`.
 
 ## iOS
 - Campos con letra de 16 px o más (si no, iOS hace zoom). Teclados numéricos con `inputmode`.

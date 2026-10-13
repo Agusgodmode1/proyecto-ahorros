@@ -2,7 +2,7 @@
 import {parse,diffDays,bizRank,MESL} from '../logica/fechas.js';
 import {num} from '../logica/util.js';
 import {fijosPeriodo,totalFijos,proximo} from '../logica/plan.js';
-import {mesTrabajo,mins} from '../logica/sueldo.js';
+import {mesTrabajo,mins,reglasHoras} from '../logica/sueldo.js';
 import {histStats,logrosLista} from '../logica/logros.js';
 import {ctx,$,today,liqNow,exAnalisis,money,esc,fCorta,fLarga,rango,fMin,cap,tile,hchip,row} from './comun.js';
 
@@ -28,7 +28,8 @@ export function renderResumen(pc){
   heroChips(pc);
   var p=state.plan,t=today(),L=liqNow(true),fp=fijosPeriodo(state.fijos,p.inicio,p.cobro);
   var m=Math.max(1,num(p.monto)),pf=Math.max(0,Math.min(100,pc.fijos/m*100)),pa=Math.max(0,Math.min(100-pf,pc.ahorro/m*100)),pg=Math.max(0,100-pf-pa);
-  var h='<div class="card stack tone-mint">';
+  var h=state.ejemplo?'<div class="banner"><p><b>Estás viendo datos de ejemplo.</b> Son de muestra: no son tuyos.</p><button class="btn" type="button" data-cero>Borrar el ejemplo y crear mi perfil</button></div>':'';
+  h+='<div class="card stack tone-mint">';
   h+='<div class="sec-h"><h2>Hasta que cobres</h2><span class="note">'+esc(rango(p.inicio,p.cobro))+' · '+pc.total+' días</span></div>';
   var fsub=fp.length?fp.map(function(o){return esc(o.f.nombre)+' ('+esc(fCorta(o.fecha))+')'}).join(', '):(state.fijos.length?'ninguno vence antes de cobrar':'<button class="linklike" type="button" data-goto="fijos">cargá tus gastos fijos</button>');
   h+='<div class="receipt">'
@@ -47,11 +48,12 @@ export function renderResumen(pc){
     +'</div></div>';
 
   /* todo de un vistazo */
-  var S=histStats(state.hist),A=exAnalisis(),mt=mesTrabajo(p),mtN=MESL[Number(mt.slice(5,7))-1],extras=L.N-num(state.sueldo.nominal);
+  var S=histStats(state.hist),A=exAnalisis(),mt=mesTrabajo(state),mtN=MESL[Number(mt.slice(5,7))-1],extras=L.N-num(state.sueldo.nominal);
   var un=logrosLista(state,pc,t,A).filter(function(l){return state.logros[l.id]||l.val>=l.need}).length;
   h+='<div class="sec"><h2>Tu mes de un vistazo</h2><div class="links">'
     +'<button type="button" class="lk tone-teal" data-goto="fijos"><span class="lk-l">Gastos fijos</span><b>'+money(totalFijos(state.fijos))+' al mes</b><span class="lk-h">'+(state.fijos.length?state.fijos.length+' cargados':'todavía no cargaste ninguno')+'</span></button>'
-    +'<button type="button" class="lk tone-grape" data-goto="sueldo"><span class="lk-l">Horas extra de '+mtN+'</span><b>+ '+money(extras)+'</b><span class="lk-h">'+fMin(mins(state,'sem'))+' en semana y '+fMin(mins(state,'fin'))+' de finde o feriado</span></button>'
+    +(reglasHoras(state).activo!==false?'<button type="button" class="lk tone-grape" data-goto="sueldo"><span class="lk-l">Horas extra de '+mtN+'</span><b>+ '+money(extras)+'</b><span class="lk-h">'+fMin(mins(state,'sem'))+' en semana y '+fMin(mins(state,'fin'))+' de finde o feriado</span></button>'
+       :'<button type="button" class="lk tone-grape" data-goto="sueldo"><span class="lk-l">Tu sueldo</span><b>'+money(L.liquido)+'</b><span class="lk-h">en mano, el '+esc(fLarga(p.cobro))+'</span></button>')
     +'<button type="button" class="lk tone-coral" data-goto="gastos"><span class="lk-l">Gastos hormiga</span><b>'+(A&&A.hor.n?money(A.hor.t/A.dias*30)+' al mes':'Sin datos')+'</b><span class="lk-h">'+(A&&A.hor.n?A.hor.n+' compras chicas en tu extracto':'pegá el extracto para verlos')+'</span></button>'
     +'<button type="button" class="lk tone-sun" data-goto="logros"><span class="lk-l">Racha de ahorro</span><b>'+S.cur+' '+(S.cur===1?'mes':'meses')+'</b><span class="lk-h">'+un+' logros desbloqueados</span></button>'
     +'</div></div>';
@@ -82,7 +84,7 @@ export function renderResumen(pc){
     +row('Lo que vas a guardar','− '+money(nx.meta),'sub save','tu meta de ahorro')
     +row('Libre para gastar',money(nx.libre),'final')+'</div>';
   h+='<div class="tiles">'+tile('tone-mint','Por semana',money(nx.semana),nx.dias+' días hasta el '+esc(fCorta(nx.nc)))+tile('tone-sky','Por día',money(nx.dia),'si repartís parejo')+tile('tone-sun','Ese día tenés',money(pc.ahorro+L.liquido),'lo guardado más el sueldo')+'</div>';
-  h+='<p class="note">El sueldo ya tiene descontados BPS, FONASA y FRL, e incluye las horas extra de '+mtN+'. Si te sobra plata de las semanas, se suma.</p></div>';
+  h+='<p class="note">El sueldo ya tiene descontados BPS, FONASA y FRL'+(reglasHoras(state).activo!==false?', e incluye las horas extra de '+mtN:'')+'. Si te sobra plata de las semanas, se suma.</p></div>';
   $('#resumen-out').innerHTML=h;
 }
 

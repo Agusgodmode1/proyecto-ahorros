@@ -1,7 +1,7 @@
 /* Pestaña Logros: racha, cerrar el mes, logros, historial y meses anteriores. */
 import {pad,diffDays,MESL} from '../logica/fechas.js';
 import {num} from '../logica/util.js';
-import {nextCobro} from '../logica/plan.js';
+import {nextCobro,cfgCobro} from '../logica/plan.js';
 import {histStats,histOk,histExtra,logrosLista,nuevosLogros,cerrarMes,mesKey} from '../logica/logros.js';
 import {ctx,$,today,planNow,liqNow,exAnalisis,money,esc,fCorta,fLarga,cap,tile,armar,toast,ICON} from './comun.js';
 import {resetWeekSel} from './semanas.js';
@@ -35,7 +35,7 @@ export function renderLogros(pc){
   $('#logros-top').innerHTML='<div class="card streak">'
     +'<div class="st-main"><span class="st-ic">'+ICONL.flame+'</span><div class="st-txt"><span class="tile-l" style="color:var(--sun-ink)">Racha actual</span><b class="st-n">'+S.cur+' '+(S.cur===1?'mes':'meses')+'</b><span class="tile-h">'+(S.cur>0?'Cerrá el próximo mes cumpliendo la meta y llegás a '+(S.cur+1)+'.':'Cumplí la meta de este mes y arrancás tu racha.')+'</span></div></div>'
     +'<div class="tiles">'+tile('tone-sun','Mejor racha',S.best+' '+(S.best===1?'mes':'meses'),'meses seguidos')+tile('tone-mint','Meses cumplidos',S.met+' de '+S.hs.length,'meses cerrados')+tile('tone-sky','Guardado en total',money(S.tot),'en meses cerrados')+tile('tone-grape','Logros',un+' de '+list.length,'desbloqueados')+'</div></div>';
-  var p=state.plan,d=diffDays(today(),p.cobro),nc=nextCobro(p.cobro);
+  var p=state.plan,d=diffDays(today(),p.cobro),nc=nextCobro(p.cobro,cfgCobro(state));
   $('#cierre-note').innerHTML='Tu meta de este período es <b>'+money(pc.ahorro)+'</b>. '+(d>0?'Lo ideal es cerrarlo el día que cobrás, el '+esc(fLarga(p.cobro))+' (faltan '+d+' '+(d===1?'día':'días')+').':'Ya cobraste: es buen momento para cerrarlo.')+' Al cerrar se guarda en tu historial y el plan arranca de nuevo del '+esc(fCorta(p.cobro))+' al '+esc(fCorta(nc))+'.';
   var ia=$('#c-ahorrado'),im=$('#c-monto');
   if(!cDirtyA&&document.activeElement!==ia)ia.value=Math.round(pc.ahorro)||'';

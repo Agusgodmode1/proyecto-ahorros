@@ -1,4 +1,4 @@
-/* Pestaña Plan: encabezado, tres pasos, "tu mes de un vistazo", semanas y "cuando cobres". */
+/* Pestaña Plan: portada con "Hoy podés gastar", anotar un gasto, plan plegable, hasta que cobres, semanas y "cuando cobres". */
 import {parse,diffDays,bizRank,MESL} from '../logica/fechas.js';
 import {num} from '../logica/util.js';
 import {fijosPeriodo,totalFijos,proximo,hoyPodes} from '../logica/plan.js';
@@ -12,28 +12,28 @@ function rankTxt(s){
   var r=bizRank(s),d=parse(s);
   return r?(r+'.º día hábil de '+MESL[d.getMonth()]):'cae en día no hábil';
 }
+/* Portada: lo único grande es cuánto podés gastar hoy */
 function heroChips(pc){
-  var L=liqNow(true),H=hoyPodes(pc,ctx.state.gastos,today());
-  var sinPlan=!(num(ctx.state.plan.monto)>0);
-  $('#hero-chips').innerHTML=hchip('Guardás',money(pc.ahorro))+hchip(H.queda<0?'Hoy te pasaste':'Hoy podés gastar',sinPlan?'—':money(Math.abs(H.queda)))+hchip('Vas a cobrar',money(L.liquido));
+  var state=ctx.state,L=liqNow(true),t=today(),H=hoyPodes(pc,state.gastos,t),el=$('#hoy-hero');
+  var sinPlan=!(num(state.plan.monto)>0);
+  if(sinPlan)el.innerHTML='<span class="hh-l">Para saber cuánto podés gastar por día</span><span class="hh-s"><button class="linklike" type="button" id="hoy-empezar">armá tu plan</button>: cuánta plata tenés y cuánto querés guardar.</span>';
+  else{
+    var h='<span class="hh-l">'+(H.queda<0?'Hoy te pasaste por':'Hoy podés gastar')+'</span><b class="hh-n'+(H.queda<0?' neg':'')+'">'+money(Math.abs(H.queda))+'</b>';
+    if(H.dentro){
+      var w=pc.weeks[H.semana],pct=w.avail>0?Math.min(100,Math.max(0,w.spent/w.avail*100)):(w.spent>0?100:0);
+      h+='<span class="hh-s">'+(H.semanaQueda<0?'Esta semana te pasaste por '+money(-H.semanaQueda):'Te quedan '+money(H.semanaQueda)+' hasta el '+esc(fLarga(H.fin)))+(H.gastadoHoy>0?' · hoy gastaste '+money(H.gastadoHoy):'')+'</span>'
+        +'<span class="bar'+(w.left<0?' over':'')+'" role="img" aria-label="Gastaste el '+Math.round(pct)+'% de la semana"><i style="width:'+pct+'%"></i></span>';
+    }else h+='<span class="hh-s">'+(t>=state.plan.cobro?'Ya cobraste: cerrá el mes en Logros para arrancar uno nuevo.':'Hoy está fuera de las fechas de tu plan.')+'</span>';
+    el.innerHTML=h;
+  }
+  $('#hero-chips').innerHTML=hchip('Guardás este mes',money(pc.ahorro))+hchip('Vas a cobrar',money(L.liquido));
 }
 /* Arriba de todo en Plan: cuánto podés gastar hoy y anotar un gasto sin cambiar de pestaña */
 function renderHoy(pc){
   var state=ctx.state,t=today(),H=hoyPodes(pc,state.gastos,t),el=$('#hoy-out');if(!el)return;
-  if(!(num(state.plan.monto)>0)){
-    el.innerHTML='<div class="callout tone-mint stack"><h2>Primero, tu plan</h2><p class="note">Contame cuánta plata tenés hasta cobrar y cuánto querés guardar. Con eso te digo cuánto podés gastar cada día.</p><div class="row-btns"><button class="btn primary" type="button" id="hoy-empezar">Armar mi plan</button></div></div>';
-    return;
-  }
-  var h='<div class="card stack hoy tone-mint"><div class="hoy-top"><span class="tile-l">'+(H.queda<0?'Hoy te pasaste por':'Hoy podés gastar')+'</span>'
-    +'<b class="hoy-n'+(H.queda<0?' neg':'')+'">'+money(Math.abs(H.queda))+'</b>';
-  if(H.dentro){
-    var sub=[];
-    if(H.gastadoHoy>0)sub.push('ya gastaste '+money(H.gastadoHoy)+' hoy');
-    sub.push(H.semanaQueda<0?'esta semana te pasaste por <b class="neg">'+money(-H.semanaQueda)+'</b>':'te quedan '+money(H.semanaQueda)+' hasta el '+esc(fLarga(H.fin))+' ('+H.dias+' '+(H.dias===1?'día':'días')+')');
-    h+='<span class="tile-h">'+cap(sub.join(' · '))+'</span>';
-  }else h+='<span class="tile-h">Hoy está fuera de tu plan ('+esc(rango(state.plan.inicio,state.plan.cobro))+'). '+(t>=state.plan.cobro?'Cerrá el mes en Logros para arrancar uno nuevo.':'Revisá las fechas del plan.')+'</span>';
-  h+='</div>';
-  h+='<details class="hoy-add"'+(hoyAbierto?' open':'')+'><summary>Anotar un gasto de hoy</summary>'+formGasto('q',{fecha:t,boton:'Anotar'})+'</details>';
+  if(!(num(state.plan.monto)>0)){el.innerHTML='';return}
+  /* Lo de todos los días: anotar un gasto de hoy, a la vista */
+  var h='<div class="card stack hoy tone-mint"><h2>Anotá un gasto de hoy</h2>'+formGasto('q',{fecha:t,boton:'Anotar'});
   var hoyG=state.gastos.filter(function(g){return g.fecha===t});
   if(hoyG.length)h+='<ul class="list glist">'+hoyG.map(function(g){return itemGasto(g,'hoy')}).join('')+'</ul>';
   h+='</div>';
@@ -68,23 +68,12 @@ export function renderResumen(pc){
   h+='<div><div class="split-bar" role="img" aria-label="Fijos '+Math.round(pf)+'%, ahorro '+Math.round(pa)+'%, para gastar '+Math.round(pg)+'%"><i class="split-fix" style="width:'+pf+'%"></i><i class="split-save" style="width:'+pa+'%"></i><i class="split-spend" style="width:'+pg+'%"></i></div>';
   h+='<div class="split-key">'+(pc.fijos>0?'<span><i class="dot" style="background:var(--teal)"></i>Fijos, '+Math.round(pf)+'%</span>':'')+'<span><i class="dot" style="background:var(--sun)"></i>Guardás, '+Math.round(pa)+'%</span><span><i class="dot" style="background:var(--sky)"></i>Para gastar, '+Math.round(pg)+'%</span></div></div>';
   h+='<div class="tiles">'
-    +tile('tone-mint','Podés gastar por día',money(pc.daily),'si repartís parejo los '+pc.total+' días')
-    +tile('tone-sky','Por semana',money(pc.gastar*7/pc.total),'cada semana de 7 días')
-    +tile('tone-sun','Guardás',money(pc.ahorro),'no lo toques hasta cobrar')
-    +tile('tone-coral','Gastaste hasta ahora',money(pc.spentInPlan),pc.spentInPlan>0?'de '+money(pc.gastar)+' que tenés':'anotalo en Semanas')
+    +tile('tone-sky','Por semana',money(pc.gastar*7/pc.total),money(pc.daily)+' por día, parejo')
+    +tile('tone-coral','Gastaste',money(pc.spentInPlan),'de '+money(pc.gastar)+' para gastar')
     +'</div></div>';
 
-  /* todo de un vistazo */
-  var S=histStats(state.hist),A=exAnalisis(),mt=mesTrabajo(state),mtN=MESL[Number(mt.slice(5,7))-1],extras=L.N-num(state.sueldo.nominal);
-  var un=logrosLista(state,pc,t,A).filter(function(l){return state.logros[l.id]||l.val>=l.need}).length;
-  h+='<div class="sec"><h2>Tu mes de un vistazo</h2><div class="links">'
-    +'<button type="button" class="lk tone-teal" data-goto="fijos"><span class="lk-l">Gastos fijos</span><b>'+money(totalFijos(state.fijos))+' al mes</b><span class="lk-h">'+(state.fijos.length?state.fijos.length+' cargados':'todavía no cargaste ninguno')+'</span></button>'
-    +(reglasHoras(state).activo!==false?'<button type="button" class="lk tone-grape" data-goto="sueldo"><span class="lk-l">Horas extra de '+mtN+'</span><b>+ '+money(extras)+'</b><span class="lk-h">'+fMin(mins(state,'sem'))+' en semana y '+fMin(mins(state,'fin'))+' de finde o feriado</span></button>'
-       :'<button type="button" class="lk tone-grape" data-goto="sueldo"><span class="lk-l">Tu sueldo</span><b>'+money(L.liquido)+'</b><span class="lk-h">en mano, el '+esc(fLarga(p.cobro))+'</span></button>')
-    +'<button type="button" class="lk tone-coral" data-goto="gastos"><span class="lk-l">Gastos hormiga</span><b>'+(A&&A.hor.n?money(A.hor.t/A.dias*30)+' al mes':'Sin datos')+'</b><span class="lk-h">'+(A&&A.hor.n?A.hor.n+' compras chicas en tu extracto':'pegá el extracto para verlos')+'</span></button>'
-    +'<button type="button" class="lk tone-sun" data-goto="logros"><span class="lk-l">Racha de ahorro</span><b>'+S.cur+' '+(S.cur===1?'mes':'meses')+'</b><span class="lk-h">'+un+' logros desbloqueados</span></button>'
-    +'</div></div>';
-
+  var mt=mesTrabajo(state),mtN=MESL[Number(mt.slice(5,7))-1];
+  /* ("Tu mes de un vistazo" se sacó: repetía lo que ya muestran las pestañas) */
   h+='<div class="sec"><div class="sec-h"><h2>Semana por semana</h2><span class="note">Tocá una semana para anotar gastos. Lo que sobra o falta pasa a la siguiente.</span></div><div class="weeks">';
   pc.weeks.forEach(function(w){
     var cur=t>=w.start&&t<=w.end,past=t>w.end,st;
@@ -110,7 +99,7 @@ export function renderResumen(pc){
     +row('Gastos fijos del mes','− '+money(nx.fij),'sub minus',state.fijos.length?state.fijos.length+' cargados':'<button class="linklike" type="button" data-goto="fijos">cargalos</button>')
     +row('Lo que vas a guardar','− '+money(nx.meta),'sub save','tu meta de ahorro')
     +row('Libre para gastar',money(nx.libre),'final')+'</div>';
-  h+='<div class="tiles">'+tile('tone-mint','Por semana',money(nx.semana),nx.dias+' días hasta el '+esc(fCorta(nx.nc)))+tile('tone-sky','Por día',money(nx.dia),'si repartís parejo')+tile('tone-sun','Ese día tenés',money(pc.ahorro+L.liquido),'lo guardado más el sueldo')+'</div>';
+  h+='<div class="tiles">'+tile('tone-sky','Por día',money(nx.dia),nx.dias+' días hasta el '+esc(fCorta(nx.nc)))+tile('tone-sun','Ese día tenés',money(pc.ahorro+L.liquido),'lo guardado más el sueldo')+'</div>';
   h+='<p class="note">El sueldo ya tiene descontados BPS, FONASA y FRL'+(reglasHoras(state).activo!==false?', e incluye las horas extra de '+mtN:'')+'. Si te sobra plata de las semanas, se suma.</p></div>';
   $('#resumen-out').innerHTML=h;
 }
@@ -152,8 +141,14 @@ function onPlanInput(){
   p.monto=Math.max(0,m);p.inicio=ini;p.cobro=cob;
   cobroNote();ahorroNote();ctx.persist();ctx.renderAll();
 }
+function abrirPlan(){
+  ctx.go('resumen');var aj=$('#plan-aj');aj.open=true;
+  try{aj.scrollIntoView({block:'start',behavior:'smooth'})}catch(er){}
+  var m=$('#in-monto');if(m)setTimeout(function(){m.focus()},300);
+}
 export function initPlan(){
   var pr=$('#p-resumen');
+  $('#hoy-hero').addEventListener('click',function(e){if(e.target.closest('#hoy-empezar'))abrirPlan()});
   initFormsGasto(pr);
   pr.addEventListener('toggle',function(e){if(e.target.classList&&e.target.classList.contains('hoy-add'))hoyAbierto=e.target.open},true);
   pr.addEventListener('submit',function(e){
@@ -164,7 +159,6 @@ export function initPlan(){
     var m=$('#q-monto');if(m)m.focus();
   });
   pr.addEventListener('click',function(e){
-    if(e.target.id==='hoy-empezar'){var aj=$('#plan-aj');aj.open=true;try{aj.scrollIntoView({block:'start',behavior:'smooth'})}catch(er){}var m=$('#in-monto');if(m)setTimeout(function(){m.focus()},300);return}
     var dg=e.target.closest('#hoy-out [data-delg]');if(dg){borrarGasto(dg.getAttribute('data-delg'));return}
     var eg=e.target.closest('#hoy-out [data-editg]');if(eg){var id=eg.getAttribute('data-editg'),w=ctx.state.gastos.filter(function(g){return g.id===id})[0];if(w)editarGasto(id)}
   });

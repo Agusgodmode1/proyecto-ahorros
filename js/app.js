@@ -66,6 +66,7 @@ function renderAll(){
   var n=ctx.state.perfil.nombre;$('#saludo').textContent=n?'Hola, '+n:'Hola';
   /* Con el perfil hecho, la explicación del encabezado ya no hace falta y deja lugar a lo importante */
   var hs=document.querySelector('.hero-sub');if(hs)hs.hidden=!!ctx.state.perfil.hecho;
+  var st=ctx.state;document.documentElement.classList.toggle('en-uso',!st.ejemplo&&!!st.perfil.hecho&&(st.gastos.length+st.horas.length+st.hist.length)>3);
   renderCountdown();renderTabs(pc);showPanels();renderAvisoRespaldo();renderResumen(pc);renderWeek(pc);renderSueldo();
   if(ctx.tab==='gastos')renderGastos();
   if(ctx.tab==='fijos')renderFijos(pc);

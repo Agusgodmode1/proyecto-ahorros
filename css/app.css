@@ -17,32 +17,32 @@
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#0E1720; --surface:#16222D; --surface-2:#1C2A36; --ink:#E7EEF4; --muted:#9AABB9; --line:#2A3B49;
-    --sky:#5EB2EE; --sky-soft:#15344C; --sky-ink:#A9D6F7;
-    --sun:#F6C143; --sun-soft:#3A2F12; --sun-ink:#F8D884;
-    --mint:#45CE9C; --mint-soft:#123A2D; --mint-ink:#9BE8C9;
-    --grape:#AC8EF4; --grape-soft:#2A2147; --grape-ink:#D3C3FA;
-    --coral:#FF8B71; --coral-soft:#43231B; --coral-ink:#FFC3B4;
-    --slate:#93A7B8; --slate-soft:#22313D; --slate-ink:#C9D6E1;
-    --teal:#4FCFD8; --teal-soft:#113A3D; --teal-ink:#A6E9EE; --pink:#F28CC0;
-    --bad:#FF7A7A; --bad-soft:#45201F;
-    --hero:#155384; --hero-chip:rgba(255,255,255,.12); --on-color:#FFFFFF;
-    --on-accent:#0E1720; --on-sun:#231800;
+    --bg:#14131C; --surface:#1D1C28; --surface-2:#262535; --ink:#EEEBF6; --muted:#A39FB7; --line:#312F40;
+    --sky:#9AA8FF; --sky-soft:#262A4A; --sky-ink:#C7CEFF;
+    --sun:#F2C46B; --sun-soft:#3A3122; --sun-ink:#F8DDA6;
+    --mint:#7FD8B2; --mint-soft:#1E3A33; --mint-ink:#B5EBD3;
+    --grape:#C4A7FF; --grape-soft:#33294D; --grape-ink:#E0D2FF;
+    --coral:#FF9B85; --coral-soft:#42282A; --coral-ink:#FFCBBF;
+    --slate:#A9B1C9; --slate-soft:#2A2C3C; --slate-ink:#D5DAEA;
+    --teal:#77CFE0; --teal-soft:#1E3640; --teal-ink:#B6E7F0; --pink:#F59BC6;
+    --bad:#FF7392; --bad-soft:#43212D;
+    --hero:#2A2547; --hero-chip:rgba(255,255,255,.08); --on-color:#F3F0FF;
+    --on-accent:#16141F; --on-sun:#241A05;
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#0E1720; --surface:#16222D; --surface-2:#1C2A36; --ink:#E7EEF4; --muted:#9AABB9; --line:#2A3B49;
-  --sky:#5EB2EE; --sky-soft:#15344C; --sky-ink:#A9D6F7;
-  --sun:#F6C143; --sun-soft:#3A2F12; --sun-ink:#F8D884;
-  --mint:#45CE9C; --mint-soft:#123A2D; --mint-ink:#9BE8C9;
-  --grape:#AC8EF4; --grape-soft:#2A2147; --grape-ink:#D3C3FA;
-  --coral:#FF8B71; --coral-soft:#43231B; --coral-ink:#FFC3B4;
-  --slate:#93A7B8; --slate-soft:#22313D; --slate-ink:#C9D6E1;
-  --teal:#4FCFD8; --teal-soft:#113A3D; --teal-ink:#A6E9EE; --pink:#F28CC0;
-  --bad:#FF7A7A; --bad-soft:#45201F;
-  --hero:#155384; --hero-chip:rgba(255,255,255,.12); --on-color:#FFFFFF;
-  --on-accent:#0E1720; --on-sun:#231800;
+  --bg:#14131C; --surface:#1D1C28; --surface-2:#262535; --ink:#EEEBF6; --muted:#A39FB7; --line:#312F40;
+  --sky:#9AA8FF; --sky-soft:#262A4A; --sky-ink:#C7CEFF;
+  --sun:#F2C46B; --sun-soft:#3A3122; --sun-ink:#F8DDA6;
+  --mint:#7FD8B2; --mint-soft:#1E3A33; --mint-ink:#B5EBD3;
+  --grape:#C4A7FF; --grape-soft:#33294D; --grape-ink:#E0D2FF;
+  --coral:#FF9B85; --coral-soft:#42282A; --coral-ink:#FFCBBF;
+  --slate:#A9B1C9; --slate-soft:#2A2C3C; --slate-ink:#D5DAEA;
+  --teal:#77CFE0; --teal-soft:#1E3640; --teal-ink:#B6E7F0; --pink:#F59BC6;
+  --bad:#FF7392; --bad-soft:#43212D;
+  --hero:#2A2547; --hero-chip:rgba(255,255,255,.08); --on-color:#F3F0FF;
+  --on-accent:#16141F; --on-sun:#241A05;
   color-scheme:dark;
 }
 
@@ -63,7 +63,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 var(--f-bo
 h1,h2,h3,p{margin:0}
 h1{font:800 clamp(30px,7vw,46px)/1.02 var(--f-display);letter-spacing:-.02em;text-wrap:balance}
 h2{font:700 20px/1.2 var(--f-display);letter-spacing:-.01em;text-wrap:balance}
-h3{font:800 12.5px/1.2 var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h3{font:700 15px/1.3 var(--f-body);color:var(--muted)}
 b,strong{font-weight:700}
 .muted{color:var(--muted)}
 .note{font-size:14px;color:var(--muted);line-height:1.5}
@@ -214,7 +214,7 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--c,var(--sky));fle
 .wk-legend b{color:var(--ink)}
 .days{display:grid;gap:6px}
 .day{border:1.5px solid var(--line);border-radius:12px;padding:8px 2px 7px;text-align:center;min-width:0;background:var(--surface)}
-.day .w{font:800 11px var(--f-body);color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.day .w{font:700 12px var(--f-body);color:var(--muted)}
 .day .n{font:800 19px/1.2 var(--f-display)}
 .day .s{font-size:11.5px;color:var(--muted);min-height:16px;overflow-wrap:anywhere}
 .day.has{background:var(--mint-soft);border-color:transparent}
@@ -528,3 +528,54 @@ html.voz-abierta,html.voz-abierta body{overflow:hidden}
 .plan-aj>summary{display:grid;grid-template-columns:auto 1fr;row-gap:2px}
 .plan-aj>summary .pa-t{grid-column:2}
 .plan-aj>summary .pa-s{grid-column:2;font-weight:600;color:var(--muted);font-size:14px}
+
+/* ---------- Rediseño "noche de cobro" (oscuro) ----------
+   Fondo tinta violeta, superficies que se elevan apenas, colores pastel cálidos por sección.
+   Lo único grande y protagonista: cuánto podés gastar hoy, arriba de todo. */
+:root[data-theme="dark"] .card,:root[data-theme="dark"] .wk,:root[data-theme="dark"] .plan-aj>summary{border-color:transparent}
+:root[data-theme="dark"] .tab{border-color:transparent;background:var(--surface)}
+:root[data-theme="dark"] .tab[aria-selected="true"]{background:var(--c-soft);color:var(--c-ink)}
+:root[data-theme="dark"] .tab[aria-selected="true"] svg{color:var(--c)}
+:root[data-theme="dark"] .tabs{background:color-mix(in srgb,var(--bg) 88%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+:root[data-theme="dark"] .wk.cur{box-shadow:inset 0 0 0 1.5px var(--sky)}
+:root[data-theme="dark"] .btn{border-color:var(--line)}
+:root[data-theme="dark"] .tile{background:var(--surface-2)}
+:root[data-theme="dark"] .tile-l{color:var(--c)}
+
+/* Portada: saludo, días para cobrar y el número del día */
+.hero{grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:6px 16px;padding:18px 20px 20px}
+.hero h1,.hero .hero-sub{display:none}
+.hero-top{margin-bottom:0}
+.cd{width:auto;height:auto;border-radius:99px;flex-direction:row;gap:6px;padding:7px 12px;box-shadow:none;background:var(--hero-chip);color:var(--on-color);align-items:baseline}
+.cd-n{font-size:20px;color:var(--sun)}
+.cd-t{font-size:13px;max-width:none;font-weight:600;opacity:.85}
+.cd-d{display:none}
+.hoy-hero{grid-column:1/-1;display:flex;flex-direction:column;gap:2px;margin-top:10px}
+.hoy-hero .hh-l{font:600 15px var(--f-body);opacity:.8}
+.hoy-hero .hh-n{font:800 clamp(52px,15vw,76px)/1 var(--f-display);letter-spacing:-.035em;color:var(--mint)}
+.hoy-hero .hh-n.neg{color:var(--bad)}
+.hoy-hero .hh-s{font-size:14.5px;opacity:.8;margin-top:4px}
+.hoy-hero .bar{background:var(--hero-chip);box-shadow:none;height:8px;margin-top:12px}
+.hoy-hero .bar>i{background:var(--mint)}
+.hoy-hero .bar.over>i{background:var(--bad)}
+.hero-chips{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:12px}
+.hchip{background:var(--hero-chip)}
+.hchip span{opacity:.75;font-weight:500}
+.hchip b{font-size:clamp(18px,5vw,22px)}
+@media (max-width:520px){.hero{padding:16px 16px 18px}.cd{width:auto;height:auto;box-shadow:none}.cd-n{font-size:18px}.cd-t{font-size:12.5px;max-width:none}}
+.hoy-hero .linklike{color:var(--on-color)}
+:root[data-theme="dark"] .sbar{background:var(--bg)}
+:root[data-theme="dark"] .toast{background:#2E2B42;color:var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.45),inset 0 0 0 1px var(--line)}
+/* Con la app ya en uso, las explicaciones de cada pestaña se ocultan: queda lo importante */
+html.en-uso .ph-s{display:none}
+/* Semanas en Plan: una fila por semana, fácil de leer de un vistazo */
+#resumen-out .weeks{grid-template-columns:1fr;gap:8px}
+#resumen-out .wk{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"top v" "d v" "bar bar" "f f";column-gap:12px;row-gap:2px;padding:12px 14px}
+#resumen-out .wk-top{grid-area:top;justify-content:flex-start;gap:8px}
+#resumen-out .wk-d{grid-area:d}
+#resumen-out .wk-l{display:none}
+#resumen-out .wk-v{grid-area:v;align-self:center;font-size:24px}
+#resumen-out .wk .bar{grid-area:bar;height:6px;margin-block:8px 2px}
+#resumen-out .wk-f{grid-area:f;font-size:12.5px}
+:root:not([data-theme="dark"]) .hoy-hero .hh-n:not(.neg){color:var(--on-color)}
+:root:not([data-theme="dark"]) .hoy-hero .bar>i{background:var(--on-color)}

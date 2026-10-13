@@ -474,3 +474,4 @@ html.voz-abierta,html.voz-abierta body{overflow:hidden}
 @media (min-width:768px){
   .voz{bottom:auto;top:12vh;border-radius:24px;padding-bottom:18px;max-height:76vh}
 }
+#aj-info .row .v{white-space:normal;overflow-wrap:anywhere;text-align:right;flex:0 1 auto;max-width:62%;font-size:15px}

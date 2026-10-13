@@ -5,11 +5,12 @@
    - pagoLaborable: 'feriado' o 'comun', cómo se paga un feriado laborable trabajado. */
 import {FERIADOS_UY} from './feriados.js';
 
-var HOL={},OPC={laborableHabil:false,pagoLaborable:'feriado'};
+/* Por defecto solo cuentan los feriados no laborables: los laborables son días comunes. */
+var HOL={},OPC={laborableHabil:true,pagoLaborable:'comun'};
 export function usarFeriados(lista,opc){
   HOL={};lista.forEach(function(f){if(typeof f==='string')HOL[f]={laborable:false};else HOL[f.fecha]={laborable:!!f.laborable}});
   opc=opc||{};
-  OPC={laborableHabil:!!opc.laborableHabil,pagoLaborable:opc.pagoLaborable==='comun'?'comun':'feriado'};
+  OPC={laborableHabil:opc.laborableHabil!==false,pagoLaborable:opc.pagoLaborable==='feriado'?'feriado':'comun'};
 }
 usarFeriados(FERIADOS_UY);
 

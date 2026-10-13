@@ -19,7 +19,7 @@ PWA para iPhone de finanzas personales de Agus (Uruguay). La publica GitHub Page
 - `js/logica/sueldo.js`: liquidación validada con recibos reales (las pruebas de `tests/sueldo.test.js` tienen que dar ±$1).
 - `js/logica/plan.js`, `extracto.js` y `logros.js`: copiados tal cual del archivo original `proyecto-ahorros.html`.
 - Las reglas de horas y el día de cobro salen del perfil (`state.perfil`), nunca de números fijos en el código. Con el perfil de Agus los resultados tienen que ser idénticos (`tests/perfil.test.js`).
-- Feriados: lista base en `js/logica/feriados.js` (solo 5 no laborables por año); los cambios del usuario en `state.feriados`; la app los aplica con `aplicarFeriados()`. Cómo se tratan los laborables lo decide el perfil: `perfil.cobro.laborableHabil` (día hábil para el cobro) y `perfil.horas.feriadoLaborable` ('feriado' | 'comun').
+- Feriados: lista base en `js/logica/feriados.js` (solo 5 no laborables por año); los cambios del usuario en `state.feriados`; la app los aplica con `aplicarFeriados()`. **Regla de Agus: solo cuentan los no laborables; los laborables son días comunes** (por defecto `perfil.cobro.laborableHabil=true` y `perfil.horas.feriadoLaborable='comun'`, cambiables en el perfil).
 
 ## iOS
 - Tema oscuro por defecto (`data-theme` en `<html>`, script en el `<head>` de index.html); se cambia en Ajustes → Apariencia y se guarda en `localStorage` (pa-tema). Todo color sale de las variables de `:root`.

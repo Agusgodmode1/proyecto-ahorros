@@ -286,7 +286,13 @@ export function interpretar(texto,opt){
     r.tipo=(dw===0||dw===6||fer||(dijoFeriado&&!esF))?'fin':'sem';
     r.feriado=fer;
     if(fer)r.avisos.push('El '+fechaCorta(fecha)+' es feriado: se paga como fin de semana o feriado.');
-    else if(esF&&dw>=1&&dw<=5){r.avisos.push('El '+fechaCorta(fecha)+' es feriado laborable: según tu perfil se paga como un día común.');r.alternativas.push({etiqueta:'Como feriado',cambios:{tipo:'fin'}})}
+    else if(esF&&dw>=1&&dw<=5){
+      /* Es un día común: si dijiste el turno entero, cuenta solo lo que pasa la jornada (como "por presencia") */
+      var R=Object.assign({umbral:555,jornada:540},opt.horas||{}),total=r.min;
+      if(total>=4*60){r.min=total>R.umbral?Math.max(0,Math.round(total-R.jornada)):0;r.presencia=total}
+      r.avisos.push('El '+fechaCorta(fecha)+' es feriado laborable: se paga como un día común.'+(r.presencia?' Estuviste '+fmtMin(total)+(r.min>0?', así que suma '+fmtMin(r.min)+' de extra.':', no pasa de la jornada: no suma extra.'):''));
+      r.alternativas.push({etiqueta:'Como feriado',cambios:{tipo:'fin',min:total}});
+    }
     else if(dijoFeriado)r.avisos.push('El '+fechaCorta(fecha)+' no está en la lista de feriados. Lo cargo como feriado igual; cambialo si no corresponde.');
     if(r.min>16*60)r.avisos.push('Son más de 16 horas: revisá el tiempo.');
     if(r.tipo==='fin'&&!esF&&!dijoFeriado&&dw>=1&&dw<=5)r.alternativas.push({etiqueta:'Entre semana',cambios:{tipo:'sem'}});
@@ -335,6 +341,7 @@ export function fechaTxt(f,hoy){
   if(hoy&&f===iso(addDays(parse(hoy),-1)))return 'ayer, '+base;
   return base;
 }
+function fmtMin(m){var h=Math.floor(m/60),r=Math.round(m%60);return h?h+' h'+(r?' '+r+' min':''):r+' min'}
 function fechaCorta(f){var d=parse(f);return DIA[d.getDay()]+' '+d.getDate()+' '+MES[d.getMonth()]}
 function fechaLarga(f){var d=parse(f);return DIAL[d.getDay()]+' '+d.getDate()+' de '+MESL[d.getMonth()]}
 function pesos(n){return fmtNum(n)+' pesos'}

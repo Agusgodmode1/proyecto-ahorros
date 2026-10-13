@@ -11,7 +11,7 @@ test('cerrar el mes guarda también el sueldo de ese cobro (para el aguinaldo)',
   var r=s.hist[0];
   assert.equal(r.k,'2026-10');
   assert.equal(r.ahorrado,12000);
-  assert.equal(r.cobro,'2026-11-09');
+  assert.equal(r.cobro,'2026-11-06');
   assert.equal(Math.round(r.nominal),Math.round(L.N));
   assert.equal(Math.round(r.liquido),Math.round(L.liquido));
   assert.ok(r.extras>0,'con horas extra de ejemplo');

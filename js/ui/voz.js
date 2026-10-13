@@ -84,7 +84,7 @@ function escribir(msg,texto){
 /* ---------- Entender y confirmar ---------- */
 function entender(txt){
   var st=ctx.state;
-  r=interpretar(txt,{hoy:today(),fijos:st.fijos,aprendido:st.voz.cats});
+  r=interpretar(txt,{hoy:today(),fijos:st.fijos,aprendido:st.voz.cats,horas:reglasHoras(st)});
   catSugerida=r.cat||null;pesosOk=!r.dolares;
   if(r.intencion==='consulta'){responderConsulta();return}
   if(r.intencion==='nada'){escribir('No entendí «'+txt+'». Corregí el texto o probá con otras palabras.',txt);return}

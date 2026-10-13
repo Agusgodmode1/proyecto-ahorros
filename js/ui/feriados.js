@@ -7,7 +7,7 @@ var verTodos=false;
 /* La app usa siempre la lista con tus cambios */
 export function aplicarFeriados(st){
   st=st||ctx.state;var p=st.perfil||{};
-  usarFeriados(feriadosActivos(st.feriados),{laborableHabil:!!(p.cobro&&p.cobro.laborableHabil),pagoLaborable:p.horas&&p.horas.feriadoLaborable});
+  usarFeriados(feriadosActivos(st.feriados),{laborableHabil:!(p.cobro&&p.cobro.laborableHabil===false),pagoLaborable:p.horas&&p.horas.feriadoLaborable});
 }
 
 export function renderFeriados(){
@@ -19,7 +19,7 @@ export function renderFeriados(){
   var visibles=verTodos?lista:lista.filter(function(f){return f.fecha>=hoy}).slice(0,8);
   var h='<ul class="list fer-list">'+visibles.map(function(f){
     return '<li><label class="check"><input type="checkbox" data-fer="'+f.fecha+'"'+(f.on?' checked':'')+(f.propio?' disabled':'')+'><span><b>'+esc(fLarga(f.fecha))+' '+f.fecha.slice(0,4)+'</b> · '+esc(f.nombre)
-      +(f.laborable?' <span class="src">laborable por ley</span>':'')+(f.propio?' <span class="src">agregado por vos</span>':'')+'</span></label>'
+      +(f.laborable?' <span class="src">laborable: día común</span>':'')+(f.propio?' <span class="src">agregado por vos</span>':'')+'</span></label>'
       +(f.propio?'<button class="btn quiet" type="button" data-ferdel="'+f.fecha+'">Borrar</button>':'')+'</li>';
   }).join('')+'</ul>';
   h+='<div class="row-btns"><button class="btn quiet" type="button" data-fertodos>'+(verTodos?'Ver solo los próximos':'Ver los '+lista.length+' feriados')+'</button></div>';

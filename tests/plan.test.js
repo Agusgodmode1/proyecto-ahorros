@@ -5,12 +5,14 @@ import {bizRank} from '../js/logica/fechas.js';
 import {defaults} from '../js/estado.js';
 
 test('próximo cobro: 5.º día hábil',function(){
-  assert.equal(quintoHabil(2026,10),'2026-11-09');
+  /* Solo los 5 feriados no laborables cortan los días hábiles */
+  assert.equal(quintoHabil(2026,10),'2026-11-06','el 2/11 es laborable: cuenta');
   assert.equal(quintoHabil(2026,11),'2026-12-07');
-  assert.equal(nextCobro('2026-10-07'),'2026-11-09');
-  assert.equal(nextCobro('2026-11-09'),'2026-12-07');
-  assert.equal(bizRank('2026-11-09'),5);
-  assert.equal(bizRank('2026-10-12'),null,'12/10 es feriado');
+  assert.equal(nextCobro('2026-10-07'),'2026-11-06');
+  assert.equal(nextCobro('2026-11-06'),'2026-12-07');
+  assert.equal(bizRank('2026-11-06'),5);
+  assert.equal(bizRank('2026-10-12'),8,'12/10 es laborable: día hábil');
+  assert.equal(bizRank('2026-08-25'),null,'25/8 no es laborable');
 });
 
 var PLAN={monto:40000,modo:'monto',ahorro:12000,pct:30,inicio:'2026-10-12',cobro:'2026-11-09'};

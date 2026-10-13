@@ -52,7 +52,7 @@ export function renderWeek(pc){
   var items=state.gastos.filter(function(g){return g.fecha>=w.start&&g.fecha<=w.end}).sort(function(a,b){return a.fecha<b.fecha?1:a.fecha>b.fecha?-1:(a.id<b.id?1:-1)});
   h+='<div class="sec"><h3>Gastos de esta semana</h3>';
   if(!items.length)h+='<div class="empty">Todavía no anotaste gastos esta semana. Cada gasto que anotes baja lo que te queda.</div>';
-  else{h+='<ul class="list">';items.forEach(function(g){h+='<li><span class="when">'+esc(fLarga(g.fecha))+'</span><span class="what">'+(g.nota?esc(g.nota):'<span class="muted">Sin detalle</span>')+(g.src==='brou'?' <span class="src">del extracto</span>':'')+'</span><span class="amt">'+money(g.monto)+'</span><button class="btn quiet" type="button" data-delg="'+esc(g.id)+'" aria-label="Borrar gasto">Borrar</button></li>'});h+='</ul>'}
+  else{h+='<ul class="list">';items.forEach(function(g){h+='<li><span class="when">'+esc(fLarga(g.fecha))+'</span><span class="what">'+(g.nota?esc(g.nota):'<span class="muted">Sin detalle</span>')+(g.src==='brou'?' <span class="src">del extracto</span>':g.src==='voz'?' <span class="src">por voz</span>':'')+'</span><span class="amt">'+money(g.monto)+'</span><button class="btn quiet" type="button" data-delg="'+esc(g.id)+'" aria-label="Borrar gasto">Borrar</button></li>'});h+='</ul>'}
   h+='</div></div>';
   el.innerHTML=h;
 }

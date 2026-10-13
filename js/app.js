@@ -10,6 +10,7 @@ import {renderFijos,initFijos} from './ui/fijos.js';
 import {renderLogros,evalLogros,initLogros} from './ui/logros.js';
 import {renderAjustes,renderAvisoRespaldo,initAjustes,mostrarBienvenida} from './ui/respaldo.js';
 import {registrarSW} from './pwa.js';
+import {initVoz} from './ui/voz.js';
 
 /* ---------- Guardado en IndexedDB ---------- */
 var timer=null,saving=false,pending=false,guardado={donde:null,persistente:null};
@@ -119,7 +120,7 @@ function arrancar(st){
   ctx.state=st;
   if(!st.meta.creado){st.meta.creado=today();persist()}
   try{var t=localStorage.getItem(TK);if(t)ctx.tab=t}catch(e){}
-  guiaInit();initGlobal();initPlan();initSemanas();initSueldo();initTarjeta();initFijos();initLogros();initAjustes(reemplazar);
+  guiaInit();initGlobal();initPlan();initSemanas();initSueldo();initTarjeta();initFijos();initLogros();initAjustes(reemplazar);initVoz();
   ctx.booted=true;
   $('#app').hidden=false;
   syncInputs();renderAll();

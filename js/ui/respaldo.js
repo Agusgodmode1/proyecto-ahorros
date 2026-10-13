@@ -91,6 +91,15 @@ export function renderAjustes(estadoGuardado){
     +row('Protegidos contra borrado',estadoGuardado&&estadoGuardado.persistente?'sí':'no confirmado','',estadoGuardado&&estadoGuardado.persistente?'':'iOS puede borrar datos de webs que no usás hace semanas. Instalada en la pantalla de inicio y abriéndola seguido, no pasa.');
   $('#aj-info').innerHTML=info;
 }
+/* ---------- Apariencia (oscuro por defecto; se guarda en este aparato) ---------- */
+var TEMA='pa-tema';
+function temaActual(){try{return localStorage.getItem(TEMA)||'oscuro'}catch(e){return 'oscuro'}}
+export function aplicarTema(t){
+  var html=document.documentElement,oscuro=t==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:t!=='claro';
+  if(t==='auto')html.removeAttribute('data-theme');else html.setAttribute('data-theme',oscuro?'dark':'light');
+  var m=document.getElementById('meta-tema');if(m)m.setAttribute('content',oscuro?'#155384':'#1A72B5');
+  document.querySelectorAll('[data-tema]').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-tema')===t))});
+}
 /* ---------- Copias automáticas ---------- */
 var copias=[],copiaArmada=null;
 export async function renderCopias(){
@@ -105,6 +114,13 @@ export async function renderCopias(){
   }).join('')+'</ul><p class="note">Lo que tenés ahora también queda guardado como copia antes de volver, así que podés deshacerlo.</p>';
 }
 export function initAjustes(reemplazar){
+  aplicarTema(temaActual());
+  $('#aj-tema').addEventListener('click',function(e){
+    var b=e.target.closest('[data-tema]');if(!b)return;
+    var t=b.getAttribute('data-tema');try{localStorage.setItem(TEMA,t)}catch(er){}
+    aplicarTema(t);
+  });
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(){if(temaActual()==='auto')aplicarTema('auto')});
   $('#aj-copias').addEventListener('click',function(e){
     var b=e.target.closest('[data-copia]');if(!b)return;
     var i=Number(b.getAttribute('data-copia'));

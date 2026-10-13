@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="es-UY">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Proyecto Ahorros</title>
+<meta name="description" content="Tu plan hasta el próximo sueldo: cuánto guardar, cuánto gastar por día y cuánto vas a cobrar.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ahorros">
+<meta name="application-name" content="Ahorros">
+<meta name="format-detection" content="telephone=no">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#14131C" id="meta-tema">
+<script>
+/* Tema: oscuro por defecto. Se aplica antes de dibujar para que no parpadee. Se cambia en Ajustes → Apariencia. */
+(function(){var t='oscuro';try{t=localStorage.getItem('pa-tema')||'oscuro'}catch(e){}
+var d=t==='auto'?matchMedia('(prefers-color-scheme: dark)').matches:t!=='claro';
+if(t!=='auto')document.documentElement.setAttribute('data-theme',d?'dark':'light');
+document.getElementById('meta-tema').setAttribute('content',d?'#14131C':'#1A72B5')})();
+</script>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Figtree:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="css/app.css">
+<script type="module" src="js/app.js"></script>
+</head>
+<body>
+<div class="sbar" aria-hidden="true"></div>
+<div class="upd" id="upd" role="status" hidden><span>Hay una versión nueva</span><button class="btn primary" type="button">Actualizar</button></div>
+<div class="welcome" id="bienvenida" hidden>
+  <div class="welcome-in stack">
+    <span class="welcome-sun" aria-hidden="true"></span>
+    <h1>Proyecto Ahorros</h1>
+    <p class="welcome-sub">Tu plan hasta el próximo sueldo. Tus datos se guardan solo en este teléfono: no hay cuentas ni servidores.</p>
+    <button class="btn primary" type="button" id="bv-perfil">Empezar: crear mi perfil</button>
+    <div class="card stack">
+      <div class="sec"><h2>¿Ya tenías datos?</h2><p class="note">Elegí un archivo de respaldo exportado desde esta app, o pegá el texto que copiaste con <b>Copiar mis datos (respaldo)</b>.</p></div>
+      <button class="btn" type="button" id="bv-importar">Importar mis datos</button>
+      <div id="bv-imp-wrap" hidden><div id="bv-import"></div></div>
+    </div>
+    <button class="btn quiet" type="button" id="bv-ejemplo">Solo mirar, con datos de ejemplo</button>
+    <p class="note">Los datos de ejemplo quedan marcados como ejemplo. Cuando quieras, los borrás y creás tu perfil.</p>
+  </div>
+</div>
+
+<div class="wiz" id="wiz" hidden><div class="welcome-in stack" id="wiz-box" role="dialog" aria-modal="true" aria-labelledby="wiz-t"></div></div>
+
+<div class="wrap" id="app" hidden>
+  <header class="hero">
+    <div>
+      <div class="hero-top"><p class="hero-hi" id="saludo">Hola</p><button class="hero-cog hero-eye" type="button" id="discreto" aria-pressed="false" aria-label="Ocultar los montos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="ojo-a" d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle class="ojo-a" cx="12" cy="12" r="3"/><path class="ojo-c" d="M3 3l18 18M10.6 5.6A9.7 9.7 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-3 3.8M6.6 6.7C3.9 8.4 2.5 12 2.5 12S6 18.5 12 18.5c1.8 0 3.3-.5 4.6-1.3M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg></button><button class="hero-cog" type="button" data-goto="ajustes" aria-label="Ajustes y respaldo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg></button></div>
+      <h1>Proyecto Ahorros</h1>
+      <p class="hero-sub">Tu plan hasta el próximo sueldo: cuánto guardar, cuánto podés gastar por día y cuánto vas a cobrar.</p>
+    </div>
+    <div class="cd" id="countdown" aria-live="polite"></div>
+    <div class="hoy-hero" id="hoy-hero"></div>
+    <div class="hero-chips" id="hero-chips"></div>
+  </header>
+
+  <nav class="tabs"><div class="tablist" role="tablist" id="tablist" aria-label="Secciones"></div></nav>
+
+  <main>
+    <!-- PLAN -->
+    <section id="p-resumen" role="tabpanel" class="tone-sky stack">
+      <div id="resp-aviso"></div>
+      <div id="fer-aviso"></div>
+      <div id="hoy-out"></div>
+      <div class="card stack" id="guia">
+        <div class="sec-h"><h2>Cómo usar esta página</h2><button class="btn quiet" type="button" id="guia-ok">Entendido, ocultar</button></div>
+        <div class="guia-grid">
+          <button type="button" class="g-item tone-sky" data-goto="resumen"><span class="g-ic" data-icon="plan"></span><b>Plan</b><span class="t">Decidí cuánto guardar. Te digo cuánto podés gastar por día.</span></button>
+          <button type="button" class="g-item tone-mint" data-goto="semanas"><span class="g-ic" data-icon="semanas"></span><b>Semanas</b><span class="t">Anotá cada gasto y mirá cuánto te queda en la semana.</span></button>
+          <button type="button" class="g-item tone-teal" data-goto="fijos"><span class="g-ic" data-icon="fijos"></span><b>Fijos</b><span class="t">Cargá lo que pagás sí o sí cada mes. Se descuenta antes de todo.</span></button>
+          <button type="button" class="g-item tone-grape" data-goto="sueldo"><span class="g-ic" data-icon="sueldo"></span><b>Sueldo</b><span class="t">Sumá tus horas extra y mirá cuánto vas a cobrar.</span></button>
+          <button type="button" class="g-item tone-coral" data-goto="gastos"><span class="g-ic" data-icon="gastos"></span><b>Tarjeta</b><span class="t">Pegá el extracto del BROU y encontrá los gastos hormiga.</span></button>
+          <button type="button" class="g-item tone-sun" data-goto="logros"><span class="g-ic" data-icon="logros"></span><b>Logros</b><span class="t">Cerrá cada mes y armá rachas cumpliendo tu meta de ahorro.</span></button>
+        </div>
+      </div>
+
+      <details class="plan-aj" id="plan-aj" open>
+      <summary><span class="pa-t">Ajustar mi plan</span><span class="pa-s" id="plan-aj-sum"></span></summary>
+      <div class="panel-head"><h2 class="ph-t">Tu plan hasta cobrar</h2><p class="ph-s">Completá los tres pasos. Con eso te digo cuánto podés gastar cada día y cada semana sin tocar lo que guardás.</p></div>
+
+      <div class="card">
+        <ol class="steps">
+          <li class="step"><span class="badge" aria-hidden="true">1</span>
+            <div class="field">
+              <label for="in-monto">¿Cuánta plata tenés hasta cobrar?</label>
+              <div class="money"><span>$</span><input id="in-monto" type="number" inputmode="numeric" min="0" step="1"></div>
+              <small>Lo que te queda hoy en la cuenta y en efectivo.</small>
+            </div>
+          </li>
+          <li class="step"><span class="badge" aria-hidden="true">2</span>
+            <div class="field">
+              <span class="lab" id="lab-pct">¿Cuánto querés guardar?</span>
+              <div class="seg" role="group" aria-label="Cómo definir el ahorro">
+                <button type="button" data-modo="monto">En pesos</button>
+                <button type="button" data-modo="pct">En porcentaje</button>
+              </div>
+              <div id="ahorro-monto-wrap" class="stack" style="gap:8px">
+                <div class="money"><span>$</span><input id="in-ahorro" type="number" inputmode="numeric" min="0" step="100" aria-label="Monto a guardar en pesos" placeholder="10000"></div>
+                <div class="seg" role="group" aria-label="Montos rápidos">
+                  <button type="button" data-ahorro="5000">5.000</button>
+                  <button type="button" data-ahorro="10000">10.000</button>
+                  <button type="button" data-ahorro="15000">15.000</button>
+                </div>
+              </div>
+              <div id="ahorro-pct-wrap" class="stack" style="gap:8px">
+                <div class="seg" role="group" aria-labelledby="lab-pct">
+                  <button type="button" data-pct="30">30%</button>
+                  <button type="button" data-pct="50">50%</button>
+                  <button type="button" data-pct="otro">Otro</button>
+                </div>
+                <div class="money suf" id="pct-otro-wrap" hidden><input id="in-pct" type="number" inputmode="numeric" min="0" max="100" step="1" aria-label="Porcentaje a guardar"><span>%</span></div>
+              </div>
+              <small id="ahorro-note"></small>
+            </div>
+          </li>
+          <li class="step"><span class="badge" aria-hidden="true">3</span>
+            <div class="field">
+              <span class="lab">¿Desde cuándo y hasta cuándo?</span>
+              <div class="two-in">
+                <div class="field"><label for="in-inicio" class="sub-l">Desde</label><input id="in-inicio" type="date"></div>
+                <div class="field"><label for="in-cobro" class="sub-l">Cobrás el</label><input id="in-cobro" type="date"></div>
+              </div>
+              <small id="cobro-note"></small>
+            </div>
+          </li>
+        </ol>
+        <p class="err" id="plan-err" role="alert" hidden></p>
+      </div>
+      </details>
+      <div id="resumen-out" class="stack"></div>
+    </section>
+
+    <!-- SEMANAS -->
+    <section id="p-semana" role="tabpanel" class="tone-mint stack" hidden></section>
+
+    <!-- GASTOS -->
+    <section id="p-gastos" role="tabpanel" class="tone-coral stack" hidden>
+      <div class="panel-head"><h2 class="ph-t">En qué se te va la plata</h2><p class="ph-s">Pegá los movimientos de tu cuenta y te muestro en qué gastás, qué días gastás más y qué gastos chicos se van sumando.</p></div>
+      <div class="card stack">
+        <ol class="steps">
+          <li class="step"><span class="badge" aria-hidden="true">1</span><div><p class="step-t">Entrá a e-BROU</p><p class="note">Abrí los movimientos de tu caja de ahorro. La tarjeta de débito gasta de ahí.</p></div></li>
+          <li class="step"><span class="badge" aria-hidden="true">2</span><div><p class="step-t">Copiá y pegá</p><p class="note">Seleccioná la lista, copiala y pegala abajo. También sirve copiar desde el PDF o el Excel.</p></div></li>
+          <li class="step"><span class="badge" aria-hidden="true">3</span><div><p class="step-t">Mirá los resultados</p><p class="note">Aparecen solos debajo del cuadro, sin tocar ningún botón.</p></div></li>
+        </ol>
+        <div class="field"><label for="gas-txt">Tus movimientos</label><textarea id="gas-txt" spellcheck="false" placeholder="09/10/2026  COMPRA POS TIENDA INGLESA  1.890,50  12.800,00"></textarea><small>Los números largos (cuentas, tarjetas) se tapan solos. Solo vos ves esto.</small></div>
+        <div class="grid2">
+          <div class="field"><label for="gas-fmt">Cómo vienen los montos</label>
+            <select id="gas-fmt"><option value="auto">Automático</option><option value="neg">Gastos con signo menos</option><option value="pos">Gastos en positivo</option></select>
+            <small>Dejalo en automático. Si los números no cierran, probá las otras opciones.</small></div>
+          <div class="field"><label for="gas-hor">Cuento como gasto chico si es menor a</label><div class="money"><span>$</span><input type="number" id="gas-hor" min="0" step="50" inputmode="numeric"></div><small>Sirve para ver los gastos hormiga.</small></div>
+        </div>
+        <div class="row-btns"><button class="btn danger" type="button" id="gas-clear">Borrar extracto</button></div>
+        <p id="gas-stat" class="note"></p>
+      </div>
+      <div id="gas-out" class="stack"></div>
+    </section>
+
+    <!-- FIJOS -->
+    <section id="p-fijos" role="tabpanel" class="tone-teal stack" hidden>
+      <div class="panel-head"><h2 class="ph-t">Gastos fijos</h2><p class="ph-s">Lo que pagás sí o sí todos los meses: alquiler, celular, internet, suscripciones. Los descuento antes de calcular cuánto podés gastar, así no te agarran de sorpresa.</p></div>
+      <div id="fijos-sum"></div>
+      <div class="card stack">
+        <h2 id="fijo-form-t">Agregá un gasto fijo</h2>
+        <div class="field"><span class="lab">Ideas para empezar</span><div class="sugs" id="fijo-sug"></div></div>
+        <form class="fijoform" id="fijo-form" autocomplete="off">
+          <div class="field"><label for="f-nombre" class="sub-l">¿Qué es?</label><input id="f-nombre" type="text" maxlength="40" placeholder="Alquiler, celular, internet"></div>
+          <div class="field"><label for="f-monto" class="sub-l">¿Cuánto por mes?</label><div class="money"><button type="button" class="mon-btn" id="f-mon" data-moneda="UYU" aria-label="Cambiar moneda: ahora en pesos">$</button><input id="f-monto" type="number" inputmode="decimal" min="0" step="any"></div><small id="f-usd-nota"></small></div>
+          <div class="field"><label for="f-dia" class="sub-l">¿Qué día se paga?</label><input id="f-dia" type="number" inputmode="numeric" min="1" max="31" step="1" placeholder="10"></div>
+          <div class="field"><label for="f-cat" class="sub-l">Tipo</label><select id="f-cat"></select></div>
+          <div class="f-opc">
+            <label class="check"><input id="f-var" type="checkbox"> El monto cambia cada mes (UTE, OSE…): uso el promedio de lo que pagaste</label>
+            <label class="check"><input id="f-tar" type="checkbox"> Es el pago de la tarjeta de crédito: no lo resto, porque lo que comprás con la tarjeta ya lo anotás como gasto</label>
+          </div>
+          <div class="row-btns"><button class="btn primary" type="submit" id="f-save">Agregar</button><button class="btn quiet" type="button" id="f-cancel" hidden>Cancelar</button></div>
+        </form>
+      </div>
+      <div id="fijos-out" class="stack"></div>
+    </section>
+
+    <!-- LOGROS -->
+    <section id="p-logros" role="tabpanel" class="tone-sun stack" hidden>
+      <div class="panel-head"><h2 class="ph-t">Logros</h2><p class="ph-s">Cada mes que cumplís tu meta de ahorro suma a tu racha. Si guardás de más, ganás logros extra.</p></div>
+      <div id="logros-top"></div>
+      <div class="card stack tone-sun" id="metas-card">
+        <div class="sec-h"><h2>Tus metas</h2><button class="btn quiet" type="button" id="meta-nueva">Nueva meta</button></div>
+        <div id="metas-out" class="stack"></div>
+        <form class="meta-form" id="meta-form" autocomplete="off" hidden>
+          <div class="field mf-n"><label for="m-nombre" class="sub-l">¿Para qué?</label><input id="m-nombre" type="text" maxlength="40" placeholder="Viaje a Brasil, auto, fondo de emergencia"></div>
+          <div class="field"><label for="m-obj" class="sub-l">¿Cuánto necesitás?</label><div class="money"><span>$</span><input id="m-obj" type="number" inputmode="numeric" min="0" step="any"></div></div>
+          <div class="field"><label for="m-para" class="sub-l">¿Para cuándo? (opcional)</label><input id="m-para" type="month"></div>
+          <div class="row-btns mf-b"><button class="btn primary" type="submit">Crear meta</button><button class="btn quiet" type="button" id="meta-cancel">Cancelar</button></div>
+        </form>
+      </div>
+      <div class="card stack" id="cierre-card">
+        <div class="sec"><h2>Cerrar el mes</h2><p class="note" id="cierre-note"></p></div>
+        <div class="grid2">
+          <div class="field"><label for="c-ahorrado">¿Cuánto guardaste de verdad?</label><div class="money"><span>$</span><input id="c-ahorrado" type="number" inputmode="numeric" min="0" step="any"></div><small id="c-hint"></small></div>
+          <div class="field"><label for="c-monto">¿Con cuánta plata arrancás el mes nuevo?</label><div class="money"><span>$</span><input id="c-monto" type="number" inputmode="numeric" min="0" step="any"></div><small>Te puse el sueldo estimado. Cambialo por lo que cobres de verdad.</small></div>
+        </div>
+        <div id="c-metas"></div>
+        <div class="row-btns"><button class="btn primary" type="button" id="c-cerrar">Cerrar el mes</button>
+          <span class="row-btns" id="c-confirm" hidden><span class="note"><b>¿Seguro?</b> Se guarda en el historial y empieza el plan nuevo.</span><button class="btn primary" type="button" id="c-si">Sí, cerrar</button><button class="btn quiet" type="button" id="c-no">Cancelar</button></span>
+        </div>
+      </div>
+      <div id="logros-out" class="stack"></div>
+      <details class="card">
+        <summary>Cargar un mes anterior</summary>
+        <div class="stack" style="margin-top:14px">
+          <p class="note">Si ya venías ahorrando, cargá esos meses para que cuenten en la racha y en el total guardado.</p>
+          <div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px">
+            <div class="field"><label for="h-mes" class="sub-l">Mes</label><select id="h-mes"></select></div>
+            <div class="field"><label for="h-anio" class="sub-l">Año</label><select id="h-anio"></select></div>
+            <div class="field"><label for="h-meta" class="sub-l">Te habías propuesto</label><div class="money"><span>$</span><input id="h-meta" type="number" inputmode="numeric" min="0" step="any"></div></div>
+            <div class="field"><label for="h-ahorrado" class="sub-l">Guardaste</label><div class="money"><span>$</span><input id="h-ahorrado" type="number" inputmode="numeric" min="0" step="any"></div></div>
+          </div>
+          <div class="row-btns"><button class="btn primary" type="button" id="h-add">Agregar al historial</button></div>
+          <p class="err" id="h-err" role="alert" hidden></p>
+        </div>
+      </details>
+    </section>
+
+    <!-- SUELDO -->
+    <section id="p-sueldo" role="tabpanel" class="tone-grape stack" hidden>
+      <div class="panel-head"><h2 class="ph-t">Tu sueldo</h2><p class="ph-s">Sumá tus horas extra y te calculo cuánto vas a cobrar, con los descuentos de Uruguay. Cuando llegue el recibo, comparalo acá para ver si te pagaron bien.</p></div>
+      <div id="ej-banner"></div>
+      <div id="bpc-aviso"></div>
+      <div id="sueldo-hero"></div>
+      <div class="card stack tone-grape" id="aguinaldo-card">
+        <div id="aguinaldo-out" class="stack"></div>
+        <div class="sv-row"><div class="field"><label for="sv-dias" class="sub-l">Días de licencia que te vas a tomar</label><input id="sv-dias" type="number" inputmode="numeric" min="0" max="60" step="1" placeholder="0"></div><p class="note" id="sv-out"></p></div>
+        <p class="note">Son estimaciones: el aguinaldo paga aportes como el sueldo y el IRPF se ajusta aparte; el salario vacacional solo paga IRPF.</p>
+      </div>
+      <div class="sec" id="sec-rates"><h2>Cuánto vale cada hora</h2><div id="sueldo-rates"></div></div>
+      <div class="pay">
+        <div class="out" id="sueldo-out"></div>
+
+        <div class="card tiempo stack" id="card-horas">
+          <div class="sec"><h2>Sumá tus horas extra</h2>
+            <p class="note" id="horas-nota"></p></div>
+          <div id="planilla-box" class="stack pl-box"></div>
+          <div class="pl-o"><span>o cargá un día</span></div>
+          <div class="grid2">
+            <div class="field">
+              <label for="l-fecha">¿Qué día?</label>
+              <input id="l-fecha" type="date">
+            </div>
+            <div class="field">
+              <span class="lab" id="lab-tipo">Tipo de día</span>
+              <div class="seg" role="group" aria-labelledby="lab-tipo">
+                <button type="button" data-tipo="sem">Entre semana</button>
+                <button type="button" data-tipo="fin">Finde o feriado</button>
+              </div>
+            </div>
+          </div>
+          <div class="field hor-box">
+            <span class="lab">¿A qué hora llegaste y a qué hora te fuiste?</span>
+            <div class="hm hor">
+              <div class="field"><label for="l-lleg" class="sub-l">Llegué</label><input id="l-lleg" type="time"></div>
+              <div class="field"><label for="l-sal" class="sub-l">Me fui</label><input id="l-sal" type="time"></div>
+            </div>
+            <p class="hor-res" id="l-hor-nota" aria-live="polite"></p>
+            <div class="row-btns"><button class="btn primary" type="button" id="l-hor-add">Sumar</button></div>
+          </div>
+          <details>
+            <summary>Otras formas de cargar</summary>
+            <div class="stack" style="margin-top:12px">
+              <div class="field">
+                <span class="lab">Tocá para sumar</span>
+                <div class="quick" id="quick">
+                  <button class="btn" type="button" data-min="15">+15 min</button>
+                  <button class="btn" type="button" data-min="30">+30 min</button>
+                  <button class="btn" type="button" data-min="60">+1 hora</button>
+                  <button class="btn" type="button" data-min="390">+6 h 30 (turno sábado)</button>
+                </div>
+              </div>
+              <div class="field">
+                <span class="lab">Otro tiempo</span>
+                <div class="hm">
+                  <div class="field"><label for="l-h" class="sub-l">Horas</label><input id="l-h" type="number" inputmode="numeric" min="0" max="24" step="1" placeholder="0"></div>
+                  <div class="field"><label for="l-m" class="sub-l">Minutos</label><input id="l-m" type="number" inputmode="numeric" min="0" max="59" step="1" placeholder="0"></div>
+                  <button class="btn primary" type="button" id="l-add">Sumar</button>
+                </div>
+              </div>
+            </div>
+          </details>
+          <div id="log-out" class="stack"></div>
+        </div>
+
+        <div class="card control stack">
+          <div class="sec"><h2>¿Te pagaron bien?</h2>
+            <p class="note">Cuando llegue el recibo, copiá estos números del papel. Te marco en verde lo que coincide y en rojo lo que hay que revisar. Podés dejar vacío lo que no quieras comparar.</p></div>
+          <div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px">
+            <div class="field"><label for="r-sue" class="sub-l">Sueldo mensual</label><div class="money"><span>$</span><input id="r-sue" type="number" inputmode="decimal" step="any"></div></div>
+            <div class="field"><label for="r-heh" class="sub-l">Horas extras: cantidad</label><input id="r-heh" type="number" inputmode="decimal" step="any" placeholder="2,5"></div>
+            <div class="field"><label for="r-hem" class="sub-l">Horas extras: importe</label><div class="money"><span>$</span><input id="r-hem" type="number" inputmode="decimal" step="any"></div></div>
+            <div class="field"><label for="r-des" class="sub-l">Descanso trabajado</label><div class="money"><span>$</span><input id="r-des" type="number" inputmode="decimal" step="any"></div></div>
+            <div class="field"><label for="r-fer" class="sub-l">Feriado trabajado</label><div class="money"><span>$</span><input id="r-fer" type="number" inputmode="decimal" step="any"></div></div>
+            <div class="field"><label for="r-bon" class="sub-l">Bono</label><div class="money"><span>$</span><input id="r-bon" type="number" inputmode="decimal" step="any"></div></div>
+            <div class="field"><label for="r-hab" class="sub-l">Total haberes</label><div class="money"><span>$</span><input id="r-hab" type="number" inputmode="decimal" step="any"></div></div>
+            <div class="field"><label for="r-dto" class="sub-l">Total descuentos</label><div class="money"><span>$</span><input id="r-dto" type="number" inputmode="decimal" step="any"></div></div>
+            <div class="field"><label for="r-liq" class="sub-l">Líquido que cobraste</label><div class="money"><span>$</span><input id="r-liq" type="number" inputmode="decimal" step="any"></div></div>
+          </div>
+          <div id="ctrl-out"></div>
+          <div class="row-btns"><button class="btn quiet" type="button" id="r-clear">Vaciar los números</button></div>
+        </div>
+
+        <details class="card datos">
+          <summary><span><span class="sum-t">Ajustes del sueldo</span><span class="note">Sueldo, bono y descuentos. Las reglas de las horas extra y el día de cobro están en Mi perfil.</span></span></summary>
+          <div class="stack" style="margin-top:16px">
+            <div class="grid2">
+              <div class="field">
+                <label for="s-nominal">Sueldo nominal mensual</label>
+                <div class="money"><span>$</span><input id="s-nominal" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></div>
+                <small>El sueldo antes de descuentos, sin extras.</small>
+              </div>
+              <div class="field">
+                <label for="s-bonofijo">Bono fijo del mes</label>
+                <div class="money"><span>$</span><input id="s-bonofijo" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></div>
+                <small>Está en 0 porque no es seguro. Ponelo solo si te lo confirman.</small>
+              </div>
+              <div class="field">
+                <label for="s-otros">Otros descuentos fijos</label>
+                <div class="money"><span>$</span><input id="s-otros" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></div>
+                <small>Sindicato, préstamo o una cuota que figure en el recibo.</small>
+              </div>
+              <div class="field">
+                <label for="s-hijos">Hijos menores de 18 a cargo</label>
+                <input id="s-hijos" type="number" inputmode="numeric" min="0" max="10" step="1" placeholder="0">
+              </div>
+              <div class="field">
+                <span class="lab">Cónyuge o concubino/a</span>
+                <label class="check"><input id="s-conyuge" type="checkbox"> Sin cobertura de salud propia (suma 2% al FONASA)</label>
+              </div>
+            </div>
+            <details>
+              <summary>Valor de las horas y BPC</summary>
+              <div class="grid2">
+                <div class="field">
+                  <span class="lab">Valor de las horas</span>
+                  <p class="note" id="s-tarifas"></p>
+                  <div class="row-btns"><button class="btn" type="button" data-perfil="3">Cambiar las reglas en Mi perfil</button></div>
+                </div>
+                <div class="field">
+                  <label for="s-bpc">Valor de la BPC</label>
+                  <div class="money"><span>$</span><input id="s-bpc" type="number" inputmode="decimal" min="0" step="any"></div>
+                  <small id="bpc-nota">Cambia cada enero. Cambiala si el BPS publica otro valor.</small>
+                </div>
+              </div>
+            </details>
+          </div>
+        </details>
+      </div>
+    </section>
+    <!-- AJUSTES Y RESPALDO -->
+    <section id="p-ajustes" role="tabpanel" class="tone-sky stack" hidden>
+      <div class="panel-head"><h2 class="ph-t">Ajustes y respaldo</h2><p class="ph-s">Tus datos viven solo en este teléfono. Exportá un respaldo de vez en cuando y guardalo en Archivos o en iCloud.</p></div>
+      <div class="card stack">
+        <div class="sec"><h2>Mi perfil</h2><p class="note" id="aj-perfil"></p></div>
+        <div class="row-btns"><button class="btn primary" type="button" data-perfil="1">Editar mi perfil</button></div>
+      </div>
+      <div class="card stack">
+        <div class="sec"><h2>Apariencia</h2><p class="note">Se guarda en este aparato.</p></div>
+        <div class="seg" role="group" aria-label="Tema" id="aj-tema">
+          <button type="button" data-tema="oscuro">Oscuro</button>
+          <button type="button" data-tema="claro">Claro</button>
+          <button type="button" data-tema="auto">Como el teléfono</button>
+        </div>
+      </div>
+      <div class="card stack">
+        <div class="sec"><h2>Dólar</h2><p class="note" id="aj-dolar-nota">Para anotar gastos y fijos en dólares. Tocá el $ al lado del monto para cambiar a US$.</p></div>
+        <form class="dolar-form" id="dolar-form" autocomplete="off"><div class="field"><label for="aj-dolar" class="sub-l">1 dólar son</label><div class="money"><span>$</span><input id="aj-dolar" type="number" inputmode="decimal" min="0" step="any" placeholder="40,50"></div></div><button class="btn primary" type="submit">Guardar</button></form>
+      </div>
+      <div class="card stack">
+        <div class="sec"><h2>Feriados</h2><p class="note">Solo cuentan los 5 <b>no laborables</b> (1/1, 1/5, 18/7, 25/8 y 25/12): no son días hábiles para el cobro y, si los trabajás, se pagan como feriado. Los <i>laborables</i> (Carnaval, Turismo, 12 de octubre…) son días comunes; eso se puede cambiar en Mi perfil. Sacá los que tu trabajo no toma y agregá los que falten.</p></div>
+        <div id="aj-feriados"></div>
+      </div>
+      <div class="card stack">
+        <div class="sec"><h2>Exportar un respaldo</h2><p class="note" id="aj-export-note"></p></div>
+        <div class="row-btns"><button class="btn primary" type="button" id="aj-export">Exportar mis datos</button><button class="btn quiet" type="button" id="aj-copy">Copiar como texto</button></div>
+        <div class="stack" id="exp-box" hidden><p class="note">No se pudo copiar solo. Tocá el cuadro, seleccioná todo y copialo.</p><textarea id="exp-txt" readonly spellcheck="false" aria-label="Tus datos en texto"></textarea><div class="row-btns"><button class="btn quiet" type="button" id="exp-close">Cerrar</button></div></div>
+      </div>
+      <div class="card stack">
+        <div class="sec"><h2>Gastos a Excel</h2><p class="note">Una planilla con fecha, monto, moneda, categoría y nota de cada gasto. Se abre en Excel o en Numbers.</p></div>
+        <div class="row-btns"><button class="btn primary" type="button" data-csv="periodo" id="csv-periodo">Gastos de este período</button><button class="btn" type="button" data-csv="todos">Todos los gastos</button></div>
+      </div>
+      <div class="card stack">
+        <div class="sec"><h2>Importar un respaldo</h2><p class="note">Reemplaza todos los datos de este teléfono por los del respaldo. Antes de hacerlo te muestro qué tiene y te pido que confirmes.</p></div>
+        <div id="aj-import"></div>
+      </div>
+      <div class="card stack">
+        <div class="sec"><h2>Copias automáticas</h2><p class="note">Si algo sale mal después de una actualización o de importar, volvés a como estaban tus datos. Quedan las 3 más nuevas, en este teléfono.</p></div>
+        <div id="aj-copias"></div>
+      </div>
+      <div class="card stack"><h2>Sobre la app</h2><div class="receipt" id="aj-info"></div></div>
+    </section>
+  </main>
+
+  <button class="mic" id="mic" type="button" aria-label="Cargar por voz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg></button>
+  <div class="voz-bg" id="voz" hidden><div class="voz" id="voz-box" role="dialog" aria-modal="true" aria-labelledby="voz-t"></div></div>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <p class="foot"><span id="save-status"></span><button class="linklike" type="button" id="guia-show" hidden>Ver la guía de uso</button><button class="linklike" type="button" data-goto="ajustes">Ajustes y respaldo</button></p>
+</div>
+</body>
+</html>

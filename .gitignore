@@ -1,0 +1,5 @@
+PROMPT-CLAUDE-CODE.md
+proyecto-ahorros.html
+node_modules/
+.claude/
+*.log

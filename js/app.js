@@ -1,25 +1,38 @@
 /* Arranque, pestañas y render general. */
 import {curWeek} from './logica/plan.js';
-import {defaults,migrar,leerGuardado,guardar} from './estado.js';
-import {ctx,$,today,planNow,toast,ICON} from './ui/comun.js';
+import {migrar,cargar,guardar,pedirPersistencia} from './estado.js';
+import {ctx,$,today,planNow,ICON} from './ui/comun.js';
 import {renderCountdown,renderResumen,syncPlan,initPlan} from './ui/plan.js';
 import {renderWeek,initSemanas} from './ui/semanas.js';
 import {renderSueldo,syncSueldo,initSueldo} from './ui/sueldo.js';
 import {renderGastos,syncGastos,initTarjeta} from './ui/tarjeta.js';
 import {renderFijos,initFijos} from './ui/fijos.js';
 import {renderLogros,evalLogros,initLogros} from './ui/logros.js';
+import {renderAjustes,renderAvisoRespaldo,initAjustes,mostrarBienvenida} from './ui/respaldo.js';
 
-/* ---------- Guardado ---------- */
-var timer=null;
+/* ---------- Guardado en IndexedDB ---------- */
+var timer=null,saving=false,pending=false,guardado={donde:null,persistente:null};
 function setStatus(m){var el=$('#save-status');if(el)el.textContent=m}
 function persist(){setStatus('Guardando…');clearTimeout(timer);timer=setTimeout(flush,450)}
-function flush(){
-  if(guardar(JSON.parse(JSON.stringify(ctx.state))))setStatus('Guardado en este navegador.');
-  else setStatus('No se pudo guardar. Los datos se pierden al cerrar la página.');
+async function flush(){
+  clearTimeout(timer);timer=null;
+  if(saving){pending=true;return}
+  saving=true;
+  try{
+    var r=await guardar(JSON.parse(JSON.stringify(ctx.state)));
+    guardado.donde=r;
+    setStatus(r?'Guardado en este dispositivo.':'No se pudo guardar. Exportá un respaldo para no perder los datos.');
+  }finally{
+    saving=false;
+    if(pending){pending=false;flush()}
+  }
 }
+/* Si la app pasa a segundo plano con cambios sin guardar, se guardan ya. */
+function flushPendiente(){if(timer)flush()}
 
 /* ---------- Pestañas ---------- */
 var TABS=[['resumen','Plan','tone-sky','plan'],['semanas','Semanas','tone-mint','semanas'],['fijos','Fijos','tone-teal','fijos'],['sueldo','Sueldo','tone-grape','sueldo'],['gastos','Tarjeta','tone-coral','gastos'],['logros','Logros','tone-sun','logros']];
+var TK='pa-tab';
 function renderTabs(pc){
   var tab=ctx.tab,cw='w'+curWeek(pc,today()),h='',isW=/^w\d+$/.test(tab);
   TABS.forEach(function(t){
@@ -37,17 +50,20 @@ function showPanels(){
   $('#p-gastos').hidden=tab!=='gastos';
   $('#p-fijos').hidden=tab!=='fijos';
   $('#p-logros').hidden=tab!=='logros';
+  $('#p-ajustes').hidden=tab!=='ajustes';
 }
 
 /* ---------- Render general ---------- */
 function renderAll(){
   var pc=planNow();
   if(/^w\d+$/.test(ctx.tab)&&Number(ctx.tab.slice(1))>=pc.weeks.length)ctx.tab='resumen';
+  try{localStorage.setItem(TK,ctx.tab)}catch(e){}
   evalLogros(pc);
-  renderCountdown();renderTabs(pc);showPanels();renderResumen(pc);renderWeek(pc);renderSueldo();
+  renderCountdown();renderTabs(pc);showPanels();renderAvisoRespaldo();renderResumen(pc);renderWeek(pc);renderSueldo();
   if(ctx.tab==='gastos')renderGastos();
   if(ctx.tab==='fijos')renderFijos(pc);
   if(ctx.tab==='logros')renderLogros(pc);
+  if(ctx.tab==='ajustes')renderAjustes(guardado);
 }
 function go(t){
   if(t==='semanas')t='w'+curWeek(planNow(),today());
@@ -56,6 +72,14 @@ function go(t){
   if(m&&m.getBoundingClientRect().top<0){try{m.scrollIntoView({block:'start'})}catch(e){}}
 }
 function syncInputs(){syncPlan();syncSueldo();syncGastos()}
+
+/* Reemplaza todos los datos (importar un respaldo). */
+function reemplazar(st){
+  if(!st.meta.creado)st.meta.creado=today();
+  ctx.state=st;ctx.tab='resumen';
+  syncInputs();renderAll();flush();
+  window.scrollTo(0,0);
+}
 
 /* ---------- Guía ---------- */
 var GK='pa-guia-oculta';
@@ -82,22 +106,28 @@ function initGlobal(){
   document.addEventListener('click',function(e){
     var g=e.target.closest('[data-goto]');if(g)go(g.getAttribute('data-goto'));
   });
-  $('#exp-datos').addEventListener('click',function(){
-    var txt=JSON.stringify({app:'proyecto-ahorros',exportado:new Date().toISOString(),datos:ctx.state});
-    function manual(){$('#exp-txt').value=txt;$('#exp-box').hidden=false;try{$('#exp-txt').focus();$('#exp-txt').select()}catch(e){}}
-    try{
-      if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(function(){toast('Datos copiados. Pegalos en la app nueva.')},manual)}
-      else manual();
-    }catch(e){manual()}
+  document.addEventListener('visibilitychange',function(){
+    if(document.visibilityState==='hidden')flushPendiente();
+    else if(ctx.state)renderAll(); /* al volver otro día, se actualizan "hoy" y la cuenta regresiva */
   });
-  $('#exp-close').addEventListener('click',function(){$('#exp-box').hidden=true});
+  window.addEventListener('pagehide',flushPendiente);
 }
 
 /* ---------- Arranque ---------- */
+function arrancar(st){
+  ctx.state=st;
+  if(!st.meta.creado){st.meta.creado=today();persist()}
+  try{var t=localStorage.getItem(TK);if(t)ctx.tab=t}catch(e){}
+  guiaInit();initGlobal();initPlan();initSemanas();initSueldo();initTarjeta();initFijos();initLogros();initAjustes(reemplazar);
+  ctx.booted=true;
+  $('#app').hidden=false;
+  syncInputs();renderAll();
+}
 ctx.persist=persist;ctx.renderAll=renderAll;ctx.go=go;ctx.syncInputs=syncInputs;
-var guardado=leerGuardado();
-ctx.state=guardado?migrar(guardado):defaults();
-guiaInit();initGlobal();initPlan();initSemanas();initSueldo();initTarjeta();initFijos();initLogros();
-ctx.booted=true;
-syncInputs();renderAll();
-setStatus('Se guarda solo en este navegador.');
+
+(async function boot(){
+  pedirPersistencia().then(function(p){guardado.persistente=p});
+  var d=await cargar();
+  if(d){arrancar(migrar(d));setStatus('Se guarda en este dispositivo.');return}
+  mostrarBienvenida(function(st){arrancar(st);flush()});
+})();

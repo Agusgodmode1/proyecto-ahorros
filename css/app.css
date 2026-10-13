@@ -383,3 +383,22 @@ th.r,td.r{text-align:right}
   .bar>i,.bar-fill{transition:width .3s ease}
   .tab,.btn,.wk,.wkp,.g-item{transition:background-color .15s,border-color .15s,color .15s}
 }
+
+/* Ajustes y respaldo */
+.hero-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+.hero-top .hero-hi{margin-bottom:0}
+.hero-cog{appearance:none;flex:none;width:36px;height:36px;border-radius:50%;border:0;background:var(--hero-chip);color:var(--on-color);display:grid;place-items:center;cursor:pointer}
+.hero-cog svg{width:20px;height:20px}
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);border:0}
+.filebtn{display:inline-flex;align-items:center;position:relative}
+.filebtn:focus-within{outline:3px solid var(--c,var(--sky));outline-offset:2px}
+.imp textarea{min-height:96px}
+.imp-ok p{line-height:1.45}
+
+/* Bienvenida */
+.welcome{min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center}
+.welcome-in{max-width:520px;width:100%;text-align:left}
+.welcome-in>.btn{width:100%}
+.welcome-in .card>.btn{width:100%}
+.welcome-sun{width:72px;height:72px;border-radius:50%;background:var(--sun);box-shadow:0 0 0 10px var(--sun-soft)}
+.welcome-sub{font-size:16.5px;color:var(--muted);line-height:1.45}

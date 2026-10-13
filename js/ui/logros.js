@@ -5,6 +5,7 @@ import {nextCobro,cfgCobro} from '../logica/plan.js';
 import {histStats,histOk,histExtra,logrosLista,nuevosLogros,cerrarMes,mesKey} from '../logica/logros.js';
 import {ctx,$,today,planNow,liqNow,exAnalisis,money,esc,fCorta,fLarga,cap,tile,armar,toast,ICON} from './comun.js';
 import {resetWeekSel} from './semanas.js';
+import {renderMetas,aportarAlCerrar,initMetas} from './metas.js';
 
 var SV='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
 var ICONL={
@@ -62,15 +63,18 @@ export function renderLogros(pc){
   }
   g+='</div>';
   $('#logros-out').innerHTML=g;
+  renderMetas();
 }
 function doCierre(){
+  var na=aportarAlCerrar();
   var nc=cerrarMes(ctx.state,planNow(),num($('#c-ahorrado').value),num($('#c-monto').value));
   resetWeekSel();cDirtyA=false;cDirtyM=false;
   $('#c-confirm').hidden=true;$('#c-cerrar').hidden=false;
   ctx.syncInputs();ctx.persist();ctx.renderAll();
-  toast('Mes cerrado. Tu plan nuevo va hasta el '+fCorta(nc)+'.');
+  toast('Mes cerrado. Tu plan nuevo va hasta el '+fCorta(nc)+'.'+(na?' Sumé tu ahorro a '+na+(na===1?' meta.':' metas.'):''));
 }
 export function initLogros(){
+  initMetas();
   $('#c-ahorrado').addEventListener('input',function(){cDirtyA=true});
   $('#c-monto').addEventListener('input',function(){cDirtyM=true});
   $('#c-cerrar').addEventListener('click',function(){this.hidden=true;$('#c-confirm').hidden=false});

@@ -5,7 +5,8 @@ import {fijosPeriodo,totalFijos,proximo,hoyPodes} from '../logica/plan.js';
 import {mesTrabajo,mins,reglasHoras} from '../logica/sueldo.js';
 import {histStats,logrosLista} from '../logica/logros.js';
 import {ctx,$,today,liqNow,exAnalisis,money,esc,fCorta,fLarga,rango,fMin,cap,tile,hchip,row,toast} from './comun.js';
-import {formGasto,initFormsGasto,leerForm,guardarGasto,borrarGasto,itemGasto} from './gastos.js';
+import {aguinaldo} from '../logica/aguinaldo.js';
+import {formGasto,initFormsGasto,leerForm,guardarGasto,borrarGasto,itemGasto,chipsFrecuentes,anotarFrecuente} from './gastos.js';
 import {editarGasto} from './semanas.js';
 
 function rankTxt(s){
@@ -33,7 +34,7 @@ function renderHoy(pc){
   var state=ctx.state,t=today(),H=hoyPodes(pc,state.gastos,t),el=$('#hoy-out');if(!el)return;
   if(!(num(state.plan.monto)>0)){el.innerHTML='';return}
   /* Lo de todos los días: anotar un gasto de hoy, a la vista */
-  var h='<div class="card stack hoy tone-mint"><h2>Anotá un gasto de hoy</h2>'+formGasto('q',{fecha:t,boton:'Anotar'});
+  var h='<div class="card stack hoy tone-mint"><h2>Anotá un gasto de hoy</h2>'+chipsFrecuentes('q')+formGasto('q',{fecha:t,boton:'Anotar'});
   var hoyG=state.gastos.filter(function(g){return g.fecha===t});
   if(hoyG.length)h+='<ul class="list glist">'+hoyG.map(function(g){return itemGasto(g,'hoy')}).join('')+'</ul>';
   h+='</div>';
@@ -92,11 +93,15 @@ export function renderResumen(pc){
   h+='</div>';
 
   var nx=proximo(state,L);
+  /* Si el aguinaldo cae en ese mes, se suma a lo libre */
+  var AG=aguinaldo(state,t),conAg=AG.pago>=p.cobro&&AG.pago<nx.nc&&AG.liquido>0;
+  if(conAg){nx=Object.assign({},nx,{libre:nx.libre+AG.liquido});nx.dia=nx.libre/nx.dias;nx.semana=nx.libre*7/nx.dias}
   h+='<div class="card stack tone-grape"><div class="sec-h"><h2>Cuando cobres</h2><span class="note">'+esc(cap(fLarga(p.cobro)))+' al '+esc(fLarga(nx.nc))+'</span></div>';
   h+='<p class="lead">'+(nx.libre>=0?'El mes que viene vas a poder gastar unos <b class="c-mint">'+money(nx.semana)+' por semana</b>.':'El mes que viene no te alcanza para la meta: te faltan <b class="neg">'+money(-nx.libre)+'</b>.')+'</p>';
   h+='<div class="receipt">'
     +row('Tu sueldo, estimado',money(L.liquido),'','<button class="linklike" type="button" data-goto="sueldo">ver el cálculo</button>')
     +row('Gastos fijos del mes','− '+money(nx.fij),'sub minus',state.fijos.length?state.fijos.length+' cargados':'<button class="linklike" type="button" data-goto="fijos">cargalos</button>')
+    +(conAg?row('Aguinaldo de '+AG.nombre,'+ '+money(AG.liquido),'sub','<button class="linklike" type="button" data-goto="sueldo">estimado</button>, antes del '+Number(AG.pago.slice(8,10))+' de '+AG.nombre):'')
     +row('Lo que vas a guardar','− '+money(nx.meta),'sub save','tu meta de ahorro')
     +row('Libre para gastar',money(nx.libre),'final')+'</div>';
   h+='<div class="tiles">'+tile('tone-sky','Por día',money(nx.dia),nx.dias+' días hasta el '+esc(fCorta(nx.nc)))+tile('tone-sun','Ese día tenés',money(pc.ahorro+L.liquido),'lo guardado más el sueldo')+'</div>';
@@ -159,6 +164,7 @@ export function initPlan(){
     var m=$('#q-monto');if(m)m.focus();
   });
   pr.addEventListener('click',function(e){
+    var fr=e.target.closest('#hoy-out [data-frec]');if(fr){anotarFrecuente(Number(fr.getAttribute('data-frec')),today());return}
     var dg=e.target.closest('#hoy-out [data-delg]');if(dg){borrarGasto(dg.getAttribute('data-delg'));return}
     var eg=e.target.closest('#hoy-out [data-editg]');if(eg){var id=eg.getAttribute('data-editg'),w=ctx.state.gastos.filter(function(g){return g.id===id})[0];if(w)editarGasto(id)}
   });

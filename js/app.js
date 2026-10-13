@@ -1,7 +1,7 @@
 /* Arranque, pestañas y render general. */
 import {curWeek} from './logica/plan.js';
 import {migrar,cargar,guardar,pedirPersistencia,defaults,necesitaMigrar,guardarCopia} from './estado.js';
-import {ctx,$,today,planNow,ICON} from './ui/comun.js';
+import {ctx,$,today,planNow,ICON,discreto,setDiscreto,toast} from './ui/comun.js';
 import {renderCountdown,renderResumen,syncPlan,initPlan} from './ui/plan.js';
 import {renderWeek,initSemanas} from './ui/semanas.js';
 import {renderSueldo,syncSueldo,initSueldo} from './ui/sueldo.js';
@@ -129,6 +129,8 @@ function initGlobal(){
       abrirPerfil(1,{nuevo:true,estado:nuevo,alTerminar:function(st){reemplazar(st,'antes de borrar los datos de ejemplo')},alCancelar:function(){renderAll()}});
     }
   });
+  /* Modo discreto: un toque tapa o muestra todos los montos */
+  $('#discreto').addEventListener('click',function(){setDiscreto(!discreto.on);marcarDiscreto();renderAll();toast(discreto.on?'Montos ocultos':'Montos visibles')});
   document.addEventListener('visibilitychange',function(){
     if(document.visibilityState==='hidden')flushPendiente();
     else if(ctx.state)renderAll(); /* al volver otro día, se actualizan "hoy" y la cuenta regresiva */
@@ -136,12 +138,17 @@ function initGlobal(){
   window.addEventListener('pagehide',flushPendiente);
 }
 
+function marcarDiscreto(){
+  var b=$('#discreto');b.setAttribute('aria-pressed',String(discreto.on));b.setAttribute('aria-label',discreto.on?'Mostrar los montos':'Ocultar los montos');
+  document.documentElement.classList.toggle('discreto',discreto.on);
+}
 /* ---------- Arranque ---------- */
 function arrancar(st){
   ctx.state=st;aplicarFeriados();
   if(!st.meta.creado){st.meta.creado=today();persist()}
   try{var t=localStorage.getItem(TK);if(t)ctx.tab=t}catch(e){}
   guiaInit();initGlobal();initPlan();initSemanas();initSueldo();initTarjeta();initFijos();initLogros();initAjustes(reemplazar);initVoz();initFeriados();
+  marcarDiscreto();
   ctx.booted=true;
   $('#app').hidden=false;
   syncInputs();renderAll();

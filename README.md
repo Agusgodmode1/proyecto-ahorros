@@ -68,6 +68,15 @@ El perfil se cambia después en **Ajustes → Mi perfil**.
 - En **Semanas** podés **editar** cualquier gasto, y si borrás uno aparece **Deshacer** unos segundos.
 - Los tres pasos del plan quedan plegados en **Ajustar mi plan**.
 
+### Más cosas
+
+- **Modo discreto**: el ojo al lado del engranaje tapa todos los montos ($ •••). Útil para abrir la app en el trabajo o en el ómnibus. Se recuerda en ese teléfono.
+- **Con un toque**: arriba del formulario aparecen tus gastos más repetidos de los últimos 60 días ("Boleto $ 50"). Un toque y queda anotado, con "Deshacer".
+- **Dólares**: cargá la cotización en **Ajustes → Dólar**. Después, al anotar un gasto o un fijo, tocá el **$** al lado del monto para pasarlo a **US$**. Cada gasto guarda la cotización de ese día; los fijos en dólares siguen la cotización nueva. Por voz: "gasté 12 dólares en Spotify".
+- **Metas con nombre** (pestaña Logros): "Viaje a Brasil · $ 60.000 · para marzo". Te dice cuánto falta, cuánto por mes necesitás y cuándo llegás a tu ritmo. Al cerrar el mes repartís lo que guardaste entre tus metas. Cada meta cumplida es un logro.
+- **Aguinaldo y licencia** (pestaña Sueldo): el aguinaldo que viene, en mano, con el detalle mes a mes; y el salario vacacional según los días que te tomes. Si el aguinaldo cae en tu próximo mes, se suma en "Cuando cobres".
+- **Gastos a Excel** (Ajustes): una planilla de los gastos del período o de todos, para abrir en Excel o Numbers.
+
 ### Cargar por voz
 
 Tocá el **micrófono** azul (abajo a la derecha) y decí, por ejemplo:

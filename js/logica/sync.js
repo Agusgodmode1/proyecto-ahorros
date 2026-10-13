@@ -3,8 +3,8 @@
    Los borrados quedan anotados (state.sync.borrados) para que no vuelvan a aparecer al juntar.
    Al juntar dos versiones, en cada dato gana el cambio más reciente. */
 
-export var SECCIONES=['perfil','plan','sueldo','extracto','recibo','fijosPagos','logros','feriados','voz','meta','ejemplo','metas','monedas'];
-export var LISTAS={gastos:'id',horas:'id',fijos:'id',hist:'k'};
+export var SECCIONES=['perfil','plan','sueldo','extracto','recibo','fijosPagos','logros','feriados','voz','meta','ejemplo','monedas'];
+export var LISTAS={gastos:'id',horas:'id',fijos:'id',hist:'k',metas:'id'};
 
 function j(x){return JSON.stringify(x===undefined?null:x)}
 function sinU(o){var c=Object.assign({},o);delete c._u;return j(c)}

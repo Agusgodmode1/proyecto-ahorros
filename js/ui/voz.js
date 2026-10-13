@@ -7,7 +7,8 @@ import {semanaDe,fijosPeriodo,totalFijos,isPagado,marcarPagado} from '../logica/
 import {mins,mesTrabajo,reglasHoras} from '../logica/sueldo.js';
 import {diffDays,pagaComoFeriado,parse,MESL} from '../logica/fechas.js';
 import {num,uid} from '../logica/util.js';
-import {ctx,$,today,planNow,liqNow,money,esc,fMin,fLarga,toast} from './comun.js';
+import {cotizacion,gastoUSD,aPesos} from '../logica/monedas.js';
+import {ctx,$,today,planNow,liqNow,money,usd,esc,fMin,fLarga,toast} from './comun.js';
 
 var MSG_TECLADO='Tocá el micrófono del teclado y dictá.';
 var TK='pa-voz-teclado'; /* se recuerda si el reconocimiento no anda en este teléfono */
@@ -86,6 +87,13 @@ function entender(txt){
   var st=ctx.state;
   r=interpretar(txt,{hoy:today(),fijos:st.fijos,aprendido:st.voz.cats,horas:reglasHoras(st)});
   catSugerida=r.cat||null;pesosOk=!r.dolares;
+  /* "50 dólares": con la cotización cargada, se guarda en dólares y se pasa a pesos solo */
+  var cot=cotizacion(st);
+  if(r.dolares&&cot>0&&(r.intencion==='gasto'||r.intencion==='fijo')){
+    r.enUSD=true;r.cot=cot;pesosOk=true;
+    r.avisos=r.avisos.filter(function(a){return !/Dijiste dólares/.test(a)});
+    r.avisos.push('En dólares: se pasa a pesos con el dólar a '+String(cot).replace('.',',')+'.');
+  }else if(r.dolares)r.avisos.push('Si cargás la cotización del dólar en Ajustes, la próxima vez lo paso a pesos solo.');
   if(r.intencion==='consulta'){responderConsulta();return}
   if(r.intencion==='nada'){escribir('No entendí «'+txt+'». Corregí el texto o probá con otras palabras.',txt);return}
   if(r.intencion==='horas'&&reglasHoras(st).activo===false)r.avisos.unshift('En tu perfil dice que no hacés horas extra: se guardan, pero no suman al sueldo hasta que lo cambies en Mi perfil.');
@@ -93,7 +101,7 @@ function entender(txt){
 }
 function opts(lista,sel){return lista.map(function(c){return '<option'+(c===sel?' selected':'')+'>'+esc(c)+'</option>'}).join('')}
 function campo(id,label,input){return '<div class="field"><label for="'+id+'" class="sub-l">'+label+'</label>'+input+'</div>'}
-function moneyIn(id,v){return '<div class="money"><span>$</span><input id="'+id+'" type="number" inputmode="decimal" min="0" step="any" value="'+(v===null||v===undefined?'':v)+'"></div>'}
+function moneyIn(id,v){return '<div class="money"><span>'+(r&&r.enUSD?'US$':'$')+'</span><input id="'+id+'" type="number" inputmode="decimal" min="0" step="any" value="'+(v===null||v===undefined?'':v)+'"></div>'}
 
 var TITULOS={gasto:'Gasto',fijo:'Gasto fijo nuevo',pagado:'Fijo pagado',horas:'Horas extra'};
 function tarjeta(){
@@ -145,10 +153,10 @@ function resumen(){
   var hoy=today(),p=[],ok=true;
   if(r.intencion==='gasto'){
     var i=semanaDe(planNow(),r.fecha);
-    p=['Gasto',r.monto?money(r.monto):'falta el monto',r.nota||'sin detalle',fechaTxt(r.fecha,hoy),i>=0?'va a la Semana '+(i+1):'queda fuera del plan'];
+    p=['Gasto',r.monto?(r.enUSD?usd(r.monto)+' = '+money(aPesos(r.monto,r.cot)):money(r.monto)):'falta el monto',r.nota||'sin detalle',fechaTxt(r.fecha,hoy),i>=0?'va a la Semana '+(i+1):'queda fuera del plan'];
     ok=r.monto>0&&!!r.fecha&&r.fecha<=hoy;
   }else if(r.intencion==='fijo'){
-    p=['Gasto fijo nuevo',r.nombre||'sin nombre',r.monto?money(r.monto)+' por mes':'falta el monto','día '+r.dia,r.cat];
+    p=['Gasto fijo nuevo',r.nombre||'sin nombre',r.monto?(r.enUSD?usd(r.monto)+' (= '+money(aPesos(r.monto,r.cot))+')':money(r.monto))+' por mes':'falta el monto','día '+r.dia,r.cat];
     ok=r.monto>0&&!!r.nombre;
   }else if(r.intencion==='pagado'){
     var f=ctx.state.fijos.filter(function(x){return x.id===r.fijoId})[0];
@@ -170,13 +178,17 @@ function guardar(){
   var st=ctx.state,msg='';
   if(r.intencion==='gasto'){
     if(!(r.monto>0))return;
-    st.gastos.push({id:uid(),fecha:r.fecha,monto:Math.round(r.monto*100)/100,nota:r.nota.slice(0,60),cat:r.cat,src:'voz'});
+    var ng={id:uid(),fecha:r.fecha,monto:Math.round(r.monto*100)/100,nota:r.nota.slice(0,60),cat:r.cat,src:'voz'};
+    if(r.enUSD)Object.assign(ng,gastoUSD(r.monto,r.cot));
+    st.gastos.push(ng);
     if(r.nota&&catSugerida&&r.cat!==catSugerida)aprender(st.voz.cats,r.nota,r.cat);
     var i=semanaDe(planNow(),r.fecha);
-    msg='Anotado: '+money(r.monto)+(r.nota?' en '+r.nota:'')+(i>=0?' · Semana '+(i+1):'');
+    msg='Anotado: '+(r.enUSD?usd(r.monto):money(r.monto))+(r.nota?' en '+r.nota:'')+(i>=0?' · Semana '+(i+1):'');
   }else if(r.intencion==='fijo'){
     if(!(r.monto>0)||!r.nombre)return;
-    st.fijos.push({id:uid(),nombre:r.nombre.slice(0,40),monto:r.monto,dia:r.dia,cat:r.cat});
+    var nf={id:uid(),nombre:r.nombre.slice(0,40),monto:r.monto,dia:r.dia,cat:r.cat};
+    if(r.enUSD){nf.usd=Math.round(r.monto*100)/100;nf.cotiz=r.cot;nf.monto=aPesos(r.monto,r.cot)}
+    st.fijos.push(nf);
     msg='Gasto fijo agregado: '+r.nombre;
   }else if(r.intencion==='pagado'){
     var f=st.fijos.filter(function(x){return x.id===r.fijoId})[0];if(!f)return;

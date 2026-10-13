@@ -1,2 +1,2 @@
 /* Versión de la app. Tiene que ser igual a VERSION en sw.js (hay una prueba que lo controla). */
-export var VERSION='1.3.0';
+export var VERSION='1.4.0';

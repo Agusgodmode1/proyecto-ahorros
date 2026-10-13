@@ -14,9 +14,16 @@ export function exAnalisis(){return analisisGuardado(ctx.state.extracto,today())
 
 var fmtN;
 try{fmtN=new Intl.NumberFormat('es-UY',{maximumFractionDigits:0,useGrouping:'always'})}catch(e){fmtN=new Intl.NumberFormat('es-UY',{maximumFractionDigits:0})}
-export function n0(n){return fmtN.format(Math.abs(Math.round(n)))}
-export function money(n){return (Math.round(n)<0?'−':'')+'$ '+n0(n)}
-export function money2(n){return (n<0?'−':'')+'$ '+Math.abs(n).toLocaleString('es-UY',{minimumFractionDigits:2,maximumFractionDigits:2})}
+/* Modo discreto: tapa todos los montos de la pantalla (se recuerda en este aparato). */
+var DK='pa-discreto';
+export var discreto={on:false};
+try{discreto.on=localStorage.getItem(DK)==='1'}catch(e){}
+export function setDiscreto(v){discreto.on=!!v;try{if(v)localStorage.setItem(DK,'1');else localStorage.removeItem(DK)}catch(e){}}
+var TAPA='•••';
+export function n0(n){return discreto.on?TAPA:fmtN.format(Math.abs(Math.round(n)))}
+export function money(n){return discreto.on?'$ '+TAPA:(Math.round(n)<0?'−':'')+'$ '+n0(n)}
+export function money2(n){return discreto.on?'$ '+TAPA:(n<0?'−':'')+'$ '+Math.abs(n).toLocaleString('es-UY',{minimumFractionDigits:2,maximumFractionDigits:2})}
+export function usd(n){return discreto.on?'US$ '+TAPA:'US$ '+(Math.round(n*100)/100).toLocaleString('es-UY',{maximumFractionDigits:2})}
 export function pctTxt(r){return (r*100).toLocaleString('es-UY',{maximumFractionDigits:3})+'%'}
 export function veces(x){return (Math.round(x*10)/10).toLocaleString('es-UY')+' veces'}
 export function fmtH(h){return h.toLocaleString('es-UY',{maximumFractionDigits:2})}

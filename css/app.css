@@ -579,3 +579,45 @@ html.en-uso .ph-s{display:none}
 #resumen-out .wk-f{grid-area:f;font-size:12.5px}
 :root:not([data-theme="dark"]) .hoy-hero .hh-n:not(.neg){color:var(--on-color)}
 :root:not([data-theme="dark"]) .hoy-hero .bar>i{background:var(--on-color)}
+
+/* Modo discreto */
+.hero-top{gap:8px}.hero-top .hero-hi{flex:1}
+.hero-eye .ojo-c{display:none}
+html.discreto .hero-eye .ojo-a{display:none}
+html.discreto .hero-eye .ojo-c{display:inline}
+html.discreto .hero-eye{background:var(--sun);color:var(--on-sun)}
+
+/* Gastos frecuentes y dólares */
+.frec{display:flex;flex-direction:column;gap:8px}
+.frec .sub-l{font:600 13px/1.3 var(--f-body);color:var(--muted)}
+.frec-b{display:flex;flex-wrap:wrap;gap:8px}
+.chip-g{appearance:none;border:0;cursor:pointer;background:var(--c-soft,var(--surface-2));color:var(--ink);border-radius:14px;padding:9px 13px;display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-height:44px;text-align:left}
+.chip-g b{font:700 14.5px/1.2 var(--f-body)}
+.chip-g span{font:600 13px/1.2 var(--f-body);color:var(--c-ink,var(--muted))}
+.chip-g:active{transform:scale(.97)}
+.mon-btn{appearance:none;cursor:pointer;display:flex;align-items:center;padding:0 4px 0 13px;background:var(--surface-2);border:1.5px solid var(--line);border-right:0;border-radius:12px 0 0 12px;color:var(--c-ink,var(--sky-ink));font:800 15px var(--f-body);min-width:44px;text-decoration:underline dotted;text-underline-offset:4px}
+.money:focus-within>.mon-btn{border-color:var(--c,var(--sky))}
+.usd-nota:empty{display:none}
+.amt-usd{display:block;font:600 12px var(--f-body);color:var(--muted);text-align:right}
+.dolar-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:end}
+#f-usd-nota:empty{display:none}
+
+/* Metas */
+.metas{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.meta{background:var(--surface-2);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:6px}
+.meta-top{display:flex;justify-content:space-between;align-items:baseline;gap:6px 12px;flex-wrap:wrap}
+.meta-top b{font:700 17px/1.2 var(--f-display)}
+.meta-top span{font-size:14px;color:var(--muted)}
+.meta .bar>i{background:var(--sun)}
+.meta.ok .bar>i{background:var(--mint)}
+.meta-sumar{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center}
+.meta-form{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:end}
+.meta-form .mf-n,.meta-form .mf-b{grid-column:1/-1}
+#c-metas:empty{display:none}
+
+/* Aguinaldo */
+.ag-n{display:flex;flex-direction:column;gap:2px}
+.ag-n b{font:800 clamp(30px,8vw,40px)/1.05 var(--f-display);color:var(--grape-ink);letter-spacing:-.02em}
+.ag-n span{font-size:14px;color:var(--muted)}
+.sv-row{display:grid;grid-template-columns:minmax(120px,180px) minmax(0,1fr);gap:12px;align-items:end;border-top:1px solid var(--line);padding-top:14px}
+@media (max-width:520px){.sv-row{grid-template-columns:1fr}}

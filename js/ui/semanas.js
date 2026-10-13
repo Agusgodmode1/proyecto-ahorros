@@ -2,7 +2,7 @@
 import {parse,addDays,iso,diffDays,DIA,DIAL,MESL} from '../logica/fechas.js';
 import {ctx,$,today,planNow,money,n0,esc,fLarga,rango,cap,toast} from './comun.js';
 import {semanaDe} from '../logica/plan.js';
-import {formGasto,initFormsGasto,leerForm,guardarGasto,borrarGasto,itemGasto} from './gastos.js';
+import {formGasto,initFormsGasto,leerForm,guardarGasto,borrarGasto,itemGasto,chipsFrecuentes,anotarFrecuente} from './gastos.js';
 
 var weekSel={},editId=null;
 export function resetWeekSel(){weekSel={};editId=null}
@@ -54,7 +54,7 @@ export function renderWeek(pc){
   var fechas=[];for(var q=0;q<w.days;q++){var dd=iso(addDays(ds,q));fechas.push([dd,cap(fLarga(dd))])}
   /* Si el gasto que editás es de otra fecha, también se puede dejar en su día */
   if(ed&&!fechas.some(function(f){return f[0]===ed.fecha}))fechas.unshift([ed.fecha,cap(fLarga(ed.fecha))]);
-  h+='<div class="card stack" id="g-card"><h2>'+(ed?'Editar gasto':'Anotá un gasto')+'</h2>';
+  h+='<div class="card stack" id="g-card"><h2>'+(ed?'Editar gasto':'Anotá un gasto')+'</h2>'+(ed?'':chipsFrecuentes('g'));
   h+=formGasto('g',{fechas:fechas,fecha:sel,gasto:ed});
 
   var items=state.gastos.filter(function(g){return g.fecha>=w.start&&g.fecha<=w.end}).sort(function(a,b){return a.fecha<b.fecha?1:a.fecha>b.fecha?-1:(a.id<b.id?1:-1)});
@@ -81,6 +81,7 @@ export function initSemanas(){
     if(era)toast('Cambios guardados');else{var nx=$('#g-monto');if(nx)nx.focus()}
   });
   p.addEventListener('click',function(e){
+    var fr=e.target.closest('[data-frec]');if(fr){var fe=$('#g-fecha');anotarFrecuente(Number(fr.getAttribute('data-frec')),fe?fe.value:today());return}
     var dg=e.target.closest('[data-delg]');
     if(dg){var id=dg.getAttribute('data-delg');if(id===editId)editId=null;borrarGasto(id);return}
     var eg=e.target.closest('[data-editg]');

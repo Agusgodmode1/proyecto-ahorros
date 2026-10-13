@@ -2,6 +2,7 @@
 import {num} from './util.js';
 import {liq,reglasHoras} from './sueldo.js';
 import {fijosPeriodo,isPagado,nextCobro,cfgCobro} from './plan.js';
+import {aportado} from './metas.js';
 
 export function mesKey(s){return s.slice(0,7)}
 export function difMeses(a,b){return (Number(b.slice(0,4))-Number(a.slice(0,4)))*12+(Number(b.slice(5,7))-Number(a.slice(5,7)))}
@@ -51,6 +52,10 @@ export function logrosLista(state,pc,hoy,A){
     {id:'total-50',ic:'coins',t:'$ 50.000 guardados',d:'Juntaste $ 50.000 entre todos los meses cerrados.',need:50000,val:Math.round(S.tot),money:true},
     {id:'total-100',ic:'coins',t:'$ 100.000 guardados',d:'Juntaste $ 100.000 entre todos los meses cerrados.',need:100000,val:Math.round(S.tot),money:true}
   ];
+  /* Un logro por cada meta con nombre */
+  (state.metas||[]).forEach(function(m){
+    if(num(m.objetivo)>0)lista.push({id:'meta-'+m.id,ic:'flag',t:'Meta: '+m.nombre,d:'Juntaste todo lo de tu meta «'+m.nombre+'».',need:Math.round(num(m.objetivo)),val:Math.round(aportado(m)),money:true});
+  });
   /* Sin horas extra en el perfil, el logro de horas no aplica */
   if(reglasHoras(state).activo===false)lista=lista.filter(function(l){return l.id!=='horas'});
   return lista;

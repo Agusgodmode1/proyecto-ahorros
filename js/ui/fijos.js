@@ -1,7 +1,8 @@
 /* Pestaña Fijos: lista, vencimientos del período, pagado y sugerencias del extracto. */
 import {num,uid} from '../logica/util.js';
 import {fijosPeriodo,totalFijos,isPagado,marcarPagado} from '../logica/plan.js';
-import {ctx,$,planNow,liqNow,exAnalisis,money,esc,fCorta,fLarga,titulo,tile,armar,toast} from './comun.js';
+import {cotizacion,aPesos} from '../logica/monedas.js';
+import {ctx,$,planNow,liqNow,exAnalisis,money,usd,esc,fCorta,fLarga,titulo,tile,armar,toast} from './comun.js';
 
 export var FCATS=[['Vivienda','var(--sky)'],['Servicios','var(--sun)'],['Celular e internet','var(--grape)'],['Suscripciones','var(--pink)'],['Salud','var(--mint)'],['Transporte','var(--teal)'],['Deudas y cuotas','var(--coral)'],['Educación','var(--slate)'],['Otros','var(--muted)']];
 var FSUG=[['Alquiler','Vivienda'],['Gastos comunes','Vivienda'],['UTE','Servicios'],['OSE','Servicios'],['Internet','Celular e internet'],['Celular','Celular e internet'],['Netflix','Suscripciones'],['Spotify','Suscripciones'],['Gimnasio','Salud'],['Mutualista','Salud'],['Boleto STM','Transporte'],['Préstamo','Deudas y cuotas'],['Tarjeta de crédito','Deudas y cuotas']];
@@ -28,7 +29,7 @@ export function renderFijos(pc){
       var oc=fp.filter(function(x){return x.f.id===f.id})[0];
       var when=oc?'vence el '+fLarga(oc.fecha):'día '+f.dia+', fuera de este período';
       var pagado=!!oc&&isPagado(state,f.id);
-      o+='<li class="'+(pagado?'paid':'')+'"><i class="dot" style="background:'+fcatCol(f.cat)+'"></i><span class="what"><b>'+esc(f.nombre)+'</b><span class="src">'+esc(f.cat)+' · '+esc(when)+'</span></span><span class="amt">'+money(num(f.monto))+'</span>'
+      o+='<li class="'+(pagado?'paid':'')+'"><i class="dot" style="background:'+fcatCol(f.cat)+'"></i><span class="what"><b>'+esc(f.nombre)+'</b><span class="src">'+esc(f.cat)+' · '+esc(when)+'</span></span><span class="amt">'+money(num(f.monto))+(f.usd?'<small class="amt-usd">'+usd(f.usd)+'</small>':'')+'</span>'
         +'<span class="ctrl">'+(oc?'<label class="paybox"><input type="checkbox" data-payf="'+esc(f.id)+'"'+(pagado?' checked':'')+'> Pagado</label>':'<span class="note">No vence en este período</span>')
         +'<span><button class="btn quiet" type="button" data-editf="'+esc(f.id)+'">Editar</button><button class="btn quiet" type="button" data-delf="'+esc(f.id)+'">Borrar</button></span></span></li>';
     });
@@ -44,7 +45,13 @@ export function renderFijos(pc){
   }
   $('#fijos-out').innerHTML=o;
 }
+function monedaFijo(u){
+  var b=$('#f-mon');b.setAttribute('data-moneda',u?'USD':'UYU');b.textContent=u?'US$':'$';b.setAttribute('aria-label','Cambiar moneda: ahora en '+(u?'dólares':'pesos'));
+  var c=cotizacion(ctx.state),n=$('#f-usd-nota');
+  n.innerHTML=!u?'':(c?'Se paga en dólares: cada mes se pasa a pesos con el dólar de Ajustes ($ '+String(c).replace('.',',')+').':'Cargá la cotización del dólar en <button class="linklike" type="button" data-goto="ajustes">Ajustes</button>.');
+}
 function resetFijoForm(){
+  monedaFijo(false);
   fEdit=null;$('#f-nombre').value='';$('#f-monto').value='';$('#f-dia').value='';$('#f-cat').value='Otros';
   $('#fijo-form-t').textContent='Agregá un gasto fijo';$('#f-save').textContent='Agregar';$('#f-cancel').hidden=true;
 }
@@ -54,21 +61,27 @@ export function initFijos(){
   $('#fijo-form').addEventListener('submit',function(e){
     e.preventDefault();
     var state=ctx.state,n=$('#f-nombre').value.trim(),m=num($('#f-monto').value),d=Math.round(num($('#f-dia').value))||1,c=$('#f-cat').value;
+    var enUSD=$('#f-mon').getAttribute('data-moneda')==='USD',cot=cotizacion(state);
     if(!n){$('#f-nombre').focus();return}
     if(!(m>0)){$('#f-monto').focus();return}
+    if(enUSD&&!cot){toast('Primero cargá la cotización del dólar en Ajustes');return}
     d=Math.min(31,Math.max(1,d));
-    if(fEdit){state.fijos.forEach(function(f){if(f.id===fEdit){f.nombre=n.slice(0,40);f.monto=m;f.dia=d;f.cat=c}})}
-    else state.fijos.push({id:uid(),nombre:n.slice(0,40),monto:m,dia:d,cat:c});
+    /* En dólares: se guarda el monto en dólares y su equivalente en pesos con la cotización actual */
+    var monto=enUSD?aPesos(m,cot):m;
+    function moneda(f){if(enUSD){f.usd=Math.round(m*100)/100;f.cotiz=cot}else{delete f.usd;delete f.cotiz}}
+    if(fEdit){state.fijos.forEach(function(f){if(f.id===fEdit){f.nombre=n.slice(0,40);f.monto=monto;f.dia=d;f.cat=c;moneda(f)}})}
+    else{var nf={id:uid(),nombre:n.slice(0,40),monto:monto,dia:d,cat:c};moneda(nf);state.fijos.push(nf)}
     var was=!!fEdit;resetFijoForm();ctx.persist();ctx.renderAll();toast(was?'Cambios guardados':'Gasto fijo agregado');
   });
   $('#f-cancel').addEventListener('click',resetFijoForm);
+  $('#f-mon').addEventListener('click',function(){monedaFijo(this.getAttribute('data-moneda')!=='USD');$('#f-monto').focus()});
   $('#p-fijos').addEventListener('click',function(e){
     var state=ctx.state;
     var s=e.target.closest('[data-fsug]');
     if(s){$('#f-nombre').value=s.getAttribute('data-fsug');$('#f-cat').value=s.getAttribute('data-fcat');$('#f-monto').focus();return}
     var ed=e.target.closest('[data-editf]');
     if(ed){var id=ed.getAttribute('data-editf'),f=state.fijos.filter(function(x){return x.id===id})[0];if(!f)return;
-      fEdit=id;$('#f-nombre').value=f.nombre;$('#f-monto').value=f.monto;$('#f-dia').value=f.dia;$('#f-cat').value=f.cat;
+      fEdit=id;$('#f-nombre').value=f.nombre;$('#f-monto').value=f.usd||f.monto;monedaFijo(!!f.usd);$('#f-dia').value=f.dia;$('#f-cat').value=f.cat;
       $('#fijo-form-t').textContent='Editar '+f.nombre;$('#f-save').textContent='Guardar cambios';$('#f-cancel').hidden=false;
       try{$('#fijo-form').scrollIntoView({block:'center'})}catch(er){}$('#f-monto').focus();return}
     var dl=e.target.closest('[data-delf]');

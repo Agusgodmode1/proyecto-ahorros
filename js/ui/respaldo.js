@@ -1,14 +1,18 @@
 /* Ajustes y respaldo: exportar, importar (con resumen y confirmación), recordatorio y bienvenida. */
 import {armarRespaldo,leerRespaldo,resumenDatos,diasSinRespaldo,defaults,ejemplo,leerCopias,migrar} from '../estado.js';
 import {abrirPerfil} from './perfil.js';
-import {ctx,$,today,esc,fCorta,toast,row} from './comun.js';
+import {ctx,$,today,esc,fCorta,toast,row,money} from './comun.js';
+import {cotizacion,actualizarFijosUSD} from '../logica/monedas.js';
+import {csvGastos} from '../logica/csv.js';
+import {catDe} from './gastos.js';
+import {num} from '../logica/util.js';
 import {VERSION} from '../version.js';
 
 /* ---------- Exportar ---------- */
 function marcarExport(){ctx.state.meta.ultimoExport=today();ctx.persist();ctx.renderAll()}
 function textoRespaldo(){return JSON.stringify(armarRespaldo(ctx.state),null,1)}
-function descargar(txt,nombre){
-  var url=URL.createObjectURL(new Blob([txt],{type:'application/json'})),a=document.createElement('a');
+function descargar(txt,nombre,tipo){
+  var url=URL.createObjectURL(new Blob([txt],{type:tipo||'application/json'})),a=document.createElement('a');
   a.href=url;a.download=nombre;document.body.appendChild(a);a.click();a.remove();
   setTimeout(function(){URL.revokeObjectURL(url)},4000);
 }
@@ -24,6 +28,20 @@ export async function exportar(){
     }
   }
   descargar(txt,nombre);marcarExport();toast('Respaldo descargado: '+nombre);
+}
+/* Planilla de gastos: abre "Compartir" en el iPhone (Guardar en Archivos, mandar por WhatsApp…) */
+async function exportarCSV(cual){
+  var p=ctx.state.plan,per=cual==='periodo';
+  var txt=csvGastos(ctx.state.gastos,catDe,per?p.inicio:null,per?p.cobro:null);
+  var n=txt.split('\r\n').length-2;
+  if(n<1){toast(per?'No hay gastos en este período':'Todavía no anotaste gastos');return}
+  var nombre='gastos-'+(per?p.inicio+'-al-'+p.cobro:'todos-'+today())+'.csv',file=null;
+  try{file=new File([txt],nombre,{type:'text/csv'})}catch(e){}
+  if(file&&navigator.canShare&&navigator.share){
+    var puede=false;try{puede=navigator.canShare({files:[file]})}catch(e){}
+    if(puede){try{await navigator.share({files:[file],title:'Gastos'});return}catch(e){if(e&&e.name==='AbortError')return}}
+  }
+  descargar(txt,nombre,'text/csv');toast('Planilla descargada: '+nombre);
 }
 function copiar(){
   var txt=JSON.stringify(armarRespaldo(ctx.state));
@@ -82,7 +100,14 @@ export function renderAvisoRespaldo(){
 }
 
 /* ---------- Pantalla ---------- */
+function renderDolar(){
+  var c=cotizacion(ctx.state),f=ctx.state.monedas.fecha,i=$('#aj-dolar');
+  if(document.activeElement!==i)i.value=c||'';
+  $('#aj-dolar-nota').innerHTML=c?'Usás <b>1 dólar = $ '+esc(String(c).replace('.',','))+'</b>'+(f?', cargado el '+esc(fCorta(f)):'')+'. Los gastos que ya anotaste en dólares guardan la cotización de ese día; los fijos en dólares se recalculan con esta.':'Para anotar gastos y fijos en dólares. Tocá el $ al lado del monto para cambiar a US$.';
+}
 export function renderAjustes(estadoGuardado){
+  renderDolar();
+  var p=ctx.state.plan;$('#csv-periodo').textContent='Gastos del '+fCorta(p.inicio)+' al '+fCorta(p.cobro);
   var m=ctx.state.meta,d=diasSinRespaldo(ctx.state,today());
   $('#aj-export-note').innerHTML=m.ultimoExport?'Último respaldo: <b>'+esc(fCorta(m.ultimoExport))+'</b>'+(d>0?' (hace '+d+' '+(d===1?'día':'días')+')':' (hoy)')+'.':'Todavía no exportaste ningún respaldo.';
   var info=row('Versión de la app',esc(VERSION))
@@ -114,6 +139,15 @@ export async function renderCopias(){
   }).join('')+'</ul><p class="note">Lo que tenés ahora también queda guardado como copia antes de volver, así que podés deshacerlo.</p>';
 }
 export function initAjustes(reemplazar){
+  document.querySelectorAll('[data-csv]').forEach(function(b){b.addEventListener('click',function(){exportarCSV(b.getAttribute('data-csv'))})});
+  $('#dolar-form').addEventListener('submit',function(e){
+    e.preventDefault();
+    var v=Math.round(num($('#aj-dolar').value)*100)/100;
+    if(!(v>0)){$('#aj-dolar').focus();return}
+    ctx.state.monedas={cotizacion:v,fecha:today()};
+    var n=actualizarFijosUSD(ctx.state,v);
+    ctx.persist();ctx.renderAll();toast('Dólar guardado'+(n?': '+n+(n===1?' fijo actualizado':' fijos actualizados'):''));
+  });
   aplicarTema(temaActual());
   $('#aj-tema').addEventListener('click',function(e){
     var b=e.target.closest('[data-tema]');if(!b)return;

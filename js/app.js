@@ -9,6 +9,7 @@ import {renderGastos,syncGastos,initTarjeta} from './ui/tarjeta.js';
 import {renderFijos,initFijos} from './ui/fijos.js';
 import {renderLogros,evalLogros,initLogros} from './ui/logros.js';
 import {renderAjustes,renderAvisoRespaldo,initAjustes,mostrarBienvenida} from './ui/respaldo.js';
+import {registrarSW} from './pwa.js';
 
 /* ---------- Guardado en IndexedDB ---------- */
 var timer=null,saving=false,pending=false,guardado={donde:null,persistente:null};
@@ -126,6 +127,7 @@ function arrancar(st){
 ctx.persist=persist;ctx.renderAll=renderAll;ctx.go=go;ctx.syncInputs=syncInputs;
 
 (async function boot(){
+  registrarSW(function(){return ctx.state?flush():null});
   pedirPersistencia().then(function(p){guardado.persistente=p});
   var d=await cargar();
   if(d){arrancar(migrar(d));setStatus('Se guarda en este dispositivo.');return}

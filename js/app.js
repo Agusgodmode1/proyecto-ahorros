@@ -1,6 +1,6 @@
 /* Arranque, pestañas y render general. */
 import {curWeek} from './logica/plan.js';
-import {migrar,cargar,guardar,pedirPersistencia,defaults} from './estado.js';
+import {migrar,cargar,guardar,pedirPersistencia,defaults,necesitaMigrar,guardarCopia} from './estado.js';
 import {ctx,$,today,planNow,ICON} from './ui/comun.js';
 import {renderCountdown,renderResumen,syncPlan,initPlan} from './ui/plan.js';
 import {renderWeek,initSemanas} from './ui/semanas.js';
@@ -8,7 +8,7 @@ import {renderSueldo,syncSueldo,initSueldo} from './ui/sueldo.js';
 import {renderGastos,syncGastos,initTarjeta} from './ui/tarjeta.js';
 import {renderFijos,initFijos} from './ui/fijos.js';
 import {renderLogros,evalLogros,initLogros} from './ui/logros.js';
-import {renderAjustes,renderAvisoRespaldo,initAjustes,mostrarBienvenida} from './ui/respaldo.js';
+import {renderAjustes,renderAvisoRespaldo,initAjustes,mostrarBienvenida,renderCopias} from './ui/respaldo.js';
 import {registrarSW} from './pwa.js';
 import {initVoz} from './ui/voz.js';
 import {abrirPerfil,initPerfil,resumenPerfil} from './ui/perfil.js';
@@ -64,11 +64,13 @@ function renderAll(){
   try{localStorage.setItem(TK,ctx.tab)}catch(e){}
   evalLogros(pc);
   var n=ctx.state.perfil.nombre;$('#saludo').textContent=n?'Hola, '+n:'Hola';
+  /* Con el perfil hecho, la explicación del encabezado ya no hace falta y deja lugar a lo importante */
+  var hs=document.querySelector('.hero-sub');if(hs)hs.hidden=!!ctx.state.perfil.hecho;
   renderCountdown();renderTabs(pc);showPanels();renderAvisoRespaldo();renderResumen(pc);renderWeek(pc);renderSueldo();
   if(ctx.tab==='gastos')renderGastos();
   if(ctx.tab==='fijos')renderFijos(pc);
   if(ctx.tab==='logros')renderLogros(pc);
-  if(ctx.tab==='ajustes'){renderAjustes(guardado);renderFeriados();$('#aj-perfil').innerHTML=resumenPerfil(ctx.state)}
+  if(ctx.tab==='ajustes'){renderAjustes(guardado);renderFeriados();renderCopias();$('#aj-perfil').innerHTML=resumenPerfil(ctx.state)}
 }
 function go(t){
   if(t==='semanas')t='w'+curWeek(planNow(),today());
@@ -78,8 +80,10 @@ function go(t){
 }
 function syncInputs(){syncPlan();syncSueldo();syncGastos()}
 
-/* Reemplaza todos los datos (importar un respaldo). */
-function reemplazar(st){
+/* Reemplaza todos los datos (importar un respaldo, volver a una copia, borrar el ejemplo).
+   Antes guarda una copia de lo que había, para poder volver atrás. */
+async function reemplazar(st,motivo){
+  if(ctx.state)await guardarCopia(JSON.parse(JSON.stringify(ctx.state)),motivo||'antes de reemplazar tus datos');
   if(!st.meta.creado)st.meta.creado=today();
   ctx.state=st;ctx.tab='resumen';aplicarFeriados();
   syncInputs();renderAll();flush();
@@ -89,11 +93,14 @@ function reemplazar(st){
 /* ---------- Guía ---------- */
 var GK='pa-guia-oculta';
 function guiaInit(){
-  var hide=false;try{hide=localStorage.getItem(GK)==='1'}catch(e){}
+  /* La guía arranca oculta si ya venís usando la app (salvo que la hayas vuelto a abrir).
+     A alguien nuevo se le muestra hasta que toque "Entendido". */
+  var st=ctx.state,usada=!!st&&!st.ejemplo&&(st.gastos.length>3||st.hist.length>0||st.horas.length>3);
+  var hide=false;try{var g=localStorage.getItem(GK);hide=g==='1'||(g===null&&usada)}catch(e){}
   $('#guia').hidden=hide;$('#guia-show').hidden=!hide;
   document.querySelectorAll('[data-icon]').forEach(function(el){el.innerHTML=ICON[el.getAttribute('data-icon')]||''});
   $('#guia-ok').addEventListener('click',function(){$('#guia').hidden=true;$('#guia-show').hidden=false;try{localStorage.setItem(GK,'1')}catch(e){}});
-  $('#guia-show').addEventListener('click',function(){$('#guia').hidden=false;$('#guia-show').hidden=true;try{localStorage.removeItem(GK)}catch(e){}go('resumen')});
+  $('#guia-show').addEventListener('click',function(){$('#guia').hidden=false;$('#guia-show').hidden=true;try{localStorage.setItem(GK,'0')}catch(e){}go('resumen')});
 }
 
 /* ---------- Eventos globales ---------- */
@@ -118,7 +125,7 @@ function initGlobal(){
     if(c){
       if(c.getAttribute('data-armed')!=='1'){c.setAttribute('data-armed','1');c.textContent='¿Seguro? Se borra todo lo de ejemplo';return}
       var meta=ctx.state.meta,nuevo=defaults();nuevo.meta=meta;
-      abrirPerfil(1,{nuevo:true,estado:nuevo,alTerminar:function(st){reemplazar(st)},alCancelar:function(){renderAll()}});
+      abrirPerfil(1,{nuevo:true,estado:nuevo,alTerminar:function(st){reemplazar(st,'antes de borrar los datos de ejemplo')},alCancelar:function(){renderAll()}});
     }
   });
   document.addEventListener('visibilitychange',function(){
@@ -145,6 +152,8 @@ ctx.persist=persist;ctx.renderAll=renderAll;ctx.go=go;ctx.syncInputs=syncInputs;
   registrarSW(function(){return ctx.state?flush():null});
   pedirPersistencia().then(function(p){guardado.persistente=p});
   var d=await cargar();
+  /* Antes de pasar los datos a la forma nueva, se guarda una copia tal cual estaban */
+  if(necesitaMigrar(d))await guardarCopia(d,'antes de actualizar la app');
   if(d){arrancar(migrar(d));setStatus('Se guarda en este dispositivo.');return}
   mostrarBienvenida(function(st){arrancar(st);flush()});
 })();

@@ -46,6 +46,14 @@ export function toast(m){
   el.textContent=m;el.hidden=false;el.classList.remove('show');void el.offsetWidth;el.classList.add('show');
   clearTimeout(toast.t);toast.t=setTimeout(function(){el.hidden=true},4200);
 }
+/* Aviso con un botón (por ejemplo "Deshacer"). Dura 6 segundos. */
+export function toastAccion(m,etiqueta,fn){
+  var el=$('#toast');if(!el)return;
+  el.innerHTML='<span>'+esc(m)+'</span><button class="toast-btn" type="button">'+esc(etiqueta)+'</button>';
+  el.querySelector('button').onclick=function(){clearTimeout(toast.t);el.hidden=true;fn()};
+  el.hidden=false;el.classList.remove('show');void el.offsetWidth;el.classList.add('show');
+  clearTimeout(toast.t);toast.t=setTimeout(function(){el.hidden=true},6000);
+}
 
 export var ICON={
   plan:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="2.8" fill="none"/><path d="M5 6v4.5c0 1.6 3.1 2.8 7 2.8s7-1.2 7-2.8V6M5 10.5V15c0 1.6 3.1 2.8 7 2.8s7-1.2 7-2.8v-4.5M5 15v3.2C5 19.8 8.1 21 12 21s7-1.2 7-2.8V15" fill="none"/></svg>',

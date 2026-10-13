@@ -66,9 +66,11 @@ export function nuevosLogros(state,pc,hoy,A){
    (inicio = cobro anterior, cobro = 5.º día hábil del mes siguiente). Devuelve la fecha del nuevo cobro. */
 export function cerrarMes(state,pc,ahorrado,monto){
   var p=state.plan,fp=fijosPeriodo(state.fijos,p.inicio,p.cobro);
-  var ah=Math.max(0,ahorrado),k=mesKey(p.inicio),semOk=0;
+  var ah=Math.max(0,ahorrado),k=mesKey(p.inicio),semOk=0,L=liq(state,true);
   pc.weeks.forEach(function(w){if(w.left>=0)semOk++});
-  var rec={k:k,desde:p.inicio,hasta:p.cobro,meta:Math.round(pc.ahorro),ahorrado:Math.round(ah),gastado:Math.round(pc.spentInPlan),presupuesto:Math.round(pc.gastar),semanas:pc.weeks.length,semanasOk:semOk,conGastos:pc.spentInPlan>0,fijosN:fp.length,fijosPagados:fp.filter(function(o){return isPagado(state,o.f.id)}).length};
+  var rec={k:k,desde:p.inicio,hasta:p.cobro,meta:Math.round(pc.ahorro),ahorrado:Math.round(ah),gastado:Math.round(pc.spentInPlan),presupuesto:Math.round(pc.gastar),semanas:pc.weeks.length,semanasOk:semOk,conGastos:pc.spentInPlan>0,fijosN:fp.length,fijosPagados:fp.filter(function(o){return isPagado(state,o.f.id)}).length,
+    /* Sueldo estimado que se cobra en este cierre: sirve para calcular el aguinaldo */
+    cobro:p.cobro,nominal:Math.round(L.N*100)/100,liquido:Math.round(L.liquido*100)/100,extras:Math.round((L.N-num(state.sueldo.nominal))*100)/100};
   state.hist=state.hist.filter(function(x){return x.k!==k});state.hist.push(rec);
   var nc=nextCobro(p.cobro,cfgCobro(state));
   p.inicio=p.cobro;p.cobro=nc;if(monto>0)p.monto=Math.round(monto);

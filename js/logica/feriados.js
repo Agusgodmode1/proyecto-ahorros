@@ -1,5 +1,6 @@
 /* Feriados de Uruguay 2026 y 2027 (puro). Se pueden quitar o agregar desde Ajustes → Feriados.
-   laborable:true = feriado "laborable" por ley (Reyes, Carnaval, Turismo, 19/4, 18/5, 12/10, 2/11).
+   laborable:true = feriado "laborable" por ley (Reyes, Carnaval, Turismo, 19/4, 18/5, 19/6, 12/10, 2/11).
+   No laborables son solo cinco: 1/1, 1/5, 18/7, 25/8 y 25/12.
    Los que la ley traslada al lunes ya están corridos (18/5/2027 → 17/5 y 12/10/2027 → 11/10).
    Para sumar un año, agregá sus fechas acá. */
 export var FERIADOS_UY=[
@@ -15,7 +16,7 @@ export var FERIADOS_UY=[
   {fecha:'2026-04-19',nombre:'Desembarco de los 33 Orientales',laborable:true},
   {fecha:'2026-05-01',nombre:'Día de los Trabajadores'},
   {fecha:'2026-05-18',nombre:'Batalla de Las Piedras',laborable:true},
-  {fecha:'2026-06-19',nombre:'Natalicio de Artigas'},
+  {fecha:'2026-06-19',nombre:'Natalicio de Artigas',laborable:true},
   {fecha:'2026-07-18',nombre:'Jura de la Constitución'},
   {fecha:'2026-08-25',nombre:'Declaratoria de la Independencia'},
   {fecha:'2026-10-12',nombre:'Día de la Diversidad Cultural',laborable:true},
@@ -33,7 +34,7 @@ export var FERIADOS_UY=[
   {fecha:'2027-04-19',nombre:'Desembarco de los 33 Orientales',laborable:true},
   {fecha:'2027-05-01',nombre:'Día de los Trabajadores'},
   {fecha:'2027-05-17',nombre:'Batalla de Las Piedras',laborable:true},
-  {fecha:'2027-06-19',nombre:'Natalicio de Artigas'},
+  {fecha:'2027-06-19',nombre:'Natalicio de Artigas',laborable:true},
   {fecha:'2027-07-18',nombre:'Jura de la Constitución'},
   {fecha:'2027-08-25',nombre:'Declaratoria de la Independencia'},
   {fecha:'2027-10-11',nombre:'Día de la Diversidad Cultural',laborable:true},

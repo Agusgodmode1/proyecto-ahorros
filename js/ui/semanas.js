@@ -1,10 +1,18 @@
 /* Pestaña Semanas: selector, "te quedan", los 7 días, anotar y borrar gastos. */
 import {parse,addDays,iso,diffDays,DIA,DIAL,MESL} from '../logica/fechas.js';
-import {num,uid} from '../logica/util.js';
-import {ctx,$,today,money,n0,esc,fLarga,rango,cap} from './comun.js';
+import {ctx,$,today,planNow,money,n0,esc,fLarga,rango,cap,toast} from './comun.js';
+import {semanaDe} from '../logica/plan.js';
+import {formGasto,initFormsGasto,leerForm,guardarGasto,borrarGasto,itemGasto} from './gastos.js';
 
-var weekSel={};
-export function resetWeekSel(){weekSel={}}
+var weekSel={},editId=null;
+export function resetWeekSel(){weekSel={};editId=null}
+/* Abre la semana del gasto con el formulario en modo edición */
+export function editarGasto(id){
+  var g=ctx.state.gastos.filter(function(x){return x.id===id})[0];if(!g)return;
+  var i=semanaDe(planNow(),g.fecha);if(i<0)return;
+  editId=id;ctx.go('w'+i);
+  var c=$('#g-card');if(c)try{c.scrollIntoView({block:'start'})}catch(e){}
+}
 
 export function renderWeek(pc){
   var state=ctx.state,tab=ctx.tab,el=$('#p-semana');
@@ -42,39 +50,41 @@ export function renderWeek(pc){
   h+='<p class="note">Cada día alcanza para <b>'+money(dayAllow)+'</b>. Debajo de cada día ves lo que gastaste: en verde si estás bien, en rojo si te pasaste.</p></div>';
 
   var sel=weekSel[i];if(!sel||sel<w.start||sel>w.end)sel=cur?t:w.start;
-  var opts='';for(var q=0;q<w.days;q++){var dd=iso(addDays(ds,q));opts+='<option value="'+dd+'"'+(dd===sel?' selected':'')+'>'+esc(cap(fLarga(dd)))+'</option>'}
-  h+='<div class="card stack"><h2>Anotá un gasto</h2>';
-  h+='<form class="addexp" id="exp-form" autocomplete="off"><div class="field"><label for="g-monto" class="sub-l">¿Cuánto?</label><div class="money"><span>$</span><input id="g-monto" type="number" inputmode="decimal" min="0" step="any" required></div></div>';
-  h+='<div class="field"><label for="g-nota" class="sub-l">¿En qué?</label><input id="g-nota" type="text" maxlength="60" placeholder="almuerzo, boleto, súper"></div>';
-  h+='<div class="field"><label for="g-fecha" class="sub-l">¿Qué día?</label><select id="g-fecha">'+opts+'</select></div>';
-  h+='<button class="btn primary" type="submit">Anotar</button></form>';
+  var ed=editId?state.gastos.filter(function(g){return g.id===editId})[0]:null;if(!ed)editId=null;
+  var fechas=[];for(var q=0;q<w.days;q++){var dd=iso(addDays(ds,q));fechas.push([dd,cap(fLarga(dd))])}
+  /* Si el gasto que editás es de otra fecha, también se puede dejar en su día */
+  if(ed&&!fechas.some(function(f){return f[0]===ed.fecha}))fechas.unshift([ed.fecha,cap(fLarga(ed.fecha))]);
+  h+='<div class="card stack" id="g-card"><h2>'+(ed?'Editar gasto':'Anotá un gasto')+'</h2>';
+  h+=formGasto('g',{fechas:fechas,fecha:sel,gasto:ed});
 
   var items=state.gastos.filter(function(g){return g.fecha>=w.start&&g.fecha<=w.end}).sort(function(a,b){return a.fecha<b.fecha?1:a.fecha>b.fecha?-1:(a.id<b.id?1:-1)});
   h+='<div class="sec"><h3>Gastos de esta semana</h3>';
   if(!items.length)h+='<div class="empty">Todavía no anotaste gastos esta semana. Cada gasto que anotes baja lo que te queda.</div>';
-  else{h+='<ul class="list">';items.forEach(function(g){h+='<li><span class="when">'+esc(fLarga(g.fecha))+'</span><span class="what">'+(g.nota?esc(g.nota):'<span class="muted">Sin detalle</span>')+(g.src==='brou'?' <span class="src">del extracto</span>':g.src==='voz'?' <span class="src">por voz</span>':'')+'</span><span class="amt">'+money(g.monto)+'</span><button class="btn quiet" type="button" data-delg="'+esc(g.id)+'" aria-label="Borrar gasto">Borrar</button></li>'});h+='</ul>'}
+  else{h+='<ul class="list glist">';items.forEach(function(g){h+=itemGasto(g,fLarga(g.fecha))});h+='</ul>'}
   h+='</div></div>';
   el.innerHTML=h;
 }
 
 export function initSemanas(){
   var p=$('#p-semana');
+  initFormsGasto(p);
   p.addEventListener('change',function(e){
-    if(e.target.id==='g-fecha'&&/^w\d+$/.test(ctx.tab))weekSel[Number(ctx.tab.slice(1))]=e.target.value;
+    if(e.target.id==='g-fecha'&&/^w\d+$/.test(ctx.tab)&&!editId)weekSel[Number(ctx.tab.slice(1))]=e.target.value;
   });
   p.addEventListener('submit',function(e){
-    if(e.target.id!=='exp-form')return;
+    if(e.target.getAttribute('data-gform')!=='g')return;
     e.preventDefault();
-    var m=num($('#g-monto').value);
-    if(!(m>0)){$('#g-monto').focus();return}
-    var f=$('#g-fecha').value;
-    ctx.state.gastos.push({id:uid(),fecha:f,monto:m,nota:$('#g-nota').value.trim().slice(0,60)});
-    if(/^w\d+$/.test(ctx.tab))weekSel[Number(ctx.tab.slice(1))]=f;
-    ctx.persist();ctx.renderAll();
-    var nx=$('#g-monto');if(nx)nx.focus();
+    var d=leerForm(e.target);if(!d)return;
+    var era=editId;guardarGasto(d,editId);editId=null;
+    if(/^w\d+$/.test(ctx.tab)&&!era)weekSel[Number(ctx.tab.slice(1))]=d.fecha;
+    ctx.renderAll();
+    if(era)toast('Cambios guardados');else{var nx=$('#g-monto');if(nx)nx.focus()}
   });
   p.addEventListener('click',function(e){
     var dg=e.target.closest('[data-delg]');
-    if(dg){var id=dg.getAttribute('data-delg');ctx.state.gastos=ctx.state.gastos.filter(function(x){return x.id!==id});ctx.persist();ctx.renderAll()}
+    if(dg){var id=dg.getAttribute('data-delg');if(id===editId)editId=null;borrarGasto(id);return}
+    var eg=e.target.closest('[data-editg]');
+    if(eg){editId=eg.getAttribute('data-editg');ctx.renderAll();var c=$('#g-card');if(c)try{c.scrollIntoView({block:'start',behavior:'smooth'})}catch(er){}var m=$('#g-monto');if(m)m.focus();return}
+    if(e.target.closest('[data-gcancel="g"]')){editId=null;ctx.renderAll()}
   });
 }

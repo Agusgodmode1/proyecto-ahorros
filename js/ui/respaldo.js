@@ -1,5 +1,5 @@
 /* Ajustes y respaldo: exportar, importar (con resumen y confirmación), recordatorio y bienvenida. */
-import {armarRespaldo,leerRespaldo,resumenDatos,diasSinRespaldo,defaults,ejemplo} from '../estado.js';
+import {armarRespaldo,leerRespaldo,resumenDatos,diasSinRespaldo,defaults,ejemplo,leerCopias,migrar} from '../estado.js';
 import {abrirPerfil} from './perfil.js';
 import {ctx,$,today,esc,fCorta,toast,row} from './comun.js';
 import {VERSION} from '../version.js';
@@ -91,11 +91,32 @@ export function renderAjustes(estadoGuardado){
     +row('Protegidos contra borrado',estadoGuardado&&estadoGuardado.persistente?'sí':'no confirmado','',estadoGuardado&&estadoGuardado.persistente?'':'iOS puede borrar datos de webs que no usás hace semanas. Instalada en la pantalla de inicio y abriéndola seguido, no pasa.');
   $('#aj-info').innerHTML=info;
 }
+/* ---------- Copias automáticas ---------- */
+var copias=[],copiaArmada=null;
+export async function renderCopias(){
+  var el=$('#aj-copias');if(!el)return;
+  copias=await leerCopias();
+  if(!copias.length){el.innerHTML='<p class="note">Todavía no hay copias. Se guarda una sola antes de cada actualización de la app que cambie tus datos, y antes de importar o reemplazar todo.</p>';return}
+  el.innerHTML='<ul class="list">'+copias.map(function(c,i){
+    var st=null;try{st=migrar(c.datos)}catch(e){}
+    var f=c.fecha?new Date(c.fecha):null,cuando=f?fCorta(f.getFullYear()+'-'+String(f.getMonth()+1).padStart(2,'0')+'-'+String(f.getDate()).padStart(2,'0'))+' '+String(f.getHours()).padStart(2,'0')+':'+String(f.getMinutes()).padStart(2,'0'):'';
+    return '<li><span class="what" style="flex-direction:column;align-items:flex-start;gap:1px"><b>'+esc(cuando)+' · '+esc(c.motivo||'copia')+'</b><span class="src">'+(st?esc(resumenDatos(st)):'no se pudo leer')+'</span></span>'
+      +(st?'<button class="btn '+(copiaArmada===i?'danger':'quiet')+'" type="button" data-copia="'+i+'">'+(copiaArmada===i?'¿Seguro? Reemplaza lo de ahora':'Volver a esta')+'</button>':'')+'</li>';
+  }).join('')+'</ul><p class="note">Lo que tenés ahora también queda guardado como copia antes de volver, así que podés deshacerlo.</p>';
+}
 export function initAjustes(reemplazar){
+  $('#aj-copias').addEventListener('click',function(e){
+    var b=e.target.closest('[data-copia]');if(!b)return;
+    var i=Number(b.getAttribute('data-copia'));
+    if(copiaArmada!==i){copiaArmada=i;renderCopias();setTimeout(function(){if(copiaArmada===i){copiaArmada=null;renderCopias()}},4000);return}
+    copiaArmada=null;
+    var c=copias[i];if(!c)return;
+    reemplazar(migrar(c.datos),'antes de volver a una copia');toast('Listo: volviste a la copia');
+  });
   $('#aj-export').addEventListener('click',exportar);
   $('#aj-copy').addEventListener('click',copiar);
   $('#exp-close').addEventListener('click',function(){$('#exp-box').hidden=true});
-  montarImportador($('#aj-import'),function(st){reemplazar(st);toast('Datos importados')});
+  montarImportador($('#aj-import'),function(st){reemplazar(st,'antes de importar un respaldo');toast('Datos importados')});
   document.addEventListener('click',function(e){
     if(e.target.id==='resp-ya')exportar();
     if(e.target.id==='resp-luego'){avisoOculto=true;renderAvisoRespaldo()}

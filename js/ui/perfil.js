@@ -4,6 +4,7 @@ import {num} from '../logica/util.js';
 import {horasPorDefecto,tarifas} from '../logica/sueldo.js';
 import {cobroDesde} from '../logica/plan.js';
 import {ctx,$,today,esc,money2,fLarga,fMin} from './comun.js';
+import {aplicarFeriados} from './feriados.js';
 
 var d=null,paso=1,opciones=null,vio3=false;
 var PASOS=['Tu nombre','Cómo cobrás','Horas extra','Descuentos'];
@@ -12,7 +13,7 @@ var PASOS=['Tu nombre','Cómo cobrás','Horas extra','Descuentos'];
 export function abrirPerfil(n,opt){
   opciones=opt;
   var st=opt.estado,p=st.perfil,s=st.sueldo;
-  d={nombre:p.nombre||'',cobro:Object.assign({tipo:'habil5',dia:30},p.cobro),horas:Object.assign(horasPorDefecto(),p.horas),
+  d={nombre:p.nombre||'',cobro:Object.assign({tipo:'habil5',dia:30,laborableHabil:false},p.cobro),horas:Object.assign(horasPorDefecto(),{feriadoLaborable:'feriado'},p.horas),
      nominal:num(s.nominal)||'',hijos:num(s.hijos),conyuge:!!s.conyuge,otros:num(s.otros)||'',bpc:num(s.bpc)||6864,manual:!!s.tarifaManual};
   paso=n||1;vio3=false;
   $('#wiz').hidden=false;document.documentElement.classList.add('voz-abierta');
@@ -38,6 +39,7 @@ function pintar(){
       +campo('w-nominal','Sueldo nominal mensual',moneyIn('w-nominal',d.nominal),'El sueldo antes de descuentos, sin horas extra. Lo ves en el recibo.')
       +'<div class="field"><span class="lab">¿Qué día cobrás?</span>'+seg('cobro',d.cobro.tipo,[['habil5','5.º día hábil'],['ultimoHabil','Último día hábil'],['fijo','Un día fijo']])+'</div>'
       +(d.cobro.tipo==='fijo'?campo('w-dia','¿Qué día del mes?','<input id="w-dia" type="number" inputmode="numeric" min="1" max="31" step="1" value="'+(d.cobro.dia||1)+'">','Si el mes es más corto, uso el último día.'):'')
+      +(d.cobro.tipo!=='fijo'?'<div class="field"><span class="lab">Los feriados laborables (Carnaval, Turismo, 12 de octubre…), ¿cuentan como día hábil para tu cobro?</span>'+seg('labhabil',!!d.cobro.laborableHabil,[[false,'No'],[true,'Sí']])+'<small>Si no sabés, fijate qué día cobraste un mes con feriados al principio, como abril (Turismo).</small></div>':'')
       +'<p class="note" id="w-prox"></p>';
   }else if(paso===3){
     var H=d.horas,on=H.activo!==false;
@@ -54,6 +56,7 @@ function pintar(){
         +'<div class="field"><span class="lab">Los minutos de semana del mes se pagan</span>'+seg('redondeo',H.redondeo,[['media','A la media hora'],['cuarto','Al cuarto de hora'],['no','Sin redondear']])+'</div>'
         +'<div class="grid2 wiz-grid"><div class="field"><span class="lab">Un día cuenta como extra si estás más de</span>'+hm('w-umb',num(H.umbral))+'</div>'
         +'<div class="field"><span class="lab">y se cuenta lo que pasa de</span>'+hm('w-jor',num(H.jornada))+'</div></div>'
+        +'<div class="field"><span class="lab">Si trabajás un feriado laborable (como el 12 de octubre), se paga como</span>'+seg('labpago',H.feriadoLaborable==='comun'?'comun':'feriado',[['feriado','Feriado'],['comun','Día común']])+'</div>'
         +'<div class="field"><span class="lab">Las horas de un mes las cobrás</span>'+seg('mescobro',H.mesCobro,[['siguiente','El mes siguiente'],['mismo','Ese mismo mes']])+'</div>'
         +(d.manual?'<p class="voz-msg">Tenías valores por hora cargados a mano. Al guardar, se calculan con estas reglas.</p>':'')
         +'<p class="voz-res" id="w-prev"></p>';
@@ -90,7 +93,11 @@ function leer(){
   if(paso===4){d.hijos=Math.max(0,Math.round(num(v('w-hijos'))));d.otros=num(v('w-otros'));d.bpc=num(v('w-bpc'))||6864;d.conyuge=$('#w-cony').checked}
 }
 function previa(){
-  if(paso===2){var el=$('#w-prox');if(el){var f=cobroDesde(today(),d.cobro);el.textContent='Tu próximo cobro sería el '+fLarga(f)+'.'}}
+  if(paso===2){var el=$('#w-prox');if(el){
+    /* Calcula con las opciones que estás eligiendo y después vuelve a las guardadas */
+    var st=opciones.estado;aplicarFeriados({feriados:st.feriados,perfil:{cobro:d.cobro,horas:d.horas}});
+    var f=cobroDesde(today(),d.cobro);aplicarFeriados(ctx.state||st);
+    el.textContent='Tu próximo cobro sería el '+fLarga(f)+'.'}}
   if(paso===3){
     var el2=$('#w-prev');if(!el2)return;
     var t=tarifas({sueldo:{nominal:num(d.nominal)},perfil:{horas:d.horas}});
@@ -110,6 +117,7 @@ function terminar(){
   p.nombre=d.nombre;p.cobro=d.cobro;p.horas=d.horas;p.hecho=true;
   s.nominal=num(d.nominal);s.hijos=d.hijos;s.conyuge=d.conyuge;s.otros=num(d.otros);s.bpc=d.bpc;
   if(s.tarifaManual&&vio3)s.tarifaManual=null;
+  aplicarFeriados(st);
   if(opciones.nuevo){st.plan.inicio=today();st.plan.cobro=cobroDesde(today(),d.cobro)}
   else if(JSON.stringify(d.cobro)!==cobroAntes)st.plan.cobro=cobroDesde(st.plan.inicio,d.cobro);
   cerrar();opciones.alTerminar(st);
@@ -126,6 +134,8 @@ export function initPerfil(){
       if(k==='dividido')d.horas.finDividido=val==='true';
       if(k==='redondeo')d.horas.redondeo=val;
       if(k==='mescobro')d.horas.mesCobro=val;
+      if(k==='labhabil')d.cobro.laborableHabil=val==='true';
+      if(k==='labpago')d.horas.feriadoLaborable=val;
       pintar();return;
     }
     var a=b.getAttribute('data-wa');

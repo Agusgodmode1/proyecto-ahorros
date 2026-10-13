@@ -61,6 +61,13 @@ La app te pregunta:
 
 El perfil se cambia después en **Ajustes → Mi perfil**.
 
+### Lo de todos los días
+
+- Arriba de **Plan** ves **cuánto podés gastar hoy**: lo que le queda a la semana repartido en los días que faltan. Si te pasás, se pone en rojo.
+- Ahí mismo tocá **Anotar un gasto de hoy**. La categoría se elige sola según lo que escribas (si la cambiás, la app aprende).
+- En **Semanas** podés **editar** cualquier gasto, y si borrás uno aparece **Deshacer** unos segundos.
+- Los tres pasos del plan quedan plegados en **Ajustar mi plan**.
+
 ### Cargar por voz
 
 Tocá el **micrófono** azul (abajo a la derecha) y decí, por ejemplo:
@@ -107,6 +114,8 @@ En la app, tocá el **engranaje** (arriba, al lado de "Hola, Agus") → **Ajuste
 - **Exportar mis datos**: abre el menú Compartir del iPhone. Elegí **Guardar en Archivos** (por ejemplo en iCloud Drive). Se guarda un archivo `proyecto-ahorros-AAAA-MM-DD.json`.
 - **Importar un respaldo**: elegí ese archivo, o pegá el texto. Antes de reemplazar te muestra qué tiene y te pide confirmación.
 - Si pasan más de 14 días sin exportar, la app te lo recuerda en la pestaña Plan.
+
+Además, la app guarda **copias automáticas** (las 3 más nuevas): antes de cada actualización que cambie la forma de tus datos y antes de importar o reemplazar todo. Si algo sale mal, en **Ajustes → Copias automáticas** tocás **Volver a esta**.
 
 Exportá cada tanto. Si borrás la app de la pantalla de inicio, o si cambiás de teléfono, el respaldo es la única forma de recuperar tus datos.
 

@@ -1,19 +1,45 @@
 /* Pestaña Plan: encabezado, tres pasos, "tu mes de un vistazo", semanas y "cuando cobres". */
 import {parse,diffDays,bizRank,MESL} from '../logica/fechas.js';
 import {num} from '../logica/util.js';
-import {fijosPeriodo,totalFijos,proximo} from '../logica/plan.js';
+import {fijosPeriodo,totalFijos,proximo,hoyPodes} from '../logica/plan.js';
 import {mesTrabajo,mins,reglasHoras} from '../logica/sueldo.js';
 import {histStats,logrosLista} from '../logica/logros.js';
-import {ctx,$,today,liqNow,exAnalisis,money,esc,fCorta,fLarga,rango,fMin,cap,tile,hchip,row} from './comun.js';
+import {ctx,$,today,liqNow,exAnalisis,money,esc,fCorta,fLarga,rango,fMin,cap,tile,hchip,row,toast} from './comun.js';
+import {formGasto,initFormsGasto,leerForm,guardarGasto,borrarGasto,itemGasto} from './gastos.js';
+import {editarGasto} from './semanas.js';
 
 function rankTxt(s){
   var r=bizRank(s),d=parse(s);
   return r?(r+'.º día hábil de '+MESL[d.getMonth()]):'cae en día no hábil';
 }
 function heroChips(pc){
-  var L=liqNow(true);
-  $('#hero-chips').innerHTML=hchip('Guardás',money(pc.ahorro))+hchip('Gasto por día',money(pc.daily))+hchip('Vas a cobrar',money(L.liquido));
+  var L=liqNow(true),H=hoyPodes(pc,ctx.state.gastos,today());
+  var sinPlan=!(num(ctx.state.plan.monto)>0);
+  $('#hero-chips').innerHTML=hchip('Guardás',money(pc.ahorro))+hchip(H.queda<0?'Hoy te pasaste':'Hoy podés gastar',sinPlan?'—':money(Math.abs(H.queda)))+hchip('Vas a cobrar',money(L.liquido));
 }
+/* Arriba de todo en Plan: cuánto podés gastar hoy y anotar un gasto sin cambiar de pestaña */
+function renderHoy(pc){
+  var state=ctx.state,t=today(),H=hoyPodes(pc,state.gastos,t),el=$('#hoy-out');if(!el)return;
+  if(!(num(state.plan.monto)>0)){
+    el.innerHTML='<div class="callout tone-mint stack"><h2>Primero, tu plan</h2><p class="note">Contame cuánta plata tenés hasta cobrar y cuánto querés guardar. Con eso te digo cuánto podés gastar cada día.</p><div class="row-btns"><button class="btn primary" type="button" id="hoy-empezar">Armar mi plan</button></div></div>';
+    return;
+  }
+  var h='<div class="card stack hoy tone-mint"><div class="hoy-top"><span class="tile-l">'+(H.queda<0?'Hoy te pasaste por':'Hoy podés gastar')+'</span>'
+    +'<b class="hoy-n'+(H.queda<0?' neg':'')+'">'+money(Math.abs(H.queda))+'</b>';
+  if(H.dentro){
+    var sub=[];
+    if(H.gastadoHoy>0)sub.push('ya gastaste '+money(H.gastadoHoy)+' hoy');
+    sub.push(H.semanaQueda<0?'esta semana te pasaste por <b class="neg">'+money(-H.semanaQueda)+'</b>':'te quedan '+money(H.semanaQueda)+' hasta el '+esc(fLarga(H.fin))+' ('+H.dias+' '+(H.dias===1?'día':'días')+')');
+    h+='<span class="tile-h">'+cap(sub.join(' · '))+'</span>';
+  }else h+='<span class="tile-h">Hoy está fuera de tu plan ('+esc(rango(state.plan.inicio,state.plan.cobro))+'). '+(t>=state.plan.cobro?'Cerrá el mes en Logros para arrancar uno nuevo.':'Revisá las fechas del plan.')+'</span>';
+  h+='</div>';
+  h+='<details class="hoy-add"'+(hoyAbierto?' open':'')+'><summary>Anotar un gasto de hoy</summary>'+formGasto('q',{fecha:t,boton:'Anotar'})+'</details>';
+  var hoyG=state.gastos.filter(function(g){return g.fecha===t});
+  if(hoyG.length)h+='<ul class="list glist">'+hoyG.map(function(g){return itemGasto(g,'hoy')}).join('')+'</ul>';
+  h+='</div>';
+  el.innerHTML=h;
+}
+var hoyAbierto=false;
 export function renderCountdown(){
   var state=ctx.state,d=diffDays(today(),state.plan.cobro),big,small;
   if(d>0){big=String(d);small=(d===1?'día para cobrar':'días para cobrar')}
@@ -25,7 +51,8 @@ export function renderCountdown(){
 
 export function renderResumen(pc){
   var state=ctx.state;
-  heroChips(pc);
+  heroChips(pc);renderHoy(pc);
+  var sum=$('#plan-aj-sum');if(sum)sum.textContent=num(state.plan.monto)>0?money(num(state.plan.monto))+' · guardás '+money(pc.ahorro)+' · hasta el '+fCorta(state.plan.cobro):'Completá los tres pasos';
   var p=state.plan,t=today(),L=liqNow(true),fp=fijosPeriodo(state.fijos,p.inicio,p.cobro);
   var m=Math.max(1,num(p.monto)),pf=Math.max(0,Math.min(100,pc.fijos/m*100)),pa=Math.max(0,Math.min(100-pf,pc.ahorro/m*100)),pg=Math.max(0,100-pf-pa);
   var h=state.ejemplo?'<div class="banner"><p><b>Estás viendo datos de ejemplo.</b> Son de muestra: no son tuyos.</p><button class="btn" type="button" data-cero>Borrar el ejemplo y crear mi perfil</button></div>':'';
@@ -91,6 +118,8 @@ export function renderResumen(pc){
 /* ---------- Formulario del plan ---------- */
 export function syncPlan(){
   var p=ctx.state.plan;
+  /* El formulario del plan arranca plegado cuando ya está configurado */
+  var aj=$('#plan-aj');if(aj)aj.open=!(num(p.monto)>0);
   $('#in-monto').value=p.monto||'';
   $('#in-inicio').value=p.inicio;$('#in-cobro').value=p.cobro;
   syncAhorro();cobroNote();
@@ -124,6 +153,21 @@ function onPlanInput(){
   cobroNote();ahorroNote();ctx.persist();ctx.renderAll();
 }
 export function initPlan(){
+  var pr=$('#p-resumen');
+  initFormsGasto(pr);
+  pr.addEventListener('toggle',function(e){if(e.target.classList&&e.target.classList.contains('hoy-add'))hoyAbierto=e.target.open},true);
+  pr.addEventListener('submit',function(e){
+    if(!e.target.getAttribute||e.target.getAttribute('data-gform')!=='q')return;
+    e.preventDefault();
+    var d=leerForm(e.target);if(!d)return;
+    guardarGasto(d,null);hoyAbierto=true;ctx.renderAll();toast('Anotado: '+money(d.monto)+(d.nota?' en '+d.nota:''));
+    var m=$('#q-monto');if(m)m.focus();
+  });
+  pr.addEventListener('click',function(e){
+    if(e.target.id==='hoy-empezar'){var aj=$('#plan-aj');aj.open=true;try{aj.scrollIntoView({block:'start',behavior:'smooth'})}catch(er){}var m=$('#in-monto');if(m)setTimeout(function(){m.focus()},300);return}
+    var dg=e.target.closest('#hoy-out [data-delg]');if(dg){borrarGasto(dg.getAttribute('data-delg'));return}
+    var eg=e.target.closest('#hoy-out [data-editg]');if(eg){var id=eg.getAttribute('data-editg'),w=ctx.state.gastos.filter(function(g){return g.id===id})[0];if(w)editarGasto(id)}
+  });
   $('#in-monto').addEventListener('input',onPlanInput);
   $('#in-inicio').addEventListener('input',onPlanInput);
   $('#in-cobro').addEventListener('input',onPlanInput);

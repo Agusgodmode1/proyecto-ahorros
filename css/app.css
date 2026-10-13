@@ -499,3 +499,32 @@ html.voz-abierta,html.voz-abierta body{overflow:hidden}
 .fer-list .check{flex:1;font-size:15px}
 .fer-form{display:grid;grid-template-columns:minmax(140px,1fr) minmax(140px,1.4fr) auto;gap:10px;align-items:end}
 @media (max-width:520px){.fer-form{grid-template-columns:1fr 1fr}.fer-form .btn{grid-column:1 / -1}}
+
+/* ---------- Gastos: formulario con categoría, editar y deshacer ---------- */
+.gform{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:end}
+.gform .f-nota,.gform .f-btn{grid-column:1 / -1}
+.gform .f-fecha{grid-column:1 / -1}
+.gform select{width:100%}
+.glist li{display:block;padding:10px 0 6px}
+.gi-main{display:flex;align-items:center;gap:8px;min-width:0}
+.gi-nota{flex:1;min-width:0;overflow-wrap:anywhere;font-weight:600}
+.gi-sub{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-left:18px}
+.gbtns{display:flex;gap:2px;flex:none}
+.btn.sm{min-height:36px;padding:4px 10px;font-size:14px}
+.toast:has(.toast-btn){display:flex;align-items:center;gap:14px;text-align:left}
+.toast-btn{appearance:none;border:0;background:transparent;color:var(--sun);font:inherit;font-weight:800;padding:6px 4px;cursor:pointer;flex:none;text-decoration:underline;text-underline-offset:3px}
+@media (min-width:641px){.gform{grid-template-columns:1fr 1fr 1.4fr}.gform .f-nota{grid-column:auto}}
+
+/* ---------- Plan: "Hoy podés gastar" y plan plegable ---------- */
+.hoy-top{display:flex;flex-direction:column;gap:2px}
+.hoy-n{font-family:var(--f-display);font-size:44px;line-height:1.05;font-weight:800;letter-spacing:-.02em;color:var(--mint-ink)}
+.hoy-n.neg{color:var(--bad)}
+.hoy-add>summary,.plan-aj>summary{min-height:44px}
+.hoy-add>summary{border-top:1px solid var(--line);padding-top:10px}
+.hoy-add .gform{margin-top:10px}
+.plan-aj>*:not(summary){margin-top:14px}
+.plan-aj>summary{color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:12px 16px;flex-wrap:wrap}
+.plan-aj>summary .pa-t{font-size:17px;font-weight:800}
+.plan-aj>summary{display:grid;grid-template-columns:auto 1fr;row-gap:2px}
+.plan-aj>summary .pa-t{grid-column:2}
+.plan-aj>summary .pa-s{grid-column:2;font-weight:600;color:var(--muted);font-size:14px}

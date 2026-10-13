@@ -2,7 +2,7 @@
    interpretar('gasté 850 en el súper', {hoy:'2026-10-13', fijos:[...], aprendido:{...}}) devuelve
    {intencion:'gasto'|'fijo'|'pagado'|'horas'|'consulta'|'nada', ...datos, avisos:[], alternativas:[]}.
    Nunca guarda nada: la pantalla muestra una tarjeta y vos confirmás. */
-import {parse,iso,addDays,esFeriado,MES,MESL,DIA,DIAL} from './fechas.js';
+import {parse,iso,addDays,esFeriado,pagaComoFeriado,MES,MESL,DIA,DIAL} from './fechas.js';
 import {CATS} from './extracto.js';
 
 export function sinTildes(s){return String(s).normalize('NFD').replace(/[̀-ͯ]/g,'')}
@@ -281,14 +281,15 @@ export function interpretar(texto,opt){
     if(x){dur=x;for(var q2=d;q2<x.fin;q2++)usados[q2]=1}
   }
   if(dur&&!hay(t,/^(pesos|peso|lucas|luca)$/)){
-    var dijoFeriado=hay(t,/^feriado$/),dw=parse(fecha).getDay(),fer=esFeriado(fecha);
+    var dijoFeriado=hay(t,/^feriado$/),dw=parse(fecha).getDay(),esF=esFeriado(fecha),fer=esF&&pagaComoFeriado(fecha);
     r.intencion='horas';r.fecha=fecha;r.min=Math.round(dur.min);
-    r.tipo=(dw===0||dw===6||fer||dijoFeriado)?'fin':'sem';
+    r.tipo=(dw===0||dw===6||fer||(dijoFeriado&&!esF))?'fin':'sem';
     r.feriado=fer;
     if(fer)r.avisos.push('El '+fechaCorta(fecha)+' es feriado: se paga como fin de semana o feriado.');
+    else if(esF&&dw>=1&&dw<=5){r.avisos.push('El '+fechaCorta(fecha)+' es feriado laborable: según tu perfil se paga como un día común.');r.alternativas.push({etiqueta:'Como feriado',cambios:{tipo:'fin'}})}
     else if(dijoFeriado)r.avisos.push('El '+fechaCorta(fecha)+' no está en la lista de feriados. Lo cargo como feriado igual; cambialo si no corresponde.');
     if(r.min>16*60)r.avisos.push('Son más de 16 horas: revisá el tiempo.');
-    if(r.tipo==='fin'&&!fer&&!dijoFeriado&&dw>=1&&dw<=5)r.alternativas.push({etiqueta:'Entre semana',cambios:{tipo:'sem'}});
+    if(r.tipo==='fin'&&!esF&&!dijoFeriado&&dw>=1&&dw<=5)r.alternativas.push({etiqueta:'Entre semana',cambios:{tipo:'sem'}});
     return r;
   }
 

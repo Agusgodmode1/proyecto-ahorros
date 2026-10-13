@@ -5,7 +5,7 @@ import {interpretar,responder,aprender,fechaTxt,FIJO_CATS} from '../logica/voz.j
 import {CAT_NAMES} from '../logica/extracto.js';
 import {semanaDe,fijosPeriodo,totalFijos,isPagado,marcarPagado} from '../logica/plan.js';
 import {mins,mesTrabajo,reglasHoras} from '../logica/sueldo.js';
-import {diffDays,esFeriado,parse,MESL} from '../logica/fechas.js';
+import {diffDays,pagaComoFeriado,parse,MESL} from '../logica/fechas.js';
 import {num,uid} from '../logica/util.js';
 import {ctx,$,today,planNow,liqNow,money,esc,fMin,fLarga,toast} from './comun.js';
 
@@ -157,7 +157,7 @@ function resumen(){
     ok=!!f;
   }else if(r.intencion==='horas'){
     var mt=mesTrabajo(ctx.state),otroMes=r.fecha&&r.fecha.slice(0,7)!==mt;
-    p=['Horas extra',fMin(r.min),r.tipo==='fin'?(esFeriado(r.fecha)?'feriado':'fin de semana o feriado'):'entre semana',fechaTxt(r.fecha,hoy),otroMes?'son de '+MESL[parse(r.fecha).getMonth()]+', no de este cobro':'se cobran el '+fLarga(ctx.state.plan.cobro)];
+    p=['Horas extra',fMin(r.min),r.tipo==='fin'?(pagaComoFeriado(r.fecha)?'feriado':'fin de semana o feriado'):'entre semana',fechaTxt(r.fecha,hoy),otroMes?'son de '+MESL[parse(r.fecha).getMonth()]+', no de este cobro':'se cobran el '+fLarga(ctx.state.plan.cobro)];
     ok=r.min>0&&!!r.fecha&&r.fecha<=hoy;
   }
   el.textContent=p.filter(Boolean).join(' · ');

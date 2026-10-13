@@ -5,7 +5,10 @@ import {ctx,$,esc,fLarga,toast,today} from './comun.js';
 
 var verTodos=false;
 /* La app usa siempre la lista con tus cambios */
-export function aplicarFeriados(){usarFeriados(feriadosActivos(ctx.state.feriados))}
+export function aplicarFeriados(st){
+  st=st||ctx.state;var p=st.perfil||{};
+  usarFeriados(feriadosActivos(st.feriados),{laborableHabil:!!(p.cobro&&p.cobro.laborableHabil),pagoLaborable:p.horas&&p.horas.feriadoLaborable});
+}
 
 export function renderFeriados(){
   var cfg=ctx.state.feriados,quit={};cfg.quitados.forEach(function(f){quit[f]=1});

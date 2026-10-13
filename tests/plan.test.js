@@ -49,3 +49,20 @@ test('lo que sobra o falta pasa a la semana siguiente',function(){
   assert.equal(semanaDe(pc,'2026-10-19'),1);
   assert.equal(semanaDe(pc,'2026-11-09'),-1);
 });
+
+test('hoy podés gastar: lo que queda de la semana repartido en los días que faltan',async function(){
+  var {hoyPodes}=await import('../js/logica/plan.js');
+  var plan={monto:28000,modo:'monto',ahorro:0,inicio:'2026-10-12',cobro:'2026-11-09'};
+  var gastos=[{fecha:'2026-10-12',monto:1500},{fecha:'2026-10-14',monto:400}];
+  var pc=planear(plan,gastos,0);
+  /* semana 1: 7.000; lunes 1.500; el miércoles 14 quedan 5 días (14 al 18) */
+  var h=hoyPodes(pc,gastos,'2026-10-14');
+  assert.equal(h.dentro,true);
+  assert.equal(h.dias,5);
+  assert.equal(h.gastadoHoy,400);
+  assert.equal(Math.round(h.porDia),1100);     /* (7000−1500)/5 */
+  assert.equal(Math.round(h.queda),700);       /* 1100 − 400 de hoy */
+  var fuera=hoyPodes(pc,gastos,'2026-12-01');
+  assert.equal(fuera.dentro,false);
+  assert.equal(Math.round(fuera.porDia),1000);
+});

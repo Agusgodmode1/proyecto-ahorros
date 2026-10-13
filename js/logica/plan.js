@@ -48,6 +48,16 @@ export function marcarPagado(state,id,pagado){
 }
 
 export function planCalc(state){return planear(state.plan,state.gastos,fijosPeriodoTotal(state))}
+/* Cuánto podés gastar hoy: lo que le queda a la semana (sumando lo que ya gastaste hoy), repartido parejo
+   en los días que le quedan, menos lo de hoy. Fuera del plan devuelve el promedio diario. */
+export function hoyPodes(pc,gastos,hoy){
+  var i=semanaDe(pc,hoy);
+  if(i<0)return {dentro:false,porDia:pc.daily,queda:pc.daily,gastadoHoy:0};
+  var w=pc.weeks[i],rem=diffDays(hoy,w.end)+1,gh=0;
+  gastos.forEach(function(g){if(g.fecha===hoy)gh+=num(g.monto)});
+  var porDia=(w.left+gh)/rem;
+  return {dentro:true,semana:i,dias:rem,gastadoHoy:gh,porDia:porDia,queda:porDia-gh,semanaQueda:w.left,fin:w.end};
+}
 export function curWeek(pc,hoy){var idx=0;pc.weeks.forEach(function(w,i){if(hoy>=w.start)idx=i});return idx}
 /* Índice de la semana del plan donde cae una fecha, o -1 si queda afuera. */
 export function semanaDe(pc,fecha){for(var i=0;i<pc.weeks.length;i++){var w=pc.weeks[i];if(fecha>=w.start&&fecha<=w.end)return i}return -1}

@@ -53,25 +53,36 @@ function copiar(){
 }
 
 /* ---------- Importar ---------- */
-/* Arma el importador dentro de `el`. onConfirmar(estado) se llama solo después de que confirmás. */
-export function montarImportador(el,onConfirmar,textoBoton){
+/* Arma el importador dentro de `el`. onConfirmar(estado) reemplaza todo y se llama solo después de que confirmás.
+   Si viene onJuntar(estado), primero se ofrece juntar con lo de este teléfono (no se pierde nada). */
+export function montarImportador(el,onConfirmar,textoBoton,onJuntar){
   el.innerHTML='<div class="stack imp">'
     +'<div class="row-btns"><label class="btn primary filebtn">Elegir archivo de respaldo<input type="file" class="sr-only" accept=".json,application/json,text/plain"></label></div>'
     +'<div class="field"><label class="sub-l" for="'+el.id+'-txt">O pegá el texto que copiaste</label><textarea id="'+el.id+'-txt" spellcheck="false" autocomplete="off" placeholder="{&quot;app&quot;:&quot;proyecto-ahorros&quot;, …}"></textarea></div>'
     +'<div class="row-btns"><button class="btn" type="button" data-imp="revisar">Revisar el texto</button></div>'
     +'<p class="err" role="alert" hidden></p>'
     +'<div class="imp-ok callout tone-mint" hidden></div></div>';
-  var ta=el.querySelector('textarea'),err=el.querySelector('.err'),okBox=el.querySelector('.imp-ok'),pendiente=null;
+  var ta=el.querySelector('textarea'),err=el.querySelector('.err'),okBox=el.querySelector('.imp-ok'),pendiente=null,armado=false;
   function mostrarError(m){err.textContent=m;err.hidden=false;okBox.hidden=true;pendiente=null}
   function revisar(texto){
     err.hidden=true;
     var r=leerRespaldo(texto);
     if(!r.ok){mostrarError(r.error);return}
-    pendiente=r.estado;
-    okBox.innerHTML='<h2>Esto es lo que tiene el respaldo</h2><p>'+esc(resumenDatos(r.estado))+'.</p>'
-      +(r.exportado?'<p class="note">Exportado el '+esc(fCorta(r.exportado.slice(0,10)))+' de '+esc(r.exportado.slice(0,4))+'.</p>':'')
-      +(ctx.state?'<p class="note"><b>Reemplaza todo lo que hay ahora en este teléfono</b> ('+esc(resumenDatos(ctx.state))+').</p>':'')
-      +'<div class="row-btns"><button class="btn primary" type="button" data-imp="si">'+esc(textoBoton||'Sí, reemplazar mis datos')+'</button><button class="btn quiet" type="button" data-imp="no">Cancelar</button></div>';
+    pendiente=r.estado;armado=false;
+    var h='<h2>Esto es lo que tiene el respaldo</h2><p>'+esc(resumenDatos(r.estado))+'.</p>'
+      +(r.exportado?'<p class="note">Exportado el '+esc(fCorta(r.exportado.slice(0,10)))+' de '+esc(r.exportado.slice(0,4))+'.</p>':'');
+    if(onJuntar&&ctx.state){
+      h+='<p class="note">En este teléfono tenés: '+esc(resumenDatos(ctx.state))+'.</p>'
+        +'<div class="stack imp-opc"><button class="btn primary" type="button" data-imp="juntar">Juntar con lo de este teléfono</button>'
+        +'<p class="note">Recomendado. No se pierde nada de ninguno de los dos: si un mismo dato cambió en los dos aparatos, queda el cambio más nuevo.</p>'
+        +'<button class="btn" type="button" data-imp="si">Reemplazar todo</button>'
+        +'<p class="note">Borra lo de este teléfono y deja solo lo del archivo.</p>'
+        +'<button class="btn quiet" type="button" data-imp="no">Cancelar</button></div>';
+    }else{
+      h+=(ctx.state?'<p class="note"><b>Reemplaza todo lo que hay ahora en este teléfono</b> ('+esc(resumenDatos(ctx.state))+').</p>':'')
+        +'<div class="row-btns"><button class="btn primary" type="button" data-imp="si">'+esc(textoBoton||'Sí, reemplazar mis datos')+'</button><button class="btn quiet" type="button" data-imp="no">Cancelar</button></div>';
+    }
+    okBox.innerHTML=h;
     okBox.hidden=false;
     try{okBox.scrollIntoView({block:'nearest'})}catch(e){}
   }
@@ -86,7 +97,12 @@ export function montarImportador(el,onConfirmar,textoBoton){
     var a=b.getAttribute('data-imp');
     if(a==='revisar'){if(ta.value.trim())revisar(ta.value);else{mostrarError('Pegá el texto del respaldo primero.');ta.focus()}}
     if(a==='no'){okBox.hidden=true;pendiente=null}
-    if(a==='si'&&pendiente){var st=pendiente;pendiente=null;okBox.hidden=true;ta.value='';onConfirmar(st)}
+    if(a==='si'&&pendiente){
+      /* Con dos opciones, reemplazar pide un segundo toque */
+      if(onJuntar&&ctx.state&&!armado){armado=true;b.textContent='¿Seguro? Se borra lo de este teléfono';b.classList.add('danger');return}
+      var st=pendiente;pendiente=null;okBox.hidden=true;ta.value='';onConfirmar(st);
+    }
+    if(a==='juntar'&&pendiente){var sj=pendiente;pendiente=null;okBox.hidden=true;ta.value='';onJuntar(sj)}
   });
 }
 
@@ -138,7 +154,7 @@ export async function renderCopias(){
       +(st?'<button class="btn '+(copiaArmada===i?'danger':'quiet')+'" type="button" data-copia="'+i+'">'+(copiaArmada===i?'¿Seguro? Reemplaza lo de ahora':'Volver a esta')+'</button>':'')+'</li>';
   }).join('')+'</ul><p class="note">Lo que tenés ahora también queda guardado como copia antes de volver, así que podés deshacerlo.</p>';
 }
-export function initAjustes(reemplazar){
+export function initAjustes(reemplazar,juntarDatos){
   document.querySelectorAll('[data-csv]').forEach(function(b){b.addEventListener('click',function(){exportarCSV(b.getAttribute('data-csv'))})});
   $('#dolar-form').addEventListener('submit',function(e){
     e.preventDefault();
@@ -166,7 +182,9 @@ export function initAjustes(reemplazar){
   $('#aj-export').addEventListener('click',exportar);
   $('#aj-copy').addEventListener('click',copiar);
   $('#exp-close').addEventListener('click',function(){$('#exp-box').hidden=true});
-  montarImportador($('#aj-import'),function(st){reemplazar(st,'antes de importar un respaldo');toast('Datos importados')});
+  montarImportador($('#aj-import'),function(st){reemplazar(st,'antes de importar un respaldo');toast('Datos importados')},null,juntarDatos);
+  $('#pase-export').addEventListener('click',exportar);
+  $('#pase-importar').addEventListener('click',function(){var c=$('#aj-import-card');try{c.scrollIntoView({block:'start',behavior:'smooth'})}catch(e){c.scrollIntoView()}});
   document.addEventListener('click',function(e){
     if(e.target.id==='resp-ya')exportar();
     if(e.target.id==='resp-luego'){avisoOculto=true;renderAvisoRespaldo()}

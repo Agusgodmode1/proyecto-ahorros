@@ -382,6 +382,14 @@ document.getElementById('meta-tema').setAttribute('content',d?'#14131C':'#1A72B5
         <div class="sec"><h2>Feriados</h2><p class="note">Solo cuentan los 5 <b>no laborables</b> (1/1, 1/5, 18/7, 25/8 y 25/12): no son días hábiles para el cobro y, si los trabajás, se pagan como feriado. Los <i>laborables</i> (Carnaval, Turismo, 12 de octubre…) son días comunes; eso se puede cambiar en Mi perfil. Sacá los que tu trabajo no toma y agregá los que falten.</p></div>
         <div id="aj-feriados"></div>
       </div>
+      <div class="card stack" id="aj-pase">
+        <div class="sec"><h2>Pasar mis datos a otro aparato</h2><p class="note">Para tener lo mismo en el celular y en la compu, o en un teléfono nuevo. Se pasa con un archivo: nada pasa por ningún servidor ni por internet de la app.</p></div>
+        <ol class="steps pase">
+          <li class="step"><span class="badge" aria-hidden="true">1</span><div><p class="step-t">En este aparato: exportá tus datos</p><p class="note">Mandate el archivo por AirDrop, iCloud Drive o WhatsApp.</p><div class="row-btns"><button class="btn primary" type="button" id="pase-export">Exportar mis datos</button></div></div></li>
+          <li class="step"><span class="badge" aria-hidden="true">2</span><div><p class="step-t">En el otro aparato: importalo y elegí juntar</p><p class="note">Abrí la app, entrá a Ajustes → Importar un respaldo, elegí el archivo y tocá <b>Juntar con lo de este teléfono</b>.</p><div class="row-btns"><button class="btn" type="button" id="pase-importar">Ir a importar</button></div></div></li>
+          <li class="step"><span class="badge" aria-hidden="true">3</span><div><p class="step-t">Si usás los dos, repetilo al revés cada tanto</p><p class="note">Los cambios de los dos lados se juntan sin pisarse: si un mismo dato cambió en los dos, queda el más nuevo, y lo que borraste no vuelve a aparecer.</p></div></li>
+        </ol>
+      </div>
       <div class="card stack">
         <div class="sec"><h2>Exportar un respaldo</h2><p class="note" id="aj-export-note"></p></div>
         <div class="row-btns"><button class="btn primary" type="button" id="aj-export">Exportar mis datos</button><button class="btn quiet" type="button" id="aj-copy">Copiar como texto</button></div>
@@ -391,8 +399,8 @@ document.getElementById('meta-tema').setAttribute('content',d?'#14131C':'#1A72B5
         <div class="sec"><h2>Gastos a Excel</h2><p class="note">Una planilla con fecha, monto, moneda, categoría y nota de cada gasto. Se abre en Excel o en Numbers.</p></div>
         <div class="row-btns"><button class="btn primary" type="button" data-csv="periodo" id="csv-periodo">Gastos de este período</button><button class="btn" type="button" data-csv="todos">Todos los gastos</button></div>
       </div>
-      <div class="card stack">
-        <div class="sec"><h2>Importar un respaldo</h2><p class="note">Reemplaza todos los datos de este teléfono por los del respaldo. Antes de hacerlo te muestro qué tiene y te pido que confirmes.</p></div>
+      <div class="card stack" id="aj-import-card">
+        <div class="sec"><h2>Importar un respaldo</h2><p class="note">Elegí un archivo exportado desde esta app (de este u otro aparato). Te muestro qué tiene y elegís: juntarlo con lo de este teléfono o reemplazar todo. Antes de cambiar nada se guarda una copia automática.</p></div>
         <div id="aj-import"></div>
       </div>
       <div class="card stack">

@@ -641,3 +641,9 @@ input[type=time]{width:100%;min-width:0;background:var(--surface-2);color:var(--
 .pagar-form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;width:100%}
 .pagar-form .btn{min-height:44px}
 .pagado-txt{font-weight:700;font-size:14px;color:var(--mint-ink)}
+
+/* ---------- Pasar mis datos a otro aparato ---------- */
+.steps.pase{grid-template-columns:minmax(0,1fr);gap:16px}
+.pase .row-btns{margin-top:10px}
+.imp-opc{gap:8px}
+.imp-opc .note{margin-top:-2px;margin-bottom:6px}

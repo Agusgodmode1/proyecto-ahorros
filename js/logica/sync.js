@@ -75,3 +75,19 @@ export function tieneDatos(st){
   if(!st)return false;
   return !!(st.gastos&&st.gastos.length||st.horas&&st.horas.length||st.fijos&&st.fijos.length||st.hist&&st.hist.length||st.perfil&&st.perfil.hecho);
 }
+
+/* Antes de cada guardado: anota en cur (el estado de la app, no una copia) qué cambió desde
+   lo último guardado, y devuelve la copia a guardar, que pasa a ser "lo último guardado". */
+export function prepararGuardado(ultimo,cur,ahora){
+  marcarCambios(ultimo,cur,ahora);
+  return JSON.parse(JSON.stringify(cur));
+}
+
+/* Juntar lo de este aparato con lo de un archivo de otro aparato.
+   cambio: el resultado es distinto de lo local (hay que guardarlo).
+   cambioDatos: cambió algo que se ve (gastos, fijos, plan…), sin contar las marcas de sincronización. */
+export function juntar(local,otro){
+  var m=combinar(local,otro);
+  function sinSync(s){var c=Object.assign({},s);delete c.sync;return c}
+  return {estado:m,cambio:!iguales(m,local),cambioDatos:!iguales(sinSync(m),sinSync(local))};
+}

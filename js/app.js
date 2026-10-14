@@ -1,6 +1,6 @@
 /* Arranque, pestañas y render general. */
 import {curWeek} from './logica/plan.js';
-import {migrar,cargar,guardar,pedirPersistencia,defaults,necesitaMigrar,guardarCopia} from './estado.js';
+import {migrar,cargar,guardar,pedirPersistencia,defaults,necesitaMigrar,guardarCopia,resumenDatos} from './estado.js';
 import {ctx,$,today,planNow,ICON,discreto,setDiscreto,toast} from './ui/comun.js';
 import {renderCountdown,renderResumen,syncPlan,initPlan} from './ui/plan.js';
 import {renderWeek,initSemanas} from './ui/semanas.js';
@@ -13,9 +13,13 @@ import {registrarSW} from './pwa.js';
 import {initVoz} from './ui/voz.js';
 import {abrirPerfil,initPerfil,resumenPerfil} from './ui/perfil.js';
 import {aplicarFeriados,renderFeriados,initFeriados} from './ui/feriados.js';
+import {prepararGuardado,juntar} from './logica/sync.js';
 
 /* ---------- Guardado en IndexedDB ---------- */
 var timer=null,saving=false,pending=false,guardado={donde:null,persistente:null};
+/* Lo último guardado: contra eso se anota qué cambió y cuándo (para juntar datos de dos aparatos). */
+var ultimo=null;
+function fijarUltimo(){ultimo=JSON.parse(JSON.stringify(ctx.state))}
 function setStatus(m){var el=$('#save-status');if(el)el.textContent=m}
 function persist(){setStatus('Guardando…');clearTimeout(timer);timer=setTimeout(flush,450)}
 async function flush(){
@@ -23,7 +27,9 @@ async function flush(){
   if(saving){pending=true;return}
   saving=true;
   try{
-    var r=await guardar(JSON.parse(JSON.stringify(ctx.state)));
+    var datos=prepararGuardado(ultimo,ctx.state,Date.now());
+    var r=await guardar(datos);
+    if(r)ultimo=datos;
     guardado.donde=r;
     setStatus(r?'Guardado en este dispositivo.':'No se pudo guardar. Exportá un respaldo para no perder los datos.');
   }finally{
@@ -86,9 +92,19 @@ function syncInputs(){syncPlan();syncSueldo();syncGastos()}
 async function reemplazar(st,motivo){
   if(ctx.state)await guardarCopia(JSON.parse(JSON.stringify(ctx.state)),motivo||'antes de reemplazar tus datos');
   if(!st.meta.creado)st.meta.creado=today();
-  ctx.state=st;ctx.tab='resumen';aplicarFeriados();
+  ctx.state=st;ctx.tab='resumen';aplicarFeriados();fijarUltimo();
   syncInputs();renderAll();flush();
   window.scrollTo(0,0);
+}
+
+/* Junta los datos de un archivo de otro aparato con los de este, sin perder nada de ninguno. */
+async function juntarDatos(delArchivo){
+  /* Primero se anota lo último que cambiaste acá, para que compita con su fecha real */
+  if(ultimo)prepararGuardado(ultimo,ctx.state,Date.now());
+  var r=juntar(ctx.state,delArchivo);
+  if(!r.cambio){toast('Ya tenías todo lo de ese archivo');return}
+  await reemplazar(r.estado,'antes de juntar con otro aparato');
+  toast(r.cambioDatos?'Listo: juntaste los datos. Ahora tenés '+resumenDatos(r.estado)+'.':'Ya tenías todo lo de ese archivo');
 }
 
 /* ---------- Guía ---------- */
@@ -144,10 +160,10 @@ function marcarDiscreto(){
 }
 /* ---------- Arranque ---------- */
 function arrancar(st){
-  ctx.state=st;aplicarFeriados();
+  ctx.state=st;aplicarFeriados();fijarUltimo();
   if(!st.meta.creado){st.meta.creado=today();persist()}
   try{var t=localStorage.getItem(TK);if(t)ctx.tab=t}catch(e){}
-  guiaInit();initGlobal();initPlan();initSemanas();initSueldo();initTarjeta();initFijos();initLogros();initAjustes(reemplazar);initVoz();initFeriados();
+  guiaInit();initGlobal();initPlan();initSemanas();initSueldo();initTarjeta();initFijos();initLogros();initAjustes(reemplazar,juntarDatos);initVoz();initFeriados();
   marcarDiscreto();
   ctx.booted=true;
   $('#app').hidden=false;

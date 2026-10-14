@@ -128,6 +128,16 @@ Además, la app guarda **copias automáticas** (las 3 más nuevas): antes de cad
 
 Exportá cada tanto. Si borrás la app de la pantalla de inicio, o si cambiás de teléfono, el respaldo es la única forma de recuperar tus datos.
 
+### Pasar tus datos a otro aparato
+
+No hay nube ni cuentas: cada aparato guarda sus datos. Para tener lo mismo en el celular y en la compu (o pasarte a un teléfono nuevo), en **Ajustes → Pasar mis datos a otro aparato**:
+
+1. En este aparato: **Exportar mis datos** y mandá el archivo por AirDrop, iCloud Drive o WhatsApp.
+2. En el otro: **Ajustes → Importar un respaldo**, elegí el archivo y tocá **Juntar con lo de este teléfono**.
+3. Si usás los dos, repetilo al revés cada tanto.
+
+Al juntar no se pierde nada: si un mismo dato cambió en los dos aparatos queda el cambio más nuevo, y lo que borraste no vuelve a aparecer. **Reemplazar todo** sigue estando, para cuando querés quedarte solo con lo del archivo. Antes de juntar o reemplazar, la app guarda una copia automática.
+
 ---
 
 ## Para Claude Code y curiosos

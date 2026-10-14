@@ -5,7 +5,7 @@ PWA para iPhone de finanzas personales de Agus (Uruguay). La publica GitHub Page
 ## Stack (no cambiar)
 - HTML + CSS + JavaScript con módulos ES. Sin compilación, sin frameworks, sin dependencias de npm. `package.json` solo existe para `"type": "module"` y `npm test`.
 - Datos: un documento en IndexedDB (`js/estado.js`). Siempre se guarda primero en el teléfono.
-- Cuenta en la nube **opcional** (Supabase, etapa B: `js/nube.js`, `js/ui/cuenta.js`, `js/logica/sync.js`). Sin cuenta todo funciona igual y nada sale del teléfono. Nunca la clave `service_role`/secret en la app.
+- Sin nube ni servidores: cada aparato guarda sus datos; para pasar datos entre aparatos se usa un archivo que se junta con `logica/sync.js` (Ajustes → Pasar mis datos a otro aparato). Cada guardado anota qué cambió y cuándo (`prepararGuardado` en `app.js`); toda sección nueva del estado va en `SECCIONES` o `LISTAS` de `sync.js` (una prueba lo controla).
 - Pruebas: `node --test` (sin dependencias).
 
 ## Reglas al hacer cualquier cambio

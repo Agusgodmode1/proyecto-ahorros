@@ -161,7 +161,7 @@ Hace falta [Node.js](https://nodejs.org) (versión LTS). Desde esta carpeta:
 node --test
 ```
 
-Prueban la liquidación contra tus recibos reales, el plan, el respaldo, el service worker y la voz.
+Prueban la liquidación (con sueldos inventados y cuentas hechas a mano), el plan, el respaldo, el service worker y la voz.
 
 ### Probarla en la compu
 

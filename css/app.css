@@ -635,3 +635,9 @@ html.discreto .hero-eye{background:var(--sun);color:var(--on-sun)}
 .hor-res b{color:var(--c-ink,var(--ink))}
 input[type=time]{width:100%;min-width:0;background:var(--surface-2);color:var(--ink);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;font:600 17px/1.3 var(--f-body);font-variant-numeric:tabular-nums;color-scheme:dark}
 :root[data-theme="light"] input[type=time]{color-scheme:light}
+
+/* Fijos: pagar con el monto real */
+.f-opc{grid-column:1/-1;display:flex;flex-direction:column;gap:8px}
+.pagar-form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;width:100%}
+.pagar-form .btn{min-height:44px}
+.pagado-txt{font-weight:700;font-size:14px;color:var(--mint-ink)}

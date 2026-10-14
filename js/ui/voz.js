@@ -3,7 +3,7 @@
    en iOS), abre un campo de texto para dictar con el micrófono del teclado. */
 import {interpretar,responder,aprender,fechaTxt,FIJO_CATS} from '../logica/voz.js';
 import {CAT_NAMES} from '../logica/extracto.js';
-import {semanaDe,fijosPeriodo,totalFijos,isPagado,marcarPagado} from '../logica/plan.js';
+import {semanaDe,fijosPeriodo,totalFijos,isPagado,marcarPagado,montoEsperado} from '../logica/plan.js';
 import {mins,mesTrabajo,reglasHoras} from '../logica/sueldo.js';
 import {diffDays,pagaComoFeriado,parse,MESL} from '../logica/fechas.js';
 import {num,uid} from '../logica/util.js';
@@ -192,7 +192,7 @@ function guardar(){
     msg='Gasto fijo agregado: '+r.nombre;
   }else if(r.intencion==='pagado'){
     var f=st.fijos.filter(function(x){return x.id===r.fijoId})[0];if(!f)return;
-    marcarPagado(st,f.id,true);
+    marcarPagado(st,f.id,true,{monto:montoEsperado(st,f),fecha:today(),nombre:f.nombre});
     msg=f.nombre+' marcado como pagado';
   }else if(r.intencion==='horas'){
     if(!(r.min>0))return;
@@ -207,7 +207,7 @@ function datosConsulta(){
   var st=ctx.state,pc=planNow(),t=today(),L=liqNow(true);
   var i=semanaDe(pc,t),sem=null;
   if(i>=0){var w=pc.weeks[i],rem=diffDays(t,w.end)+1;sem={queda:w.left,porDia:Math.max(w.left,0)/Math.max(rem,1),fin:w.end,gastado:w.spent,tenias:w.avail}}
-  return {semana:sem,liquido:L.liquido,cobro:st.plan.cobro,dias:diffDays(t,st.plan.cobro),fijosMes:totalFijos(st.fijos),fijosPeriodo:pc.fijos,
+  return {semana:sem,liquido:L.liquido,cobro:st.plan.cobro,dias:diffDays(t,st.plan.cobro),fijosMes:totalFijos(st.fijos,st),fijosPeriodo:pc.fijos,
     minSem:mins(st,'sem'),minFin:mins(st,'fin'),extras:L.N-num(st.sueldo.nominal),ahorro:pc.ahorro,gastadoPlan:pc.spentInPlan,paraGastar:pc.gastar};
 }
 function responderConsulta(){

@@ -37,15 +37,33 @@ export function fijosPeriodo(fijos,desde,hasta){
   });
   return out.sort(function(x,y){return x.fecha<y.fecha?-1:1});
 }
-export function fijosPeriodoTotal(state){var t=0;fijosPeriodo(state.fijos,state.plan.inicio,state.plan.cobro).forEach(function(o){t+=num(o.f.monto)});return t}
-export function totalFijos(fijos){var t=0;fijos.forEach(function(f){t+=num(f.monto)});return t}
-/* Pagado: casilla por período, guardada en fijosPagos[fechaDeCobro][id]. */
-export function isPagado(state,id){var k=state.plan.cobro;return !!(state.fijosPagos[k]&&state.fijosPagos[k][id])}
-export function marcarPagado(state,id,pagado){
+/* ---------- Pagos de los fijos ----------
+   fijosPagos[fechaDeCobro][id] = {monto, fecha, nombre, usd?} con lo que pagaste de verdad
+   (o true, en los pagos marcados antes de guardar el monto).
+   - Un fijo "variable" (UTE, OSE…) espera el promedio de sus últimos 3 pagos.
+   - Un fijo "pago de tarjeta" no se resta del presupuesto: lo que compraste con la tarjeta ya está en tus gastos. */
+export function pagoDe(state,id,k){var m=state.fijosPagos[k||state.plan.cobro];var v=m&&m[id];return v?(typeof v==='object'?v:{}):null}
+export function isPagado(state,id){return !!pagoDe(state,id)}
+export function marcarPagado(state,id,pagado,datos){
   var k=state.plan.cobro;
   if(!state.fijosPagos[k])state.fijosPagos[k]={};
-  if(pagado)state.fijosPagos[k][id]=true;else delete state.fijosPagos[k][id];
+  if(pagado)state.fijosPagos[k][id]=datos&&typeof datos==='object'?datos:true;else delete state.fijosPagos[k][id];
 }
+/* Pagos anotados de un fijo, del más nuevo al más viejo: [{k, monto, fecha}] */
+export function pagosDe(state,id){
+  return Object.keys(state.fijosPagos||{}).sort().reverse().map(function(k){var v=state.fijosPagos[k][id];return v&&typeof v==='object'&&num(v.monto)>0?{k:k,monto:num(v.monto),fecha:v.fecha||null}:null}).filter(Boolean);
+}
+/* Cuánto se espera pagar: el monto del fijo, o el promedio de los últimos 3 pagos si es variable */
+export function montoEsperado(state,f){
+  if(f.variable){var ps=pagosDe(state,f.id).slice(0,3);if(ps.length){var t=0;ps.forEach(function(x){t+=x.monto});return Math.round(t/ps.length)}}
+  return num(f.monto);
+}
+/* Cuánto cuenta en este período: lo que pagaste de verdad, o lo esperado si todavía no */
+export function montoDelPeriodo(state,f){var p=pagoDe(state,f.id);return p&&num(p.monto)>0?num(p.monto):montoEsperado(state,f)}
+export function cuentaEnPresupuesto(f){return !f.tarjeta}
+export function fijosPeriodoTotal(state){var t=0;fijosPeriodo(state.fijos,state.plan.inicio,state.plan.cobro).forEach(function(o){if(cuentaEnPresupuesto(o.f))t+=montoDelPeriodo(state,o.f)});return t}
+/* Total de los fijos de un mes (sin el pago de la tarjeta). Con state, los variables usan su promedio. */
+export function totalFijos(fijos,state){var t=0;fijos.forEach(function(f){if(cuentaEnPresupuesto(f))t+=state?montoEsperado(state,f):num(f.monto)});return t}
 
 export function planCalc(state){return planear(state.plan,state.gastos,fijosPeriodoTotal(state))}
 /* Cuánto podés gastar hoy: lo que le queda a la semana (sumando lo que ya gastaste hoy), repartido parejo
@@ -90,7 +108,7 @@ export function cfgCobro(state){return (state.perfil&&state.perfil.cobro)||{tipo
 /* "Cuando cobres": líquido estimado − fijos del mes − meta = libre para el mes siguiente. */
 export function proximo(state,L){
   var p=state.plan,nc=nextCobro(p.cobro,cfgCobro(state)),dias=Math.max(1,diffDays(p.cobro,nc));
-  var fij=totalFijos(state.fijos),meta=p.modo==='monto'?Math.max(0,Math.round(num(p.ahorro))):Math.round(L.liquido*num(p.pct)/100);
+  var fij=totalFijos(state.fijos,state),meta=p.modo==='monto'?Math.max(0,Math.round(num(p.ahorro))):Math.round(L.liquido*num(p.pct)/100);
   var libre=L.liquido-fij-meta;
   return {nc:nc,dias:dias,fij:fij,meta:meta,libre:libre,dia:libre/dias,semana:libre*7/dias};
 }

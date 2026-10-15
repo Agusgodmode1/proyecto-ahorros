@@ -2,7 +2,7 @@
 import {parse,diffDays,bizRank,MESL} from '../logica/fechas.js';
 import {num} from '../logica/util.js';
 import {fijosPeriodo,totalFijos,proximo,hoyPodes,planCalc} from '../logica/plan.js';
-import {disponible,previaSaldo,ajustarSaldo,deshacerAjuste} from '../logica/saldo.js';
+import {disponible,fijosPagados,previaSaldo,ajustarSaldo,deshacerAjuste} from '../logica/saldo.js';
 import {mesTrabajo,mins,reglasHoras} from '../logica/sueldo.js';
 import {histStats,logrosLista} from '../logica/logros.js';
 import {ctx,$,today,liqNow,planNow,exAnalisis,money,esc,fCorta,fLarga,rango,fMin,cap,tile,hchip,row,toast,toastAccion} from './comun.js';
@@ -68,21 +68,24 @@ export function renderResumen(pc){
   if(fa)fa.innerHTML=sf.length?'<div class="banner"><p><b>No tengo los feriados de '+sf.join(' y ')+'.</b> Sin ellos, el día de cobro puede salir mal. Actualizá la app o agregalos en Ajustes → Feriados.</p><button class="btn" type="button" data-goto="ajustes">Ir a Feriados</button></div>':'';
   var sum=$('#plan-aj-sum');if(sum)sum.textContent=num(state.plan.monto)>0?money(Math.max(0,disponible(state,pc)))+' disponibles · guardás '+money(pc.ahorro)+' · hasta el '+fCorta(state.plan.cobro):'Completá los tres pasos';
   var p=state.plan,t=today(),L=liqNow(true),fp=fijosPeriodo(state.fijos,p.inicio,p.cobro);
-  var m=Math.max(1,num(p.monto)),pf=Math.max(0,Math.min(100,pc.fijos/m*100)),pa=Math.max(0,Math.min(100-pf,pc.ahorro/m*100)),pg=Math.max(0,100-pf-pa);
+  /* Todo en base a la plata que tenés AHORA (la misma del botón de la portada) */
+  var disp=Math.max(0,disponible(state,pc)),pagF=Math.min(pc.fijos,fijosPagados(state)),pend=Math.max(0,pc.fijos-pagF),resto=pc.gastar-pc.spentInPlan;
+  var m=Math.max(1,disp),pf=Math.max(0,Math.min(100,pend/m*100)),pa=Math.max(0,Math.min(100-pf,pc.ahorro/m*100)),pg=Math.max(0,100-pf-pa);
+  var dq=t>=p.cobro?pc.total:Math.max(1,diffDays(t<p.inicio?p.inicio:t,p.cobro)),pDia=t>=p.cobro?pc.daily:resto/dq;
   var h=state.ejemplo?'<div class="banner"><p><b>Estás viendo datos de ejemplo.</b> Son de muestra: no son tuyos.</p><button class="btn" type="button" data-cero>Borrar el ejemplo y crear mi perfil</button></div>':'';
   h+='<div class="card stack tone-mint">';
   h+='<div class="sec-h"><h2>Hasta que cobres</h2><span class="note">'+esc(rango(p.inicio,p.cobro))+' · '+pc.total+' días</span></div>';
   var fsub=fp.length?fp.map(function(o){return esc(o.f.nombre)+' ('+esc(fCorta(o.fecha))+')'}).join(', '):(state.fijos.length?'ninguno vence antes de cobrar':'<button class="linklike" type="button" data-goto="fijos">cargá tus gastos fijos</button>');
   h+='<div class="receipt">'
-    +row('Plata que tenés',money(num(p.monto)))
-    +row('Gastos fijos que vencen antes de cobrar','− '+money(pc.fijos),'sub minus',fsub)
+    +row('Plata que tenés ahora',money(disp),'','según lo que anotaste · <button class="linklike" type="button" id="saldo-abrir2">actualizar</button>')
+    +row('Gastos fijos que faltan pagar','− '+money(pend),'sub minus',pagF>0?'ya pagaste '+money(pagF)+(pend>0?'. Faltan: ':'')+(pend>0?fsub:''):fsub)
     +row('Lo que guardás','− '+money(pc.ahorro),'sub save','tu meta de este mes')
-    +row('Te queda para gastar',money(pc.gastar),'final')+'</div>';
-  if(pc.gastar<0)h+='<p class="err" style="margin-top:0">Con los fijos y lo que querés guardar no te alcanza: te faltan '+money(-pc.gastar)+'. Bajá el ahorro o revisá los fijos.</p>';
+    +row('Te queda para gastar',money(resto),'final')+'</div>';
+  if(resto<0)h+='<p class="err" style="margin-top:0">Con lo que te queda no llegás a guardar todo: te faltan '+money(-resto)+'. Bajá el ahorro o revisá los gastos.</p>';
   h+='<div><div class="split-bar" role="img" aria-label="Fijos '+Math.round(pf)+'%, ahorro '+Math.round(pa)+'%, para gastar '+Math.round(pg)+'%"><i class="split-fix" style="width:'+pf+'%"></i><i class="split-save" style="width:'+pa+'%"></i><i class="split-spend" style="width:'+pg+'%"></i></div>';
-  h+='<div class="split-key">'+(pc.fijos>0?'<span><i class="dot" style="background:var(--teal)"></i>Fijos, '+Math.round(pf)+'%</span>':'')+'<span><i class="dot" style="background:var(--sun)"></i>Guardás, '+Math.round(pa)+'%</span><span><i class="dot" style="background:var(--sky)"></i>Para gastar, '+Math.round(pg)+'%</span></div></div>';
+  h+='<div class="split-key">'+(pend>0?'<span><i class="dot" style="background:var(--teal)"></i>Fijos, '+Math.round(pf)+'%</span>':'')+'<span><i class="dot" style="background:var(--sun)"></i>Guardás, '+Math.round(pa)+'%</span><span><i class="dot" style="background:var(--sky)"></i>Para gastar, '+Math.round(pg)+'%</span></div></div>';
   h+='<div class="tiles">'
-    +tile('tone-sky','Por semana',money(pc.gastar*7/pc.total),money(pc.daily)+' por día, parejo')
+    +tile('tone-sky','Por semana',money(pDia*7),money(pDia)+' por día, parejo hasta cobrar')
     +tile('tone-coral','Gastaste',money(pc.spentInPlan),'de '+money(pc.gastar)+' para gastar')
     +'</div></div>';
 
@@ -179,8 +182,8 @@ function ahorroNote(){
   var pc=planCalc(st);
   if(pc.ahorroPedido>pc.ahorro+0.5)el.textContent='Con lo que tenés y tus fijos, lo máximo que podés guardar es '+money(pc.ahorro)+'. Usamos ese tope.';
   else if(p.modo==='monto'){
-    if(num(p.ahorro)>num(p.monto))el.textContent='El ahorro no puede ser mayor que la plata disponible.';
-    else el.textContent=p.monto>0?'Es el '+(Math.round(num(p.ahorro)/p.monto*1000)/10).toLocaleString('es-UY')+'% de lo que tenés. Es tu meta del mes para la racha de logros.':'';
+    if(num(p.ahorro)>Math.max(0,disponible(st,pc)))el.textContent='El ahorro no puede ser mayor que la plata que tenés ahora ('+money(Math.max(0,disponible(st,pc)))+').';
+    else{var dsp=Math.max(0,disponible(st,pc));el.textContent=dsp>0?'Es el '+(Math.round(num(p.ahorro)/dsp*1000)/10).toLocaleString('es-UY')+'% de lo que tenés ahora. Es tu meta del mes para la racha de logros.':''}
   }else el.textContent='';
 }
 function planErr(m){var e=$('#plan-err');e.textContent=m||'';e.hidden=!m}
@@ -244,6 +247,7 @@ function confirmarSaldo(real){
 export function initPlan(){
   var pr=$('#p-resumen');
   initSaldo();
+  pr.addEventListener('click',function(e){if(e.target.closest('#saldo-abrir2'))abrirSaldo()});
   $('#hoy-hero').addEventListener('click',function(e){if(e.target.closest('#hoy-empezar'))abrirPlan();if(e.target.closest('#saldo-abrir'))abrirSaldo()});
   initFormsGasto(pr);
   pr.addEventListener('toggle',function(e){if(e.target.classList&&e.target.classList.contains('hoy-add'))hoyAbierto=e.target.open},true);

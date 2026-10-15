@@ -42,9 +42,9 @@ function filaDesc(x,i,usd){
 }
 
 function pintar(){
-  var h='<div class="wiz-top"><span class="note">Paso '+paso+' de 4 · '+PASOS[paso-1]+'</span>'
+  var h='<div class="wiz-top"><span class="note">Paso '+paso+' de '+(opciones.nuevo?7:4)+' · '+PASOS[paso-1]+'</span>'
     +(opciones.nuevo?'':'<button class="btn quiet" type="button" data-wa="cancelar">Cancelar</button>')+'</div>'
-    +'<div class="wiz-dots" aria-hidden="true">'+[1,2,3,4].map(function(i){return '<i class="'+(i<=paso?'on':'')+'"></i>'}).join('')+'</div>';
+    +'<div class="wiz-dots" aria-hidden="true" style="grid-template-columns:repeat('+(opciones.nuevo?7:4)+',1fr)">'+(opciones.nuevo?[1,2,3,4,5,6,7]:[1,2,3,4]).map(function(i){return '<i class="'+(i<=paso?'on':'')+'"></i>'}).join('')+'</div>';
   if(paso===1){
     h+='<h1 id="wiz-t">¿Cómo te llamás?</h1><p class="welcome-sub">Lo uso para saludarte. Queda solo en este teléfono.</p>'
       +campo('w-nombre','Tu nombre','<input id="w-nombre" type="text" maxlength="30" autocomplete="given-name" value="'+esc(d.nombre)+'">');
@@ -102,7 +102,7 @@ function pintar(){
   }
   h+='<p class="err" id="w-err" role="alert" hidden></p><div class="row-btns wiz-acc">'
     +(paso>1?'<button class="btn" type="button" data-wa="atras">Atrás</button>':(opciones.nuevo&&opciones.alCancelar?'<button class="btn quiet" type="button" data-wa="cancelar">Volver</button>':''))
-    +(paso<4?'<button class="btn primary" type="button" data-wa="sig">Siguiente</button>':'<button class="btn primary" type="button" data-wa="fin">'+(opciones.nuevo?'Listo, empezar':'Guardar')+'</button>')
+    +(paso<4?'<button class="btn primary" type="button" data-wa="sig">Siguiente</button>':'<button class="btn primary" type="button" data-wa="fin">'+(opciones.nuevo?'Siguiente':'Guardar')+'</button>')
     +(!opciones.nuevo&&paso<4?'<button class="btn quiet" type="button" data-wa="fin">Guardar</button>':'')+'</div>';
   $('#wiz-box').innerHTML=h;if(paso===3)vio3=true;
   previa();

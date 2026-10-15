@@ -36,8 +36,12 @@ document.getElementById('meta-tema').setAttribute('content',d?'#0D0D0D':'#1A72B5
   <div class="welcome-in stack">
     <span class="welcome-sun" aria-hidden="true"></span>
     <h1>Proyecto Ahorros</h1>
-    <p class="welcome-sub">Tu plan hasta el próximo sueldo. Tus datos se guardan solo en este teléfono: no hay cuentas ni servidores.</p>
-    <button class="btn primary" type="button" id="bv-perfil">Empezar: crear mi perfil</button>
+    <p class="welcome-sub">Esta app te ayuda a organizar tus ingresos en un solo lugar y a ahorrar todos los meses.</p>
+    <div class="card stack"><div class="sec"><h2>Para empezar vas a necesitar</h2></div>
+      <ul class="welcome-need"><li>Tu último recibo de sueldo (o lo que cobrás)</li><li>La plata que tenés hoy</li><li>Cuánto querés ahorrar</li></ul>
+      <p class="note">Con eso, la app hace los cálculos por vos.</p></div>
+    <button class="btn primary" type="button" id="bv-perfil">Empezar</button>
+    <p class="note">Tus datos quedan solo en este celular: no hay cuentas ni servidores.</p>
     <div class="card stack">
       <div class="sec"><h2>¿Ya tenías datos?</h2><p class="note">Elegí un archivo de respaldo exportado desde esta app, o pegá el texto que copiaste con <b>Copiar mis datos (respaldo)</b>.</p></div>
       <button class="btn" type="button" id="bv-importar">Importar mis datos</button>
@@ -50,6 +54,7 @@ document.getElementById('meta-tema').setAttribute('content',d?'#0D0D0D':'#1A72B5
 
 <div class="pin" id="pin" hidden role="dialog" aria-modal="true" aria-labelledby="pin-t"><div class="pin-in stack" id="pin-box"></div></div>
 
+<div class="wiz" id="cfg" hidden><div class="welcome-in stack" id="cfg-box" role="dialog" aria-modal="true" aria-labelledby="cfg-t"></div></div>
 <div class="wiz" id="wiz" hidden><div class="welcome-in stack" id="wiz-box" role="dialog" aria-modal="true" aria-labelledby="wiz-t"></div></div>
 
 <div class="sheet" id="gasto-sheet" hidden role="dialog" aria-modal="true" aria-labelledby="gs-t"><div class="sheet-in stack" id="gasto-box"></div></div>
@@ -79,6 +84,7 @@ document.getElementById('meta-tema').setAttribute('content',d?'#0D0D0D':'#1A72B5
   <main>
     <!-- PLAN -->
     <section id="p-resumen" role="tabpanel" class="tone-sky stack">
+      <div id="cierre-aviso"></div>
       <div id="resp-aviso"></div>
       <div id="ritmo-aviso"></div>
       <div id="fer-aviso"></div>
@@ -383,6 +389,10 @@ document.getElementById('meta-tema').setAttribute('content',d?'#0D0D0D':'#1A72B5
     <!-- AJUSTES Y RESPALDO -->
     <section id="p-ajustes" role="tabpanel" class="tone-sky stack" hidden>
       <div class="panel-head"><h2 class="ph-t">Ajustes y respaldo</h2><p class="ph-s">Tus datos viven solo en este teléfono. Exportá un respaldo de vez en cuando y guardalo en Archivos o en iCloud.</p></div>
+      <div class="card stack">
+        <div class="sec"><h2>Mis datos</h2><p class="note">Tu plata de hoy, tu meta de ahorro y tus gastos fijos. Al cambiarlos, se recalcula todo.</p></div>
+        <div class="row-btns"><button class="btn primary" type="button" id="aj-datos">Editar mis datos</button><button class="btn" type="button" id="aj-tour">Ver el tour otra vez</button></div>
+      </div>
       <div class="card stack">
         <div class="sec"><h2>Mi perfil</h2><p class="note" id="aj-perfil"></p></div>
         <div class="row-btns"><button class="btn primary" type="button" data-perfil="1">Editar mi perfil</button></div>

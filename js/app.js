@@ -12,6 +12,8 @@ import {renderAjustes,renderAvisoRespaldo,initAjustes,mostrarBienvenida,renderCo
 import {registrarSW} from './pwa.js';
 import {initVoz} from './ui/voz.js';
 import {abrirPerfil,initPerfil,resumenPerfil} from './ui/perfil.js';
+import {abrirInicio,initInicio,flujoNuevo} from './ui/inicio.js';
+import {initTour,iniciarTour,tourSiPendiente} from './ui/tour.js';
 import {aplicarFeriados,renderFeriados,initFeriados} from './ui/feriados.js';
 import {prepararGuardado,juntar} from './logica/sync.js';
 import {renderCategorias,initCategorias} from './ui/categorias.js';
@@ -84,6 +86,7 @@ function renderAll(){
   if(ctx.tab==='logros')renderLogros(pc);
   if(ctx.tab==='ajustes'){renderAjustes(guardado);renderFeriados();renderCategorias();renderAjustesPin();
     document.querySelectorAll('[data-sobrante]').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-sobrante')===(ctx.state.plan.sobrante||'siguiente')))});renderCopias();$('#aj-perfil').innerHTML=resumenPerfil(ctx.state)}
+  tourSiPendiente();
 }
 function go(t){
   if(t==='semanas')t='w'+curWeek(planNow(),today());
@@ -143,12 +146,15 @@ function initGlobal(){
     /* Mi perfil, en el paso que corresponda */
     var pf=e.target.closest('[data-perfil]');
     if(pf)abrirPerfil(Number(pf.getAttribute('data-perfil'))||1,{nuevo:false,estado:ctx.state,alTerminar:function(){syncInputs();persist();renderAll()}});
+    /* Mis datos (plata de hoy, meta y fijos) y el tour, desde Ajustes */
+    if(e.target.closest('#aj-datos'))abrirInicio({nuevo:false,estado:ctx.state,alTerminar:function(){syncInputs();persist();renderAll();toast('Listo: se recalculó todo')}});
+    if(e.target.closest('#aj-tour'))iniciarTour();
     /* Borrar los datos de ejemplo y crear el perfil (dos toques) */
     var c=e.target.closest('[data-cero]');
     if(c){
       if(c.getAttribute('data-armed')!=='1'){c.setAttribute('data-armed','1');c.textContent='¿Seguro? Se borra todo lo de ejemplo';return}
       var meta=ctx.state.meta,nuevo=defaults();nuevo.meta=meta;
-      abrirPerfil(1,{nuevo:true,estado:nuevo,alTerminar:function(st){reemplazar(st,'antes de borrar los datos de ejemplo')},alCancelar:function(){renderAll()}});
+      flujoNuevo(nuevo,function(st){reemplazar(st,'antes de borrar los datos de ejemplo')},function(){renderAll()});
     }
   });
   /* Modo discreto: un toque tapa o muestra todos los montos */
@@ -178,7 +184,7 @@ function arrancar(st){
 ctx.persist=persist;ctx.renderAll=renderAll;ctx.go=go;ctx.syncInputs=syncInputs;
 
 (async function boot(){
-  initPerfil();initPin();
+  initPerfil();initInicio();initTour();initPin();
   registrarSW(function(){return ctx.state?flush():null});
   pedirPersistencia().then(function(p){guardado.persistente=p});
   var d=await cargar();

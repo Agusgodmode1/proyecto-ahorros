@@ -61,6 +61,15 @@ function renderAlertaMeta(pc){
   el.innerHTML='<div class="banner alerta" role="alert"><p><b>Esa meta no se puede.</b> Tenés '+money(d)+', así que lo máximo que podés guardar es '+money(mx)+' y no los '+money(ped)+' que pusiste. Bajá la meta o actualizá tu saldo si tenés más plata.</p>'
     +'<span class="row-btns">'+(p.modo==='monto'&&mx>=1?'<button class="btn" type="button" id="meta-bajar" data-mx="'+Math.floor(mx)+'">Guardar '+money(Math.floor(mx))+'</button>':'')+'<button class="btn quiet" type="button" id="meta-plan">Cambiar la meta</button></span></div>';
 }
+/* Día de cobro: resumen de lo que quedó sin gastar frente a la meta y el botón para cerrar el mes (alimenta Logros) */
+function renderCierre(pc){
+  var el=$('#cierre-aviso');if(!el)return;
+  var st=ctx.state,p=st.plan,t=today();
+  if(st.ejemplo||!(num(p.monto)>0)||t<p.cobro){el.innerHTML='';return}
+  var sobra=Math.round(maxAhorro(st,pc)),meta=Math.round(pc.ahorro),txt;
+  txt=sobra>=meta?'¡Lo lograste! Te quedaron '+money(sobra)+' sin gastar y tu meta era '+money(meta)+'.':'Te quedaron '+money(sobra)+' sin gastar y tu meta era '+money(meta)+': faltaron '+money(meta-sobra)+'.';
+  el.innerHTML='<div class="banner cierre"><p><b>Llegó el día de cobro.</b> '+txt+' Cerrá el mes para guardarlo en tus logros y arrancar el siguiente.</p><button class="btn primary" type="button" id="cierre-ir">Cerrar el mes</button></div>';
+}
 /* Debajo de la portada: lo que gastaste hoy (o, en vista simple, tus últimos 3 gastos). Anotar se hace desde la hoja. */
 function renderHoy(pc){
   var state=ctx.state,t=today(),el=$('#hoy-out');if(!el)return;
@@ -70,7 +79,10 @@ function renderHoy(pc){
     lista=state.gastos.slice().reverse().sort(function(a,b){return a.fecha<b.fecha?1:a.fecha>b.fecha?-1:0}).slice(0,3);
     tit='Tus últimos gastos';
   }else{lista=state.gastos.filter(function(g){return g.fecha===t});tit='Gastaste hoy'}
-  if(!lista.length){el.innerHTML=simple?'<div class="card stack hoy tone-mint"><h2>Tus últimos gastos</h2><p class="note">Todavía no anotaste ninguno. Tocá «+ Gasto».</p></div>':'';return}
+  if(!lista.length){
+    var vacio='<div class="card stack hoy tone-mint"><h2>'+(simple?'Tus últimos gastos':'Todavía no anotaste gastos')+'</h2><p class="note">Tocá «+ Gasto» o el micrófono y decí, por ejemplo, «gasté 350 en un café». Cada gasto baja lo que podés gastar hoy.</p></div>';
+    el.innerHTML=simple||(!state.gastos.length&&!state.ejemplo)?vacio:'';return;
+  }
   el.innerHTML='<div class="card stack hoy tone-mint"><h2>'+tit+'</h2><ul class="list glist">'+lista.map(function(g){return itemGasto(g,g.fecha===t?'hoy':fCorta(g.fecha))}).join('')+'</ul></div>';
 }
 /* Vista simple: solo lo esencial (se recuerda en este celular) */
@@ -130,7 +142,7 @@ export function renderCountdown(){
 
 export function renderResumen(pc){
   var state=ctx.state;
-  syncMontoCampo(pc);ahorroNote();heroChips(pc);renderAlertaMeta(pc);renderHoy(pc);renderRitmo(pc);
+  syncMontoCampo(pc);ahorroNote();heroChips(pc);renderAlertaMeta(pc);renderCierre(pc);renderHoy(pc);renderRitmo(pc);
   var sf=aniosSinFeriados(state,today()),fa=$('#fer-aviso');
   if(fa)fa.innerHTML=sf.length?'<div class="banner"><p><b>No tengo los feriados de '+sf.join(' y ')+'.</b> Sin ellos, el día de cobro puede salir mal. Actualizá la app o agregalos en Ajustes → Feriados.</p><button class="btn" type="button" data-goto="ajustes">Ir a Feriados</button></div>':'';
   var sum=$('#plan-aj-sum');if(sum)sum.textContent=num(state.plan.monto)>0?money(Math.max(0,disponible(state,pc)))+' disponibles · guardás '+money(pc.ahorro)+' · hasta el '+fCorta(state.plan.cobro):'Completá los tres pasos';
@@ -338,6 +350,10 @@ export function initPlan(){
   $('#hoy-hero').addEventListener('click',function(e){if(e.target.closest('#hoy-empezar'))abrirPlan()});
   $('#hero-chips').addEventListener('click',function(e){if(e.target.closest('#saldo-abrir'))abrirSaldo();if(e.target.closest('#ahorro-abrir'))abrirMeta()});
   initGasto();
+  $('#cierre-aviso').addEventListener('click',function(e){
+    if(!e.target.closest('#cierre-ir'))return;
+    ctx.go('logros');setTimeout(function(){var c=$('#cierre-card');if(c)try{c.scrollIntoView({block:'start',behavior:'smooth'})}catch(er){}},120);
+  });
   pr.addEventListener('toggle',function(e){var f=e.target.closest&&e.target.closest('[data-fold]');if(f&&e.target===f)plegados[f.getAttribute('data-fold')]=f.open},true);
   pr.addEventListener('click',function(e){
     var dg=e.target.closest('#hoy-out [data-delg]');if(dg){borrarGasto(dg.getAttribute('data-delg'));return}

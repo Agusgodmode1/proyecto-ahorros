@@ -1,6 +1,6 @@
 /* Ajustes y respaldo: exportar, importar (con resumen y confirmación), recordatorio y bienvenida. */
 import {armarRespaldo,leerRespaldo,resumenDatos,diasSinRespaldo,defaults,ejemplo,leerCopias,migrar} from '../estado.js';
-import {abrirPerfil} from './perfil.js';
+import {flujoNuevo} from './inicio.js';
 import {ctx,$,today,esc,fCorta,toast,row,money} from './comun.js';
 import {cotizacion,actualizarFijosUSD} from '../logica/monedas.js';
 import {csvGastos} from '../logica/csv.js';
@@ -205,6 +205,6 @@ export function mostrarBienvenida(listo){
   $('#bv-ejemplo').addEventListener('click',function(){el.hidden=true;listo(ejemplo())});
   $('#bv-perfil').addEventListener('click',function(){
     el.hidden=true;
-    abrirPerfil(1,{nuevo:true,estado:defaults(),alTerminar:listo,alCancelar:function(){el.hidden=false}});
+    flujoNuevo(defaults(),listo,function(){el.hidden=false});
   });
 }

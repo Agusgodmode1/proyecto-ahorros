@@ -3,6 +3,7 @@ import {num,uid} from '../logica/util.js';
 import {progresoMeta,repartirAhorro} from '../logica/metas.js';
 import {MESL} from '../logica/fechas.js';
 import {ctx,$,today,money,esc,armar,toast} from './comun.js';
+import {fondoEmergencia} from '../logica/inicio.js';
 
 function mesTxt(k){return MESL[Number(k.slice(5,7))-1]+' de '+k.slice(0,4)}
 function plural(n,a,b){return n+' '+(n===1?a:b)}
@@ -10,7 +11,12 @@ function plural(n,a,b){return n+' '+(n===1?a:b)}
 export function renderMetas(){
   var el=$('#metas-out');if(!el)return;
   var ms=ctx.state.metas||[],t=today();
-  if(!ms.length){el.innerHTML='<p class="note">Poné nombre a lo que estás juntando ("Viaje a Brasil", "Fondo de emergencia") y te digo cuánto te falta y cuándo llegás.</p>';renderCierreMetas();return}
+  if(!ms.length){
+    var fe=fondoEmergencia(ctx.state);
+    el.innerHTML='<p class="note">Poné nombre a lo que estás juntando ("Viaje a Brasil", "Auto") y te digo cuánto te falta y cuándo llegás.</p>'
+      +'<div class="meta-fondo"><b>Primero, un fondo de emergencia</b><p class="note">Antes de pensar en invertir, lo primero es juntar entre 3 y 6 meses de tus gastos para los imprevistos.'+(fe?' Con lo que gastás hoy, serían unos <b>'+money(fe)+'</b> (3 meses).':'')+'</p><button class="btn primary" type="button" id="meta-fondo">Crear mi fondo de emergencia</button></div>';
+    renderCierreMetas();return;
+  }
   el.innerHTML='<ul class="metas">'+ms.map(function(m){
     var p=progresoMeta(m,t),sub;
     if(p.cumplida)sub='¡Llegaste! Juntaste '+money(p.aportado)+'.';
@@ -65,6 +71,7 @@ export function initMetas(){
     ctx.persist();ctx.renderAll();toast('Sumaste '+money(v)+' a '+m.nombre);
   });
   card.addEventListener('click',function(e){
+    if(e.target.closest('#meta-fondo')){form.hidden=false;$('#m-nombre').value='Fondo de emergencia';var fv=fondoEmergencia(ctx.state);if(fv)$('#m-obj').value=fv;$('#m-obj').focus();return}
     var b=e.target.closest('[data-metadel]');if(!b)return;
     if(!armar(b))return;
     var id=b.getAttribute('data-metadel');

@@ -56,3 +56,10 @@ PWA para iPhone de finanzas personales de Agus (Uruguay). La publica GitHub Page
 - "Hasta que cobres", "Semana por semana" y "Cuando cobres" son `<details class="fold">` cerrados; el estado abierto se guarda en `plegados` (plan.js).
 - Vista simple: botón `#modo-simple` (localStorage `pa-simple`), clase `.simple` en `#app` oculta plan y tarjetas, muestra los últimos 3 gastos.
 - Tamaños táctiles: bloque "Inicio 1.15" al final de app.css (botones/campos ≥ 48 px).
+
+## Primer uso, tour y cierre (1.19)
+- Primera vez: bienvenida (texto corto) → `flujoNuevo()` en `ui/inicio.js`: perfil (4 pasos, `ui/perfil.js`) + plata de hoy, meta (atajos 10/20/30 %) y gastos fijos (3 pasos) + resumen «Te queda para gastar $X, $Y por día». 7 pasos en una sola barra de progreso. Cuentas puras en `logica/inicio.js` (probadas). Sin plata de hoy ni meta no se avanza; si la meta no se puede, se propone la posible.
+- «Mis datos» (Ajustes) abre los mismos 3 pasos en modo edición; el saldo pasa por `ajustarSaldo` (igual que «Actualizar saldo»). Un solo estado (`plan`, `fijos`, `gastos`): ningún número se guarda duplicado.
+- Tour (`ui/tour.js`): globos sobre la pantalla real, arranca solo después de la primera configuración (`localStorage pa-tour`), se repite desde Ajustes. Si agregás una pestaña o botón principal, sumalo a `PASOS`.
+- Día de cobro: aviso «Llegó el día de cobro» en Plan (`renderCierre`), lleva a «Cerrar el mes» de Logros. Metas vacías sugieren el fondo de emergencia (3 meses de gastos, `fondoEmergencia`).
+- Pendiente a propósito: «Qué hacer con tus ahorros» (fase 4): se hace después de probar estas fases con uso real.

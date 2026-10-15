@@ -7,7 +7,7 @@ import {liq} from '../logica/sueldo.js';
 import {analisisGuardado} from '../logica/extracto.js';
 
 /* ctx.state es el estado actual; app.js completa persist, renderAll y go. */
-export var ctx={state:null,tab:'resumen',booted:false,persist:function(){},renderAll:function(){},go:function(){},syncInputs:function(){}};
+export var ctx={state:null,tab:'resumen',booted:false,persist:function(){},renderAll:function(){},go:function(){},syncInputs:function(){},abrirSaldo:function(){}};
 
 export function today(){return iso(new Date())}
 /* El plan de siempre, ajustado: sobrantes al ahorro, lo que te pasaste repartido y el mínimo cuidado (logica/mes.js) */

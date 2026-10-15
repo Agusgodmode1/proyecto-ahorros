@@ -61,6 +61,12 @@ document.getElementById('meta-tema').setAttribute('content',d?'#0D0D0D':'#1A72B5
     </div>
     <div class="cd" id="countdown" aria-live="polite"></div>
     <div class="hoy-hero" id="hoy-hero"></div>
+    <form class="saldo-card tone-sky" id="saldo-card" autocomplete="off" hidden>
+      <label for="saldo-in" class="saldo-l">¿Cuánta plata tenés ahora?</label>
+      <div class="money"><span>$</span><input id="saldo-in" type="number" inputmode="decimal" min="0" step="any" placeholder="lo que tenés en cuenta y en efectivo"></div>
+      <p class="saldo-p" id="saldo-prev" aria-live="polite"></p>
+      <div class="row-btns"><button class="btn primary" type="submit">Actualizar saldo</button><button class="btn quiet" type="button" id="saldo-x">Cancelar</button></div>
+    </form>
     <div class="hero-chips" id="hero-chips"></div>
   </header>
 
@@ -95,7 +101,7 @@ document.getElementById('meta-tema').setAttribute('content',d?'#0D0D0D':'#1A72B5
             <div class="field">
               <label for="in-monto">¿Cuánta plata tenés hasta cobrar?</label>
               <div class="money"><span>$</span><input id="in-monto" type="number" inputmode="numeric" min="0" step="1"></div>
-              <small>Lo que te queda hoy en la cuenta y en efectivo.</small>
+              <small>Con lo que arrancás el plan. Para actualizar lo que tenés ahora, usá «Actualizar saldo» en la portada.</small>
             </div>
           </li>
           <li class="step"><span class="badge" aria-hidden="true">2</span>

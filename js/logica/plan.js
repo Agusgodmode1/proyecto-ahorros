@@ -6,7 +6,10 @@ import {num} from './util.js';
    presupuesto de cada una = para gastar × días ÷ días totales, y lo que sobra o falta pasa a la siguiente. */
 export function planear(plan,gastos,fijosRes){
   var total=Math.max(1,diffDays(plan.inicio,plan.cobro));
-  var ahorro=plan.modo==='monto'?Math.min(Math.max(0,Math.round(plan.ahorro||0)),Math.max(0,plan.monto)):Math.round(plan.monto*plan.pct/100),gastar=plan.monto-ahorro-(fijosRes||0);
+  /* Tope: no se puede guardar más de lo que queda después de los fijos (si no, "para gastar" daría negativo) */
+  var tope=Math.max(0,plan.monto-(fijosRes||0));
+  var pedido=plan.modo==='monto'?Math.min(Math.max(0,Math.round(plan.ahorro||0)),Math.max(0,plan.monto)):Math.round(plan.monto*plan.pct/100);
+  var ahorro=Math.min(pedido,tope),gastar=plan.monto-ahorro-(fijosRes||0);
   var weeks=[],off=0,w=0,carry=0;
   while(off<total){
     var len=Math.min(7,total-off),s=addDays(parse(plan.inicio),off),e=addDays(s,len-1);
@@ -19,7 +22,7 @@ export function planear(plan,gastos,fijosRes){
   var inPlan=0;
   for(var j=0;j<weeks.length;j++)inPlan+=weeks[j].spent;
   var all=0;for(var q=0;q<gastos.length;q++)all+=gastos[q].monto;
-  return {total:total,ahorro:ahorro,fijos:fijosRes||0,gastar:gastar,daily:gastar/total,weeks:weeks,spentInPlan:inPlan,spentAll:all};
+  return {total:total,ahorro:ahorro,ahorroPedido:pedido,fijos:fijosRes||0,gastar:gastar,daily:gastar/total,weeks:weeks,spentInPlan:inPlan,spentAll:all};
 }
 
 /* Fijos: vencen en el período si su día cae entre el inicio (incluido) y el cobro (excluido).
@@ -108,7 +111,9 @@ export function cfgCobro(state){return (state.perfil&&state.perfil.cobro)||{tipo
 /* "Cuando cobres": líquido estimado − fijos del mes − meta = libre para el mes siguiente. */
 export function proximo(state,L){
   var p=state.plan,nc=nextCobro(p.cobro,cfgCobro(state)),dias=Math.max(1,diffDays(p.cobro,nc));
-  var fij=totalFijos(state.fijos,state),meta=p.modo==='monto'?Math.max(0,Math.round(num(p.ahorro))):Math.round(L.liquido*num(p.pct)/100);
+  var fij=totalFijos(state.fijos,state),metaPedida=p.modo==='monto'?Math.max(0,Math.round(num(p.ahorro))):Math.round(L.liquido*num(p.pct)/100);
+  /* Tope: no se puede guardar más de lo que cobrás menos los fijos */
+  var meta=Math.min(metaPedida,Math.max(0,L.liquido-fij));
   var libre=L.liquido-fij-meta;
-  return {nc:nc,dias:dias,fij:fij,meta:meta,libre:libre,dia:libre/dias,semana:libre*7/dias};
+  return {nc:nc,dias:dias,fij:fij,meta:meta,metaPedida:metaPedida,libre:libre,dia:libre/dias,semana:libre*7/dias};
 }

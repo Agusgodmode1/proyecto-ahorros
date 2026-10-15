@@ -730,3 +730,15 @@ html.pin-tapa #app,html.pin-tapa .mic,html.pin-tapa .tabs{visibility:hidden}
 :root[data-theme="dark"] .hero-chips .hchip:first-child b{color:var(--mint)}
 :root[data-theme="dark"] .hero-cog{background:var(--surface)}
 :root[data-theme="dark"] .hero-hi{opacity:.75}
+
+/* Actualizar saldo (1.14) */
+.saldo-btn{appearance:none;align-self:flex-start;margin-top:10px;border:0;border-radius:99px;padding:8px 14px;min-height:40px;background:var(--track);color:var(--on-color);font:700 13.5px var(--f-body);cursor:pointer}
+.saldo-btn:active{transform:scale(.97)}
+:root[data-theme="dark"] .saldo-btn{color:var(--sky)}
+.saldo-card{order:2;display:flex;flex-direction:column;gap:10px;background:var(--card-h);border-radius:20px;padding:14px 16px 16px;color:var(--on-color)}
+.saldo-l{font:700 15px var(--f-body)}
+.saldo-p{font-size:13.5px;line-height:1.45;opacity:.85}
+.saldo-card .btn.primary{background:var(--on-color);border-color:var(--on-color);color:#0D0D0D}
+.saldo-card .btn.quiet{color:var(--on-color)}
+.saldo-card .btn.quiet:hover{background:var(--hero-chip)}
+:root[data-theme="dark"] .saldo-card .btn.primary{background:var(--sky);border-color:var(--sky);color:var(--on-accent)}

@@ -1,15 +1,16 @@
 /* Pestaña Plan: portada con "Hoy podés gastar", anotar un gasto, plan plegable, hasta que cobres, semanas y "cuando cobres". */
 import {parse,diffDays,bizRank,MESL} from '../logica/fechas.js';
 import {num} from '../logica/util.js';
-import {fijosPeriodo,totalFijos,proximo,hoyPodes} from '../logica/plan.js';
+import {fijosPeriodo,totalFijos,proximo,hoyPodes,planCalc} from '../logica/plan.js';
+import {disponible,previaSaldo,ajustarSaldo,deshacerAjuste} from '../logica/saldo.js';
 import {mesTrabajo,mins,reglasHoras} from '../logica/sueldo.js';
 import {histStats,logrosLista} from '../logica/logros.js';
-import {ctx,$,today,liqNow,planNow,exAnalisis,money,esc,fCorta,fLarga,rango,fMin,cap,tile,hchip,row,toast} from './comun.js';
+import {ctx,$,today,liqNow,planNow,exAnalisis,money,esc,fCorta,fLarga,rango,fMin,cap,tile,hchip,row,toast,toastAccion} from './comun.js';
 import {aguinaldo} from '../logica/aguinaldo.js';
 import {aniosSinFeriados} from '../logica/avisos.js';
 import {ritmoDelMes,minimoDe} from '../logica/mes.js';
 import {sensibilidadDolar} from '../logica/recibos.js';
-import {formGasto,initFormsGasto,leerForm,guardarGasto,borrarGasto,itemGasto,chipsFrecuentes,anotarFrecuente} from './gastos.js';
+import {formGasto,initFormsGasto,leerForm,permitido,guardarGasto,borrarGasto,itemGasto,chipsFrecuentes,anotarFrecuente} from './gastos.js';
 import {editarGasto} from './semanas.js';
 
 function rankTxt(s){
@@ -30,6 +31,7 @@ function heroChips(pc){
         +(pc.ajuste&&pc.ajuste.estado==='nada'?'<span class="hh-s neg">Para tu mínimo faltan '+money(pc.ajuste.falta)+' aunque no gastes nada más.</span>':'')
         +'<span class="bar'+(w.left<0?' over':'')+'" role="img" aria-label="Gastaste el '+Math.round(pct)+'% de la semana"><i style="width:'+pct+'%"></i></span>';
     }else h+='<span class="hh-s">'+(t>=state.plan.cobro?'Ya cobraste: cerrá el mes en Logros para arrancar uno nuevo.':'Hoy está fuera de las fechas de tu plan.')+'</span>';
+    h+='<button class="saldo-btn" type="button" id="saldo-abrir">Tengo '+money(Math.max(0,disponible(state,pc)))+' · actualizar</button>';
     el.innerHTML=h;
   }
   $('#hero-chips').innerHTML=hchip('Guardás este mes',money(pc.ahorro))+hchip('Vas a cobrar',money(L.liquido));
@@ -61,7 +63,7 @@ export function renderCountdown(){
 
 export function renderResumen(pc){
   var state=ctx.state;
-  heroChips(pc);renderHoy(pc);renderRitmo(pc);
+  ahorroNote();heroChips(pc);renderHoy(pc);renderRitmo(pc);
   var sf=aniosSinFeriados(state,today()),fa=$('#fer-aviso');
   if(fa)fa.innerHTML=sf.length?'<div class="banner"><p><b>No tengo los feriados de '+sf.join(' y ')+'.</b> Sin ellos, el día de cobro puede salir mal. Actualizá la app o agregalos en Ajustes → Feriados.</p><button class="btn" type="button" data-goto="ajustes">Ir a Feriados</button></div>':'';
   var sum=$('#plan-aj-sum');if(sum)sum.textContent=num(state.plan.monto)>0?money(num(state.plan.monto))+' · guardás '+money(pc.ahorro)+' · hasta el '+fCorta(state.plan.cobro):'Completá los tres pasos';
@@ -115,6 +117,7 @@ export function renderResumen(pc){
     +(conAg?row('Aguinaldo de '+AG.nombre,'+ '+money(AG.liquido),'sub','<button class="linklike" type="button" data-goto="sueldo">estimado</button>, antes del '+Number(AG.pago.slice(8,10))+' de '+AG.nombre):'')
     +row('Lo que vas a guardar','− '+money(nx.meta),'sub save','tu meta de ahorro')
     +row('Libre para gastar',money(nx.libre),'final')+'</div>';
+  if(nx.metaPedida>nx.meta)h+='<p class="note">Tu meta de '+money(nx.metaPedida)+' es más de lo que te queda después de los fijos. Se usa '+money(nx.meta)+'.</p>';
   var sd=sensibilidadDolar(L);
   if(sd)h+='<p class="note">Cobrás en dólares y gastás en pesos: si el dólar se mueve un '+sd.pct+' %, lo que te queda libre cambia unos <b>'+money(sd.cambio)+'</b>, para arriba o para abajo.</p>';
   h+='<div class="tiles">'+tile('tone-sky','Por día',money(nx.dia),nx.dias+' días hasta el '+esc(fCorta(nx.nc)))+tile('tone-sun','Ese día tenés',money(pc.ahorro+L.liquido),'lo guardado más el sueldo')+'</div>';
@@ -165,8 +168,10 @@ function renderRitmo(pc){
   el.innerHTML='<div class="banner ritmo-'+r.tipo+'"><p>'+txt+'</p><button class="btn quiet" type="button" id="ritmo-ok">Entendido</button></div>';
 }
 function ahorroNote(){
-  var p=ctx.state.plan,el=$('#ahorro-note');if(!el)return;
-  if(p.modo==='monto'){
+  var st=ctx.state,p=st.plan,el=$('#ahorro-note');if(!el)return;
+  var pc=planCalc(st);
+  if(pc.ahorroPedido>pc.ahorro+0.5)el.textContent='Con lo que tenés y tus fijos, lo máximo que podés guardar es '+money(pc.ahorro)+'. Usamos ese tope.';
+  else if(p.modo==='monto'){
     if(num(p.ahorro)>num(p.monto))el.textContent='El ahorro no puede ser mayor que la plata disponible.';
     else el.textContent=p.monto>0?'Es el '+(Math.round(num(p.ahorro)/p.monto*1000)/10).toLocaleString('es-UY')+'% de lo que tenés. Es tu meta del mes para la racha de logros.':'';
   }else el.textContent='';
@@ -186,15 +191,51 @@ function abrirPlan(){
   try{aj.scrollIntoView({block:'start',behavior:'smooth'})}catch(er){}
   var m=$('#in-monto');if(m)setTimeout(function(){m.focus()},300);
 }
+/* ---------- Actualizar saldo: decís cuánta plata tenés y la app anota la diferencia ---------- */
+function saldoPrev(){
+  var st=ctx.state,i=$('#saldo-in'),pv=$('#saldo-prev');if(!i||!pv)return;
+  var v=i.value,p=previaSaldo(st,v===''?null:num(v),today()),d=money(Math.max(0,p.disponible)),t;
+  if(v==='')t='Según lo que anotaste, tenés '+d+'. Poné lo que tenés de verdad y yo anoto la diferencia.';
+  else if(p.tipo==='invalido')t='Poné cuánta plata tenés. No puede ser negativa.';
+  else if(p.tipo==='fuera')t='Ya cobraste: cerrá el mes en Logros para arrancar uno nuevo.';
+  else if(p.tipo==='igual')t='Coincide con lo que tenés anotado ('+d+'). No hay nada para cambiar.';
+  else if(p.tipo==='gasto')t='Según lo anotado tenés '+d+'. Faltan '+money(p.diff)+' de gastos: los anoto como «Ajuste de saldo» y se recalcula todo.';
+  else t='Tenés '+money(p.diff)+' más de lo anotado: lo sumo a tu plata disponible y se recalcula todo.';
+  pv.textContent=t;
+}
+function abrirSaldo(){
+  var c=$('#saldo-card'),i=$('#saldo-in');if(!c||!i)return;
+  if(!(num(ctx.state.plan.monto)>0)){abrirPlan();return}
+  ctx.go('resumen');c.hidden=false;i.value='';saldoPrev();
+  try{c.scrollIntoView({block:'center',behavior:'smooth'})}catch(er){}
+  setTimeout(function(){i.focus()},250);
+}
+function initSaldo(){
+  ctx.abrirSaldo=abrirSaldo;
+  $('#saldo-in').addEventListener('input',saldoPrev);
+  $('#saldo-x').addEventListener('click',function(){$('#saldo-card').hidden=true});
+  $('#saldo-card').addEventListener('submit',function(e){
+    e.preventDefault();
+    var v=$('#saldo-in').value,p=previaSaldo(ctx.state,v===''?null:num(v),today());
+    if(p.tipo==='invalido'||p.tipo==='fuera'||p.tipo==='igual'){saldoPrev();return}
+    var r=ajustarSaldo(ctx.state,num(v),today());
+    ctx.persist();$('#saldo-card').hidden=true;ctx.syncInputs();ctx.renderAll();
+    toastAccion(r.tipo==='gasto'?'Anoté '+money(r.diff)+' de ajuste de saldo':'Sumé '+money(r.diff)+' a tu plata disponible','Deshacer',function(){
+      deshacerAjuste(ctx.state,r);ctx.persist();ctx.syncInputs();ctx.renderAll();
+    });
+  });
+}
 export function initPlan(){
   var pr=$('#p-resumen');
-  $('#hoy-hero').addEventListener('click',function(e){if(e.target.closest('#hoy-empezar'))abrirPlan()});
+  initSaldo();
+  $('#hoy-hero').addEventListener('click',function(e){if(e.target.closest('#hoy-empezar'))abrirPlan();if(e.target.closest('#saldo-abrir'))abrirSaldo()});
   initFormsGasto(pr);
   pr.addEventListener('toggle',function(e){if(e.target.classList&&e.target.classList.contains('hoy-add'))hoyAbierto=e.target.open},true);
   pr.addEventListener('submit',function(e){
     if(!e.target.getAttribute||e.target.getAttribute('data-gform')!=='q')return;
     e.preventDefault();
     var d=leerForm(e.target);if(!d)return;
+    if(!permitido(d.monto))return;
     guardarGasto(d,null);hoyAbierto=true;ctx.renderAll();toast('Anotado: '+money(d.monto)+(d.nota?' en '+d.nota:''));
     var m=$('#q-monto');if(m)m.focus();
   });

@@ -13,7 +13,7 @@ function dias(a,b){
 export function cruzar(movs,gastos,desde,hasta,tol){
   tol=tol===undefined?3:tol;
   var M=movs.filter(function(m){return m.f>=desde&&m.f<=hasta}).slice().sort(function(a,b){return a.f<b.f?-1:a.f>b.f?1:b.monto-a.monto});
-  var G=gastos.filter(function(g){return g.fecha>=desde&&g.fecha<=hasta}),usado={},out={coinciden:[],faltan:[],soloAnotados:[]};
+  var G=gastos.filter(function(g){return g.fecha>=desde&&g.fecha<=hasta&&g.src!=='ajuste'}),usado={},out={coinciden:[],faltan:[],soloAnotados:[]};
   M.forEach(function(m){
     var mejor=null,md=99;
     G.forEach(function(g){

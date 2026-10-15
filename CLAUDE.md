@@ -38,3 +38,7 @@ PWA para iPhone de finanzas personales de Agus (Uruguay). La publica GitHub Page
 - Metas (`state.metas`, `logica/metas.js`), aguinaldo y vacacional (`logica/aguinaldo.js`: estimaciones), CSV para Excel (`logica/csv.js`).
 - PIN (`logica/pin.js`, `ui/pin.js`): opcional, de este aparato (localStorage `pa-pin` = {sal, hash SHA-256}); nunca en texto plano ni en los respaldos. "Olvidé el PIN" solo borra los datos del teléfono (no hay cuenta).
 - La carga por voz nunca guarda sin confirmación. Si falla `SpeechRecognition`, se usa el dictado del teclado.
+
+## Saldo y topes (1.14)
+- `logica/saldo.js`: `disponible` = plata del plan − gastos anotados − fijos pagados. "Actualizar saldo" (botón en la portada) compara con lo que el usuario dice que tiene: si tiene menos, anota un gasto `src:'ajuste'` ("Ajuste de saldo", fecha del día anterior); si tiene más, suma a `plan.monto`. Siempre con "Deshacer". El ajuste no entra en el cruce de la tarjeta.
+- Topes: un gasto nuevo no puede ser mayor que lo disponible (`permitido()` en `ui/gastos.js`, ofrece "Actualizar saldo"); el ahorro del plan no pasa de monto − fijos (`planear`); la meta de "Cuando cobres" no pasa de sueldo − fijos (`proximo`). Los gastos del extracto de la tarjeta no se limitan: son hechos.

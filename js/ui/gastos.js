@@ -6,6 +6,7 @@ import {cotizacion,gastoUSD,aPesos} from '../logica/monedas.js';
 import {frecuentes} from '../logica/frecuentes.js';
 import {ctx,esc,money,usd,toastAccion,toast,fCorta,today} from './comun.js';
 import {nombresVisibles,nombreDe,colorDe} from '../logica/categorias.js';
+import {cabeGasto} from '../logica/saldo.js';
 
 /* La categoría que sugiere la nota, ya pasada a tu lista de categorías */
 export function sugerir(nota){var st=ctx.state;return nombreDe(st,categoriaGasto(nota||'',st&&st.voz.cats))}
@@ -76,6 +77,14 @@ export function leerForm(f){
   return d;
 }
 
+/* Tope: un gasto nuevo no puede ser mayor que la plata disponible. Devuelve false (y avisa) si no entra. */
+export function permitido(monto){
+  var c=cabeGasto(ctx.state,monto);
+  if(c.ok)return true;
+  toastAccion(c.disponible>0?'No te alcanza: tenés '+money(c.disponible)+' disponibles.':'No te queda plata disponible.','Actualizar saldo',function(){ctx.abrirSaldo()});
+  return false;
+}
+
 /* Guarda un gasto nuevo o cambia uno existente. Si corregiste la categoría, la app la aprende. */
 export function guardarGasto(d,editId){
   var st=ctx.state;
@@ -102,6 +111,7 @@ export function anotarFrecuente(i,fecha){
   var d={nota:x.nota,cat:x.cat||sugerir(x.nota),fecha:fecha||today()};d.sugerida=d.cat;
   if(x.usd){var cot=cotizacion(ctx.state);if(!cot){toast('Primero cargá la cotización del dólar en Ajustes');return}Object.assign(d,gastoUSD(x.usd,cot))}
   else d.monto=x.monto;
+  if(!permitido(d.monto))return;
   var id=guardarGasto(d,null);ctx.renderAll();
   toastAccion('Anotado: '+(x.usd?usd(x.usd):money(d.monto))+' en '+x.nota,'Deshacer',function(){
     ctx.state.gastos=ctx.state.gastos.filter(function(g){return g.id!==id});ctx.persist();ctx.renderAll();
@@ -125,6 +135,6 @@ export function borrarGasto(id){
 export function itemGasto(g,cuando){
   var c=catDe(g);
   return '<li><div class="gi-main"><i class="dot" style="background:'+catColor(c)+'"></i><span class="gi-nota">'+(g.nota?esc(g.nota):'<span class="muted">Sin detalle</span>')+'</span><span class="amt">'+money(g.monto)+(g.usd?'<small class="amt-usd">'+usd(g.usd)+'</small>':'')+'</span></div>'
-    +'<div class="gi-sub"><span class="src">'+esc(cuando)+' · '+esc(c)+(g.src==='brou'?' · del extracto':g.src==='voz'?' · por voz':'')+'</span>'
+    +'<div class="gi-sub"><span class="src">'+esc(cuando)+' · '+esc(c)+(g.src==='brou'?' · del extracto':g.src==='voz'?' · por voz':g.src==='ajuste'?' · ajuste de saldo':'')+'</span>'
     +'<span class="gbtns"><button class="btn quiet sm" type="button" data-editg="'+esc(g.id)+'" aria-label="Editar gasto">Editar</button><button class="btn quiet sm" type="button" data-delg="'+esc(g.id)+'" aria-label="Borrar gasto">Borrar</button></span></div></li>';
 }

@@ -28,6 +28,7 @@ PWA para iPhone de finanzas personales de Agus (Uruguay). La publica GitHub Page
 - Tema oscuro por defecto (`data-theme` en `<html>`, script en el `<head>` de index.html); se cambia en Ajustes → Apariencia y se guarda en `localStorage` (pa-tema). Todo color sale de las variables de `:root`.
 - Campos con letra de 16 px o más (si no, iOS hace zoom). Teclados numéricos con `inputmode`.
 - Respetar `env(safe-area-inset-*)`. Nada fijo puede quedar tapado por la barra de pestañas, el micrófono o el indicador de inicio.
+- Categorías de gasto: editables (`state.categorias`, `logica/categorias.js`). Nunca una lista fija en la pantalla: usá `nombresVisibles()`, `nombreDe()` (lo que reconoce la nota, la voz o el extracto → tu categoría) y `colorDe()`. Borrar siempre pasa los gastos a otra; "Otros" no se borra.
 - Gastos: el formulario es uno solo (`js/ui/gastos.js`), con categoría sugerida por la nota. Borrar siempre ofrece "Deshacer".
 - Montos: siempre con `money()`/`money2()`/`usd()` de `ui/comun.js` (respetan el modo discreto).
 - Dólares: un gasto en US$ guarda `monto` (pesos), `usd` y `cotiz` (la del día); todas las cuentas usan `monto`. Los fijos en US$ se recalculan al cambiar la cotización (`logica/monedas.js`).

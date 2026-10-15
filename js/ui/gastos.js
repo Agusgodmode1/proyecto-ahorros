@@ -1,26 +1,27 @@
 /* Anotar, editar y borrar gastos. Lo usan Semanas y Plan.
    La categoría se sugiere sola a partir de la nota (el mismo clasificador que la voz) y aprende si la corregís. */
-import {CAT_NAMES} from '../logica/extracto.js';
 import {categoriaGasto,aprender} from '../logica/voz.js';
 import {num,uid} from '../logica/util.js';
 import {cotizacion,gastoUSD,aPesos} from '../logica/monedas.js';
 import {frecuentes} from '../logica/frecuentes.js';
 import {ctx,esc,money,usd,toastAccion,toast,fCorta,today} from './comun.js';
-import {CATCOL} from './tarjeta.js';
+import {nombresVisibles,nombreDe,colorDe} from '../logica/categorias.js';
 
-export var CATS_GASTO=CAT_NAMES.filter(function(c){return c!=='Ingresos'});
-
+/* La categoría que sugiere la nota, ya pasada a tu lista de categorías */
+export function sugerir(nota){var st=ctx.state;return nombreDe(st,categoriaGasto(nota||'',st&&st.voz.cats))}
 /* Categoría de un gasto: la guardada o, en gastos viejos sin categoría, la que sale de la nota. */
-export function catDe(g){return g.cat||categoriaGasto(g.nota||'',ctx.state&&ctx.state.voz.cats)}
-export function catColor(c){return CATCOL[c]||'var(--muted)'}
+export function catDe(g){return g.cat||sugerir(g.nota)}
+export function catColor(c){return colorDe(ctx.state,c)}
+/* Opciones del selector: tus categorías visibles (y la del gasto, si la ocultaste después) */
+function opcionesCat(actual){var l=nombresVisibles(ctx.state);if(actual&&l.indexOf(actual)<0)l=l.concat([actual]);return l}
 
 /* Formulario. p = prefijo de ids; o = {fechas:[[iso,texto]], fecha, gasto (si se edita), boton} */
 export function formGasto(p,o){
-  var g=o.gasto||{},cat=g.id?catDe(g):'Otros',enUSD=!!g.usd;
+  var g=o.gasto||{},cat=g.id?catDe(g):sugerir(''),enUSD=!!g.usd;
   /* La moneda se cambia tocando el símbolo: $ ↔ US$ */
   var h='<form class="gform" data-gform="'+p+'" data-moneda="'+(enUSD?'USD':'UYU')+'"'+(g.cotiz?' data-cotiz="'+esc(g.cotiz)+'"':'')+' autocomplete="off">'
     +'<div class="field f-monto"><label for="'+p+'-monto" class="sub-l">¿Cuánto?</label><div class="money"><button type="button" class="mon-btn" data-mon aria-label="Cambiar moneda: ahora en '+(enUSD?'dólares':'pesos')+'">'+(enUSD?'US$':'$')+'</button><input id="'+p+'-monto" type="number" inputmode="decimal" min="0" step="any" required value="'+(g.id?esc(enUSD?g.usd:g.monto):'')+'"></div><small class="usd-nota" data-usdnota></small></div>'
-    +'<div class="field f-cat"><label for="'+p+'-cat" class="sub-l">Categoría</label><select id="'+p+'-cat" data-sugerida="'+esc(cat)+'"'+(g.id?' data-tocada="1"':'')+'>'+CATS_GASTO.map(function(c){return '<option'+(c===cat?' selected':'')+'>'+esc(c)+'</option>'}).join('')+'</select></div>'
+    +'<div class="field f-cat"><label for="'+p+'-cat" class="sub-l">Categoría</label><select id="'+p+'-cat" data-sugerida="'+esc(cat)+'"'+(g.id?' data-tocada="1"':'')+'>'+opcionesCat(cat).map(function(c){return '<option'+(c===cat?' selected':'')+'>'+esc(c)+'</option>'}).join('')+'</select></div>'
     +'<div class="field f-nota"><label for="'+p+'-nota" class="sub-l">¿En qué?</label><input id="'+p+'-nota" type="text" maxlength="60" placeholder="almuerzo, boleto, súper" value="'+esc(g.nota||'')+'"></div>';
   if(o.fechas&&o.fechas.length)h+='<div class="field f-fecha"><label for="'+p+'-fecha" class="sub-l">¿Qué día?</label><select id="'+p+'-fecha">'+o.fechas.map(function(f){return '<option value="'+f[0]+'"'+(f[0]===(g.fecha||o.fecha)?' selected':'')+'>'+esc(f[1])+'</option>'}).join('')+'</select></div>';
   else h+='<input type="hidden" id="'+p+'-fecha" value="'+esc(g.fecha||o.fecha)+'">';
@@ -51,7 +52,7 @@ export function initFormsGasto(raiz){
     if(e.target.id===p+'-monto'){notaUSD(f);return}
     if(e.target.id!==p+'-nota')return;
     var sel=f.querySelector('#'+p+'-cat');if(!sel||sel.getAttribute('data-tocada')==='1')return;
-    var c=categoriaGasto(e.target.value,ctx.state.voz.cats);
+    var c=sugerir(e.target.value);
     sel.value=c;sel.setAttribute('data-sugerida',c);
   });
   raiz.addEventListener('change',function(e){
@@ -65,7 +66,7 @@ export function leerForm(f){
   var p=f.getAttribute('data-gform'),q=function(s){return f.querySelector('#'+p+'-'+s)};
   var m=num(q('monto').value);
   if(!(m>0)){q('monto').focus();return null}
-  var sel=q('cat'),d={monto:Math.round(m*100)/100,nota:q('nota').value.trim().slice(0,60),cat:sel.value,sugerida:categoriaGasto(q('nota').value,ctx.state.voz.cats),fecha:q('fecha').value};
+  var sel=q('cat'),d={monto:Math.round(m*100)/100,nota:q('nota').value.trim().slice(0,60),cat:sel.value,sugerida:sugerir(q('nota').value),fecha:q('fecha').value};
   if(f.getAttribute('data-moneda')==='USD'){
     /* Un gasto que ya estaba en dólares conserva su cotización; uno nuevo usa la de hoy */
     var cot=num(f.getAttribute('data-cotiz'))||cotizacion(ctx.state);
@@ -98,7 +99,7 @@ export function chipsFrecuentes(p){
 /* Anota el frecuente número i en la fecha dada y ofrece "Deshacer" */
 export function anotarFrecuente(i,fecha){
   var x=frecuentes(ctx.state.gastos,today(),4)[i];if(!x)return;
-  var d={nota:x.nota,cat:x.cat||categoriaGasto(x.nota,ctx.state.voz.cats),fecha:fecha||today()};d.sugerida=d.cat;
+  var d={nota:x.nota,cat:x.cat||sugerir(x.nota),fecha:fecha||today()};d.sugerida=d.cat;
   if(x.usd){var cot=cotizacion(ctx.state);if(!cot){toast('Primero cargá la cotización del dólar en Ajustes');return}Object.assign(d,gastoUSD(x.usd,cot))}
   else d.monto=x.monto;
   var id=guardarGasto(d,null);ctx.renderAll();

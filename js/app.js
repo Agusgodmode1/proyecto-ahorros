@@ -14,6 +14,7 @@ import {initVoz} from './ui/voz.js';
 import {abrirPerfil,initPerfil,resumenPerfil} from './ui/perfil.js';
 import {aplicarFeriados,renderFeriados,initFeriados} from './ui/feriados.js';
 import {prepararGuardado,juntar} from './logica/sync.js';
+import {renderCategorias,initCategorias} from './ui/categorias.js';
 
 /* ---------- Guardado en IndexedDB ---------- */
 var timer=null,saving=false,pending=false,guardado={donde:null,persistente:null};
@@ -77,7 +78,7 @@ function renderAll(){
   if(ctx.tab==='gastos')renderGastos();
   if(ctx.tab==='fijos')renderFijos(pc);
   if(ctx.tab==='logros')renderLogros(pc);
-  if(ctx.tab==='ajustes'){renderAjustes(guardado);renderFeriados();renderCopias();$('#aj-perfil').innerHTML=resumenPerfil(ctx.state)}
+  if(ctx.tab==='ajustes'){renderAjustes(guardado);renderFeriados();renderCategorias();renderCopias();$('#aj-perfil').innerHTML=resumenPerfil(ctx.state)}
 }
 function go(t){
   if(t==='semanas')t='w'+curWeek(planNow(),today());
@@ -163,7 +164,7 @@ function arrancar(st){
   ctx.state=st;aplicarFeriados();fijarUltimo();
   if(!st.meta.creado){st.meta.creado=today();persist()}
   try{var t=localStorage.getItem(TK);if(t)ctx.tab=t}catch(e){}
-  guiaInit();initGlobal();initPlan();initSemanas();initSueldo();initTarjeta();initFijos();initLogros();initAjustes(reemplazar,juntarDatos);initVoz();initFeriados();
+  guiaInit();initGlobal();initPlan();initSemanas();initSueldo();initTarjeta();initFijos();initLogros();initAjustes(reemplazar,juntarDatos);initVoz();initFeriados();initCategorias();
   marcarDiscreto();
   ctx.booted=true;
   $('#app').hidden=false;

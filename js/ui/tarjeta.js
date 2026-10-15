@@ -3,6 +3,8 @@ import {diffDays,DIAL,MESL} from '../logica/fechas.js';
 import {num} from '../logica/util.js';
 import * as EX from '../logica/extracto.js';
 import {ctx,$,today,planNow,money,esc,fCorta,cap,titulo,tile} from './comun.js';
+import {nombresVisibles,nombreDe,colorDe} from '../logica/categorias.js';
+function mapa(c){return nombreDe(ctx.state,c)}
 
 var gasTimer=null,gasConfirm=false;
 export var CATCOL={'Delivery y comida':'var(--coral)','Supermercado':'var(--mint)','Kiosco y almacén':'var(--sun)','Transporte':'var(--sky)','Suscripciones':'var(--grape)','Juegos':'var(--pink)','Trading':'var(--teal)','Servicios y cuentas':'var(--slate)','Salud':'var(--pink)','Compras online':'var(--teal)','Retiros y transferencias':'var(--slate)','Comisiones y cargos':'var(--bad)','Otros':'var(--muted)','Ingresos':'var(--mint)'};
@@ -14,12 +16,12 @@ function bars(items,fmt){
   }).join('')+'</div>';
 }
 function catSelect(k,cur){
-  return '<span class="cat-cell"><i class="dot" style="background:'+(CATCOL[cur]||'var(--muted)')+'"></i><select class="cat-sel" data-catk="'+esc(k)+'" aria-label="Categoría de '+esc(titulo(k))+'">'+EX.CAT_NAMES.map(function(c){return '<option'+(c===cur?' selected':'')+'>'+esc(c)+'</option>'}).join('')+'</select></span>';
+  return '<span class="cat-cell"><i class="dot" style="background:'+colorDe(ctx.state,cur)+'"></i><select class="cat-sel" data-catk="'+esc(k)+'" aria-label="Categoría de '+esc(titulo(k))+'">'+(nombresVisibles(ctx.state).indexOf(cur)<0?nombresVisibles(ctx.state).concat([cur]):nombresVisibles(ctx.state)).map(function(c){return '<option'+(c===cur?' selected':'')+'>'+esc(c)+'</option>'}).join('')+'</select></span>';
 }
 export function renderGastos(){
   var state=ctx.state,ex=state.extracto,out=$('#gas-out'),st=$('#gas-stat');
   if(!ex.texto.trim()){st.textContent='';out.innerHTML='<div class="empty">Cuando pegues el extracto, acá vas a ver cuánto gastaste, en qué categorías, qué días gastás más y qué gastos chicos se van sumando.</div>';return}
-  var r=EX.leer(ex.texto,today(),ex.formato),A=EX.analizar(r.movs,{cat:ex.cat,hormiga:num(ex.hormiga)||400});
+  var r=EX.leer(ex.texto,today(),ex.formato),A=EX.analizar(r.movs,{cat:ex.cat,hormiga:num(ex.hormiga)||400,mapa:mapa});
   if(!A){
     st.innerHTML='<b>No pude leer movimientos.</b> Cada línea tiene que empezar con la fecha (por ejemplo 09/10/2026) y terminar con el importe.';
     out.innerHTML='';return;
@@ -46,7 +48,7 @@ export function renderGastos(){
   var fijos=A.com.filter(function(c){return c.fijo});
   if(fijos.length)L.push('Cobros fijos que se repiten: '+fijos.slice(0,4).map(function(c){return esc(titulo(c.k))+' ('+money(c.prom)+')'}).join(', ')+'.');
   if(L.length)h+='<div class="callout"><h2>Lo que se ve</h2><ul class="lect">'+L.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul></div>';
-  h+='<div class="card stack"><h2>Por categoría</h2>'+bars(A.cats.map(function(c){return {l:c.c,v:c.t,n:c.n,c:CATCOL[c.c]||'var(--muted)'}}),function(x){return '<b>'+money(x.v)+'</b> · '+Math.round(x.v/A.totG*100)+'%'})+'</div>';
+  h+='<div class="card stack"><h2>Por categoría</h2>'+bars(A.cats.map(function(c){return {l:c.c,v:c.t,n:c.n,c:colorDe(ctx.state,c.c)}}),function(x){return '<b>'+money(x.v)+'</b> · '+Math.round(x.v/A.totG*100)+'%'})+'</div>';
   var dmx=0;A.dow.forEach(function(d){if(d.t>dmx)dmx=d.t});
   var orden=[1,2,3,4,5,6,0];
   h+='<div class="card stack"><h2>Por día de la semana</h2>'+bars(orden.map(function(i){var d=A.dow[i];return {l:cap(DIAL[i]),v:d.t,n:d.n,dim:!(d.t===dmx&&dmx>0)}}),function(x){return '<b>'+money(x.v)+'</b> · '+x.n+' compras'})+'</div>';
@@ -77,7 +79,7 @@ export function renderGastos(){
 }
 function gasHash(m,i){var s=m.f+m.d+m.m+i,h=0;for(var k=0;k<s.length;k++)h=(h*31+s.charCodeAt(k))|0;return 'b'+(h>>>0).toString(36)}
 function cargarAlPlan(){
-  var state=ctx.state,ex=state.extracto,r=EX.leer(ex.texto,today(),ex.formato),A=EX.analizar(r.movs,{cat:ex.cat,hormiga:num(ex.hormiga)||400});
+  var state=ctx.state,ex=state.extracto,r=EX.leer(ex.texto,today(),ex.formato),A=EX.analizar(r.movs,{cat:ex.cat,hormiga:num(ex.hormiga)||400,mapa:mapa});
   state.gastos=state.gastos.filter(function(g){return g.src!=='brou'});
   if(A){
     A.gas.filter(function(m){return m.f>=state.plan.inicio&&m.f<=state.plan.cobro}).forEach(function(m,i){

@@ -2,7 +2,7 @@
    Nunca guarda sin que toques "Guardar". Si el reconocimiento de voz no anda (pasa en la app instalada
    en iOS), abre un campo de texto para dictar con el micrófono del teclado. */
 import {interpretar,responder,aprender,fechaTxt,FIJO_CATS} from '../logica/voz.js';
-import {CAT_NAMES} from '../logica/extracto.js';
+import {nombresVisibles,nombreDe} from '../logica/categorias.js';
 import {semanaDe,fijosPeriodo,totalFijos,isPagado,marcarPagado,montoEsperado} from '../logica/plan.js';
 import {mins,mesTrabajo,reglasHoras} from '../logica/sueldo.js';
 import {diffDays,pagaComoFeriado,parse,MESL} from '../logica/fechas.js';
@@ -86,6 +86,7 @@ function escribir(msg,texto){
 function entender(txt){
   var st=ctx.state;
   r=interpretar(txt,{hoy:today(),fijos:st.fijos,aprendido:st.voz.cats,horas:reglasHoras(st)});
+  if(r.intencion==='gasto'&&r.cat)r.cat=nombreDe(ctx.state,r.cat);
   catSugerida=r.cat||null;pesosOk=!r.dolares;
   /* "50 dólares": con la cotización cargada, se guarda en dólares y se pasa a pesos solo */
   var cot=cotizacion(st);
@@ -113,7 +114,7 @@ function tarjeta(){
   if(r.intencion==='gasto'){
     h+=campo('vz-monto','¿Cuánto?',moneyIn('vz-monto',r.monto))
       +campo('vz-nota','¿En qué?','<input id="vz-nota" type="text" maxlength="60" value="'+esc(r.nota||'')+'">')
-      +campo('vz-cat','Categoría','<select id="vz-cat">'+opts(CAT_NAMES,r.cat)+'</select>')
+      +campo('vz-cat','Categoría','<select id="vz-cat">'+opts(nombresVisibles(ctx.state).indexOf(r.cat)<0?nombresVisibles(ctx.state).concat([r.cat]):nombresVisibles(ctx.state),r.cat)+'</select>')
       +campo('vz-fecha','¿Qué día?','<input id="vz-fecha" type="date" max="'+hoy+'" value="'+r.fecha+'">');
   }else if(r.intencion==='fijo'){
     h+=campo('vz-nombre','¿Qué es?','<input id="vz-nombre" type="text" maxlength="40" value="'+esc(r.nombre||'')+'">')

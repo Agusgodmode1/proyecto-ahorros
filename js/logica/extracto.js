@@ -184,7 +184,7 @@ function mediana(a){if(!a.length)return 0;var b=a.slice().sort(function(x,y){ret
 function analizar(movs,opt){
   opt=opt||{};
   var uyu=movs.filter(function(m){return !m.usd}),over=opt.cat||{},hor=opt.hormiga||400;
-  uyu.forEach(function(m){m.k=clave(m.d);m.c=catDe(m,over)});
+  uyu.forEach(function(m){m.k=clave(m.d);m.c=catDe(m,over);if(opt.mapa&&m.c!=='Ingresos')m.c=opt.mapa(m.c)});
   var gas=uyu.filter(function(m){return m.m<0}),ing=uyu.filter(function(m){return m.m>0});
   if(!uyu.length)return null;
   var fechas=uyu.map(function(m){return m.f}).sort(),desde=fechas[0],hasta=fechas[fechas.length-1];

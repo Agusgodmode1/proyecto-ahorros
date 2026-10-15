@@ -6,13 +6,15 @@ import {cobroDesde,fechaCobro} from './logica/plan.js';
 import {feriadosActivos} from './logica/feriados.js';
 import {monedasBase} from './logica/monedas.js';
 import {horasPorDefecto} from './logica/sueldo.js';
+import {categoriasBase,categoriasDesde} from './logica/categorias.js';
 
 /* Subí este número cuando cambie la forma del estado y agregá el paso en migrar().
    v1–v3: archivo HTML · v4: voz y meta · v5: perfil propio y feriados editables · v6: sincronización
    v7: opciones de feriados laborables en el perfil · v8: metas, dólares y días de licencia
    v9: año en que confirmaste la BPC (para avisar cada enero); pagos de fijos con monto real
-   v10: tipo de ingreso y moneda en el perfil; descuentos propios e ingresos de cada mes en el sueldo */
-export var VERSION_ESTADO=10;
+   v10: tipo de ingreso y moneda en el perfil; descuentos propios e ingresos de cada mes en el sueldo
+   v11: categorías de gasto editables (state.categorias) */
+export var VERSION_ESTADO=11;
 
 function hoyISO(){return iso(new Date())}
 /* Feriados: por defecto solo cuentan los 5 no laborables (1/1, 1/5, 18/7, 25/8, 25/12).
@@ -41,7 +43,8 @@ export function defaults(hoy){
     meta:{creado:null,ultimoExport:null},/* fechas aaaa-mm-dd */
     sync:{t:{},borrados:{}},             /* cuándo cambió cada cosa, para juntar aparatos (logica/sync.js) */
     metas:[],                            /* {id,nombre,objetivo,para:'aaaa-mm',aportes:[{id,fecha,monto}]} */
-    monedas:monedasBase()                /* cotización del dólar que cargás en Ajustes */
+    monedas:monedasBase(),               /* cotización del dólar que cargás en Ajustes */
+    categorias:categoriasBase()          /* categorías de gasto, editables en Ajustes (logica/categorias.js) */
   };
 }
 
@@ -102,7 +105,10 @@ export function migrar(d){
     meta:Object.assign({},base.meta,obj(x.meta)),
     sync:{t:obj(obj(x.sync).t),borrados:obj(obj(x.sync).borrados)},
     metas:Array.isArray(x.metas)?x.metas:[],
-    monedas:Object.assign(monedasBase(),obj(x.monedas))};
+    monedas:Object.assign(monedasBase(),obj(x.monedas)),
+    categorias:Array.isArray(x.categorias)&&x.categorias.length?x.categorias:null};
+  /* v11: las categorías de siempre pasan a ser tu lista, más las que ya usaban tus gastos. Ningún gasto cambia. */
+  if(!state.categorias)state.categorias=categoriasDesde(state);
   if(state.sueldo.diasLicencia===undefined)state.sueldo.diasLicencia=0;
   /* v9: la BPC guardada hasta ahora es la de 2026 */
   if(vx<9&&!x.sueldo||vx<9&&!x.sueldo.bpcAnio)state.sueldo.bpcAnio=2026;

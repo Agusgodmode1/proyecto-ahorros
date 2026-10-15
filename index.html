@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es-UY">
+<html lang="es-UY" class="v2">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -61,7 +61,7 @@ document.getElementById('meta-tema').setAttribute('content',d?'#0D0D0D':'#1A72B5
       <h1>Proyecto Ahorros</h1>
       <p class="hero-sub">Tu plan hasta el próximo sueldo: cuánto guardar, cuánto podés gastar por día y cuánto vas a cobrar.</p>
     </div>
-    <div class="cd" id="countdown" aria-live="polite" hidden></div>
+    <div class="cd" id="countdown" aria-live="polite"></div>
     <div class="hoy-hero" id="hoy-hero"></div>
     <form class="saldo-card tone-sky" id="saldo-card" autocomplete="off" hidden>
       <label for="saldo-in" class="saldo-l">¿Cuánta plata tenés ahora?</label>
@@ -70,6 +70,7 @@ document.getElementById('meta-tema').setAttribute('content',d?'#0D0D0D':'#1A72B5
       <div class="row-btns"><button class="btn primary" type="submit">Actualizar saldo</button><button class="btn quiet" type="button" id="saldo-x">Cancelar</button></div>
     </form>
     <div class="hero-chips" id="hero-chips"></div>
+    <button class="mini" id="hero-mini" type="button" data-goto="resumen" aria-label="Ir al plan"></button>
   </header>
   <div id="meta-alerta"></div>
 

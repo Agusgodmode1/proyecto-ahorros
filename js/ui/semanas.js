@@ -3,7 +3,7 @@ import {parse,addDays,iso,diffDays,DIA,DIAL,MESL} from '../logica/fechas.js';
 import {ctx,$,today,planNow,money,n0,esc,fLarga,rango,cap,toast} from './comun.js';
 import {sobranteDe} from '../logica/mes.js';
 import {semanaDe} from '../logica/plan.js';
-import {formGasto,initFormsGasto,leerForm,permitido,guardarGasto,borrarGasto,itemGasto,chipsFrecuentes,anotarFrecuente} from './gastos.js';
+import {formGasto,initFormsGasto,leerForm,avisoAnotado,guardarGasto,borrarGasto,itemGasto,chipsFrecuentes,anotarFrecuente} from './gastos.js';
 
 var weekSel={},editId=null;
 export function resetWeekSel(){weekSel={};editId=null}
@@ -89,11 +89,10 @@ export function initSemanas(){
     if(e.target.getAttribute('data-gform')!=='g')return;
     e.preventDefault();
     var d=leerForm(e.target);if(!d)return;
-    if(!editId&&!permitido(d.monto))return;
-    var era=editId;guardarGasto(d,editId);editId=null;
+    var era=editId,nid=guardarGasto(d,editId);editId=null;
     if(/^w\d+$/.test(ctx.tab)&&!era)weekSel[Number(ctx.tab.slice(1))]=d.fecha;
     ctx.renderAll();
-    if(era)toast('Cambios guardados');else{var nx=$('#g-monto');if(nx)nx.focus()}
+    if(era)toast('Cambios guardados');else{avisoAnotado(nid,'Anotado: '+money(d.monto)+(d.nota?' en '+d.nota:''));var nx=$('#g-monto');if(nx)nx.focus()}
   });
   p.addEventListener('click',function(e){
     var fr=e.target.closest('[data-frec]');if(fr){var fe=$('#g-fecha');anotarFrecuente(Number(fr.getAttribute('data-frec')),fe?fe.value:today());return}

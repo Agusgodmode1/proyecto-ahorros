@@ -41,10 +41,18 @@ PWA para iPhone de finanzas personales de Agus (Uruguay). La publica GitHub Page
 
 ## Saldo y topes (1.14)
 - `logica/saldo.js`: `disponible` = plata del plan − gastos anotados − fijos pagados. "Actualizar saldo" (botón en la portada) compara con lo que el usuario dice que tiene: si tiene menos, anota un gasto `src:'ajuste'` ("Ajuste de saldo", fecha del día anterior); si tiene más, suma a `plan.monto`. Siempre con "Deshacer". El ajuste no entra en el cruce de la tarjeta.
-- Topes: un gasto nuevo no puede ser mayor que lo disponible (`permitido()` en `ui/gastos.js`, ofrece "Actualizar saldo"); el ahorro del plan no pasa de monto − fijos (`planear`); la meta de "Cuando cobres" no pasa de sueldo − fijos (`proximo`). Los gastos del extracto de la tarjeta no se limitan: son hechos.
+- Un gasto real nunca se bloquea: se anota siempre y, si deja lo disponible en negativo, `avisoAnotado()` (`ui/gastos.js`) avisa y ofrece "Actualizar saldo"; si no, ofrece "Deshacer". El aviso (`.toast`) va por encima de la hoja de gasto.
+- Topes: el ahorro del plan no pasa de monto − fijos (`planear`); la meta de "Cuando cobres" no pasa de sueldo − fijos (`proximo`). Los gastos del extracto de la tarjeta no se limitan: son hechos.
+
+## Diseño 2.0 (1.18)
+- Mismos colores; otra forma. Capa al final de `app.css` con el prefijo `.v2` (clase en `<html>`), que le gana a las capas viejas. Cambios de diseño nuevos van ahí.
+- Letra: `ui-rounded` (la redondeada del iPhone) para números y títulos, `system-ui` para el texto. Nada se descarga.
+- La portada (Hoy podés gastar, Cobrás en, Tenés, Guardás) solo se ve en Plan (`data-vista` en `<html>`, lo pone `showPanels`). En las otras pestañas, la franja `#hero-mini` (hoy podés gastar + cobrás en; al tocarla vuelve a Plan).
+- Plan: la cifra de "Hoy podés gastar" enorme y sin caja (el signo $ chico, `grande()`); debajo, bloque de 3: "Cobrás en" alto a la izquierda, Tenés y Guardás apilados a la derecha. Hasta que cobres / Semana por semana / Cuando cobres forman una sola lista agrupada. La guía es una tira que se desliza.
+- Celular: barra de pestañas flotante y el micrófono al lado (no tapa contenido).
 
 ## Inicio simple (1.15)
-- Portada: "Hoy podés gastar" + botón grande «Anotar un gasto» (abre la hoja `#gasto-sheet`, formulario con prefijo `q`) + fila de 3 datos (Cobrás en / Tenés / Guardás). La cuenta regresiva ya no es una tarjeta aparte (`renderCountdown` quedó vacío).
+- Portada (1.17): "Hoy podés gastar" con un botón chico «+ Gasto» al lado (abre la hoja `#gasto-sheet`, formulario con prefijo `q`, con «¿Qué día?»: Hoy/Ayer/Anteayer; el foco va al monto en el mismo toque para que iOS abra el teclado) + tarjeta "Cobrás en N días" con barra de 12 tramos (`renderCountdown`, también en vista simple) + fila de 2 datos (Tenés / Guardás). Agus pidió que la cuenta regresiva tenga su tarjeta: no la saques ni la achiques.
 - "Hasta que cobres", "Semana por semana" y "Cuando cobres" son `<details class="fold">` cerrados; el estado abierto se guarda en `plegados` (plan.js).
 - Vista simple: botón `#modo-simple` (localStorage `pa-simple`), clase `.simple` en `#app` oculta plan y tarjetas, muestra los últimos 3 gastos.
 - Tamaños táctiles: bloque "Inicio 1.15" al final de app.css (botones/campos ≥ 48 px).

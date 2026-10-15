@@ -354,7 +354,7 @@ th.r,td.r{text-align:right}
 .logro.on{background:var(--sun-soft);border:1.5px solid transparent}
 .logro.on .lg-ic{background:var(--sun);color:var(--on-sun)}
 .logro.on .lg-st{color:var(--sun-ink)}
-.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:20;background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:14px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.25);width:max-content;max-width:calc(100% - 32px);text-align:center}
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:58;background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:14px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.25);width:max-content;max-width:calc(100% - 32px);text-align:center}
 @keyframes tin{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
 
 @media (max-width:640px){
@@ -727,7 +727,6 @@ html.pin-tapa #app,html.pin-tapa .mic,html.pin-tapa .tabs{visibility:hidden}
 .hero-chips{order:4;margin-top:0}
 .hchip{background:var(--card-h)}
 :root[data-theme="dark"] .hero{background:transparent;padding:4px 0 0}
-:root[data-theme="dark"] .hero-chips .hchip:first-child b{color:var(--mint)}
 :root[data-theme="dark"] .hero-cog{background:var(--surface)}
 :root[data-theme="dark"] .hero-hi{opacity:.75}
 
@@ -751,8 +750,9 @@ html.pin-tapa #app,html.pin-tapa .mic,html.pin-tapa .tabs{visibility:hidden}
 
 /* ---------- Inicio 1.15: más simple y más fácil de tocar ---------- */
 /* Botón grande para anotar un gasto, dentro de la portada */
-.gasto-btn{appearance:none;width:100%;min-height:56px;margin-top:12px;border:0;border-radius:16px;cursor:pointer;background:var(--sky);color:var(--on-accent);font:800 19px/1 var(--f-display);display:flex;align-items:center;justify-content:center;gap:10px}
-.gasto-btn span{font-size:28px;line-height:1;font-weight:700}
+.hh-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.gasto-btn{appearance:none;flex:none;min-height:44px;border:0;border-radius:99px;cursor:pointer;background:var(--sky);color:var(--on-accent);font:800 15px/1 var(--f-display);display:inline-flex;align-items:center;gap:6px;padding:0 16px 0 12px}
+.gasto-btn span{font-size:22px;line-height:1;font-weight:700}
 .gasto-btn:active{transform:scale(.985);filter:brightness(.95)}
 /* Fila de tres datos */
 .hero-chips{gap:8px}
@@ -807,10 +807,162 @@ input[type=number],input[type=date],input[type=text],input[type=time],select{min
   .simple-btn{padding:0 10px;font-size:12px}
   .hchip b{font-size:17px}
 }
-.hero-chips{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:0}
+.hero-chips{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:0}
 .hchip{padding:10px 10px;min-height:78px;border-radius:18px}
 .hchip span{font-size:13px}
 .hchip b{font-size:clamp(16px,4.9vw,22px);white-space:nowrap}
 #meta-alerta:empty,#p-resumen>:empty{display:none}
 .sheet .f-btn,.sheet .f-btn .btn{width:100%}
 .sheet .f-btn .btn{min-height:56px;font-size:18px}
+
+/* Portada 1.17: vuelve la tarjeta "Cobrás en" y el botón de gasto es chico, al lado de "Hoy podés gastar" */
+.hoy-hero{order:2}
+.cd{order:3}
+.hero-chips{order:4}
+#app.simple .cd{display:grid}
+
+/* =====================================================================
+   Diseño 2.0 (1.18): mismo color, otra forma.
+   - Tipografía redondeada del iPhone para números y títulos (ui-rounded), sin descargar nada.
+   - La portada solo vive en Plan. En las otras pestañas, una franja compacta (#hero-mini).
+   - Plan: la cifra de "Hoy podés gastar" enorme y sin caja; abajo, un bloque de 3 datos:
+     el cobro a la izquierda (alto) y Tenés / Guardás apilados a la derecha.
+   - Hasta que cobres / Semana por semana / Cuando cobres: una lista agrupada, como Ajustes de iOS.
+   - Barra de pestañas flotante, con el micrófono al lado (nunca tapa contenido).
+   Todo va con el prefijo .v2 (clase en <html>) para ganarle a las capas viejas.
+   ===================================================================== */
+:root.v2{
+  --f-display:ui-rounded,'SF Pro Rounded','Bricolage Grotesque',system-ui,-apple-system,sans-serif;
+  --f-body:system-ui,-apple-system,'SF Pro Text','Segoe UI',Roboto,sans-serif;
+  --r-l:28px;--r-m:20px;--r-s:14px;
+}
+.v2 body{font-size:16px;line-height:1.45}
+.v2 .wrap{gap:22px;max-width:640px}
+.v2 h2{font:700 21px/1.2 var(--f-display);letter-spacing:-.01em}
+
+/* ---------- Encabezado ---------- */
+.v2 .hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);grid-template-areas:"top top" "hoy hoy" "saldo saldo" "cd ch" "mini mini";gap:12px;padding:0;background:transparent;border-radius:0}
+.v2 .hero>div:first-child{grid-area:top}
+.v2 .hoy-hero{grid-area:hoy}
+.v2 .saldo-card{grid-area:saldo}
+.v2 .cd{grid-area:cd}
+.v2 .hero-chips{grid-area:ch}
+.v2 .mini{grid-area:mini}
+.v2 .hero-top{gap:8px}
+.v2 .hero-hi{font:700 17px var(--f-display);opacity:1;color:var(--muted)}
+.v2 .hero-cog{width:40px;height:40px;background:var(--surface)}
+.v2 .simple-btn{min-height:40px;background:var(--surface)}
+
+/* Hoy podés gastar: la cifra es el diseño */
+.v2 .hoy-hero{background:transparent;border-radius:0;padding:14px 2px 4px;gap:0}
+.v2 .hh-top{align-items:center}
+.v2 .hoy-hero .hh-l{font:600 17px var(--f-body);opacity:1;color:var(--muted)}
+.v2 .hoy-hero .hh-n{display:flex;align-items:flex-start;gap:6px;font:800 clamp(72px,24vw,112px)/.92 var(--f-display);letter-spacing:-.055em;color:var(--sky);margin:10px 0 8px -4px}
+.v2 .hoy-hero .hh-n.neg{color:var(--bad)}
+.v2 .hh-cur{font-size:.36em;letter-spacing:0;margin-top:.22em;opacity:.8}
+.v2 .hoy-hero .hh-s{font-size:15px;opacity:1;color:var(--muted);margin-top:2px}
+.v2 .hoy-hero .bar{height:10px;border-radius:99px;margin-top:14px;background:var(--surface)}
+.v2 .hoy-hero .bar>i{border-radius:99px}
+.v2 .gasto-btn{min-height:48px;padding:0 18px 0 14px;font-size:16px}
+.v2 .gasto-btn span{font-size:24px}
+
+/* Bloque de datos: cobro alto a la izquierda, saldo y ahorro apilados */
+.v2 .cd{display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:6px;width:auto;height:auto;min-height:0;border-radius:var(--r-l);padding:18px 18px 16px;background:var(--surface);box-shadow:none;text-align:left}
+.v2 .cd-l{font:600 15px var(--f-body);opacity:1;color:var(--muted)}
+.v2 .cd-v{flex-direction:column;align-items:flex-start;gap:0;justify-content:flex-start}
+.v2 .cd-n{font:800 clamp(64px,20vw,84px)/.9 var(--f-display);letter-spacing:-.05em;color:var(--coral)}
+.v2 .cd-t{font:700 17px var(--f-display);opacity:1;margin-top:2px}
+.v2 .cd-seg{width:100%;gap:3px;margin-top:8px}
+.v2 .cd-seg i{height:8px;border-radius:3px;background:var(--surface-2)}
+.v2 .cd-seg i.on{background:var(--coral)}
+.v2 .cd-d{display:block;font:600 14px var(--f-body);color:var(--muted);opacity:1}
+.v2 .hero-chips{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:1fr 1fr;gap:12px;margin:0}
+.v2 .hchip{border-radius:var(--r-l);padding:16px;min-height:0;background:var(--surface);justify-content:space-between;gap:4px}
+.v2 .hchip span{font:600 15px var(--f-body);opacity:1;color:var(--muted)}
+.v2 .hchip b{font:800 clamp(22px,6.4vw,28px)/1.05 var(--f-display);letter-spacing:-.03em;white-space:nowrap}
+.v2 .hchip:last-child b{color:var(--mint)}
+.v2 .hchip small{font-size:13.5px;color:var(--muted);opacity:1}
+.v2 button.hchip small{color:var(--sky)}
+.v2 .saldo-card{border-radius:var(--r-l);background:var(--surface);padding:18px}
+
+/* Franja compacta (solo fuera de Plan) */
+.v2 .mini{display:none}
+.v2[data-vista="otra"] .hoy-hero,.v2[data-vista="otra"] .cd,.v2[data-vista="otra"] .hero-chips,.v2[data-vista="otra"] .saldo-card{display:none}
+.v2[data-vista="otra"] .mini:not([hidden]){appearance:none;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;width:100%;border:0;cursor:pointer;text-align:left;background:var(--surface);color:var(--ink);border-radius:var(--r-m);padding:12px 16px}
+.v2 .mini span{display:flex;flex-direction:column;gap:1px;min-width:0}
+.v2 .mini small{font-size:13px;color:var(--muted)}
+.v2 .mini b{font:800 24px/1.05 var(--f-display);letter-spacing:-.03em;color:var(--sky)}
+.v2 .mini b.neg{color:var(--bad)}
+.v2 .mini .mn-b{align-items:flex-end;text-align:right}
+.v2 .mini .mn-b b{color:var(--coral)}
+.v2 #meta-alerta:empty{display:none}
+
+/* ---------- Títulos de cada pestaña ---------- */
+.v2 .panel-head{gap:8px;padding:6px 2px 4px}
+.v2 .ph-t{font:800 clamp(34px,10vw,44px)/1 var(--f-display);letter-spacing:-.035em;color:var(--c)}
+.v2 .ph-s{font-size:15.5px;line-height:1.5;color:var(--muted);max-width:52ch}
+
+/* ---------- Tarjetas, datos y botones ---------- */
+.v2 .card{border:0;border-radius:var(--r-l);padding:20px;background:var(--surface)}
+.v2 .card h2{font-size:21px}
+.v2 .tiles{gap:10px}
+.v2 .tile{border-radius:var(--r-m);padding:16px;background:var(--surface-2)}
+.v2 .tile-l{font:600 14px var(--f-body);color:var(--c)}
+.v2 .tile-v{font:800 clamp(22px,6.6vw,32px)/1.05 var(--f-display);letter-spacing:-.035em;overflow-wrap:normal;word-break:normal}
+.v2 .tile-h{font-size:13.5px}
+.v2 .btn{border-radius:99px;min-height:48px;padding:10px 20px;font-size:16px}
+.v2 .btn.sm{min-height:36px;padding:6px 14px;font-size:14px}
+.v2 .banner{border-radius:var(--r-m);padding:16px 18px}
+.v2 input,.v2 select,.v2 textarea{border-radius:var(--r-s)}
+.v2 .receipt{gap:10px}
+
+/* ---------- Plan: lista agrupada ---------- */
+.v2 #resumen-out{display:flex;flex-direction:column;gap:0}
+.v2 #resumen-out>.banner{margin-bottom:22px}
+.v2 #resumen-out>.fold{border-radius:0;margin:0;padding:4px 18px;background:var(--surface)}
+.v2 #resumen-out>.fold+.fold{box-shadow:inset 0 1px 0 var(--line)}
+.v2 #resumen-out>.fold:first-of-type{border-radius:var(--r-l) var(--r-l) 0 0;padding-top:8px}
+.v2 #resumen-out>.fold:last-of-type{border-radius:0 0 var(--r-l) var(--r-l);padding-bottom:8px}
+.v2 #resumen-out>.fold[open]{padding-bottom:18px}
+.v2 .fold>summary{min-height:68px}
+.v2 .fold-t{font:700 18px/1.2 var(--f-display)}
+.v2 .fold-s{font-size:14.5px;font-weight:500}
+.v2 .plan-aj>summary{border:0;border-radius:var(--r-l);background:var(--surface);padding:14px 18px}
+.v2 .plan-aj>summary .pa-t{font:700 18px var(--f-display)}
+
+/* Guía: una tira que se desliza, no una grilla que tapa la pantalla */
+.v2 #guia{background:transparent;padding:0;gap:12px}
+.v2 #guia .sec-h{padding-inline:2px}
+.v2 .guia-grid{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0;padding:2px 0 6px;scrollbar-width:none}
+.v2 .guia-grid::-webkit-scrollbar{display:none}
+.v2 .g-item{flex:0 0 172px;scroll-snap-align:start;border-radius:var(--r-m);padding:16px;grid-template-columns:minmax(0,1fr);gap:8px;align-content:start}
+.v2 .g-item .t{font-size:14px;color:var(--muted)}
+
+/* ---------- Semanas ---------- */
+.v2 .wk{border:0;border-radius:var(--r-m);background:var(--surface)}
+
+/* ---------- Pestañas: barra flotante con el micrófono al lado ---------- */
+@media (max-width:767px){
+  .v2 body{padding-bottom:calc(124px + env(safe-area-inset-bottom,0px))}
+  .v2 .tabs{left:max(12px,env(safe-area-inset-left,0px));right:calc(max(12px,env(safe-area-inset-right,0px)) + 70px);bottom:calc(10px + env(safe-area-inset-bottom,0px));
+    padding:6px;border:0;border-radius:30px;background:color-mix(in srgb,var(--surface) 88%,transparent);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
+    box-shadow:0 10px 30px rgba(0,0,0,.45),inset 0 0 0 1px var(--line)}
+  .v2 .tablist{gap:0}
+  .v2 .tab{padding:7px 0 6px;gap:3px;border-radius:24px;font-size:10.5px;font-weight:600;min-height:52px;justify-content:center}
+  .v2 .tab svg{width:23px;height:23px;color:var(--muted)}
+  .v2 .tab[aria-selected="true"]{background:var(--c-soft);color:var(--c)}
+  .v2 .tab[aria-selected="true"] svg{color:var(--c)}
+  .v2 .mic{width:64px;height:64px;right:max(12px,env(safe-area-inset-right,0px));bottom:calc(10px + env(safe-area-inset-bottom,0px));box-shadow:0 10px 30px rgba(0,0,0,.45)}
+  .v2 .toast{bottom:calc(90px + env(safe-area-inset-bottom,0px))}
+}
+@media (max-width:360px){.v2 .tab span{display:none}.v2 .tab{min-height:48px}}
+@media (min-width:768px){.v2 .wrap{max-width:720px}}
+
+/* Vista simple: lo mismo, sin las listas */
+.v2 #app.simple .cd{display:flex}
+
+/* Modo claro: mismas formas, con las superficies claras */
+.v2:not([data-theme="dark"]) .hoy-hero .hh-n:not(.neg){color:var(--sky)}
+.v2 .hero,.v2 .hero-cog,.v2 .simple-btn,.v2 .cd,.v2 .hchip,.v2 .saldo-card,.v2 .saldo-card .btn.quiet{color:var(--ink)}
+.v2 .simple-btn[aria-pressed="true"]{color:var(--on-accent)}
+.v2:not([data-theme="dark"]) .saldo-card .btn.primary{background:var(--sky);border-color:var(--sky);color:var(--on-accent)}

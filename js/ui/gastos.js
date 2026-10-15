@@ -6,7 +6,7 @@ import {cotizacion,gastoUSD,aPesos} from '../logica/monedas.js';
 import {frecuentes} from '../logica/frecuentes.js';
 import {ctx,esc,money,usd,toastAccion,toast,fCorta,today} from './comun.js';
 import {nombresVisibles,nombreDe,colorDe} from '../logica/categorias.js';
-import {cabeGasto} from '../logica/saldo.js';
+import {disponible} from '../logica/saldo.js';
 
 /* La categoría que sugiere la nota, ya pasada a tu lista de categorías */
 export function sugerir(nota){var st=ctx.state;return nombreDe(st,categoriaGasto(nota||'',st&&st.voz.cats))}
@@ -77,12 +77,17 @@ export function leerForm(f){
   return d;
 }
 
-/* Tope: un gasto nuevo no puede ser mayor que la plata disponible. Devuelve false (y avisa) si no entra. */
-export function permitido(monto){
-  var c=cabeGasto(ctx.state,monto);
-  if(c.ok)return true;
-  toastAccion(c.disponible>0?'No te alcanza: tenés '+money(c.disponible)+' disponibles.':'No te queda plata disponible.','Actualizar saldo',function(){ctx.abrirSaldo()});
-  return false;
+/* Un gasto real siempre se anota (es un hecho, aunque no "entre" en lo disponible).
+   Después de guardarlo: si te dejó en negativo, avisa y ofrece "Actualizar saldo"; si no, ofrece "Deshacer". */
+export function avisoAnotado(id,texto){
+  var st=ctx.state,d=num(st.plan.monto)>0?disponible(st):0;
+  if(num(st.plan.monto)>0&&d<-0.5){
+    toastAccion('Anotado. Gastaste '+money(-d)+' más de la plata que tenías anotada.','Actualizar saldo',function(){ctx.abrirSaldo()});
+    return;
+  }
+  toastAccion(texto,'Deshacer',function(){
+    ctx.state.gastos=ctx.state.gastos.filter(function(g){return g.id!==id});ctx.persist();ctx.renderAll();
+  });
 }
 
 /* Guarda un gasto nuevo o cambia uno existente. Si corregiste la categoría, la app la aprende. */
@@ -111,11 +116,8 @@ export function anotarFrecuente(i,fecha){
   var d={nota:x.nota,cat:x.cat||sugerir(x.nota),fecha:fecha||today()};d.sugerida=d.cat;
   if(x.usd){var cot=cotizacion(ctx.state);if(!cot){toast('Primero cargá la cotización del dólar en Ajustes');return}Object.assign(d,gastoUSD(x.usd,cot))}
   else d.monto=x.monto;
-  if(!permitido(d.monto))return;
   var id=guardarGasto(d,null);ctx.renderAll();
-  toastAccion('Anotado: '+(x.usd?usd(x.usd):money(d.monto))+' en '+x.nota,'Deshacer',function(){
-    ctx.state.gastos=ctx.state.gastos.filter(function(g){return g.id!==id});ctx.persist();ctx.renderAll();
-  });
+  avisoAnotado(id,'Anotado: '+(x.usd?usd(x.usd):money(d.monto))+' en '+x.nota);
 }
 
 /* Borra y ofrece "Deshacer" durante unos segundos. */

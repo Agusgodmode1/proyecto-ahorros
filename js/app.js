@@ -57,6 +57,7 @@ function renderTabs(pc){
 }
 function showPanels(){
   var tab=ctx.tab;
+  document.documentElement.setAttribute('data-vista',tab==='resumen'?'plan':'otra');
   $('#p-resumen').hidden=tab!=='resumen';
   $('#p-semana').hidden=!/^w\d+$/.test(tab);
   $('#p-sueldo').hidden=tab!=='sueldo';

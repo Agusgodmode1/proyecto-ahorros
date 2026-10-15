@@ -9,6 +9,7 @@ import {diffDays,pagaComoFeriado,parse,MESL} from '../logica/fechas.js';
 import {num,uid} from '../logica/util.js';
 import {cotizacion,gastoUSD,aPesos} from '../logica/monedas.js';
 import {ctx,$,today,planNow,liqNow,money,usd,esc,fMin,fLarga,toast} from './comun.js';
+import {avisoAnotado} from './gastos.js';
 
 var MSG_TECLADO='Tocá el micrófono del teclado y dictá.';
 var TK='pa-voz-teclado'; /* se recuerda si el reconocimiento no anda en este teléfono */
@@ -176,12 +177,12 @@ function resumen(){
 /* ---------- Guardar ---------- */
 function guardar(){
   leer();
-  var st=ctx.state,msg='';
+  var st=ctx.state,msg='',gid=null;
   if(r.intencion==='gasto'){
     if(!(r.monto>0))return;
     var ng={id:uid(),fecha:r.fecha,monto:Math.round(r.monto*100)/100,nota:r.nota.slice(0,60),cat:r.cat,src:'voz'};
     if(r.enUSD)Object.assign(ng,gastoUSD(r.monto,r.cot));
-    st.gastos.push(ng);
+    st.gastos.push(ng);gid=ng.id;
     if(r.nota&&catSugerida&&r.cat!==catSugerida)aprender(st.voz.cats,r.nota,r.cat);
     var i=semanaDe(planNow(),r.fecha);
     msg='Anotado: '+(r.enUSD?usd(r.monto):money(r.monto))+(r.nota?' en '+r.nota:'')+(i>=0?' · Semana '+(i+1):'');
@@ -200,7 +201,8 @@ function guardar(){
     st.horas.push({id:uid(),fecha:r.fecha,tipo:r.tipo,min:r.min,src:'voz'});
     msg='Sumé '+fMin(r.min)+(r.tipo==='fin'?' de finde o feriado':' entre semana');
   }
-  ctx.persist();ctx.renderAll();cerrar();toast(msg);
+  ctx.persist();ctx.renderAll();cerrar();
+  if(gid)avisoAnotado(gid,msg);else toast(msg);
 }
 
 /* ---------- Consultas: responde en pantalla y en voz, sin guardar nada ---------- */

@@ -1,0 +1,2 @@
+pdf.js 6.3.289 (versión "legacy", de pdfjs-dist en npm), sin cambios salvo la extensión .mjs → .js.
+Licencia Apache 2.0 (ver LICENSE). Se usa para leer recibos en PDF dentro del teléfono.

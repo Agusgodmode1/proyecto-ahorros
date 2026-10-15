@@ -12,3 +12,6 @@ Publicar.bat
 *.xls
 *.csv
 !tests/fixtures/*.xlsx
+
+# Recibos reales para probar: nunca al repositorio
+pruebas/

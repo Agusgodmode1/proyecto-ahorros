@@ -1,7 +1,7 @@
 /* Service worker: guarda la app para que funcione sin internet y avisa cuando hay una versión nueva.
    CADA CAMBIO EN LA APP: subí VERSION (y la de js/version.js). Así cambia el nombre del caché y el
    teléfono descarga la versión nueva. Si agregás un archivo, sumalo a ARCHIVOS (una prueba lo controla). */
-var VERSION='1.9.0';
+var VERSION='1.10.0';
 var CACHE='ahorros-'+VERSION;
 var FUENTES='ahorros-fuentes';
 var ARCHIVOS=[
@@ -28,6 +28,7 @@ var ARCHIVOS=[
   'js/logica/mes.js',
   'js/logica/metas.js',
   'js/logica/plan.js',
+  'js/logica/recibos.js',
   'js/logica/planilla.js',
   'js/logica/sueldo.js',
   'js/logica/sync.js',
@@ -43,6 +44,7 @@ var ARCHIVOS=[
   'js/ui/metas.js',
   'js/ui/perfil.js',
   'js/ui/plan.js',
+  'js/ui/recibos.js',
   'js/ui/planilla.js',
   'js/ui/respaldo.js',
   'js/ui/semanas.js',
@@ -54,7 +56,9 @@ var ARCHIVOS=[
   'icons/icon-192.png',
   'icons/icon-512.png',
   'icons/maskable-192.png',
-  'icons/maskable-512.png'
+  'icons/maskable-512.png',
+  'vendor/pdfjs-6.3.289/pdf.min.js',
+  'vendor/pdfjs-6.3.289/pdf.worker.min.js'
 ];
 
 self.addEventListener('install',function(e){

@@ -13,23 +13,24 @@ var tipoSel='sem',confirmClear=false;
 var REDTXT={media:' y se pagan redondeados a la media hora',cuarto:' y se pagan redondeados al cuarto de hora',no:' y se pagan sin redondear'};
 
 export function renderSueldo(){
-  var state=ctx.state,s=state.sueldo,L=liqNow(true),L0=liqNow(false),mc=mins(state,'sem'),me=mins(state,'fin');
+  /* Lr: lo que vas a cobrar (el recibo, si lo cargaste); L: la estimación, para el desglose */
+  var state=ctx.state,s=state.sueldo,Lr=liqNow(true),L=Lr.estimado||Lr,L0=liqNow(false),mc=mins(state,'sem'),me=mins(state,'fin');
   var bpc=num(s.bpc)||6864,nom=num(s.nominal),t=tarifas(state),R=reglasHoras(state),hn=t.hora,finH=t.heEsp+t.bonoHora,conHoras=R.activo!==false;
   var desc=L.mont+L.fon+L.frl+L.irpf+L.otros,extras=L.N-nom;
   var ing=ingresoDe(state),uy=ing.tipo==='uy';
   /* Lo que es solo del sueldo en Uruguay: aguinaldo, BPC, control del recibo y descuentos de ley */
-  $('#aguinaldo-card').hidden=!uy;$('#card-control').hidden=!uy;
+  $('#aguinaldo-card').hidden=!uy;$('#card-control').hidden=!uy;$('#card-recibos').hidden=ing.tipo==='variable';
   ['s-otros','s-hijos','s-conyuge','s-bpc'].forEach(function(id){var f=$('#'+id).closest('.field');if(f)f.hidden=!uy});
   var fb=$('#s-bonofijo').closest('.field');if(fb)fb.hidden=ing.tipo==='variable';
   var ln=document.querySelector('label[for="s-nominal"]');if(ln)ln.textContent=ing.tipo==='variable'?'Lo que cobrás en un mes normal (en mano)':ing.tipo==='personalizado'?'Sueldo mensual, antes de tus descuentos':'Sueldo nominal mensual';
   /* Sin horas extra, el control del recibo no pregunta por horas */
   ['r-heh','r-hem','r-des','r-fer'].forEach(function(id){var f=$('#'+id).closest('.field');if(f)f.hidden=!conHoras});
-  if(!uy){renderOtroIngreso(L,conHoras);return}
+  if(!uy){renderOtroIngreso(Lr,conHoras);return}
   var ban='';
   if(state.ejemplo)ban='<div class="banner"><p><b>Estás viendo valores de ejemplo.</b> Sueldo, valor de las horas y registro de tiempo son de muestra. Borralos y creá tu perfil cuando quieras.</p><button class="btn" type="button" data-cero>Borrar el ejemplo y crear mi perfil</button></div>';
   $('#ej-banner').innerHTML=ban;
 
-  $('#sueldo-hero').innerHTML='<div class="card pay-hero"><div class="ph-main"><span class="tile-l" style="color:var(--grape-ink)">Vas a cobrar, más o menos</span><b class="pay-big">'+money(L.liquido)+'</b><span class="tile-h">El '+esc(fLarga(state.plan.cobro))+', ya con los descuentos. '+(conHoras?'Las horas extra te suman <b>'+money(L.liquido-L0.liquido)+'</b> en mano.':'')+'</span></div><div class="tiles">'
+  $('#sueldo-hero').innerHTML='<div class="card pay-hero"><div class="ph-main"><span class="tile-l" style="color:var(--grape-ink)">'+(Lr.real?'Vas a cobrar':'Vas a cobrar, más o menos')+'</span><b class="pay-big">'+money(Lr.liquido)+'</b><span class="tile-h">El '+esc(fLarga(state.plan.cobro))+', ya con los descuentos. '+(Lr.real?'Es lo que dice tu recibo; mi estimación daba '+money(L.liquido)+'. ':'')+(conHoras?'Las horas extra te suman <b>'+money(L.liquido-L0.liquido)+'</b> en mano.':'')+'</span></div><div class="tiles">'
     +tile('tone-sky','Sueldo base',money(nom),'el mismo todos los meses')
     +(conHoras?tile('tone-mint','Extras de este mes','+ '+money(extras),'horas extra, descanso y bono'):tile('tone-mint','Bono','+ '+money(extras),'bono fijo del mes'))
     +tile('tone-coral','Descuentos','− '+money(desc),'BPS, FONASA y FRL'+(L.irpf>0?' e IRPF':''))

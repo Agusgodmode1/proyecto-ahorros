@@ -4,6 +4,7 @@ import {liq,reglasHoras} from './sueldo.js';
 import {fijosPeriodo,isPagado,nextCobro,cfgCobro} from './plan.js';
 import {aportado} from './metas.js';
 import {minimoDe,nivelDe,rachaSemanas} from './mes.js';
+import {liqReal} from './recibos.js';
 
 export function mesKey(s){return s.slice(0,7)}
 export function difMeses(a,b){return (Number(b.slice(0,4))-Number(a.slice(0,4)))*12+(Number(b.slice(5,7))-Number(a.slice(5,7)))}
@@ -80,7 +81,7 @@ export function nuevosLogros(state,pc,hoy,A){
    (inicio = cobro anterior, cobro = 5.º día hábil del mes siguiente). Devuelve la fecha del nuevo cobro. */
 export function cerrarMes(state,pc,ahorrado,monto){
   var p=state.plan,fp=fijosPeriodo(state.fijos,p.inicio,p.cobro);
-  var ah=Math.max(0,ahorrado),k=mesKey(p.inicio),semOk=0,L=liq(state,true),seq=[];
+  var ah=Math.max(0,ahorrado),k=mesKey(p.inicio),semOk=0,L=liqReal(state),seq=[];
   pc.weeks.forEach(function(w){if(w.left>=0)semOk++;if(w.spent>0)seq.push(w.left>=0)});
   var rec={k:k,desde:p.inicio,hasta:p.cobro,meta:Math.round(pc.ahorro),ahorrado:Math.round(ah),gastado:Math.round(pc.spentInPlan),presupuesto:Math.round(pc.gastar),semanas:pc.weeks.length,semanasOk:semOk,conGastos:pc.spentInPlan>0,fijosN:fp.length,fijosPagados:fp.filter(function(o){return isPagado(state,o.f.id)}).length,
     minimo:minimoDe(state,pc),semanasSeq:seq,

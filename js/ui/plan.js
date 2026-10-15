@@ -8,6 +8,7 @@ import {ctx,$,today,liqNow,planNow,exAnalisis,money,esc,fCorta,fLarga,rango,fMin
 import {aguinaldo} from '../logica/aguinaldo.js';
 import {aniosSinFeriados} from '../logica/avisos.js';
 import {ritmoDelMes,minimoDe} from '../logica/mes.js';
+import {sensibilidadDolar} from '../logica/recibos.js';
 import {formGasto,initFormsGasto,leerForm,guardarGasto,borrarGasto,itemGasto,chipsFrecuentes,anotarFrecuente} from './gastos.js';
 import {editarGasto} from './semanas.js';
 
@@ -105,11 +106,13 @@ export function renderResumen(pc){
   h+='<div class="card stack tone-grape"><div class="sec-h"><h2>Cuando cobres</h2><span class="note">'+esc(cap(fLarga(p.cobro)))+' al '+esc(fLarga(nx.nc))+'</span></div>';
   h+='<p class="lead">'+(nx.libre>=0?'El mes que viene vas a poder gastar unos <b class="c-mint">'+money(nx.semana)+' por semana</b>.':'El mes que viene no te alcanza para la meta: te faltan <b class="neg">'+money(-nx.libre)+'</b>.')+'</p>';
   h+='<div class="receipt">'
-    +row('Tu sueldo, estimado',money(L.liquido),'','<button class="linklike" type="button" data-goto="sueldo">ver el cálculo</button>')
+    +row(L.real?'Tu sueldo (según tu recibo)':'Tu sueldo, estimado',money(L.liquido),'','<button class="linklike" type="button" data-goto="sueldo">ver el cálculo</button>')
     +row('Gastos fijos del mes','− '+money(nx.fij),'sub minus',state.fijos.length?state.fijos.length+' cargados':'<button class="linklike" type="button" data-goto="fijos">cargalos</button>')
     +(conAg?row('Aguinaldo de '+AG.nombre,'+ '+money(AG.liquido),'sub','<button class="linklike" type="button" data-goto="sueldo">estimado</button>, antes del '+Number(AG.pago.slice(8,10))+' de '+AG.nombre):'')
     +row('Lo que vas a guardar','− '+money(nx.meta),'sub save','tu meta de ahorro')
     +row('Libre para gastar',money(nx.libre),'final')+'</div>';
+  var sd=sensibilidadDolar(L);
+  if(sd)h+='<p class="note">Cobrás en dólares y gastás en pesos: si el dólar se mueve un '+sd.pct+' %, lo que te queda libre cambia unos <b>'+money(sd.cambio)+'</b>, para arriba o para abajo.</p>';
   h+='<div class="tiles">'+tile('tone-sky','Por día',money(nx.dia),nx.dias+' días hasta el '+esc(fCorta(nx.nc)))+tile('tone-sun','Ese día tenés',money(pc.ahorro+L.liquido),'lo guardado más el sueldo')+'</div>';
   h+='<p class="note">El sueldo ya tiene descontados BPS, FONASA y FRL'+(reglasHoras(state).activo!==false?', e incluye las horas extra de '+mtN:'')+'. Si te sobra plata de las semanas, se suma.</p></div>';
   $('#resumen-out').innerHTML=h;

@@ -9,6 +9,7 @@
 import {num} from './util.js';
 import {liq,mesTrabajo,reglasHoras} from './sueldo.js';
 import {pad} from './fechas.js';
+import {nominalesReales} from './recibos.js';
 
 function mk(y,m){var d=new Date(y,m-1,1,12);return d.getFullYear()+'-'+pad(d.getMonth()+1)}
 /* Próximo aguinaldo a cobrar desde hoy: {pago, nombre, meses:['aaaa-mm' ×6]} */
@@ -29,6 +30,8 @@ function aportes(N,fonRate){var mont=N*0.15,fon=N*fonRate,frl=N*0.001;return {mo
 export function aguinaldo(state,hoy){
   var A=proximoAguinaldo(hoy),porMes={};
   (state.hist||[]).forEach(function(r){var k=mesDeCierre(state,r);if(k&&num(r.nominal)>0)porMes[k]={nominal:num(r.nominal),fuente:'cierre'}});
+  /* Los recibos que cargaste mandan sobre todo lo demás */
+  var reales=nominalesReales(state);Object.keys(reales).forEach(function(k){porMes[k]={nominal:reales[k],fuente:'recibo'}});
   var L=liq(state,true),actual=mesTrabajo(state),base=num(state.sueldo.nominal)+num(state.sueldo.bonoFijo);
   if(!porMes[actual])porMes[actual]={nominal:L.N,fuente:'actual'};
   var meses=A.meses.map(function(k){var x=porMes[k]||{nominal:base,fuente:'estimado'};return {k:k,nominal:Math.round(x.nominal*100)/100,fuente:x.fuente}});

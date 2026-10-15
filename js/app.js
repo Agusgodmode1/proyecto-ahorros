@@ -15,6 +15,7 @@ import {abrirPerfil,initPerfil,resumenPerfil} from './ui/perfil.js';
 import {aplicarFeriados,renderFeriados,initFeriados} from './ui/feriados.js';
 import {prepararGuardado,juntar} from './logica/sync.js';
 import {renderCategorias,initCategorias} from './ui/categorias.js';
+import {renderRecibos,initRecibos} from './ui/recibos.js';
 
 /* ---------- Guardado en IndexedDB ---------- */
 var timer=null,saving=false,pending=false,guardado={donde:null,persistente:null};
@@ -75,6 +76,7 @@ function renderAll(){
   var hs=document.querySelector('.hero-sub');if(hs)hs.hidden=!!ctx.state.perfil.hecho;
   var st=ctx.state;document.documentElement.classList.toggle('en-uso',!st.ejemplo&&!!st.perfil.hecho&&(st.gastos.length+st.horas.length+st.hist.length)>3);
   renderCountdown();renderTabs(pc);showPanels();renderAvisoRespaldo();renderResumen(pc);renderWeek(pc);renderSueldo();
+  if(ctx.tab==='sueldo')renderRecibos();
   if(ctx.tab==='gastos')renderGastos();
   if(ctx.tab==='fijos')renderFijos(pc);
   if(ctx.tab==='logros')renderLogros(pc);
@@ -165,7 +167,7 @@ function arrancar(st){
   ctx.state=st;aplicarFeriados();fijarUltimo();
   if(!st.meta.creado){st.meta.creado=today();persist()}
   try{var t=localStorage.getItem(TK);if(t)ctx.tab=t}catch(e){}
-  guiaInit();initGlobal();initPlan();initSemanas();initSueldo();initTarjeta();initFijos();initLogros();initAjustes(reemplazar,juntarDatos);initVoz();initFeriados();initCategorias();
+  guiaInit();initGlobal();initPlan();initSemanas();initSueldo();initTarjeta();initFijos();initLogros();initAjustes(reemplazar,juntarDatos);initVoz();initFeriados();initCategorias();initRecibos();
   marcarDiscreto();
   ctx.booted=true;
   $('#app').hidden=false;

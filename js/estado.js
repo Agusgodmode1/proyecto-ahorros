@@ -14,8 +14,9 @@ import {categoriasBase,categoriasDesde} from './logica/categorias.js';
    v9: año en que confirmaste la BPC (para avisar cada enero); pagos de fijos con monto real
    v10: tipo de ingreso y moneda en el perfil; descuentos propios e ingresos de cada mes en el sueldo
    v11: categorías de gasto editables (state.categorias)
-   v12: plan.minimo (mínimo aceptable), plan.sobrante y plan.sobranteSemana (a dónde va lo que sobra) */
-export var VERSION_ESTADO=12;
+   v12: plan.minimo (mínimo aceptable), plan.sobrante y plan.sobranteSemana (a dónde va lo que sobra)
+   v13: recibos de sueldo guardados mes a mes (state.recibos) y plantillas por empleador para leer PDFs */
+export var VERSION_ESTADO=13;
 
 function hoyISO(){return iso(new Date())}
 /* Feriados: por defecto solo cuentan los 5 no laborables (1/1, 1/5, 18/7, 25/8, 25/12).
@@ -45,7 +46,9 @@ export function defaults(hoy){
     sync:{t:{},borrados:{}},             /* cuándo cambió cada cosa, para juntar aparatos (logica/sync.js) */
     metas:[],                            /* {id,nombre,objetivo,para:'aaaa-mm',aportes:[{id,fecha,monto}]} */
     monedas:monedasBase(),               /* cotización del dólar que cargás en Ajustes */
-    categorias:categoriasBase()          /* categorías de gasto, editables en Ajustes (logica/categorias.js) */
+    categorias:categoriasBase(),         /* categorías de gasto, editables en Ajustes (logica/categorias.js) */
+    recibos:[],                          /* recibos de sueldo confirmados, mes a mes (logica/recibos.js) */
+    plantillasRecibo:{}                  /* por empleador: qué renglón del PDF es cada campo */
   };
 }
 
@@ -107,7 +110,9 @@ export function migrar(d){
     sync:{t:obj(obj(x.sync).t),borrados:obj(obj(x.sync).borrados)},
     metas:Array.isArray(x.metas)?x.metas:[],
     monedas:Object.assign(monedasBase(),obj(x.monedas)),
-    categorias:Array.isArray(x.categorias)&&x.categorias.length?x.categorias:null};
+    categorias:Array.isArray(x.categorias)&&x.categorias.length?x.categorias:null,
+    recibos:Array.isArray(x.recibos)?x.recibos:[],
+    plantillasRecibo:obj(x.plantillasRecibo)};
   /* v11: las categorías de siempre pasan a ser tu lista, más las que ya usaban tus gastos. Ningún gasto cambia. */
   if(!state.categorias)state.categorias=categoriasDesde(state);
   /* v12: sin mínimo (vale lo mismo que el objetivo) y lo que sobra pasa a la semana siguiente, como siempre */

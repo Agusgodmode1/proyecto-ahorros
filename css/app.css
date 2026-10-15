@@ -676,3 +676,9 @@ input[type=time]{width:100%;min-width:0;background:var(--surface-2);color:var(--
 .ritmo-bien{background:var(--mint-soft)}
 .ritmo-mal{background:var(--bad-soft)}
 .hh-s.neg{color:var(--bad)}
+
+/* ---------- Recibos ---------- */
+.rec-lista li{flex-direction:column;align-items:stretch;gap:10px}
+.rec-fila{display:flex;align-items:center;gap:10px;min-width:0}
+.rec-de{color:var(--muted);overflow-wrap:anywhere}
+.rec-campos{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}

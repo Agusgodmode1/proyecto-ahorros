@@ -1,4 +1,5 @@
-/* Concepto: una alcancía con cajones de color. Celeste = el plan, sol = lo que guardás, verde = lo que te queda
+/* Paleta Limón (modo oscuro): negro puro, lima para lo que podés gastar, verde para lo que guardás, naranja para el cobro.
+   Concepto original: una alcancía con cajones de color. Celeste = el plan, sol = lo que guardás, verde = lo que te queda
    en la semana, violeta = el sueldo, coral = en qué se va la plata. Cada pestaña lleva su color de punta a punta. */
 :root{
   --bg:#EEF3F8; --surface:#FFFFFF; --surface-2:#F5F8FB; --ink:#13202B; --muted:#5A6A78; --line:#DAE3EB;
@@ -17,32 +18,32 @@
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#14131C; --surface:#1D1C28; --surface-2:#262535; --ink:#EEEBF6; --muted:#A39FB7; --line:#312F40;
-    --sky:#9AA8FF; --sky-soft:#262A4A; --sky-ink:#C7CEFF;
-    --sun:#F2C46B; --sun-soft:#3A3122; --sun-ink:#F8DDA6;
-    --mint:#7FD8B2; --mint-soft:#1E3A33; --mint-ink:#B5EBD3;
-    --grape:#C4A7FF; --grape-soft:#33294D; --grape-ink:#E0D2FF;
-    --coral:#FF9B85; --coral-soft:#42282A; --coral-ink:#FFCBBF;
-    --slate:#A9B1C9; --slate-soft:#2A2C3C; --slate-ink:#D5DAEA;
-    --teal:#77CFE0; --teal-soft:#1E3640; --teal-ink:#B6E7F0; --pink:#F59BC6;
-    --bad:#FF7392; --bad-soft:#43212D;
-    --hero:#2A2547; --hero-chip:rgba(255,255,255,.08); --on-color:#F3F0FF;
-    --on-accent:#16141F; --on-sun:#241A05;
+    --bg:#0D0D0D; --surface:#1A1A1A; --surface-2:#242424; --ink:#F5F5F0; --muted:#A3A39B; --line:#2E2E2C;
+    --sky:#E4FF3A; --sky-soft:#2B2F0C; --sky-ink:#F0FF8F;
+    --sun:#FFB547; --sun-soft:#352809; --sun-ink:#FFD992;
+    --mint:#7CF29C; --mint-soft:#12301C; --mint-ink:#B8F9CB;
+    --grape:#BBA8FF; --grape-soft:#29233F; --grape-ink:#DACFFF;
+    --coral:#FF8A5B; --coral-soft:#3A2016; --coral-ink:#FFC3AA;
+    --slate:#B4B4AC; --slate-soft:#262624; --slate-ink:#DEDED6;
+    --teal:#5EEAD4; --teal-soft:#0F2F2A; --teal-ink:#AAF4E9; --pink:#FF8FC0;
+    --bad:#FF6B6B; --bad-soft:#3F1B1B;
+    --hero:#0D0D0D; --hero-chip:rgba(255,255,255,.08); --on-color:#F5F5F0;
+    --on-accent:#0D0D0D; --on-sun:#1A1200;
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#14131C; --surface:#1D1C28; --surface-2:#262535; --ink:#EEEBF6; --muted:#A39FB7; --line:#312F40;
-  --sky:#9AA8FF; --sky-soft:#262A4A; --sky-ink:#C7CEFF;
-  --sun:#F2C46B; --sun-soft:#3A3122; --sun-ink:#F8DDA6;
-  --mint:#7FD8B2; --mint-soft:#1E3A33; --mint-ink:#B5EBD3;
-  --grape:#C4A7FF; --grape-soft:#33294D; --grape-ink:#E0D2FF;
-  --coral:#FF9B85; --coral-soft:#42282A; --coral-ink:#FFCBBF;
-  --slate:#A9B1C9; --slate-soft:#2A2C3C; --slate-ink:#D5DAEA;
-  --teal:#77CFE0; --teal-soft:#1E3640; --teal-ink:#B6E7F0; --pink:#F59BC6;
-  --bad:#FF7392; --bad-soft:#43212D;
-  --hero:#2A2547; --hero-chip:rgba(255,255,255,.08); --on-color:#F3F0FF;
-  --on-accent:#16141F; --on-sun:#241A05;
+  --bg:#0D0D0D; --surface:#1A1A1A; --surface-2:#242424; --ink:#F5F5F0; --muted:#A3A39B; --line:#2E2E2C;
+  --sky:#E4FF3A; --sky-soft:#2B2F0C; --sky-ink:#F0FF8F;
+  --sun:#FFB547; --sun-soft:#352809; --sun-ink:#FFD992;
+  --mint:#7CF29C; --mint-soft:#12301C; --mint-ink:#B8F9CB;
+  --grape:#BBA8FF; --grape-soft:#29233F; --grape-ink:#DACFFF;
+  --coral:#FF8A5B; --coral-soft:#3A2016; --coral-ink:#FFC3AA;
+  --slate:#B4B4AC; --slate-soft:#262624; --slate-ink:#DEDED6;
+  --teal:#5EEAD4; --teal-soft:#0F2F2A; --teal-ink:#AAF4E9; --pink:#FF8FC0;
+  --bad:#FF6B6B; --bad-soft:#3F1B1B;
+  --hero:#0D0D0D; --hero-chip:rgba(255,255,255,.08); --on-color:#F5F5F0;
+  --on-accent:#0D0D0D; --on-sun:#1A1200;
   color-scheme:dark;
 }
 
@@ -565,7 +566,7 @@ html.voz-abierta,html.voz-abierta body{overflow:hidden}
 @media (max-width:520px){.hero{padding:16px 16px 18px}.cd{width:auto;height:auto;box-shadow:none}.cd-n{font-size:18px}.cd-t{font-size:12.5px;max-width:none}}
 .hoy-hero .linklike{color:var(--on-color)}
 :root[data-theme="dark"] .sbar{background:var(--bg)}
-:root[data-theme="dark"] .toast{background:#2E2B42;color:var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.45),inset 0 0 0 1px var(--line)}
+:root[data-theme="dark"] .toast{background:#262624;color:var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.45),inset 0 0 0 1px var(--line)}
 /* Con la app ya en uso, las explicaciones de cada pestaña se ocultan: queda lo importante */
 html.en-uso .ph-s{display:none}
 /* Semanas en Plan: una fila por semana, fácil de leer de un vistazo */
@@ -698,3 +699,32 @@ input[type=time]{width:100%;min-width:0;background:var(--surface-2);color:var(--
 /* Con PIN, en segundo plano o bloqueada, no se ve nada de la app */
 html.pin-tapa #app,html.pin-tapa .mic,html.pin-tapa .tabs{visibility:hidden}
 .pin-form{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;max-width:320px}
+
+/* Portada 1.13 (Limón): tarjetas separadas. Hoy podés gastar más chico, cuenta regresiva del cobro con su propia tarjeta */
+:root{--card-h:var(--hero-chip);--track:var(--hero-chip);--cd-c:var(--sun)}
+:root[data-theme="dark"]{--card-h:var(--surface);--track:var(--bg);--cd-c:var(--coral)}
+.hero{grid-template-columns:minmax(0,1fr);gap:10px}
+.hero>div:first-child{order:1}
+.hoy-hero{order:2;margin-top:0;gap:3px;background:var(--card-h);border-radius:20px;padding:14px 16px 16px}
+.hoy-hero .hh-l{font:600 13px var(--f-body);opacity:.7}
+.hoy-hero .hh-n{font:800 clamp(30px,8.5vw,38px)/1.1 var(--f-display);letter-spacing:-.025em;color:var(--sky)}
+.hoy-hero .hh-n.neg{color:var(--bad)}
+.hoy-hero .hh-s{font-size:13.5px}
+.hoy-hero .bar{background:var(--track);height:6px;margin-top:10px}
+.hoy-hero .bar>i{background:var(--sky)}
+.hoy-hero .bar.over>i{background:var(--bad)}
+.cd{order:3;width:auto;height:auto;border-radius:20px;background:var(--card-h);color:var(--on-color);box-shadow:none;padding:12px 16px 14px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;align-items:baseline;text-align:left}
+.cd-l{font:600 13px var(--f-body);opacity:.7}
+.cd-v{display:flex;align-items:baseline;gap:6px;justify-content:flex-end}
+.cd-n{font:800 clamp(26px,7vw,32px)/1 var(--f-display);letter-spacing:-.02em;color:var(--cd-c)}
+.cd-t{font:600 14px var(--f-body);opacity:.85;max-width:none;margin:0}
+.cd-seg{grid-column:1/-1;display:flex;gap:3px;margin-top:2px}
+.cd-seg i{flex:1;height:6px;border-radius:2px;background:var(--track)}
+.cd-seg i.on{background:var(--cd-c)}
+.cd-d{display:block;grid-column:1/-1;font:600 12.5px var(--f-body);opacity:.7;margin:0}
+.hero-chips{order:4;margin-top:0}
+.hchip{background:var(--card-h)}
+:root[data-theme="dark"] .hero{background:transparent;padding:4px 0 0}
+:root[data-theme="dark"] .hero-chips .hchip:first-child b{color:var(--mint)}
+:root[data-theme="dark"] .hero-cog{background:var(--surface)}
+:root[data-theme="dark"] .hero-hi{opacity:.75}

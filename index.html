@@ -12,13 +12,13 @@
 <meta name="application-name" content="Ahorros">
 <meta name="format-detection" content="telephone=no">
 <meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#14131C" id="meta-tema">
+<meta name="theme-color" content="#0D0D0D" id="meta-tema">
 <script>
 /* Tema: oscuro por defecto. Se aplica antes de dibujar para que no parpadee. Se cambia en Ajustes → Apariencia. */
 (function(){var t='oscuro';try{t=localStorage.getItem('pa-tema')||'oscuro'}catch(e){}
 var d=t==='auto'?matchMedia('(prefers-color-scheme: dark)').matches:t!=='claro';
 if(t!=='auto')document.documentElement.setAttribute('data-theme',d?'dark':'light');
-document.getElementById('meta-tema').setAttribute('content',d?'#14131C':'#1A72B5')})();
+document.getElementById('meta-tema').setAttribute('content',d?'#0D0D0D':'#1A72B5')})();
 </script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">

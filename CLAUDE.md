@@ -24,7 +24,7 @@ PWA para iPhone de finanzas personales de Agus (Uruguay). La publica GitHub Page
 - Feriados: lista base en `js/logica/feriados.js` (solo 5 no laborables por año); los cambios del usuario en `state.feriados`; la app los aplica con `aplicarFeriados()`. **Regla de Agus: solo cuentan los no laborables; los laborables son días comunes** (por defecto `perfil.cobro.laborableHabil=true` y `perfil.horas.feriadoLaborable='comun'`, cambiables en el perfil).
 
 ## iOS
-- Diseño "noche de cobro": fondo tinta violeta (#14131C), superficies sin borde, un pastel por pestaña (Plan lavanda, Semanas menta, Fijos agua, Sueldo lila, Tarjeta durazno, Logros miel). Lo único grande es "Hoy podés gastar" en la portada. Etiquetas en minúscula (sin mayúsculas sostenidas).
+- Diseño "Limón" (modo oscuro): fondo negro (#0D0D0D), lima (#E4FF3A) para lo que podés gastar, verde para lo que guardás, naranja para el cobro; un tono por pestaña (Plan lima, Semanas verde, Fijos turquesa, Sueldo violeta suave, Tarjeta naranja, Logros ámbar). En la portada, "Hoy podés gastar" (tarjeta de ~36 px) y "Cobrás en N días" (tarjeta con barra de 12 tramos) van cada uno en su tarjeta. Etiquetas en minúscula (sin mayúsculas sostenidas).
 - Tema oscuro por defecto (`data-theme` en `<html>`, script en el `<head>` de index.html); se cambia en Ajustes → Apariencia y se guarda en `localStorage` (pa-tema). Todo color sale de las variables de `:root`.
 - Campos con letra de 16 px o más (si no, iOS hace zoom). Teclados numéricos con `inputmode`.
 - Respetar `env(safe-area-inset-*)`. Nada fijo puede quedar tapado por la barra de pestañas, el micrófono o el indicador de inicio.

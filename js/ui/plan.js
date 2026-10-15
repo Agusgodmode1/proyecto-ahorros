@@ -47,12 +47,16 @@ function renderHoy(pc){
 }
 var hoyAbierto=false;
 export function renderCountdown(){
-  var state=ctx.state,d=diffDays(today(),state.plan.cobro),big,small;
-  if(d>0){big=String(d);small=(d===1?'día para cobrar':'días para cobrar')}
-  else if(d===0){big='Hoy';small='cobrás'}
-  else{big='Ya';small='cobraste'}
-  $('#countdown').innerHTML='<span class="cd-n">'+esc(big)+'</span><span class="cd-t">'+esc(small)+'</span><span class="cd-d">'+esc(fLarga(state.plan.cobro))+'</span>';
-  $('#countdown').setAttribute('aria-label',(d>0?d+' '+small:small)+', '+fLarga(state.plan.cobro));
+  var state=ctx.state,d=diffDays(today(),state.plan.cobro),big,small,lab;
+  if(d>0){big=String(d);small=(d===1?'día':'días');lab='Cobrás en'}
+  else if(d===0){big='Hoy';small='cobrás';lab='Cobro'}
+  else{big='Ya';small='cobraste';lab='Cobro'}
+  var tot=diffDays(state.plan.inicio||today(),state.plan.cobro),pas=diffDays(state.plan.inicio||today(),today());
+  var on=tot>0?Math.max(0,Math.min(12,Math.round(12*pas/tot))):0,seg='';
+  if(d<=0)on=12;
+  for(var i=0;i<12;i++)seg+='<i'+(i<on?' class="on"':'')+'></i>';
+  $('#countdown').innerHTML='<span class="cd-l">'+lab+'</span><span class="cd-v"><span class="cd-n">'+esc(big)+'</span><span class="cd-t">'+esc(small)+'</span></span><span class="cd-seg" aria-hidden="true">'+seg+'</span><span class="cd-d">'+esc(fLarga(state.plan.cobro))+'</span>';
+  $('#countdown').setAttribute('aria-label',(d>0?d+' '+small+' para cobrar':(d===0?'Cobrás hoy':'Ya cobraste'))+', '+fLarga(state.plan.cobro));
 }
 
 export function renderResumen(pc){

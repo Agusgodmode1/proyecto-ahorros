@@ -48,6 +48,8 @@ document.getElementById('meta-tema').setAttribute('content',d?'#14131C':'#1A72B5
   </div>
 </div>
 
+<div class="pin" id="pin" hidden role="dialog" aria-modal="true" aria-labelledby="pin-t"><div class="pin-in stack" id="pin-box"></div></div>
+
 <div class="wiz" id="wiz" hidden><div class="welcome-in stack" id="wiz-box" role="dialog" aria-modal="true" aria-labelledby="wiz-t"></div></div>
 
 <div class="wrap" id="app" hidden>
@@ -382,6 +384,10 @@ document.getElementById('meta-tema').setAttribute('content',d?'#14131C':'#1A72B5
           <button type="button" data-tema="claro">Claro</button>
           <button type="button" data-tema="auto">Como el teléfono</button>
         </div>
+      </div>
+      <div class="card stack">
+        <div class="sec"><h2>Bloqueo con PIN</h2></div>
+        <div id="aj-pin"></div>
       </div>
       <div class="card stack">
         <div class="sec"><h2>Lo que sobra de cada semana</h2><p class="note">Cuando una semana termina y no gastaste todo. Lo podés cambiar semana a semana en Semanas.</p></div>

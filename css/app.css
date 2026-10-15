@@ -682,3 +682,19 @@ input[type=time]{width:100%;min-width:0;background:var(--surface-2);color:var(--
 .rec-fila{display:flex;align-items:center;gap:10px;min-width:0}
 .rec-de{color:var(--muted);overflow-wrap:anywhere}
 .rec-campos{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+
+/* ---------- Bloqueo con PIN ---------- */
+.pin{position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;align-items:center;justify-content:center;overflow-y:auto;
+  padding:calc(24px + env(safe-area-inset-top,0px)) 24px calc(24px + env(safe-area-inset-bottom,0px))}
+.pin-in{width:100%;max-width:340px;align-items:center;text-align:center}
+.pin-dots{display:flex;gap:16px;justify-content:center;margin:8px 0}
+.pin-dots i{width:16px;height:16px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--muted)}
+.pin-dots i.on{background:var(--ink);box-shadow:none}
+.pin-msg{min-height:1.4em;color:var(--bad);font-weight:600}
+.pin-teclas{display:grid;grid-template-columns:repeat(3,72px);gap:14px;justify-content:center}
+.pin-k{width:72px;height:72px;border-radius:50%;border:0;background:var(--surface);color:var(--ink);font:600 28px/1 var(--f-display);cursor:pointer}
+.pin-k:active{background:var(--surface-2)}
+.pin-k[disabled]{opacity:.4}
+/* Con PIN, en segundo plano o bloqueada, no se ve nada de la app */
+html.pin-tapa #app,html.pin-tapa .mic,html.pin-tapa .tabs{visibility:hidden}
+.pin-form{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;max-width:320px}

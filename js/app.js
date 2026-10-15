@@ -16,6 +16,7 @@ import {aplicarFeriados,renderFeriados,initFeriados} from './ui/feriados.js';
 import {prepararGuardado,juntar} from './logica/sync.js';
 import {renderCategorias,initCategorias} from './ui/categorias.js';
 import {renderRecibos,initRecibos} from './ui/recibos.js';
+import {pinActivo,pedirPin,initPin,renderAjustesPin,initAjustesPin} from './ui/pin.js';
 
 /* ---------- Guardado en IndexedDB ---------- */
 var timer=null,saving=false,pending=false,guardado={donde:null,persistente:null};
@@ -80,7 +81,7 @@ function renderAll(){
   if(ctx.tab==='gastos')renderGastos();
   if(ctx.tab==='fijos')renderFijos(pc);
   if(ctx.tab==='logros')renderLogros(pc);
-  if(ctx.tab==='ajustes'){renderAjustes(guardado);renderFeriados();renderCategorias();
+  if(ctx.tab==='ajustes'){renderAjustes(guardado);renderFeriados();renderCategorias();renderAjustesPin();
     document.querySelectorAll('[data-sobrante]').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-sobrante')===(ctx.state.plan.sobrante||'siguiente')))});renderCopias();$('#aj-perfil').innerHTML=resumenPerfil(ctx.state)}
 }
 function go(t){
@@ -167,7 +168,7 @@ function arrancar(st){
   ctx.state=st;aplicarFeriados();fijarUltimo();
   if(!st.meta.creado){st.meta.creado=today();persist()}
   try{var t=localStorage.getItem(TK);if(t)ctx.tab=t}catch(e){}
-  guiaInit();initGlobal();initPlan();initSemanas();initSueldo();initTarjeta();initFijos();initLogros();initAjustes(reemplazar,juntarDatos);initVoz();initFeriados();initCategorias();initRecibos();
+  guiaInit();initGlobal();initPlan();initSemanas();initSueldo();initTarjeta();initFijos();initLogros();initAjustes(reemplazar,juntarDatos);initVoz();initFeriados();initCategorias();initRecibos();initAjustesPin();
   marcarDiscreto();
   ctx.booted=true;
   $('#app').hidden=false;
@@ -176,12 +177,14 @@ function arrancar(st){
 ctx.persist=persist;ctx.renderAll=renderAll;ctx.go=go;ctx.syncInputs=syncInputs;
 
 (async function boot(){
-  initPerfil();
+  initPerfil();initPin();
   registrarSW(function(){return ctx.state?flush():null});
   pedirPersistencia().then(function(p){guardado.persistente=p});
   var d=await cargar();
   /* Antes de pasar los datos a la forma nueva, se guarda una copia tal cual estaban */
   if(necesitaMigrar(d))await guardarCopia(d,'antes de actualizar la app');
+  /* Con PIN, primero el PIN: los datos no se muestran hasta ponerlo bien */
+  if(d&&pinActivo())await pedirPin();
   if(d){arrancar(migrar(d));setStatus('Se guarda en este dispositivo.');return}
   mostrarBienvenida(function(st){arrancar(st);flush()});
 })();

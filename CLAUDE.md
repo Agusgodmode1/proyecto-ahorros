@@ -36,4 +36,5 @@ PWA para iPhone de finanzas personales de Agus (Uruguay). La publica GitHub Page
 - Recibos (`state.recibos`, `logica/recibos.js`): el recibo del mes trabajado manda sobre la estimación (`liqReal`, que usa `liqNow(true)`) y alimenta el aguinaldo. Los PDF se leen con pdf.js guardado en `vendor/pdfjs-6.3.289/` (versión exacta, en el service worker); el PDF nunca se guarda. Recibos reales para probar solo en `pruebas/` (está en .gitignore).
 - Tarjeta = control (`logica/control.js`): el extracto nunca suma gastos solo. Se cruza con lo anotado (mismo monto, ±3 días, uno a uno) y el usuario elige qué agregar de lo que falta. Nada de cargas masivas que dupliquen.
 - Metas (`state.metas`, `logica/metas.js`), aguinaldo y vacacional (`logica/aguinaldo.js`: estimaciones), CSV para Excel (`logica/csv.js`).
+- PIN (`logica/pin.js`, `ui/pin.js`): opcional, de este aparato (localStorage `pa-pin` = {sal, hash SHA-256}); nunca en texto plano ni en los respaldos. "Olvidé el PIN" solo borra los datos del teléfono (no hay cuenta).
 - La carga por voz nunca guarda sin confirmación. Si falla `SpeechRecognition`, se usa el dictado del teclado.

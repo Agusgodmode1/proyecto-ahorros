@@ -31,10 +31,14 @@ function heroChips(pc){
         +(pc.ajuste&&pc.ajuste.estado==='nada'?'<span class="hh-s neg">Para tu mínimo faltan '+money(pc.ajuste.falta)+' aunque no gastes nada más.</span>':'')
         +'<span class="bar'+(w.left<0?' over':'')+'" role="img" aria-label="Gastaste el '+Math.round(pct)+'% de la semana"><i style="width:'+pct+'%"></i></span>';
     }else h+='<span class="hh-s">'+(t>=state.plan.cobro?'Ya cobraste: cerrá el mes en Logros para arrancar uno nuevo.':'Hoy está fuera de las fechas de tu plan.')+'</span>';
-    h+='<button class="saldo-btn" type="button" id="saldo-abrir">Tengo '+money(Math.max(0,disponible(state,pc)))+' · actualizar</button>';
+    h+='<button class="gasto-btn" type="button" id="gasto-abrir"><span aria-hidden="true">+</span> Anotar un gasto</button>';
     el.innerHTML=h;
   }
-  $('#hero-chips').innerHTML=hchip('Guardás este mes',money(pc.ahorro))+hchip('Vas a cobrar',money(L.liquido));
+  /* Tres datos, siempre en la misma fila: cuándo cobrás, cuánta plata tenés y cuánto guardás */
+  var d=diffDays(t,state.plan.cobro),cv=d>0?d+(d===1?' día':' días'):(d===0?'Hoy':'Ya cobraste');
+  $('#hero-chips').innerHTML='<div class="hchip hc-cobro" aria-label="'+(d>0?'Cobrás en '+cv:(d===0?'Cobrás hoy':'Ya cobraste'))+'"><span>'+(d>0?'Cobrás en':'Cobro')+'</span><b>'+esc(cv)+'</b><small>'+esc(fCorta(state.plan.cobro))+'</small></div>'
+    +'<button class="hchip hc-saldo" type="button" id="saldo-abrir"><span>Tenés</span><b>'+money(Math.max(0,disponible(state,pc)))+'</b><small>actualizar</small></button>'
+    +'<div class="hchip"><span>Guardás</span><b>'+money(pc.ahorro)+'</b><small>este mes</small></div>';
 }
 /* Aviso grande cuando la meta de ahorro no se puede cumplir con la plata que tenés */
 function renderAlertaMeta(pc){
@@ -47,30 +51,58 @@ function renderAlertaMeta(pc){
   el.innerHTML='<div class="banner alerta" role="alert"><p><b>Esa meta no se puede.</b> Tenés '+money(d)+', así que lo máximo que podés guardar es '+money(mx)+' y no los '+money(ped)+' que pusiste. Bajá la meta o actualizá tu saldo si tenés más plata.</p>'
     +'<span class="row-btns">'+(p.modo==='monto'?'<button class="btn" type="button" id="meta-bajar" data-mx="'+Math.floor(mx)+'">Guardar '+money(Math.floor(mx))+'</button>':'')+'<button class="btn quiet" type="button" id="meta-plan">Cambiar la meta</button></span></div>';
 }
-/* Arriba de todo en Plan: cuánto podés gastar hoy y anotar un gasto sin cambiar de pestaña */
+/* Debajo de la portada: lo que gastaste hoy (o, en vista simple, tus últimos 3 gastos). Anotar se hace desde la hoja. */
 function renderHoy(pc){
-  var state=ctx.state,t=today(),H=hoyPodes(pc,state.gastos,t),el=$('#hoy-out');if(!el)return;
+  var state=ctx.state,t=today(),el=$('#hoy-out');if(!el)return;
   if(!(num(state.plan.monto)>0)){el.innerHTML='';return}
-  /* Lo de todos los días: anotar un gasto de hoy, a la vista */
-  var h='<div class="card stack hoy tone-mint"><h2>Anotá un gasto de hoy</h2>'+chipsFrecuentes('q')+formGasto('q',{fecha:t,boton:'Anotar'});
-  var hoyG=state.gastos.filter(function(g){return g.fecha===t});
-  if(hoyG.length)h+='<ul class="list glist">'+hoyG.map(function(g){return itemGasto(g,'hoy')}).join('')+'</ul>';
-  h+='</div>';
-  el.innerHTML=h;
+  var simple=vistaSimple(),lista,tit,cuando;
+  if(simple){
+    lista=state.gastos.slice().reverse().sort(function(a,b){return a.fecha<b.fecha?1:a.fecha>b.fecha?-1:0}).slice(0,3);
+    tit='Tus últimos gastos';
+  }else{lista=state.gastos.filter(function(g){return g.fecha===t});tit='Gastaste hoy'}
+  if(!lista.length){el.innerHTML=simple?'<div class="card stack hoy tone-mint"><h2>Tus últimos gastos</h2><p class="note">Todavía no anotaste ninguno. Tocá «Anotar un gasto».</p></div>':'';return}
+  el.innerHTML='<div class="card stack hoy tone-mint"><h2>'+tit+'</h2><ul class="list glist">'+lista.map(function(g){return itemGasto(g,g.fecha===t?'hoy':fCorta(g.fecha))}).join('')+'</ul></div>';
 }
-var hoyAbierto=false;
-export function renderCountdown(){
-  var state=ctx.state,d=diffDays(today(),state.plan.cobro),big,small,lab;
-  if(d>0){big=String(d);small=(d===1?'día':'días');lab='Cobrás en'}
-  else if(d===0){big='Hoy';small='cobrás';lab='Cobro'}
-  else{big='Ya';small='cobraste';lab='Cobro'}
-  var tot=diffDays(state.plan.inicio||today(),state.plan.cobro),pas=diffDays(state.plan.inicio||today(),today());
-  var on=tot>0?Math.max(0,Math.min(12,Math.round(12*pas/tot))):0,seg='';
-  if(d<=0)on=12;
-  for(var i=0;i<12;i++)seg+='<i'+(i<on?' class="on"':'')+'></i>';
-  $('#countdown').innerHTML='<span class="cd-l">'+lab+'</span><span class="cd-v"><span class="cd-n">'+esc(big)+'</span><span class="cd-t">'+esc(small)+'</span></span><span class="cd-seg" aria-hidden="true">'+seg+'</span><span class="cd-d">'+esc(fLarga(state.plan.cobro))+'</span>';
-  $('#countdown').setAttribute('aria-label',(d>0?d+' '+small+' para cobrar':(d===0?'Cobrás hoy':'Ya cobraste'))+', '+fLarga(state.plan.cobro));
+/* Vista simple: solo lo esencial (se recuerda en este celular) */
+var VS='pa-simple';
+function vistaSimple(){try{return localStorage.getItem(VS)==='1'}catch(e){return false}}
+function aplicarVista(){
+  var s=vistaSimple(),a=$('#app'),b=$('#modo-simple');
+  if(a)a.classList.toggle('simple',s);
+  if(b){b.setAttribute('aria-pressed',String(s));b.textContent=s?'Vista completa':'Vista simple'}
 }
+/* Hoja para anotar un gasto: se abre desde el botón grande de la portada */
+function abrirGasto(){
+  var s=$('#gasto-sheet'),b=$('#gasto-box');if(!s||!b)return;
+  b.innerHTML='<div class="sheet-top"><h2 id="gs-t">Anotar un gasto</h2><button class="btn quiet" type="button" id="gasto-x">Cerrar</button></div>'+chipsFrecuentes('q')+formGasto('q',{fecha:today(),boton:'Anotar'});
+  s.hidden=false;document.documentElement.classList.add('hoja');
+  setTimeout(function(){var m=$('#q-monto');if(m)m.focus()},120);
+}
+function cerrarGasto(){var s=$('#gasto-sheet');if(s)s.hidden=true;document.documentElement.classList.remove('hoja')}
+function initGasto(){
+  var s=$('#gasto-sheet');
+  initFormsGasto(s);
+  s.addEventListener('click',function(e){
+    if(e.target===s||e.target.closest('#gasto-x')){cerrarGasto();return}
+    var fr=e.target.closest('[data-frec]');if(fr){var ok=anotarFrecuente(Number(fr.getAttribute('data-frec')),today());cerrarGasto();return}
+  });
+  s.addEventListener('submit',function(e){
+    if(!e.target.getAttribute||e.target.getAttribute('data-gform')!=='q')return;
+    e.preventDefault();
+    var d=leerForm(e.target);if(!d)return;
+    if(!permitido(d.monto))return;
+    guardarGasto(d,null);cerrarGasto();ctx.renderAll();toast('Anotado: '+money(d.monto)+(d.nota?' en '+d.nota:''));
+  });
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!s.hidden)cerrarGasto()});
+  $('#hoy-hero').addEventListener('click',function(e){if(e.target.closest('#gasto-abrir'))abrirGasto()});
+  var vb=$('#modo-simple');
+  if(vb)vb.addEventListener('click',function(){try{localStorage.setItem(VS,vistaSimple()?'0':'1')}catch(er){}aplicarVista();ctx.renderAll()});
+  aplicarVista();
+}
+var plegados={};/* tarjetas plegables abiertas, por id */
+function foldIni(id,tono,tit,sub){return '<details class="card fold '+tono+'" data-fold="'+id+'"'+(plegados[id]?' open':'')+'><summary><span class="fold-t">'+tit+'</span><span class="fold-s">'+sub+'</span></summary><div class="stack fold-b">'}
+/* La cuenta regresiva ahora es el primer dato de la fila de la portada (heroChips) */
+export function renderCountdown(){}
 
 export function renderResumen(pc){
   var state=ctx.state;
@@ -84,8 +116,7 @@ export function renderResumen(pc){
   var m=Math.max(1,disp),pf=Math.max(0,Math.min(100,pend/m*100)),pa=Math.max(0,Math.min(100-pf,pc.ahorro/m*100)),pg=Math.max(0,100-pf-pa);
   var dq=t>=p.cobro?pc.total:Math.max(1,diffDays(t<p.inicio?p.inicio:t,p.cobro)),pDia=t>=p.cobro?pc.daily:resto/dq;
   var h=state.ejemplo?'<div class="banner"><p><b>Estás viendo datos de ejemplo.</b> Son de muestra: no son tuyos.</p><button class="btn" type="button" data-cero>Borrar el ejemplo y crear mi perfil</button></div>':'';
-  h+='<div class="card stack tone-mint">';
-  h+='<div class="sec-h"><h2>Hasta que cobres</h2><span class="note">'+esc(rango(p.inicio,p.cobro))+' · '+pc.total+' días</span></div>';
+  h+=foldIni('cobrar','tone-mint','Hasta que cobres',resto<0?'Te faltan '+money(-resto)+' para llegar a tu meta':'Te queda para gastar '+money(resto)+' · '+esc(rango(p.inicio,p.cobro)));
   var fsub=fp.length?fp.map(function(o){return esc(o.f.nombre)+' ('+esc(fCorta(o.fecha))+')'}).join(', '):(state.fijos.length?'ninguno vence antes de cobrar':'<button class="linklike" type="button" data-goto="fijos">cargá tus gastos fijos</button>');
   h+='<div class="receipt">'
     +row('Plata que tenés ahora',money(disp),'','según lo que anotaste · <button class="linklike" type="button" id="saldo-abrir2">actualizar</button>')
@@ -98,11 +129,12 @@ export function renderResumen(pc){
   h+='<div class="tiles">'
     +tile('tone-sky','Por semana',money(pDia*7),money(pDia)+' por día, parejo hasta cobrar')
     +tile('tone-coral','Gastaste',money(pc.spentInPlan),'de '+money(pc.gastar)+' para gastar')
-    +'</div></div>';
+    +'</div></div></details>';
 
   var mt=mesTrabajo(state),mtN=MESL[Number(mt.slice(5,7))-1];
   /* ("Tu mes de un vistazo" se sacó: repetía lo que ya muestran las pestañas) */
-  h+='<div class="sec"><div class="sec-h"><h2>Semana por semana</h2><span class="note">Tocá una semana para anotar gastos. Lo que sobra o falta pasa a la siguiente.</span></div><div class="weeks">';
+  var cw=pc.weeks.filter(function(w){return t>=w.start&&t<=w.end})[0];
+  h+=foldIni('semanas','tone-sky','Semana por semana',cw?(cw.left<0?'Esta semana te pasaste por '+money(-cw.left):'Esta semana te quedan '+money(cw.left)):pc.weeks.length+' semanas')+'<p class="note">Tocá una semana para anotar gastos. Lo que sobra o falta pasa a la siguiente.</p><div class="weeks">';
   pc.weeks.forEach(function(w){
     var cur=t>=w.start&&t<=w.end,past=t>w.end,st;
     if(w.left<0)st=['bad','Te pasaste'];else if(cur)st=['now','Esta semana'];else if(past)st=['ok','Cumplida'];else st=['','Próxima'];
@@ -117,13 +149,13 @@ export function renderResumen(pc){
   h+='</div>';
   var fuera=pc.spentAll-pc.spentInPlan;
   if(Math.round(fuera)>0)h+='<p class="note">Hay '+money(fuera)+' en gastos con fecha fuera del plan. No cuentan en las semanas.</p>';
-  h+='</div>';
+  h+='</div></details>';
 
   var nx=proximo(state,L);
   /* Si el aguinaldo cae en ese mes, se suma a lo libre */
   var AG=aguinaldo(state,t),conAg=AG.pago>=p.cobro&&AG.pago<nx.nc&&AG.liquido>0;
   if(conAg){nx=Object.assign({},nx,{libre:nx.libre+AG.liquido});nx.dia=nx.libre/nx.dias;nx.semana=nx.libre*7/nx.dias}
-  h+='<div class="card stack tone-grape"><div class="sec-h"><h2>Cuando cobres</h2><span class="note">'+esc(cap(fLarga(p.cobro)))+' al '+esc(fLarga(nx.nc))+'</span></div>';
+  h+=foldIni('cuando','tone-grape','Cuando cobres',nx.libre>=0?'El mes que viene: '+money(nx.semana)+' por semana':'El mes que viene te faltan '+money(-nx.libre));
   h+='<p class="lead">'+(nx.libre>=0?'El mes que viene vas a poder gastar unos <b class="c-mint">'+money(nx.semana)+' por semana</b>.':'El mes que viene no te alcanza para la meta: te faltan <b class="neg">'+money(-nx.libre)+'</b>.')+'</p>';
   h+='<div class="receipt">'
     +row(L.real?'Tu sueldo (según tu recibo)':'Tu sueldo, estimado',money(L.liquido),'','<button class="linklike" type="button" data-goto="sueldo">ver el cálculo</button>')
@@ -135,7 +167,7 @@ export function renderResumen(pc){
   var sd=sensibilidadDolar(L);
   if(sd)h+='<p class="note">Cobrás en dólares y gastás en pesos: si el dólar se mueve un '+sd.pct+' %, lo que te queda libre cambia unos <b>'+money(sd.cambio)+'</b>, para arriba o para abajo.</p>';
   h+='<div class="tiles">'+tile('tone-sky','Por día',money(nx.dia),nx.dias+' días hasta el '+esc(fCorta(nx.nc)))+tile('tone-sun','Ese día tenés',money(pc.ahorro+L.liquido),'lo guardado más el sueldo')+'</div>';
-  h+='<p class="note">El sueldo ya tiene descontados BPS, FONASA y FRL'+(reglasHoras(state).activo!==false?', e incluye las horas extra de '+mtN:'')+'. Si te sobra plata de las semanas, se suma.</p></div>';
+  h+='<p class="note">El sueldo ya tiene descontados BPS, FONASA y FRL'+(reglasHoras(state).activo!==false?', e incluye las horas extra de '+mtN:'')+'. Si te sobra plata de las semanas, se suma.</p></div></details>';
   $('#resumen-out').innerHTML=h;
 }
 
@@ -271,19 +303,11 @@ export function initPlan(){
     if(num(st.plan.monto)>0&&pc.ahorroPedido>mx+0.5)toast('No se puede guardar tanto: con lo que tenés, lo máximo es '+money(mx)+'.');
   });
   pr.addEventListener('click',function(e){if(e.target.closest('#saldo-abrir2'))abrirSaldo()});
-  $('#hoy-hero').addEventListener('click',function(e){if(e.target.closest('#hoy-empezar'))abrirPlan();if(e.target.closest('#saldo-abrir'))abrirSaldo()});
-  initFormsGasto(pr);
-  pr.addEventListener('toggle',function(e){if(e.target.classList&&e.target.classList.contains('hoy-add'))hoyAbierto=e.target.open},true);
-  pr.addEventListener('submit',function(e){
-    if(!e.target.getAttribute||e.target.getAttribute('data-gform')!=='q')return;
-    e.preventDefault();
-    var d=leerForm(e.target);if(!d)return;
-    if(!permitido(d.monto))return;
-    guardarGasto(d,null);hoyAbierto=true;ctx.renderAll();toast('Anotado: '+money(d.monto)+(d.nota?' en '+d.nota:''));
-    var m=$('#q-monto');if(m)m.focus();
-  });
+  $('#hoy-hero').addEventListener('click',function(e){if(e.target.closest('#hoy-empezar'))abrirPlan()});
+  $('#hero-chips').addEventListener('click',function(e){if(e.target.closest('#saldo-abrir'))abrirSaldo()});
+  initGasto();
+  pr.addEventListener('toggle',function(e){var f=e.target.closest&&e.target.closest('[data-fold]');if(f&&e.target===f)plegados[f.getAttribute('data-fold')]=f.open},true);
   pr.addEventListener('click',function(e){
-    var fr=e.target.closest('#hoy-out [data-frec]');if(fr){anotarFrecuente(Number(fr.getAttribute('data-frec')),today());return}
     var dg=e.target.closest('#hoy-out [data-delg]');if(dg){borrarGasto(dg.getAttribute('data-delg'));return}
     var eg=e.target.closest('#hoy-out [data-editg]');if(eg){var id=eg.getAttribute('data-editg'),w=ctx.state.gastos.filter(function(g){return g.id===id})[0];if(w)editarGasto(id)}
   });

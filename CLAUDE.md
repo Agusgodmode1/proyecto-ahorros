@@ -42,3 +42,9 @@ PWA para iPhone de finanzas personales de Agus (Uruguay). La publica GitHub Page
 ## Saldo y topes (1.14)
 - `logica/saldo.js`: `disponible` = plata del plan − gastos anotados − fijos pagados. "Actualizar saldo" (botón en la portada) compara con lo que el usuario dice que tiene: si tiene menos, anota un gasto `src:'ajuste'` ("Ajuste de saldo", fecha del día anterior); si tiene más, suma a `plan.monto`. Siempre con "Deshacer". El ajuste no entra en el cruce de la tarjeta.
 - Topes: un gasto nuevo no puede ser mayor que lo disponible (`permitido()` en `ui/gastos.js`, ofrece "Actualizar saldo"); el ahorro del plan no pasa de monto − fijos (`planear`); la meta de "Cuando cobres" no pasa de sueldo − fijos (`proximo`). Los gastos del extracto de la tarjeta no se limitan: son hechos.
+
+## Inicio simple (1.15)
+- Portada: "Hoy podés gastar" + botón grande «Anotar un gasto» (abre la hoja `#gasto-sheet`, formulario con prefijo `q`) + fila de 3 datos (Cobrás en / Tenés / Guardás). La cuenta regresiva ya no es una tarjeta aparte (`renderCountdown` quedó vacío).
+- "Hasta que cobres", "Semana por semana" y "Cuando cobres" son `<details class="fold">` cerrados; el estado abierto se guarda en `plegados` (plan.js).
+- Vista simple: botón `#modo-simple` (localStorage `pa-simple`), clase `.simple` en `#app` oculta plan y tarjetas, muestra los últimos 3 gastos.
+- Tamaños táctiles: bloque "Inicio 1.15" al final de app.css (botones/campos ≥ 48 px).

@@ -48,7 +48,7 @@ function heroChips(pc){
   /* Dos datos en la misma fila: cuánta plata tenés y cuánto guardás (el cobro tiene su propia tarjeta) */
   $('#hero-chips').innerHTML=''
     +'<button class="hchip hc-saldo" type="button" id="saldo-abrir"><span>Tenés</span><b>'+money(Math.max(0,disponible(state,pc)))+'</b><small>actualizar</small></button>'
-    +'<div class="hchip"><span>Guardás</span><b>'+money(pc.ahorro)+'</b><small>este mes</small></div>';
+    +'<button class="hchip hc-ahorro" type="button" id="ahorro-abrir"><span>Guardás este mes</span><b>'+money(pc.ahorro)+'</b><small>actualizar</small></button>';
 }
 /* Aviso grande cuando la meta de ahorro no se puede cumplir con la plata que tenés */
 function renderAlertaMeta(pc){
@@ -272,6 +272,14 @@ function abrirPlan(){
   try{aj.scrollIntoView({block:'start',behavior:'smooth'})}catch(er){}
   var m=$('#in-monto');if(m)setTimeout(function(){m.focus()},300);
 }
+/* Desde «Guardás»: abre el plan y deja el cursor en la meta de ahorro */
+function abrirMeta(){
+  if(!(num(ctx.state.plan.monto)>0)){abrirPlan();return}
+  ctx.go('resumen');var aj=$('#plan-aj');aj.open=true;
+  var m=ctx.state.plan.modo==='monto'?$('#in-ahorro'):$('#in-pct');
+  try{(m.closest('.field')||aj).scrollIntoView({block:'center',behavior:'smooth'})}catch(er){}
+  setTimeout(function(){if(m&&!m.closest('[hidden]')){m.focus();try{m.select()}catch(er){}}},300);
+}
 /* ---------- Actualizar saldo: decís cuánta plata tenés y la app anota la diferencia ---------- */
 function saldoPrev(){
   var st=ctx.state,i=$('#saldo-in'),pv=$('#saldo-prev');if(!i||!pv)return;
@@ -328,7 +336,7 @@ export function initPlan(){
   });
   pr.addEventListener('click',function(e){if(e.target.closest('#saldo-abrir2'))abrirSaldo()});
   $('#hoy-hero').addEventListener('click',function(e){if(e.target.closest('#hoy-empezar'))abrirPlan()});
-  $('#hero-chips').addEventListener('click',function(e){if(e.target.closest('#saldo-abrir'))abrirSaldo()});
+  $('#hero-chips').addEventListener('click',function(e){if(e.target.closest('#saldo-abrir'))abrirSaldo();if(e.target.closest('#ahorro-abrir'))abrirMeta()});
   initGasto();
   pr.addEventListener('toggle',function(e){var f=e.target.closest&&e.target.closest('[data-fold]');if(f&&e.target===f)plegados[f.getAttribute('data-fold')]=f.open},true);
   pr.addEventListener('click',function(e){

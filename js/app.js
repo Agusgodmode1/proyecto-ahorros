@@ -78,7 +78,8 @@ function renderAll(){
   if(ctx.tab==='gastos')renderGastos();
   if(ctx.tab==='fijos')renderFijos(pc);
   if(ctx.tab==='logros')renderLogros(pc);
-  if(ctx.tab==='ajustes'){renderAjustes(guardado);renderFeriados();renderCategorias();renderCopias();$('#aj-perfil').innerHTML=resumenPerfil(ctx.state)}
+  if(ctx.tab==='ajustes'){renderAjustes(guardado);renderFeriados();renderCategorias();
+    document.querySelectorAll('[data-sobrante]').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-sobrante')===(ctx.state.plan.sobrante||'siguiente')))});renderCopias();$('#aj-perfil').innerHTML=resumenPerfil(ctx.state)}
 }
 function go(t){
   if(t==='semanas')t='w'+curWeek(planNow(),today());

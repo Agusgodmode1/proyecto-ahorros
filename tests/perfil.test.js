@@ -84,7 +84,8 @@ test('sin horas extra: no suman y no aparece el logro de horas',function(){
   assert.equal(mins(s,'sem'),0);assert.equal(mins(s,'fin'),0);
   var L=liq(s,true);assert.equal(L.N,45000);
   var ls=logrosLista(s,planCalc(s),'2026-10-13',null);
-  assert.equal(ls.length,14);
+  var todos=logrosLista(Object.assign({},s,{perfil:Object.assign({},s.perfil,{horas:Object.assign({},s.perfil.horas,{activo:true})})}),planCalc(s),'2026-10-13',null);
+  assert.equal(ls.length,todos.length-1,'es la lista completa menos el de horas');
   assert.ok(!ls.some(function(l){return l.id==='horas'}));
 });
 

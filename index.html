@@ -68,6 +68,7 @@ document.getElementById('meta-tema').setAttribute('content',d?'#14131C':'#1A72B5
     <!-- PLAN -->
     <section id="p-resumen" role="tabpanel" class="tone-sky stack">
       <div id="resp-aviso"></div>
+      <div id="ritmo-aviso"></div>
       <div id="fer-aviso"></div>
       <div id="hoy-out"></div>
       <div class="card stack" id="guia">
@@ -119,6 +120,9 @@ document.getElementById('meta-tema').setAttribute('content',d?'#14131C':'#1A72B5
                 <div class="money suf" id="pct-otro-wrap" hidden><input id="in-pct" type="number" inputmode="numeric" min="0" max="100" step="1" aria-label="Porcentaje a guardar"><span>%</span></div>
               </div>
               <small id="ahorro-note"></small>
+              <div class="field min-field"><label for="in-minimo" class="sub-l">Mínimo aceptable (opcional)</label>
+                <div class="money" id="min-wrap"><span id="min-pre">$</span><input id="in-minimo" type="number" inputmode="numeric" min="0" step="any" placeholder="lo mismo que tu objetivo"></div>
+                <small id="minimo-note">Si llegás a esto, el mes ya cuenta como logrado. Lo de arriba es tu objetivo.</small></div>
             </div>
           </li>
           <li class="step"><span class="badge" aria-hidden="true">3</span>
@@ -373,6 +377,10 @@ document.getElementById('meta-tema').setAttribute('content',d?'#14131C':'#1A72B5
           <button type="button" data-tema="claro">Claro</button>
           <button type="button" data-tema="auto">Como el teléfono</button>
         </div>
+      </div>
+      <div class="card stack">
+        <div class="sec"><h2>Lo que sobra de cada semana</h2><p class="note">Cuando una semana termina y no gastaste todo. Lo podés cambiar semana a semana en Semanas.</p></div>
+        <div class="seg" role="group" aria-label="Qué hacer con lo que sobra"><button type="button" data-sobrante="siguiente">Pasa a la semana siguiente</button><button type="button" data-sobrante="ahorro">Va directo al ahorro</button></div>
       </div>
       <div class="card stack">
         <div class="sec"><h2>Categorías</h2><p class="note">Las que aparecen al anotar un gasto, en la voz, en la tarjeta y en la planilla. Renombralas, cambiales el color, ordenalas u ocultá las que no usás. Si borrás una, sus gastos pasan a la que elijas.</p></div>

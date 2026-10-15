@@ -1,6 +1,6 @@
 /* Logros → Tus metas: crear metas con nombre, sumarles plata y repartir el ahorro al cerrar el mes. */
 import {num,uid} from '../logica/util.js';
-import {progresoMeta} from '../logica/metas.js';
+import {progresoMeta,repartirAhorro} from '../logica/metas.js';
 import {MESL} from '../logica/fechas.js';
 import {ctx,$,today,money,esc,armar,toast} from './comun.js';
 
@@ -37,15 +37,10 @@ function renderCierreMetas(){
     +'</div><small>Opcional. Se suma a cada meta cuando cerrás el mes.</small></div>';
 }
 /* Lo llama "Cerrar el mes" (antes de cerrar): suma los aportes que pusiste */
-export function aportarAlCerrar(){
-  var n=0,t=today();
-  document.querySelectorAll('[data-cmeta]').forEach(function(i){
-    var v=num(i.value);if(!(v>0))return;
-    var m=ctx.state.metas.filter(function(x){return x.id===i.getAttribute('data-cmeta')})[0];
-    if(m){m.aportes.push({id:uid(),fecha:t,monto:Math.round(v)});n++}
-    i.value='';
-  });
-  return n;
+export function aportarAlCerrar(ahorrado){
+  var montos={};
+  document.querySelectorAll("[data-cmeta]").forEach(function(i){montos[i.getAttribute("data-cmeta")]=num(i.value);i.value=""});
+  return repartirAhorro(ctx.state.metas,montos,ahorrado,today(),uid);
 }
 
 export function initMetas(){

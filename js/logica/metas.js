@@ -23,3 +23,14 @@ export function progresoMeta(m,hoy){
   }
   return r;
 }
+/* Al cerrar el mes: reparte lo ahorrado entre metas. montos = {idMeta: monto}. Devuelve cuántas metas recibieron.
+   No reparte más de lo ahorrado (si te pasás, se recorta en el orden de las metas). */
+export function repartirAhorro(metas,montos,ahorrado,fecha,nuevoId){
+  var resto=Math.max(0,num(ahorrado)),n=0;
+  metas.forEach(function(m){
+    var v=Math.min(resto,Math.max(0,Math.round(num(montos[m.id]))));
+    if(!(v>0))return;
+    m.aportes=m.aportes||[];m.aportes.push({id:nuevoId(),fecha:fecha,monto:v});resto-=v;n++;
+  });
+  return n;
+}

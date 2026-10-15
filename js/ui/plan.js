@@ -4,9 +4,10 @@ import {num} from '../logica/util.js';
 import {fijosPeriodo,totalFijos,proximo,hoyPodes} from '../logica/plan.js';
 import {mesTrabajo,mins,reglasHoras} from '../logica/sueldo.js';
 import {histStats,logrosLista} from '../logica/logros.js';
-import {ctx,$,today,liqNow,exAnalisis,money,esc,fCorta,fLarga,rango,fMin,cap,tile,hchip,row,toast} from './comun.js';
+import {ctx,$,today,liqNow,planNow,exAnalisis,money,esc,fCorta,fLarga,rango,fMin,cap,tile,hchip,row,toast} from './comun.js';
 import {aguinaldo} from '../logica/aguinaldo.js';
 import {aniosSinFeriados} from '../logica/avisos.js';
+import {ritmoDelMes,minimoDe} from '../logica/mes.js';
 import {formGasto,initFormsGasto,leerForm,guardarGasto,borrarGasto,itemGasto,chipsFrecuentes,anotarFrecuente} from './gastos.js';
 import {editarGasto} from './semanas.js';
 
@@ -24,6 +25,8 @@ function heroChips(pc){
     if(H.dentro){
       var w=pc.weeks[H.semana],pct=w.avail>0?Math.min(100,Math.max(0,w.spent/w.avail*100)):(w.spent>0?100:0);
       h+='<span class="hh-s">'+(H.semanaQueda<0?'Esta semana te pasaste por '+money(-H.semanaQueda):'Te quedan '+money(H.semanaQueda)+' hasta el '+esc(fLarga(H.fin)))+(H.gastadoHoy>0?' · hoy gastaste '+money(H.gastadoHoy):'')+'</span>'
+        +(pc.ajuste&&pc.ajuste.estado==='minimo'?'<span class="hh-s">El objetivo ya no se alcanza: esto cuida tu mínimo de '+money(pc.ajuste.minimo)+'.</span>':'')
+        +(pc.ajuste&&pc.ajuste.estado==='nada'?'<span class="hh-s neg">Para tu mínimo faltan '+money(pc.ajuste.falta)+' aunque no gastes nada más.</span>':'')
         +'<span class="bar'+(w.left<0?' over':'')+'" role="img" aria-label="Gastaste el '+Math.round(pct)+'% de la semana"><i style="width:'+pct+'%"></i></span>';
     }else h+='<span class="hh-s">'+(t>=state.plan.cobro?'Ya cobraste: cerrá el mes en Logros para arrancar uno nuevo.':'Hoy está fuera de las fechas de tu plan.')+'</span>';
     el.innerHTML=h;
@@ -53,7 +56,7 @@ export function renderCountdown(){
 
 export function renderResumen(pc){
   var state=ctx.state;
-  heroChips(pc);renderHoy(pc);
+  heroChips(pc);renderHoy(pc);renderRitmo(pc);
   var sf=aniosSinFeriados(state,today()),fa=$('#fer-aviso');
   if(fa)fa.innerHTML=sf.length?'<div class="banner"><p><b>No tengo los feriados de '+sf.join(' y ')+'.</b> Sin ellos, el día de cobro puede salir mal. Actualizá la app o agregalos en Ajustes → Feriados.</p><button class="btn" type="button" data-goto="ajustes">Ir a Feriados</button></div>':'';
   var sum=$('#plan-aj-sum');if(sum)sum.textContent=num(state.plan.monto)>0?money(num(state.plan.monto))+' · guardás '+money(pc.ahorro)+' · hasta el '+fCorta(state.plan.cobro):'Completá los tres pasos';
@@ -130,7 +133,29 @@ function syncAhorro(){
   document.querySelectorAll('[data-ahorro]').forEach(function(b){b.setAttribute('aria-pressed',String(Number(b.getAttribute('data-ahorro'))===Math.round(num(p.ahorro))))});
   document.querySelectorAll('[data-pct]').forEach(function(b){var v=b.getAttribute('data-pct');b.setAttribute('aria-pressed',String(v==='otro'?otro:Number(v)===p.pct))});
   $('#pct-otro-wrap').hidden=!otro;$('#in-pct').value=otro?p.pct:'';
-  ahorroNote();
+  ahorroNote();syncMinimo();
+}
+/* Mínimo aceptable: en pesos o en %, igual que el objetivo */
+function syncMinimo(){
+  var p=ctx.state.plan,i=$('#in-minimo');if(!i)return;
+  $('#min-pre').textContent=p.modo==='pct'?'%':'$';
+  if(document.activeElement!==i)i.value=p.minimo&&p.minimo.valor!==''&&p.minimo.valor!==null&&p.minimo.valor!==undefined?p.minimo.valor:'';
+  var pc=planNow(),m=minimoDe(ctx.state,pc),n=$('#minimo-note');
+  n.textContent=p.minimo&&p.minimo.valor!==''&&p.minimo.valor!==undefined&&p.minimo.valor!==null
+    ?(m<pc.ahorro?'Con '+money(m)+' el mes ya cuenta como logrado; con '+money(pc.ahorro)+', llegás al objetivo.':'El mínimo no puede ser más que tu objetivo: uso '+money(pc.ahorro)+'.')
+    :'Si llegás a esto, el mes ya cuenta como logrado. Lo de arriba es tu objetivo.';
+}
+/* Aviso a mitad de mes: ¿el ritmo alcanza para el mínimo? Se puede cerrar hasta mañana. */
+var RK='pa-ritmo-oculto';
+function renderRitmo(pc){
+  var el=$('#ritmo-aviso');if(!el)return;
+  var t=today(),r=ritmoDelMes(ctx.state,pc,t),oc=null;try{oc=localStorage.getItem(RK)}catch(e){}
+  if(!r||oc===t){el.innerHTML='';return}
+  var txt;
+  if(r.tipo==='bien')txt='<b>Vas bien.</b> A este ritmo guardás unos '+money(r.ahorro)+', y llegás a tu objetivo de '+money(r.objetivo)+'.';
+  else if(r.tipo==='minimo')txt='<b>Llegás al mínimo, no al objetivo.</b> A este ritmo guardás unos '+money(r.ahorro)+'. Para llegar a '+money(r.objetivo)+', gastá hasta '+money(r.porDiaObjetivo)+' por día.';
+  else txt='<b>A este ritmo no llegás al mínimo.</b> Guardarías unos '+money(Math.max(0,r.ahorro))+' y tu mínimo es '+money(r.minimo)+'. Bajá unos '+money(r.bajar)+' por día: hasta '+money(r.porDiaMinimo)+' por día.';
+  el.innerHTML='<div class="banner ritmo-'+r.tipo+'"><p>'+txt+'</p><button class="btn quiet" type="button" id="ritmo-ok">Entendido</button></div>';
 }
 function ahorroNote(){
   var p=ctx.state.plan,el=$('#ahorro-note');if(!el)return;
@@ -181,6 +206,10 @@ export function initPlan(){
     if(v==='pct'&&p.modo==='monto'&&num(p.monto)>0){p.pct=Math.min(100,Math.max(0,Math.round(num(p.ahorro)/num(p.monto)*100)))}
     p.modo=v;syncAhorro();ctx.persist();ctx.renderAll();
   })});
+  $('#in-minimo').addEventListener('input',function(){
+    var v=this.value;ctx.state.plan.minimo=v===''?null:{valor:Math.max(0,num(v))};syncMinimo();ctx.persist();ctx.renderAll();
+  });
+  $('#ritmo-aviso').addEventListener('click',function(e){if(e.target.id==='ritmo-ok'){try{localStorage.setItem(RK,today())}catch(er){}$('#ritmo-aviso').innerHTML=''}});
   $('#in-ahorro').addEventListener('input',function(){ctx.state.plan.ahorro=Math.max(0,num(this.value));syncAhorro();ctx.persist();ctx.renderAll()});
   document.querySelectorAll('[data-ahorro]').forEach(function(b){b.addEventListener('click',function(){
     ctx.state.plan.ahorro=Number(b.getAttribute('data-ahorro'));$('#in-ahorro').value=ctx.state.plan.ahorro;syncAhorro();ctx.persist();ctx.renderAll();

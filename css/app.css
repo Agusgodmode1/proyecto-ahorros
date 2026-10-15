@@ -669,3 +669,10 @@ input[type=time]{width:100%;min-width:0;background:var(--surface-2);color:var(--
 .cat-ic button[aria-pressed="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
 .cat-nueva{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end;margin-top:6px}
 .cat-ed{padding:12px;background:var(--surface-2);border-radius:14px}
+
+/* ---------- Fin de mes: mínimo, ritmo y semanas ---------- */
+.min-field{margin-top:8px}
+.wk-aviso{background:var(--sun-soft);color:var(--ink);border-radius:12px;padding:10px 12px;font-weight:600}
+.ritmo-bien{background:var(--mint-soft)}
+.ritmo-mal{background:var(--bad-soft)}
+.hh-s.neg{color:var(--bad)}

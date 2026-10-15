@@ -13,8 +13,9 @@ import {categoriasBase,categoriasDesde} from './logica/categorias.js';
    v7: opciones de feriados laborables en el perfil · v8: metas, dólares y días de licencia
    v9: año en que confirmaste la BPC (para avisar cada enero); pagos de fijos con monto real
    v10: tipo de ingreso y moneda en el perfil; descuentos propios e ingresos de cada mes en el sueldo
-   v11: categorías de gasto editables (state.categorias) */
-export var VERSION_ESTADO=11;
+   v11: categorías de gasto editables (state.categorias)
+   v12: plan.minimo (mínimo aceptable), plan.sobrante y plan.sobranteSemana (a dónde va lo que sobra) */
+export var VERSION_ESTADO=12;
 
 function hoyISO(){return iso(new Date())}
 /* Feriados: por defecto solo cuentan los 5 no laborables (1/1, 1/5, 18/7, 25/8, 25/12).
@@ -31,7 +32,7 @@ export function defaults(hoy){
   return {
     v:VERSION_ESTADO,ejemplo:false,
     perfil:perfilBase(),
-    plan:{monto:0,modo:'monto',ahorro:0,pct:30,inicio:hoy,cobro:cobroDesde(hoy,{tipo:'habil5'})},
+    plan:{monto:0,modo:'monto',ahorro:0,pct:30,inicio:hoy,cobro:cobroDesde(hoy,{tipo:'habil5'}),minimo:null,sobrante:'siguiente',sobranteSemana:{}},
     gastos:[],
     sueldo:sueldoBase(),
     extracto:{texto:'',formato:'auto',hormiga:400,cat:{}},
@@ -109,6 +110,10 @@ export function migrar(d){
     categorias:Array.isArray(x.categorias)&&x.categorias.length?x.categorias:null};
   /* v11: las categorías de siempre pasan a ser tu lista, más las que ya usaban tus gastos. Ningún gasto cambia. */
   if(!state.categorias)state.categorias=categoriasDesde(state);
+  /* v12: sin mínimo (vale lo mismo que el objetivo) y lo que sobra pasa a la semana siguiente, como siempre */
+  if(state.plan.minimo===undefined)state.plan.minimo=null;
+  if(state.plan.sobrante!=='ahorro')state.plan.sobrante='siguiente';
+  state.plan.sobranteSemana=obj(state.plan.sobranteSemana);
   if(state.sueldo.diasLicencia===undefined)state.sueldo.diasLicencia=0;
   /* v9: la BPC guardada hasta ahora es la de 2026 */
   if(vx<9&&!x.sueldo||vx<9&&!x.sueldo.bpcAnio)state.sueldo.bpcAnio=2026;

@@ -6,6 +6,7 @@ import {histStats,histOk,histExtra,logrosLista,nuevosLogros,cerrarMes,mesKey} fr
 import {ctx,$,today,planNow,liqNow,exAnalisis,money,esc,fCorta,fLarga,cap,tile,armar,toast,ICON} from './comun.js';
 import {resetWeekSel} from './semanas.js';
 import {renderMetas,aportarAlCerrar,initMetas} from './metas.js';
+import {minimoDe,nivelDe,rachaSemanas} from '../logica/mes.js';
 
 var SV='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
 var ICONL={
@@ -35,9 +36,12 @@ export function renderLogros(pc){
   var un=list.filter(function(l){return state.logros[l.id]||l.val>=l.need}).length;
   $('#logros-top').innerHTML='<div class="card streak">'
     +'<div class="st-main"><span class="st-ic">'+ICONL.flame+'</span><div class="st-txt"><span class="tile-l" style="color:var(--sun-ink)">Racha actual</span><b class="st-n">'+S.cur+' '+(S.cur===1?'mes':'meses')+'</b><span class="tile-h">'+(S.cur>0?'Cerrá el próximo mes cumpliendo la meta y llegás a '+(S.cur+1)+'.':'Cumplí la meta de este mes y arrancás tu racha.')+'</span></div></div>'
-    +'<div class="tiles">'+tile('tone-sun','Mejor racha',S.best+' '+(S.best===1?'mes':'meses'),'meses seguidos')+tile('tone-mint','Meses cumplidos',S.met+' de '+S.hs.length,'meses cerrados')+tile('tone-sky','Guardado en total',money(S.tot),'en meses cerrados')+tile('tone-grape','Logros',un+' de '+list.length,'desbloqueados')+'</div></div>';
+    +'<div class="tiles">'+tile('tone-mint','Semanas seguidas',(function(r){return r.actual+(r.actual===1?' semana':' semanas')})(rachaSemanas(state.hist,pc,today())),'dentro del tope · mejor: '+rachaSemanas(state.hist,pc,today()).mejor)
+      +tile('tone-grape','Meses con objetivo',S.curObj+' seguidos','en total: '+S.obj+' · mejor racha: '+S.bestObj)
+      +tile('tone-sun','Mejor racha',S.best+' '+(S.best===1?'mes':'meses'),'meses seguidos')+tile('tone-mint','Meses cumplidos',S.met+' de '+S.hs.length,'meses cerrados')+tile('tone-sky','Guardado en total',money(S.tot),'en meses cerrados')+tile('tone-grape','Logros',un+' de '+list.length,'desbloqueados')+'</div></div>';
   var p=state.plan,d=diffDays(today(),p.cobro),nc=nextCobro(p.cobro,cfgCobro(state));
-  $('#cierre-note').innerHTML='Tu meta de este período es <b>'+money(pc.ahorro)+'</b>. '+(d>0?'Lo ideal es cerrarlo el día que cobrás, el '+esc(fLarga(p.cobro))+' (faltan '+d+' '+(d===1?'día':'días')+').':'Ya cobraste: es buen momento para cerrarlo.')+' Al cerrar se guarda en tu historial y el plan arranca de nuevo del '+esc(fCorta(p.cobro))+' al '+esc(fCorta(nc))+'.';
+  var mn=minimoDe(state,pc);
+  $('#cierre-note').innerHTML=(mn<pc.ahorro?'Tu objetivo de este período es <b>'+money(pc.ahorro)+'</b> y tu mínimo, <b>'+money(mn)+'</b>: con el mínimo el mes ya cuenta como logrado. ':'Tu meta de este período es <b>'+money(pc.ahorro)+'</b>. ')+(d>0?'Lo ideal es cerrarlo el día que cobrás, el '+esc(fLarga(p.cobro))+' (faltan '+d+' '+(d===1?'día':'días')+').':'Ya cobraste: es buen momento para cerrarlo.')+' Al cerrar se guarda en tu historial y el plan arranca de nuevo del '+esc(fCorta(p.cobro))+' al '+esc(fCorta(nc))+'.';
   var ia=$('#c-ahorrado'),im=$('#c-monto');
   if(!cDirtyA&&document.activeElement!==ia)ia.value=Math.round(pc.ahorro)||'';
   if(!cDirtyM&&document.activeElement!==im)im.value=Math.round(L.liquido)||'';
@@ -66,12 +70,14 @@ export function renderLogros(pc){
   renderMetas();
 }
 function doCierre(){
-  var na=aportarAlCerrar();
+  var na=aportarAlCerrar(num($('#c-ahorrado').value));
   var nc=cerrarMes(ctx.state,planNow(),num($('#c-ahorrado').value),num($('#c-monto').value));
+  var rec=ctx.state.hist[ctx.state.hist.length-1],niv=rec?nivelDe(rec):'ninguno';
+  var res=niv==='objetivo'?'¡Llegaste al objetivo! ':niv==='minimo'?'Llegaste al mínimo: el mes cuenta como logrado. ':'Este mes no llegaste al mínimo. ';
   resetWeekSel();cDirtyA=false;cDirtyM=false;
   $('#c-confirm').hidden=true;$('#c-cerrar').hidden=false;
   ctx.syncInputs();ctx.persist();ctx.renderAll();
-  toast('Mes cerrado. Tu plan nuevo va hasta el '+fCorta(nc)+'.'+(na?' Sumé tu ahorro a '+na+(na===1?' meta.':' metas.'):''));
+  toast(res+'Tu plan nuevo va hasta el '+fCorta(nc)+'.'+(na?' Sumé tu ahorro a '+na+(na===1?' meta.':' metas.'):''));
 }
 export function initLogros(){
   initMetas();

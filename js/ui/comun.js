@@ -1,6 +1,7 @@
 /* Contexto compartido entre vistas y helpers de formato/HTML. */
 import {iso,parse,MES,DIA} from '../logica/fechas.js';
 import {planCalc} from '../logica/plan.js';
+import {ajustarPlan} from '../logica/mes.js';
 import {liq} from '../logica/sueldo.js';
 import {analisisGuardado} from '../logica/extracto.js';
 
@@ -8,7 +9,8 @@ import {analisisGuardado} from '../logica/extracto.js';
 export var ctx={state:null,tab:'resumen',booted:false,persist:function(){},renderAll:function(){},go:function(){},syncInputs:function(){}};
 
 export function today(){return iso(new Date())}
-export function planNow(){return planCalc(ctx.state)}
+/* El plan de siempre, ajustado: sobrantes al ahorro, lo que te pasaste repartido y el mínimo cuidado (logica/mes.js) */
+export function planNow(){return ajustarPlan(ctx.state,planCalc(ctx.state),today())}
 export function liqNow(conExtras){return liq(ctx.state,conExtras)}
 export function exAnalisis(){return analisisGuardado(ctx.state.extracto,today())}
 

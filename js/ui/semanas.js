@@ -1,6 +1,7 @@
 /* Pestaña Semanas: selector, "te quedan", los 7 días, anotar y borrar gastos. */
 import {parse,addDays,iso,diffDays,DIA,DIAL,MESL} from '../logica/fechas.js';
 import {ctx,$,today,planNow,money,n0,esc,fLarga,rango,cap,toast} from './comun.js';
+import {sobranteDe} from '../logica/mes.js';
 import {semanaDe} from '../logica/plan.js';
 import {formGasto,initFormsGasto,leerForm,guardarGasto,borrarGasto,itemGasto,chipsFrecuentes,anotarFrecuente} from './gastos.js';
 
@@ -33,12 +34,18 @@ export function renderWeek(pc){
   var pill=over?'<span class="pill bad">Te pasaste</span>':cur?'<span class="pill now">Esta semana</span>':past?'<span class="pill ok">Cumplida</span>':'<span class="pill">Próxima</span>';
   h+='<div class="card stack"><div class="sec-h"><h2>'+esc(tit)+'</h2>'+pill+'</div>';
   var sub;
-  if(over)sub='Gastaste más de lo que tenías. La diferencia se descuenta de la semana que viene.';
-  else if(past)sub='La semana terminó. Lo que sobró pasó a la siguiente.';
+  var ult=i===pc.weeks.length-1;
+  if(over)sub=past&&!ult?'Gastaste más de lo que tenías. La diferencia se repartió entre las semanas que quedan.':'Gastaste más de lo que tenías.'+(ult?'':' La diferencia se reparte entre las semanas que quedan cuando termine.');
+  else if(past)sub=w.alAhorro?'La semana terminó. Lo que sobró ('+money(w.alAhorro)+') fue al ahorro.':'La semana terminó. Lo que sobró pasó a la siguiente.';
   else sub='Podés gastar <b>'+money(perDay)+'</b> por día '+(cur?'hasta el '+DIAL[de.getDay()]:'si repartís parejo')+'.';
+  /* La semana después de una que se pasó: cuánto bajó el día */
+  var rc=pc.ajuste&&pc.ajuste.recalculo;
+  if(cur&&rc&&rc.semana===i-1)h+='<p class="wk-aviso">La semana pasada te pasaste '+money(rc.deficit)+'; el resto baja a '+money(perDay)+' por día.</p>';
   h+='<div class="wk-big"><span class="wk-bl">'+(over?'Te pasaste por':'Te quedan')+'</span><span class="wk-bv'+(over?' neg':'')+'">'+money(Math.abs(w.left))+'</span><span class="wk-sub">'+sub+'</span></div>';
   h+='<div><div class="bar big'+(over?' over':'')+'" role="img" aria-label="Gastaste el '+Math.round(pct)+'% de lo disponible"><i style="width:'+pct+'%"></i></div>';
   h+='<div class="wk-legend"><span>Gastaste <b>'+money(w.spent)+'</b></span><span>Tenías <b>'+money(w.avail)+'</b>'+(Math.round(w.carry)!==0?' ('+money(w.budget)+(w.carry<0?' − ':' + ')+money(Math.abs(w.carry))+' de la semana anterior)':'')+'</span></div></div>';
+  if(past&&!over&&w.left+(w.alAhorro||0)>0&&!ult){var so=sobranteDe(state,w);
+    h+='<div class="field"><span class="sub-l">Lo que sobró de esta semana</span><div class="seg" role="group" aria-label="A dónde va lo que sobró"><button type="button" data-sobsem="'+w.start+'" data-val="siguiente" aria-pressed="'+(so!=='ahorro')+'">A la semana siguiente</button><button type="button" data-sobsem="'+w.start+'" data-val="ahorro" aria-pressed="'+(so==='ahorro')+'">Al ahorro</button></div></div>'}
   h+='<div class="days" style="grid-template-columns:repeat('+w.days+',minmax(0,1fr))">';
   for(var k=0;k<w.days;k++){
     var d=addDays(ds,k),di=iso(d),sd=0;
@@ -67,6 +74,13 @@ export function renderWeek(pc){
 
 export function initSemanas(){
   var p=$('#p-semana');
+  /* Lo que sobra: por defecto (Ajustes) y semana por semana */
+  document.addEventListener('click',function(e){
+    var b=e.target.closest('[data-sobrante]');
+    if(b){ctx.state.plan.sobrante=b.getAttribute('data-sobrante');ctx.persist();ctx.renderAll();toast(ctx.state.plan.sobrante==='ahorro'?'Lo que sobre de cada semana va al ahorro':'Lo que sobre pasa a la semana siguiente');return}
+    var s=e.target.closest('[data-sobsem]');
+    if(s){var pl=ctx.state.plan;pl.sobranteSemana=Object.assign({},pl.sobranteSemana);pl.sobranteSemana[s.getAttribute('data-sobsem')]=s.getAttribute('data-val');ctx.persist();ctx.renderAll()}
+  });
   initFormsGasto(p);
   p.addEventListener('change',function(e){
     if(e.target.id==='g-fecha'&&/^w\d+$/.test(ctx.tab)&&!editId)weekSel[Number(ctx.tab.slice(1))]=e.target.value;

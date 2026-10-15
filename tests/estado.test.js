@@ -116,3 +116,11 @@ test('v8 → v9: la BPC guardada queda como la de 2026',function(){
   assert.equal(m.sueldo.bpcAnio,2026);
   assert.equal(migrar(m).sueldo.bpcAnio,2026,'no cambia al volver a abrir');
 });
+
+test('v11 → v12: el plan suma mínimo y "lo que sobra" sin cambiar nada de lo anterior',function(){
+  var s=defaults();s.v=11;delete s.plan.minimo;delete s.plan.sobrante;delete s.plan.sobranteSemana;s.plan.ahorro=9000;
+  var m=migrar(s);
+  assert.equal(m.v,VERSION_ESTADO);
+  assert.equal(m.plan.minimo,null);assert.equal(m.plan.sobrante,'siguiente');assert.deepEqual(m.plan.sobranteSemana,{});
+  assert.equal(m.plan.ahorro,9000);
+});

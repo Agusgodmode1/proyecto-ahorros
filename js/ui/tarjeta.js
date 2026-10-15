@@ -2,9 +2,13 @@
 import {diffDays,DIAL,MESL} from '../logica/fechas.js';
 import {num} from '../logica/util.js';
 import * as EX from '../logica/extracto.js';
-import {ctx,$,today,planNow,money,esc,fCorta,cap,titulo,tile} from './comun.js';
+import {ctx,$,today,planNow,money,esc,fCorta,cap,titulo,tile,toast} from './comun.js';
 import {nombresVisibles,nombreDe,colorDe} from '../logica/categorias.js';
 function mapa(c){return nombreDe(ctx.state,c)}
+import {cruzar,hormigas} from '../logica/control.js';
+import {catDe} from './gastos.js';
+import {uid} from '../logica/util.js';
+var faltan=[];
 
 var gasTimer=null,gasConfirm=false;
 export var CATCOL={'Delivery y comida':'var(--coral)','Supermercado':'var(--mint)','Kiosco y almacén':'var(--sun)','Transporte':'var(--sky)','Suscripciones':'var(--grape)','Juegos':'var(--pink)','Trading':'var(--teal)','Servicios y cuentas':'var(--slate)','Salud':'var(--pink)','Compras online':'var(--teal)','Retiros y transferencias':'var(--slate)','Comisiones y cargos':'var(--bad)','Otros':'var(--muted)','Ingresos':'var(--mint)'};
@@ -61,32 +65,42 @@ export function renderGastos(){
       var rit=c.fijo?'<span class="pill ex">cobro fijo</span>':(c.n>=3&&c.cada>0?'cada ~'+Math.round(c.cada)+' días':'');
       return '<tr><td>'+esc(titulo(c.k))+'</td><td>'+catSelect(c.k,c.c)+'</td><td class="r">'+c.n+'</td><td class="r"><b>'+money(c.t)+'</b></td><td class="r">'+money(c.prom)+'</td><td>'+rit+'</td></tr>';
     }).join('')+'</tbody></table></div></div>';
-  if(A.horCom.length){
-    h+='<div class="card stack"><div class="sec"><h2>Gastos chicos que se acumulan</h2><p class="note">Compras de menos de '+money(A.hor.umbral)+', juntadas por comercio. De a poco no se notan; sumadas, sí.</p></div>'+bars(A.horCom.map(function(c,i){return {l:titulo(c.k),v:c.t,n:c.n,dim:i>0}}),function(x){return '<b>'+money(x.v)+'</b> · '+x.n+' veces'})+'</div>';
+  var mesH=A.hasta.slice(0,7),um=num(ex.hormiga)||400;
+  var hx=hormigas(A.gas.map(function(m){return {fecha:m.f,monto:-m.m,grupo:titulo(m.k)}}),mesH,um);
+  var ha=hormigas(state.gastos.map(function(g){return {fecha:g.fecha,monto:g.monto,grupo:catDe(g)}}),mesH,um);
+  if(hx.length||ha.length){
+    var item=function(o){return '<li><span class="what"><b>'+o.n+' × '+esc(o.grupo)+'</b><span class="src">'+money(o.total)+' en '+MESL[Number(mesH.slice(5,7))-1]+' · '+money(o.anual)+' en un año a este ritmo</span></span></li>'};
+    h+='<div class="card stack"><div class="sec"><h2>Gastos hormiga</h2><p class="note">Compras de menos de '+money(um)+' que se repiten 3 veces o más en '+MESL[Number(mesH.slice(5,7))-1]+'. De a poco no se notan; sumadas, sí.</p></div>'
+      +(hx.length?'<h3 class="sub-h">En el extracto, por comercio</h3><ul class="list">'+hx.slice(0,6).map(item).join('')+'</ul>':'')
+      +(ha.length?'<h3 class="sub-h">En lo que anotaste, por categoría</h3><ul class="list">'+ha.slice(0,6).map(item).join('')+'</ul>':'')+'</div>';
   }
   if(A.grandes.length){
     h+='<div class="card stack"><h2>Los gastos más grandes</h2><div class="scroll"><table style="min-width:360px"><tbody>'
       +A.grandes.map(function(m){return '<tr><td class="muted">'+esc(fCorta(m.f))+'</td><td>'+esc(titulo(m.k))+'</td><td class="r"><b>'+money(-m.m)+'</b></td></tr>'}).join('')+'</tbody></table></div></div>';
   }
-  var enRango=A.gas.filter(function(m){return m.f>=plan.inicio&&m.f<=plan.cobro});
-  var tr=-enRango.reduce(function(t,m){return t+m.m},0),yaB=state.gastos.filter(function(g){return g.src==='brou'}).length;
-  h+='<div class="card stack tone-mint"><h2>Pasar estos gastos a tus semanas</h2><p class="note">'
-    +(enRango.length?'Hay <b>'+enRango.length+' gastos</b> entre el '+esc(fCorta(plan.inicio))+' y el '+esc(fCorta(plan.cobro))+' por <b>'+money(tr)+'</b>. Si los cargás, cada uno cae en su semana y no tenés que anotarlos a mano.'
-    :'Todavía no hay gastos del extracto dentro de las fechas del plan ('+esc(fCorta(plan.inicio))+' al '+esc(fCorta(plan.cobro))+').')
-    +(yaB?' Ya hay '+yaB+' cargados de un extracto anterior; se reemplazan.':'')+'</p>'
-    +'<div class="row-btns"><button class="btn primary" type="button" id="gas-load"'+(enRango.length||yaB?'':' disabled')+'>Cargar a mis semanas</button></div></div>';
+  var desde=plan.inicio>A.desde?plan.inicio:A.desde,hasta=plan.cobro<A.hasta?plan.cobro:A.hasta;
+  if(desde<=hasta){
+    var C=cruzar(A.gas.map(function(m){return {f:m.f,monto:Math.round(-m.m*100)/100,d:m.d,k:m.k,c:m.c}}),state.gastos,desde,hasta);
+    faltan=C.faltan;
+    var tf=0;C.faltan.forEach(function(m){tf+=m.monto});
+    h+='<div class="card stack tone-mint" id="control-card"><div class="sec"><h2>Lo que anotaste vs. el extracto</h2><p class="note">Del '+esc(fCorta(desde))+' al '+esc(fCorta(hasta))+'. Cada movimiento se busca entre tus gastos (mismo monto, hasta 3 días de diferencia). El extracto no suma nada solo: vos elegís qué agregar.</p></div>'
+      +'<div class="tiles">'+tile('tone-mint','Coincide',String(C.coinciden.length),'anotado y en el extracto')+tile('tone-coral','No lo anotaste',String(C.faltan.length),C.faltan.length?money(tf):'todo al día')+tile('tone-sky','Solo anotado',String(C.soloAnotados.length),'efectivo u otra tarjeta')+'</div>';
+    if(C.faltan.length)h+='<div class="sec"><div class="sec-h"><h3 class="sub-h">En el extracto pero no lo anotaste</h3>'+(C.faltan.length>1?'<button class="btn" type="button" data-falta="todos">Agregar los '+C.faltan.length+'</button>':'')+'</div><ul class="list">'
+      +C.faltan.map(function(m,i){return '<li><span class="when">'+esc(fCorta(m.f))+'</span><span class="what">'+esc(titulo(m.k))+'</span><span class="amt">'+money(m.monto)+'</span><button class="btn quiet sm" type="button" data-falta="'+i+'">Agregar</button></li>'}).join('')+'</ul></div>';
+    if(C.soloAnotados.length)h+='<details><summary>Anotado pero no está en el extracto ('+C.soloAnotados.length+')</summary><p class="note">Puede ser efectivo u otra tarjeta. Es solo para que lo veas.</p><ul class="list">'
+      +C.soloAnotados.map(function(g){return '<li><span class="when">'+esc(fCorta(g.fecha))+'</span><span class="what">'+esc(g.nota||'Sin detalle')+'</span><span class="amt">'+money(g.monto)+'</span></li>'}).join('')+'</ul></details>';
+    if(C.coinciden.length)h+='<details><summary>Coincide ('+C.coinciden.length+')</summary><ul class="list">'
+      +C.coinciden.map(function(x){return '<li><span class="when">'+esc(fCorta(x.mov.f))+'</span><span class="what">'+esc(titulo(x.mov.k))+' <span class="src">= '+esc(x.gasto.nota||'tu gasto')+(x.dias?', '+x.dias+(x.dias===1?' día':' días')+' de diferencia':'')+'</span></span><span class="amt">'+money(x.mov.monto)+'</span></li>'}).join('')+'</ul></details>';
+    h+='</div>';
+  }else{faltan=[];h+='<div class="empty">El extracto no tiene movimientos dentro de las fechas de tu plan ('+esc(fCorta(plan.inicio))+' al '+esc(fCorta(plan.cobro))+').</div>'}
   out.innerHTML=h;
 }
-function gasHash(m,i){var s=m.f+m.d+m.m+i,h=0;for(var k=0;k<s.length;k++)h=(h*31+s.charCodeAt(k))|0;return 'b'+(h>>>0).toString(36)}
-function cargarAlPlan(){
-  var state=ctx.state,ex=state.extracto,r=EX.leer(ex.texto,today(),ex.formato),A=EX.analizar(r.movs,{cat:ex.cat,hormiga:num(ex.hormiga)||400,mapa:mapa});
-  state.gastos=state.gastos.filter(function(g){return g.src!=='brou'});
-  if(A){
-    A.gas.filter(function(m){return m.f>=state.plan.inicio&&m.f<=state.plan.cobro}).forEach(function(m,i){
-      state.gastos.push({id:gasHash(m,i),fecha:m.f,monto:Math.round(-m.m*100)/100,nota:titulo(m.k).slice(0,60),src:'brou'});
-    });
-  }
+/* Agregar como gasto lo que estaba en el extracto y no anotaste (uno o todos). Nunca duplica: solo los que faltan. */
+function agregarFaltantes(lista){
+  var st=ctx.state;
+  lista.forEach(function(m){st.gastos.push({id:uid(),fecha:m.f,monto:m.monto,nota:titulo(m.k).slice(0,60),cat:m.c&&m.c!=='Ingresos'?m.c:undefined,src:'brou'})});
   ctx.persist();ctx.renderAll();
+  toast(lista.length===1?'Agregado: '+money(lista[0].monto)+' de '+titulo(lista[0].k):'Agregaste '+lista.length+' gastos del extracto');
 }
 export function syncGastos(){
   var ex=ctx.state.extracto;
@@ -112,5 +126,9 @@ export function initTarjeta(){
     var s=e.target.closest('.cat-sel');if(!s)return;
     ctx.state.extracto.cat[s.getAttribute('data-catk')]=s.value;ctx.persist();renderGastos();
   });
-  $('#p-gastos').addEventListener('click',function(e){if(e.target.id==='gas-load')cargarAlPlan()});
+  $('#p-gastos').addEventListener('click',function(e){
+    var b=e.target.closest('[data-falta]');if(!b)return;
+    var v=b.getAttribute('data-falta');
+    if(v==='todos')agregarFaltantes(faltan.slice());else if(faltan[Number(v)])agregarFaltantes([faltan[Number(v)]]);
+  });
 }

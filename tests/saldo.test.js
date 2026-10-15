@@ -34,12 +34,21 @@ test('actualizar saldo con menos plata: se anota un gasto "Ajuste de saldo" del 
   assert.equal(disponible(s),37000,'deshacer vuelve al estado anterior');
 });
 
-test('actualizar saldo el primer día del plan: el ajuste cae en el inicio, nunca antes',function(){
+test('sin gastos ni fijos pagados: lo que decís pasa a ser la plata del plan (no hay nada que ajustar)',function(){
   var s=estado();s.gastos=[];
   var r=ajustarSaldo(s,35000,'2026-10-12');
-  var g=s.gastos[0];
-  assert.equal(g.fecha,'2026-10-12');
-  assert.equal(r.diff,5000);
+  assert.equal(r.tipo,'monto');
+  assert.equal(s.plan.monto,35000);
+  assert.equal(s.gastos.length,0,'no se inventa un gasto');
+  assert.equal(disponible(s),35000);
+  deshacerAjuste(s,r);
+  assert.equal(s.plan.monto,40000);
+});
+
+test('el ajuste nunca cae antes del inicio del plan',function(){
+  var s=estado();
+  var r=ajustarSaldo(s,30000,'2026-10-12');
+  assert.equal(s.gastos.filter(function(x){return x.id===r.id})[0].fecha,'2026-10-12');
 });
 
 test('actualizar saldo con más plata: se suma a lo que tenías, y se puede deshacer',function(){

@@ -63,10 +63,10 @@ export function renderCountdown(){
 
 export function renderResumen(pc){
   var state=ctx.state;
-  ahorroNote();heroChips(pc);renderHoy(pc);renderRitmo(pc);
+  syncMontoCampo(pc);ahorroNote();heroChips(pc);renderHoy(pc);renderRitmo(pc);
   var sf=aniosSinFeriados(state,today()),fa=$('#fer-aviso');
   if(fa)fa.innerHTML=sf.length?'<div class="banner"><p><b>No tengo los feriados de '+sf.join(' y ')+'.</b> Sin ellos, el día de cobro puede salir mal. Actualizá la app o agregalos en Ajustes → Feriados.</p><button class="btn" type="button" data-goto="ajustes">Ir a Feriados</button></div>':'';
-  var sum=$('#plan-aj-sum');if(sum)sum.textContent=num(state.plan.monto)>0?money(num(state.plan.monto))+' · guardás '+money(pc.ahorro)+' · hasta el '+fCorta(state.plan.cobro):'Completá los tres pasos';
+  var sum=$('#plan-aj-sum');if(sum)sum.textContent=num(state.plan.monto)>0?money(Math.max(0,disponible(state,pc)))+' disponibles · guardás '+money(pc.ahorro)+' · hasta el '+fCorta(state.plan.cobro):'Completá los tres pasos';
   var p=state.plan,t=today(),L=liqNow(true),fp=fijosPeriodo(state.fijos,p.inicio,p.cobro);
   var m=Math.max(1,num(p.monto)),pf=Math.max(0,Math.min(100,pc.fijos/m*100)),pa=Math.max(0,Math.min(100-pf,pc.ahorro/m*100)),pg=Math.max(0,100-pf-pa);
   var h=state.ejemplo?'<div class="banner"><p><b>Estás viendo datos de ejemplo.</b> Son de muestra: no son tuyos.</p><button class="btn" type="button" data-cero>Borrar el ejemplo y crear mi perfil</button></div>':'';
@@ -126,11 +126,18 @@ export function renderResumen(pc){
 }
 
 /* ---------- Formulario del plan ---------- */
+/* El campo "¿Cuánta plata tenés?" muestra lo disponible ahora (no con lo que arrancaste), igual que el botón de la portada */
+var montoSetup=false;
+function syncMontoCampo(pc){
+  var i=$('#in-monto');if(!i||document.activeElement===i)return;
+  var p=ctx.state.plan;
+  i.value=num(p.monto)>0?String(Math.max(0,disponible(ctx.state,pc))):'';
+}
 export function syncPlan(){
   var p=ctx.state.plan;
   /* El formulario del plan arranca plegado cuando ya está configurado */
   var aj=$('#plan-aj');if(aj)aj.open=!(num(p.monto)>0);
-  $('#in-monto').value=p.monto||'';
+  syncMontoCampo();
   $('#in-inicio').value=p.inicio;$('#in-cobro').value=p.cobro;
   syncAhorro();cobroNote();
 }
@@ -183,7 +190,8 @@ function onPlanInput(){
   if(diffDays(ini,cob)<1){planErr('La fecha de cobro tiene que ser posterior al inicio.');return}
   if(diffDays(ini,cob)>120){planErr('El plan cubre más de 120 días. Revisá las fechas.');return}
   planErr('');
-  p.monto=Math.max(0,m);p.inicio=ini;p.cobro=cob;
+  if(montoSetup||!(num(p.monto)>0))p.monto=Math.max(0,m);
+  p.inicio=ini;p.cobro=cob;
   cobroNote();ahorroNote();ctx.persist();ctx.renderAll();
 }
 function abrirPlan(){
@@ -199,6 +207,7 @@ function saldoPrev(){
   else if(p.tipo==='invalido')t='Poné cuánta plata tenés. No puede ser negativa.';
   else if(p.tipo==='fuera')t='Ya cobraste: cerrá el mes en Logros para arrancar uno nuevo.';
   else if(p.tipo==='igual')t='Coincide con lo que tenés anotado ('+d+'). No hay nada para cambiar.';
+  else if(p.tipo==='monto')t='Todavía no anotaste gastos: tu plata del plan pasa de '+d+' a '+money(num(v))+' y se recalcula todo.';
   else if(p.tipo==='gasto')t='Según lo anotado tenés '+d+'. Faltan '+money(p.diff)+' de gastos: los anoto como «Ajuste de saldo» y se recalcula todo.';
   else t='Tenés '+money(p.diff)+' más de lo anotado: lo sumo a tu plata disponible y se recalcula todo.';
   pv.textContent=t;
@@ -216,14 +225,21 @@ function initSaldo(){
   $('#saldo-x').addEventListener('click',function(){$('#saldo-card').hidden=true});
   $('#saldo-card').addEventListener('submit',function(e){
     e.preventDefault();
-    var v=$('#saldo-in').value,p=previaSaldo(ctx.state,v===''?null:num(v),today());
-    if(p.tipo==='invalido'||p.tipo==='fuera'||p.tipo==='igual'){saldoPrev();return}
-    var r=ajustarSaldo(ctx.state,num(v),today());
-    ctx.persist();$('#saldo-card').hidden=true;ctx.syncInputs();ctx.renderAll();
-    toastAccion(r.tipo==='gasto'?'Anoté '+money(r.diff)+' de ajuste de saldo':'Sumé '+money(r.diff)+' a tu plata disponible','Deshacer',function(){
-      deshacerAjuste(ctx.state,r);ctx.persist();ctx.syncInputs();ctx.renderAll();
-    });
+    var v=$('#saldo-in').value;
+    if(!confirmarSaldo(v===''?null:num(v)))saldoPrev();
+    else $('#saldo-card').hidden=true;
   });
+}
+/* Aplica un saldo nuevo y recalcula todo. Devuelve false si no había nada para cambiar. */
+function confirmarSaldo(real){
+  var st=ctx.state,p=previaSaldo(st,real,today());
+  if(p.tipo==='invalido'||p.tipo==='fuera'||p.tipo==='igual')return false;
+  var r=ajustarSaldo(st,real,today());
+  ctx.persist();ctx.syncInputs();ctx.renderAll();
+  toastAccion(r.tipo==='gasto'?'Anoté '+money(r.diff)+' de ajuste de saldo':r.tipo==='ingreso'?'Sumé '+money(r.diff)+' a tu plata disponible':'Tu plata disponible quedó en '+money(real),'Deshacer',function(){
+    deshacerAjuste(ctx.state,r);ctx.persist();ctx.syncInputs();ctx.renderAll();
+  });
+  return true;
 }
 export function initPlan(){
   var pr=$('#p-resumen');
@@ -244,7 +260,19 @@ export function initPlan(){
     var dg=e.target.closest('#hoy-out [data-delg]');if(dg){borrarGasto(dg.getAttribute('data-delg'));return}
     var eg=e.target.closest('#hoy-out [data-editg]');if(eg){var id=eg.getAttribute('data-editg'),w=ctx.state.gastos.filter(function(g){return g.id===id})[0];if(w)editarGasto(id)}
   });
-  $('#in-monto').addEventListener('input',onPlanInput);
+  /* Con el plan armado, cambiar este campo es actualizar el saldo (igual que el botón de la portada).
+     Mientras escribís por primera vez el plan, se guarda directo. */
+  $('#in-monto').addEventListener('focus',function(){montoSetup=!(num(ctx.state.plan.monto)>0)});
+  $('#in-monto').addEventListener('input',function(){if(montoSetup)onPlanInput()});
+  $('#in-monto').addEventListener('change',function(){
+    var st=ctx.state,v=this.value;
+    if(montoSetup){montoSetup=false;onPlanInput();return}
+    var p=previaSaldo(st,v===''?null:num(v),today());
+    if(p.tipo==='fuera'){st.plan.monto=Math.max(0,num(v));ctx.persist();ctx.renderAll();return}
+    if(p.tipo==='invalido')toast('Poné cuánta plata tenés. No puede ser negativa.');
+    else if(p.tipo!=='igual')confirmarSaldo(num(v));
+    syncMontoCampo();
+  });
   $('#in-inicio').addEventListener('input',onPlanInput);
   $('#in-cobro').addEventListener('input',onPlanInput);
   $('#in-pct').addEventListener('input',function(){var v=Math.min(100,Math.max(0,Math.round(num(this.value))));ctx.state.plan.pct=v;ctx.persist();ctx.renderAll()});

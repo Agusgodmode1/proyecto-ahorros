@@ -28,14 +28,16 @@ export function cabeGasto(state,monto){
   var d=disponible(state);
   return {ok:monto<=d+0.5,disponible:Math.max(0,d)};
 }
-/* Qué haría actualizar el saldo a `real`: {tipo:'igual'|'gasto'|'ingreso'|'invalido'|'fuera', diff, disponible} */
+/* Qué haría actualizar el saldo a `real`: {tipo:'igual'|'gasto'|'ingreso'|'monto'|'invalido'|'fuera', diff, disponible}.
+   'monto' = todavía no anotaste gastos ni pagaste fijos: lo que decís pasa a ser la plata del plan (no hay nada que ajustar). */
 export function previaSaldo(state,real,hoy){
   var d=disponible(state);
   if(real===null||real===undefined||!isFinite(real)||real<0)return {tipo:'invalido',diff:0,disponible:d};
   if(hoy>=state.plan.cobro)return {tipo:'fuera',diff:0,disponible:d};
   var diff=r2(d-real);
   if(Math.abs(diff)<0.5)return {tipo:'igual',diff:0,disponible:d};
-  return {tipo:diff>0?'gasto':'ingreso',diff:Math.abs(diff),disponible:d};
+  var sinMov=planCalc(state).spentInPlan===0&&fijosPagados(state)===0;
+  return {tipo:sinMov?'monto':(diff>0?'gasto':'ingreso'),diff:Math.abs(diff),disponible:d};
 }
 /* Aplica el ajuste. Devuelve {tipo, diff, id?, montoAntes?} para poder deshacerlo. */
 export function ajustarSaldo(state,real,hoy){
@@ -47,14 +49,14 @@ export function ajustarSaldo(state,real,hoy){
     state.gastos.push(g);
     return {tipo:'gasto',diff:p.diff,id:g.id};
   }
-  if(p.tipo==='ingreso'){
+  if(p.tipo==='ingreso'||p.tipo==='monto'){
     var antes=num(state.plan.monto);
-    state.plan.monto=r2(antes+p.diff);
-    return {tipo:'ingreso',diff:p.diff,montoAntes:antes};
+    state.plan.monto=p.tipo==='monto'?r2(real):r2(antes+p.diff);
+    return {tipo:p.tipo,diff:p.diff,montoAntes:antes};
   }
   return {tipo:p.tipo,diff:0};
 }
 export function deshacerAjuste(state,r){
   if(r.tipo==='gasto')state.gastos=state.gastos.filter(function(g){return g.id!==r.id});
-  else if(r.tipo==='ingreso')state.plan.monto=r.montoAntes;
+  else if(r.tipo==='ingreso'||r.tipo==='monto')state.plan.monto=r.montoAntes;
 }

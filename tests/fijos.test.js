@@ -1,6 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {defaults} from '../js/estado.js';
+import {diasSinCopia} from '../js/logica/avisos.js';
 import {marcarPagado,pagoDe,isPagado,pagosDe,montoEsperado,montoDelPeriodo,fijosPeriodoTotal,totalFijos,planCalc,proximo} from '../js/logica/plan.js';
 
 function base(){
@@ -49,4 +50,15 @@ test('avisos: año sin feriados y BPC de un año anterior',async function(){
   s.sueldo.bpcAnio=2026;
   assert.equal(revisarBPC(s,'2026-12-31'),false);
   assert.equal(revisarBPC(s,'2027-01-02'),true);
+});
+
+test('aviso de copia fuera del teléfono: recién después de 30 días',function(){
+  var st=defaults();
+  assert.equal(diasSinCopia(st,'2026-10-15'),null,'sin fechas no avisa');
+  st.meta.creado='2026-09-15';
+  assert.equal(diasSinCopia(st,'2026-10-15'),null,'30 días justos todavía no');
+  assert.equal(diasSinCopia(st,'2026-10-16'),31,'nunca exportó: cuenta desde que empezó');
+  st.meta.ultimoExport='2026-10-01';
+  assert.equal(diasSinCopia(st,'2026-10-16'),null,'exportó hace 15 días');
+  assert.equal(diasSinCopia(st,'2026-11-05'),35);
 });

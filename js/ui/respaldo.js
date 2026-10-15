@@ -7,6 +7,7 @@ import {csvGastos} from '../logica/csv.js';
 import {catDe} from './gastos.js';
 import {num} from '../logica/util.js';
 import {VERSION} from '../version.js';
+import {diasSinCopia} from '../logica/avisos.js';
 
 /* ---------- Exportar ---------- */
 function marcarExport(){ctx.state.meta.ultimoExport=today();ctx.persist();ctx.renderAll()}
@@ -110,9 +111,9 @@ export function montarImportador(el,onConfirmar,textoBoton,onJuntar){
 var avisoOculto=false;
 export function renderAvisoRespaldo(){
   var el=$('#resp-aviso');if(!el)return;
-  var d=diasSinRespaldo(ctx.state,today());
-  if(avisoOculto||d===null||d<=14){el.innerHTML='';return}
-  el.innerHTML='<div class="banner"><p>Hace <b>'+d+' días</b> que no guardás un respaldo. Tus datos viven solo en este teléfono.</p><button class="btn" type="button" id="resp-ya">Exportar ahora</button><button class="btn quiet" type="button" id="resp-luego">Después</button></div>';
+  var d=diasSinCopia(ctx.state,today());
+  if(avisoOculto||d===null){el.innerHTML='';return}
+  el.innerHTML='<div class="banner"><p>Hace <b>'+d+' días</b> que no guardás una copia fuera del teléfono.</p><button class="btn" type="button" id="resp-ya">Guardar una copia</button><button class="btn quiet" type="button" id="resp-luego">Después</button></div>';
 }
 
 /* ---------- Pantalla ---------- */
@@ -184,7 +185,12 @@ export function initAjustes(reemplazar,juntarDatos){
   $('#exp-close').addEventListener('click',function(){$('#exp-box').hidden=true});
   montarImportador($('#aj-import'),function(st){reemplazar(st,'antes de importar un respaldo');toast('Datos importados')},null,juntarDatos);
   $('#pase-export').addEventListener('click',exportar);
-  $('#pase-importar').addEventListener('click',function(){var c=$('#aj-import-card');try{c.scrollIntoView({block:'start',behavior:'smooth'})}catch(e){c.scrollIntoView()}});
+  /* Abre el selector de archivos del importador; el resumen y "Juntar / Reemplazar" aparecen en esa tarjeta */
+  $('#pase-importar').addEventListener('click',function(){
+    var c=$('#aj-import-card'),f=c.querySelector('input[type=file]');
+    if(f)f.click();
+    try{c.scrollIntoView({block:'start',behavior:'smooth'})}catch(e){c.scrollIntoView()}
+  });
   document.addEventListener('click',function(e){
     if(e.target.id==='resp-ya')exportar();
     if(e.target.id==='resp-luego'){avisoOculto=true;renderAvisoRespaldo()}

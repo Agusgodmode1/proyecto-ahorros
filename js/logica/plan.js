@@ -8,7 +8,7 @@ export function planear(plan,gastos,fijosRes){
   var total=Math.max(1,diffDays(plan.inicio,plan.cobro));
   /* Tope: no se puede guardar más de lo que queda después de los fijos (si no, "para gastar" daría negativo) */
   var tope=Math.max(0,plan.monto-(fijosRes||0));
-  var pedido=plan.modo==='monto'?Math.min(Math.max(0,Math.round(plan.ahorro||0)),Math.max(0,plan.monto)):Math.round(plan.monto*plan.pct/100);
+  var pedido=plan.modo==='monto'?Math.max(0,Math.round(plan.ahorro||0)):Math.round(plan.monto*plan.pct/100);
   var ahorro=Math.min(pedido,tope),gastar=plan.monto-ahorro-(fijosRes||0);
   var weeks=[],off=0,w=0,carry=0;
   while(off<total){

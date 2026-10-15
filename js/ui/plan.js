@@ -2,7 +2,7 @@
 import {parse,diffDays,bizRank,MESL} from '../logica/fechas.js';
 import {num} from '../logica/util.js';
 import {fijosPeriodo,totalFijos,proximo,hoyPodes,planCalc} from '../logica/plan.js';
-import {disponible,fijosPagados,previaSaldo,ajustarSaldo,deshacerAjuste} from '../logica/saldo.js';
+import {disponible,fijosPagados,maxAhorro,previaSaldo,ajustarSaldo,deshacerAjuste} from '../logica/saldo.js';
 import {mesTrabajo,mins,reglasHoras} from '../logica/sueldo.js';
 import {histStats,logrosLista} from '../logica/logros.js';
 import {ctx,$,today,liqNow,planNow,exAnalisis,money,esc,fCorta,fLarga,rango,fMin,cap,tile,hchip,row,toast,toastAccion} from './comun.js';
@@ -36,6 +36,17 @@ function heroChips(pc){
   }
   $('#hero-chips').innerHTML=hchip('Guardás este mes',money(pc.ahorro))+hchip('Vas a cobrar',money(L.liquido));
 }
+/* Aviso grande cuando la meta de ahorro no se puede cumplir con la plata que tenés */
+function renderAlertaMeta(pc){
+  var el=$('#meta-alerta');if(!el)return;
+  var st=ctx.state,p=st.plan,t=today();
+  if(!(num(p.monto)>0)||t>=p.cobro){el.innerHTML='';return}
+  var mx=maxAhorro(st,pc),ped=pc.ahorroPedido;
+  if(ped<=mx+0.5){el.innerHTML='';return}
+  var d=Math.max(0,disponible(st,pc));
+  el.innerHTML='<div class="banner alerta" role="alert"><p><b>Esa meta no se puede.</b> Tenés '+money(d)+', así que lo máximo que podés guardar es '+money(mx)+' y no los '+money(ped)+' que pusiste. Bajá la meta o actualizá tu saldo si tenés más plata.</p>'
+    +'<span class="row-btns">'+(p.modo==='monto'?'<button class="btn" type="button" id="meta-bajar" data-mx="'+Math.floor(mx)+'">Guardar '+money(Math.floor(mx))+'</button>':'')+'<button class="btn quiet" type="button" id="meta-plan">Cambiar la meta</button></span></div>';
+}
 /* Arriba de todo en Plan: cuánto podés gastar hoy y anotar un gasto sin cambiar de pestaña */
 function renderHoy(pc){
   var state=ctx.state,t=today(),H=hoyPodes(pc,state.gastos,t),el=$('#hoy-out');if(!el)return;
@@ -63,7 +74,7 @@ export function renderCountdown(){
 
 export function renderResumen(pc){
   var state=ctx.state;
-  syncMontoCampo(pc);ahorroNote();heroChips(pc);renderHoy(pc);renderRitmo(pc);
+  syncMontoCampo(pc);ahorroNote();heroChips(pc);renderAlertaMeta(pc);renderHoy(pc);renderRitmo(pc);
   var sf=aniosSinFeriados(state,today()),fa=$('#fer-aviso');
   if(fa)fa.innerHTML=sf.length?'<div class="banner"><p><b>No tengo los feriados de '+sf.join(' y ')+'.</b> Sin ellos, el día de cobro puede salir mal. Actualizá la app o agregalos en Ajustes → Feriados.</p><button class="btn" type="button" data-goto="ajustes">Ir a Feriados</button></div>':'';
   var sum=$('#plan-aj-sum');if(sum)sum.textContent=num(state.plan.monto)>0?money(Math.max(0,disponible(state,pc)))+' disponibles · guardás '+money(pc.ahorro)+' · hasta el '+fCorta(state.plan.cobro):'Completá los tres pasos';
@@ -179,11 +190,14 @@ function renderRitmo(pc){
 }
 function ahorroNote(){
   var st=ctx.state,p=st.plan,el=$('#ahorro-note');if(!el)return;
-  var pc=planCalc(st);
-  if(pc.ahorroPedido>pc.ahorro+0.5)el.textContent='Con lo que tenés y tus fijos, lo máximo que podés guardar es '+money(pc.ahorro)+'. Usamos ese tope.';
+  var pc=planCalc(st),mx=maxAhorro(st,pc),d=Math.max(0,disponible(st,pc));
+  el.classList.remove('err');
+  if(num(p.monto)>0&&pc.ahorroPedido>mx+0.5){
+    el.classList.add('err');el.style.marginTop='0';
+    el.textContent='No se puede: tenés '+money(d)+' y lo máximo que podés guardar es '+money(mx)+'. Se usa ese tope hasta que bajes la meta.';
+  }
   else if(p.modo==='monto'){
-    if(num(p.ahorro)>Math.max(0,disponible(st,pc)))el.textContent='El ahorro no puede ser mayor que la plata que tenés ahora ('+money(Math.max(0,disponible(st,pc)))+').';
-    else{var dsp=Math.max(0,disponible(st,pc));el.textContent=dsp>0?'Es el '+(Math.round(num(p.ahorro)/dsp*1000)/10).toLocaleString('es-UY')+'% de lo que tenés ahora. Es tu meta del mes para la racha de logros.':''}
+    el.textContent=d>0?'Es el '+(Math.round(num(p.ahorro)/d*1000)/10).toLocaleString('es-UY')+'% de lo que tenés ahora. Es tu meta del mes para la racha de logros.':'';
   }else el.textContent='';
 }
 function planErr(m){var e=$('#plan-err');e.textContent=m||'';e.hidden=!m}
@@ -247,6 +261,15 @@ function confirmarSaldo(real){
 export function initPlan(){
   var pr=$('#p-resumen');
   initSaldo();
+  $('#meta-alerta').addEventListener('click',function(e){
+    var b=e.target.closest('#meta-bajar');
+    if(b){ctx.state.plan.ahorro=Number(b.getAttribute('data-mx'))||0;ctx.persist();ctx.syncInputs();ctx.renderAll();toast('Meta bajada a '+money(ctx.state.plan.ahorro));return}
+    if(e.target.closest('#meta-plan'))abrirPlan();
+  });
+  $('#in-ahorro').addEventListener('change',function(){
+    var st=ctx.state,pc=planCalc(st),mx=maxAhorro(st,pc);
+    if(num(st.plan.monto)>0&&pc.ahorroPedido>mx+0.5)toast('No se puede guardar tanto: con lo que tenés, lo máximo es '+money(mx)+'.');
+  });
   pr.addEventListener('click',function(e){if(e.target.closest('#saldo-abrir2'))abrirSaldo()});
   $('#hoy-hero').addEventListener('click',function(e){if(e.target.closest('#hoy-empezar'))abrirPlan();if(e.target.closest('#saldo-abrir'))abrirSaldo()});
   initFormsGasto(pr);

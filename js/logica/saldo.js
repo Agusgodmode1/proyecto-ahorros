@@ -60,3 +60,13 @@ export function deshacerAjuste(state,r){
   if(r.tipo==='gasto')state.gastos=state.gastos.filter(function(g){return g.id!==r.id});
   else if(r.tipo==='ingreso'||r.tipo==='monto')state.plan.monto=r.montoAntes;
 }
+
+/* Lo máximo que se puede guardar ahora: la plata que tenés menos los fijos que todavía faltan pagar */
+export function fijosPendientes(state,pc){
+  pc=pc||planCalc(state);
+  return Math.max(0,pc.fijos-Math.min(pc.fijos,fijosPagados(state)));
+}
+export function maxAhorro(state,pc){
+  pc=pc||planCalc(state);
+  return Math.max(0,r2(disponible(state,pc)-fijosPendientes(state,pc)));
+}

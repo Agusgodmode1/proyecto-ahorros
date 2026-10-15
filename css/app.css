@@ -742,3 +742,8 @@ html.pin-tapa #app,html.pin-tapa .mic,html.pin-tapa .tabs{visibility:hidden}
 .saldo-card .btn.quiet{color:var(--on-color)}
 .saldo-card .btn.quiet:hover{background:var(--hero-chip)}
 :root[data-theme="dark"] .saldo-card .btn.primary{background:var(--sky);border-color:var(--sky);color:var(--on-accent)}
+
+/* Meta imposible */
+.banner.alerta{background:var(--bad-soft);color:var(--ink)}
+.banner.alerta p b{color:var(--bad)}
+.field small.err{color:var(--bad);font-weight:600;font-size:14px}

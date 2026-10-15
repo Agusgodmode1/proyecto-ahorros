@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {defaults} from '../js/estado.js';
 import {planear,proximo,planCalc} from '../js/logica/plan.js';
-import {disponible,cabeGasto,previaSaldo,ajustarSaldo,deshacerAjuste} from '../js/logica/saldo.js';
+import {disponible,cabeGasto,previaSaldo,ajustarSaldo,deshacerAjuste,maxAhorro,fijosPendientes} from '../js/logica/saldo.js';
 
 /* Números inventados, igual que el resto de las pruebas */
 function estado(){
@@ -99,4 +99,21 @@ test('tope: la meta del mes que viene no pasa de lo que cobrás menos los fijos'
   assert.equal(nx.metaPedida,90000);
   assert.equal(nx.meta,28800);
   assert.ok(nx.libre>=0);
+});
+
+test('meta imposible: con $2.000 y una meta de $12.000, el pedido se ve y el ahorro se recorta',function(){
+  var s=estado();s.gastos=[];s.fijos=[];s.plan.monto=2000;s.plan.ahorro=12000;
+  var pc=planCalc(s);
+  assert.equal(pc.ahorroPedido,12000,'lo que pidió se conserva para poder avisar');
+  assert.equal(pc.ahorro,2000,'lo que se usa nunca pasa de lo que hay');
+  assert.equal(maxAhorro(s,pc),2000);
+  assert.ok(pc.gastar>=0);
+});
+
+test('máximo a guardar: lo que tenés menos los fijos que faltan pagar',function(){
+  var s=estado();
+  assert.equal(maxAhorro(s),37000-1200,'celular todavía sin pagar');
+  s.fijosPagos['2026-11-09']={c:{monto:1200,fecha:'2026-10-20'}};
+  assert.equal(maxAhorro(s),35800,'con el celular pagado');
+  assert.equal(fijosPendientes(s),0);
 });

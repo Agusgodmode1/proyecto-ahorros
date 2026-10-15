@@ -56,6 +56,7 @@ La primera vez se abre una ventana para iniciar sesión en GitHub. Iniciá sesi�
 La app te pregunta:
 
 - **Empezar: crear mi perfil**: tu nombre, tu sueldo, qué día cobrás, tus reglas de horas extra y tus descuentos. Así la puede usar cualquier persona con sus propios números.
+  - Tipo de ingreso: **sueldo en Uruguay** (con BPS, FONASA, FRL e IRPF), **sueldo personalizado** (tus propios descuentos, en % o en pesos) o **independiente o variable** (cargás lo que cobraste cada mes en la pestaña Sueldo). Los dos últimos pueden ser en dólares.
 - **Importar mis datos**: si usabas la página anterior (`proyecto-ahorros.html`), abrila, tocá **Copiar mis datos (respaldo)** abajo de todo, volvé a la app y pegalo. También podés elegir un archivo de respaldo que hayas exportado. Antes de cargar te muestra un resumen ("12 gastos, 10 registros de horas, 3 fijos…") y te pide que confirmes.
 - **Solo mirar, con datos de ejemplo**: datos de muestra, marcados como ejemplo. Cuando quieras los borrás y creás tu perfil.
 

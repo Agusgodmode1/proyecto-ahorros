@@ -10,15 +10,18 @@ import {horasPorDefecto} from './logica/sueldo.js';
 /* Subí este número cuando cambie la forma del estado y agregá el paso en migrar().
    v1–v3: archivo HTML · v4: voz y meta · v5: perfil propio y feriados editables · v6: sincronización
    v7: opciones de feriados laborables en el perfil · v8: metas, dólares y días de licencia
-   v9: año en que confirmaste la BPC (para avisar cada enero); pagos de fijos con monto real */
-export var VERSION_ESTADO=9;
+   v9: año en que confirmaste la BPC (para avisar cada enero); pagos de fijos con monto real
+   v10: tipo de ingreso y moneda en el perfil; descuentos propios e ingresos de cada mes en el sueldo */
+export var VERSION_ESTADO=10;
 
 function hoyISO(){return iso(new Date())}
 /* Feriados: por defecto solo cuentan los 5 no laborables (1/1, 1/5, 18/7, 25/8, 25/12).
    cobro.laborableHabil: los feriados laborables (Carnaval, Turismo, 12/10…) son días hábiles para el cobro.
    horas.feriadoLaborable: un feriado laborable trabajado se paga como día 'comun' o como 'feriado'. */
-export function perfilBase(){return {nombre:'',hecho:false,cobro:{tipo:'habil5',dia:30,laborableHabil:true},horas:Object.assign(horasPorDefecto(),{feriadoLaborable:'comun'}),recibosAgus:false}}
-function sueldoBase(){return {nominal:0,bonoFijo:0,hijos:0,conyuge:false,otros:0,bpc:6864,bpcAnio:new Date().getFullYear(),tarifaManual:null,diasLicencia:0}}
+export function perfilBase(){return {nombre:'',hecho:false,ingreso:{tipo:'uy',moneda:'UYU'},cobro:{tipo:'habil5',dia:30,laborableHabil:true},horas:Object.assign(horasPorDefecto(),{feriadoLaborable:'comun'}),recibosAgus:false}}
+/* descuentos: los del sueldo personalizado [{id,nombre,tipo:'pct'|'monto',valor}].
+   ingresosMes: lo que cobraste cada mes con ingreso variable {'aaaa-mm': monto}. */
+function sueldoBase(){return {nominal:0,bonoFijo:0,hijos:0,conyuge:false,otros:0,bpc:6864,bpcAnio:new Date().getFullYear(),tarifaManual:null,diasLicencia:0,descuentos:[],ingresosMes:{}}}
 
 /* Instalación nueva: en blanco. El plan arranca hoy y va hasta el próximo cobro. */
 export function defaults(hoy){
@@ -124,8 +127,11 @@ export function migrar(d){
     delete s.heCom;delete s.heEsp;delete s.bonoHora;delete s.redondeo;
   }else{
     var xp=obj(x.perfil);
-    state.perfil=Object.assign(perfilBase(),xp,{cobro:Object.assign(perfilBase().cobro,obj(xp.cobro)),horas:Object.assign(perfilBase().horas,obj(xp.horas))});
+    state.perfil=Object.assign(perfilBase(),xp,{ingreso:Object.assign(perfilBase().ingreso,obj(xp.ingreso)),cobro:Object.assign(perfilBase().cobro,obj(xp.cobro)),horas:Object.assign(perfilBase().horas,obj(xp.horas))});
   }
+  /* v10: hasta ahora todos cobraban sueldo en Uruguay, en pesos */
+  if(!Array.isArray(state.sueldo.descuentos))state.sueldo.descuentos=[];
+  state.sueldo.ingresosMes=obj(state.sueldo.ingresosMes);
   if(vx<7)corregirCobroV7(state);
   /* Los datos que venían de los recibos de Agus son del puesto de CRM */
   if(state.perfil.recibosAgus&&!state.perfil.puesto)state.perfil.puesto='crm';

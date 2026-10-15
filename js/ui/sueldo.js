@@ -1,8 +1,8 @@
 /* Pestaña Sueldo: recibo estimado, valor de cada hora, registro de horas y "¿Te pagaron bien?". */
 import {parse,MESL} from '../logica/fechas.js';
 import {num,uid} from '../logica/util.js';
-import {mesTrabajo,mins,pagoSem,tarifas,reglasHoras,extraDelDia} from '../logica/sueldo.js';
-import {ctx,$,today,liqNow,planNow,money,money2,pctTxt,veces,fmtH,esc,fLarga,fMin,tile,row,cap,toast} from './comun.js';
+import {mesTrabajo,mins,pagoSem,tarifas,reglasHoras,extraDelDia,ingresoDe,mesIngreso} from '../logica/sueldo.js';
+import {ctx,$,today,liqNow,planNow,money,money2,usd,pctTxt,veces,fmtH,esc,fLarga,fMin,tile,row,cap,toast,armar} from './comun.js';
 import {renderResumen} from './plan.js';
 import {aguinaldo,salarioVacacional} from '../logica/aguinaldo.js';
 import {extraPorHorario,tipoDeDia,minimoExtra} from '../logica/horario.js';
@@ -16,6 +16,15 @@ export function renderSueldo(){
   var state=ctx.state,s=state.sueldo,L=liqNow(true),L0=liqNow(false),mc=mins(state,'sem'),me=mins(state,'fin');
   var bpc=num(s.bpc)||6864,nom=num(s.nominal),t=tarifas(state),R=reglasHoras(state),hn=t.hora,finH=t.heEsp+t.bonoHora,conHoras=R.activo!==false;
   var desc=L.mont+L.fon+L.frl+L.irpf+L.otros,extras=L.N-nom;
+  var ing=ingresoDe(state),uy=ing.tipo==='uy';
+  /* Lo que es solo del sueldo en Uruguay: aguinaldo, BPC, control del recibo y descuentos de ley */
+  $('#aguinaldo-card').hidden=!uy;$('#card-control').hidden=!uy;
+  ['s-otros','s-hijos','s-conyuge','s-bpc'].forEach(function(id){var f=$('#'+id).closest('.field');if(f)f.hidden=!uy});
+  var fb=$('#s-bonofijo').closest('.field');if(fb)fb.hidden=ing.tipo==='variable';
+  var ln=document.querySelector('label[for="s-nominal"]');if(ln)ln.textContent=ing.tipo==='variable'?'Lo que cobrás en un mes normal (en mano)':ing.tipo==='personalizado'?'Sueldo mensual, antes de tus descuentos':'Sueldo nominal mensual';
+  /* Sin horas extra, el control del recibo no pregunta por horas */
+  ['r-heh','r-hem','r-des','r-fer'].forEach(function(id){var f=$('#'+id).closest('.field');if(f)f.hidden=!conHoras});
+  if(!uy){renderOtroIngreso(L,conHoras);return}
   var ban='';
   if(state.ejemplo)ban='<div class="banner"><p><b>Estás viendo valores de ejemplo.</b> Sueldo, valor de las horas y registro de tiempo son de muestra. Borralos y creá tu perfil cuando quieras.</p><button class="btn" type="button" data-cero>Borrar el ejemplo y crear mi perfil</button></div>';
   $('#ej-banner').innerHTML=ban;
@@ -64,6 +73,45 @@ export function renderSueldo(){
   var y=today().slice(0,4);
   $('#bpc-aviso').innerHTML=revisarBPC(state,today())?'<div class="banner"><p><b>¿Cambió la BPC?</b> Estamos en '+y+' y estás usando la de '+esc(String(s.bpcAnio))+' ('+money(bpc)+'). Cada enero el BPS publica un valor nuevo, y cambia los tramos del IRPF.</p><div class="row-btns"><button class="btn" type="button" id="bpc-ir">Cargar la nueva</button><button class="btn quiet" type="button" id="bpc-igual">Sigue igual</button></div></div>':'';
   $('#bpc-nota').textContent='Valor de '+(s.bpcAnio||y)+'. Cambia cada enero: actualizala cuando el BPS publique la nueva.';
+}
+/* ---------- Sueldo personalizado e ingreso variable ---------- */
+function enMoneda(L,v){return L.moneda==='USD'&&L.cotiz?' <span class="src">('+usd(v/L.cotiz)+')</span>':''}
+function renderOtroIngreso(L,conHoras){
+  var state=ctx.state,s=state.sueldo,variable=L.tipo==='variable',nom=num(s.nominal);
+  var ban=state.ejemplo?'<div class="banner"><p><b>Estás viendo valores de ejemplo.</b> Borralos y creá tu perfil cuando quieras.</p><button class="btn" type="button" data-cero>Borrar el ejemplo y crear mi perfil</button></div>':'';
+  if(L.sinCotizacion)ban+='<div class="banner"><p><b>Cobrás en dólares y falta la cotización.</b> Cargala en Ajustes → Dólar para pasar tu ingreso a pesos. Mientras tanto uso el número tal cual.</p><button class="btn" type="button" data-goto="ajustes">Ir a Ajustes</button></div>';
+  $('#ej-banner').innerHTML=ban;$('#bpc-aviso').innerHTML='';
+  var mesN=MESL[Number(String(L.mes||mesIngreso(state)).slice(5,7))-1];
+  var sub=variable?(L.estimado?'Todavía no cargaste lo de '+mesN+': uso lo que cobrás en un mes normal.':'Lo que cargaste para '+mesN+'.'):'El '+esc(fLarga(state.plan.cobro))+', con tus descuentos.';
+  $('#sueldo-hero').innerHTML='<div class="card pay-hero"><div class="ph-main"><span class="tile-l" style="color:var(--grape-ink)">'+(variable?'Vas a cobrar este mes':'Vas a cobrar, más o menos')+'</span><b class="pay-big">'+money(L.liquido)+'</b><span class="tile-h">'+sub+(L.moneda==='USD'&&L.orig?' Son '+usd(L.orig.liquido)+(L.cotiz?' a $ '+String(L.cotiz).replace('.',',')+' el dólar':'')+'.':'')+'</span></div>'
+    +(variable?'':'<div class="tiles">'+tile('tone-sky','Sueldo',money(L.N-L.bono-L.extraCom-L.extraEsp),'antes de descuentos')
+      +(conHoras||L.bono>0?tile('tone-mint','Extras de este mes','+ '+money(L.bono+L.extraCom+L.extraEsp),conHoras?'horas extra y bono':'bono fijo'):'')
+      +tile('tone-coral','Tus descuentos','− '+money(L.otros),L.descuentos.length?L.descuentos.length+(L.descuentos.length===1?' descuento':' descuentos'):'no cargaste descuentos')+'</div>')+'</div>';
+  var h;
+  if(variable){
+    var im=s.ingresosMes||{},meses=Object.keys(im).sort().reverse(),m=L.mes;
+    h='<div class="card stack"><div class="sec"><h2>Lo que cobraste</h2><p class="note">Cargá lo que te quedó en mano cada mes'+(L.moneda==='USD'?', en dólares':'')+'. El plan usa el del mes en que cobrás ('+mesN+').</p></div>'
+      +'<form class="ing-form" id="ing-form" autocomplete="off"><div class="field"><label for="ing-mes" class="sub-l">Mes</label><input id="ing-mes" type="month" value="'+m+'"></div>'
+      +'<div class="field"><label for="ing-monto" class="sub-l">En mano</label><div class="money"><span>'+(L.moneda==='USD'?'US$':'$')+'</span><input id="ing-monto" type="number" inputmode="decimal" min="0" step="any" value="'+(im[m]!==undefined?im[m]:'')+'"></div></div>'
+      +'<button class="btn primary" type="submit">Guardar</button></form>'
+      +(meses.length?'<ul class="list">'+meses.map(function(k){return '<li><span class="what"><b>'+esc(cap(MESL[Number(k.slice(5,7))-1]))+' '+k.slice(0,4)+'</b></span><span class="amt">'+(L.moneda==='USD'?usd(num(im[k])):money(num(im[k])))+'</span><button class="btn quiet" type="button" data-ingdel="'+esc(k)+'">Borrar</button></li>'}).join('')+'</ul>':'<div class="empty">Todavía no cargaste ningún mes.</div>')
+      +'<p class="note">Lo que cobrás en un mes normal ('+(L.moneda==='USD'?usd(nom):money(nom))+') se cambia en Ajustes → Mi perfil.</p></div>';
+  }else{
+    h='<div class="card receipt"><div class="sec-h"><h2>Tu recibo</h2><span class="note">con tus descuentos</span></div>';
+    h+='<h3 class="rg rg-plus">Lo que ganás</h3>'+row('Sueldo mensual',money(L.N-L.bono-L.extraCom-L.extraEsp));
+    if(conHoras){h+=row('Horas extras entre semana',money(L.extraCom),'sub');h+=row('Fin de semana y feriados',money(L.extraEsp),'sub')}
+    if(L.bono>0)h+=row('Bono',money(L.bono),'sub');
+    h+=row('Total ganado',money(L.N),'tot');
+    h+='<h3 class="rg rg-minus">Lo que te descuentan</h3>';
+    h+=L.descuentos.length?L.descuentos.map(function(d){return row(esc(d.nombre)+(d.tipo==='pct'?' ('+String(d.valor).replace('.',',')+'%)':''),'− '+money(d.monto),'sub minus')}).join(''):'<p class="note">No cargaste descuentos.</p>';
+    if(L.descuentos.length)h+=row('Total descuentos','− '+money(L.otros),'tot minus');
+    h+=row('Lo que cobrás',money(L.liquido)+enMoneda(L,L.liquido),'final');
+    h+='<div class="row-btns" style="margin-top:8px"><button class="btn" type="button" data-perfil="4">Cambiar mis descuentos</button></div></div>';
+  }
+  $('#sueldo-out').innerHTML=h;
+  $('#sec-rates').hidden=true;$('#card-horas').hidden=!conHoras;
+  if(conHoras){var mc=mins(state,'sem'),me=mins(state,'fin');renderLog(mc,me,L);renderPlanilla()}
+  $('#s-tarifas').textContent=conHoras?'Salen de tu sueldo y tu perfil.':'Sin horas extra.';
 }
 /* Aguinaldo y salario vacacional (estimados) */
 var MESC=['ene','feb','mar','abr','may','jun','jul','ago','set','oct','nov','dic'];
@@ -217,8 +265,20 @@ export function initSueldo(){
   });
   Object.keys(RID).forEach(function(k){$('#'+RID[k]).addEventListener('input',function(){ctx.state.recibo[k]=this.value;ctx.persist();renderCtrl()})});
   $('#r-clear').addEventListener('click',function(){ctx.state.recibo={};syncRecibo();ctx.persist();renderCtrl()});
+  /* Ingreso variable: lo que cobraste cada mes */
+  $('#p-sueldo').addEventListener('submit',function(e){
+    if(e.target.id!=='ing-form')return;
+    e.preventDefault();
+    var m=$('#ing-mes').value,v=$('#ing-monto').value;
+    if(!/^\d{4}-\d{2}$/.test(m)){$('#ing-mes').focus();return}
+    if(v===''||!(num(v)>=0)){$('#ing-monto').focus();return}
+    var s=ctx.state.sueldo;s.ingresosMes=Object.assign({},s.ingresosMes);s.ingresosMes[m]=Math.round(num(v)*100)/100;
+    ctx.persist();ctx.renderAll();toast('Guardado lo de '+MESL[Number(m.slice(5,7))-1]);
+  });
   $('#p-sueldo').addEventListener('click',function(e){
     var state=ctx.state;
+    var di=e.target.closest('[data-ingdel]');
+    if(di){if(!armar(di))return;var k=di.getAttribute('data-ingdel'),im=Object.assign({},state.sueldo.ingresosMes);delete im[k];state.sueldo.ingresosMes=im;ctx.persist();ctx.renderAll();return}
     var dh=e.target.closest('[data-delh]');
     if(dh){var hid=dh.getAttribute('data-delh');state.horas=state.horas.filter(function(x){return x.id!==hid});ctx.persist();renderSueldo();renderResumen(planNow());return}
     if(e.target.id==='log-clear'){confirmClear=true;renderSueldo();return}

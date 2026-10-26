@@ -7,6 +7,7 @@ import {feriadosActivos} from './logica/feriados.js';
 import {monedasBase} from './logica/monedas.js';
 import {horasPorDefecto} from './logica/sueldo.js';
 import {categoriasBase,categoriasDesde} from './logica/categorias.js';
+import {pactoBase,pactoDesdePlan} from './logica/pacto.js';
 
 /* Subí este número cuando cambie la forma del estado y agregá el paso en migrar().
    v1–v3: archivo HTML · v4: voz y meta · v5: perfil propio y feriados editables · v6: sincronización
@@ -15,8 +16,9 @@ import {categoriasBase,categoriasDesde} from './logica/categorias.js';
    v10: tipo de ingreso y moneda en el perfil; descuentos propios e ingresos de cada mes en el sueldo
    v11: categorías de gasto editables (state.categorias)
    v12: plan.minimo (mínimo aceptable), plan.sobrante y plan.sobranteSemana (a dónde va lo que sobra)
-   v13: recibos de sueldo guardados mes a mes (state.recibos) y plantillas por empleador para leer PDFs */
-export var VERSION_ESTADO=13;
+   v13: recibos de sueldo guardados mes a mes (state.recibos) y plantillas por empleador para leer PDFs
+   v14: el pacto del Libro del Ahorro (state.pacto: cuándo se selló); quien ya usaba la app lo tiene sellado */
+export var VERSION_ESTADO=14;
 
 function hoyISO(){return iso(new Date())}
 /* Feriados: por defecto solo cuentan los 5 no laborables (1/1, 1/5, 18/7, 25/8, 25/12).
@@ -48,7 +50,8 @@ export function defaults(hoy){
     monedas:monedasBase(),               /* cotización del dólar que cargás en Ajustes */
     categorias:categoriasBase(),         /* categorías de gasto, editables en Ajustes (logica/categorias.js) */
     recibos:[],                          /* recibos de sueldo confirmados, mes a mes (logica/recibos.js) */
-    plantillasRecibo:{}                  /* por empleador: qué renglón del PDF es cada campo */
+    plantillasRecibo:{},                 /* por empleador: qué renglón del PDF es cada campo */
+    pacto:pactoBase()                    /* {sellado:fecha|null, numero, usd}: los datos del pacto viven en plan */
   };
 }
 
@@ -82,6 +85,7 @@ export function ejemplo(hoy){
   s.plan.cobro=fechaCobro(2026,10,s.perfil.cobro); /* 5.º día hábil de noviembre con la regla actual */
   s.sueldo.nominal=L.sueldo.nominal;
   s.horas=L.horas.map(function(h){return Object.assign(h,{ej:true})});
+  s.pacto=pactoDesdePlan(s,hoy||hoyISO());
   return s;
 }
 function obj(o){return (o&&typeof o==='object'&&!Array.isArray(o))?o:{}}
@@ -112,7 +116,10 @@ export function migrar(d){
     monedas:Object.assign(monedasBase(),obj(x.monedas)),
     categorias:Array.isArray(x.categorias)&&x.categorias.length?x.categorias:null,
     recibos:Array.isArray(x.recibos)?x.recibos:[],
-    plantillasRecibo:obj(x.plantillasRecibo)};
+    plantillasRecibo:obj(x.plantillasRecibo),
+    pacto:Object.assign(pactoBase(),obj(x.pacto))};
+  /* v14: a quien ya usaba la app no se le muestra el prólogo: su plan pasa a ser su pacto */
+  if(vx<14&&!state.pacto.sellado)state.pacto=pactoDesdePlan(state,hoyISO());
   /* v11: las categorías de siempre pasan a ser tu lista, más las que ya usaban tus gastos. Ningún gasto cambia. */
   if(!state.categorias)state.categorias=categoriasDesde(state);
   /* v12: sin mínimo (vale lo mismo que el objetivo) y lo que sobra pasa a la semana siguiente, como siempre */

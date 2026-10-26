@@ -7,8 +7,6 @@ import {planCalc} from '../logica/plan.js';
 import {disponible,ajustarSaldo,previaSaldo} from '../logica/saldo.js';
 import {liq} from '../logica/sueldo.js';
 import {atajosMeta,resumenInicio} from '../logica/inicio.js';
-import {abrirPerfil} from './perfil.js';
-import {marcarTour} from './tour.js';
 import {ctx,$,today,money,esc,fLarga} from './comun.js';
 
 var TIT=['Plata de hoy','Tu meta de ahorro','Gastos fijos'];
@@ -128,10 +126,4 @@ export function initInicio(){
     if(a==='posible'){aplicar(resumenInicio(st,num(D.saldo),num(D.meta)).metaPosible);return}
     if(a==='fin'){aplicar(num(D.meta))}
   });
-}
-/* Primera vez: perfil (4 pasos) y luego esta configuración (3 pasos), en un solo recorrido de 7 pasos */
-export function flujoNuevo(estado,listo,alCancelar){
-  function perfil(n){abrirPerfil(n,{nuevo:true,estado:estado,alCancelar:alCancelar,alTerminar:function(){config()}})}
-  function config(){abrirInicio({nuevo:true,estado:estado,alAtras:function(){perfil(4)},alTerminar:function(s){marcarTour();listo(s)}})}
-  perfil(1);
 }

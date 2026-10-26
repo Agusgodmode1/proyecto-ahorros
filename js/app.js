@@ -1,6 +1,6 @@
 /* Arranque, pestañas y render general. */
 import {curWeek} from './logica/plan.js';
-import {migrar,cargar,guardar,pedirPersistencia,defaults,necesitaMigrar,guardarCopia,resumenDatos} from './estado.js';
+import {migrar,cargar,guardar,pedirPersistencia,defaults,ejemplo,necesitaMigrar,guardarCopia,resumenDatos} from './estado.js';
 import {ctx,$,today,planNow,ICON,discreto,setDiscreto,toast} from './ui/comun.js';
 import {renderCountdown,renderResumen,syncPlan,initPlan} from './ui/plan.js';
 import {renderWeek,initSemanas} from './ui/semanas.js';
@@ -8,11 +8,12 @@ import {renderSueldo,syncSueldo,initSueldo} from './ui/sueldo.js';
 import {renderGastos,syncGastos,initTarjeta} from './ui/tarjeta.js';
 import {renderFijos,initFijos} from './ui/fijos.js';
 import {renderLogros,evalLogros,initLogros} from './ui/logros.js';
-import {renderAjustes,renderAvisoRespaldo,initAjustes,mostrarBienvenida,renderCopias} from './ui/respaldo.js';
+import {renderAjustes,renderAvisoRespaldo,initAjustes,renderCopias} from './ui/respaldo.js';
 import {registrarSW} from './pwa.js';
 import {initVoz} from './ui/voz.js';
 import {abrirPerfil,initPerfil,resumenPerfil} from './ui/perfil.js';
-import {abrirInicio,initInicio,flujoNuevo} from './ui/inicio.js';
+import {abrirInicio,initInicio} from './ui/inicio.js';
+import {abrirLibro,initLibro} from './ui/libro.js';
 import {initTour,iniciarTour,tourSiPendiente} from './ui/tour.js';
 import {aplicarFeriados,renderFeriados,initFeriados} from './ui/feriados.js';
 import {prepararGuardado,juntar} from './logica/sync.js';
@@ -149,12 +150,14 @@ function initGlobal(){
     /* Mis datos (plata de hoy, meta y fijos) y el tour, desde Ajustes */
     if(e.target.closest('#aj-datos'))abrirInicio({nuevo:false,estado:ctx.state,alTerminar:function(){syncInputs();persist();renderAll();toast('Listo: se recalculó todo')}});
     if(e.target.closest('#aj-tour'))iniciarTour();
+    if(e.target.closest('#aj-prologo'))abrirLibro({modo:'releer',estado:ctx.state,alCerrar:function(){}});
     /* Borrar los datos de ejemplo y crear el perfil (dos toques) */
     var c=e.target.closest('[data-cero]');
     if(c){
       if(c.getAttribute('data-armed')!=='1'){c.setAttribute('data-armed','1');c.textContent='¿Seguro? Se borra todo lo de ejemplo';return}
       var meta=ctx.state.meta,nuevo=defaults();nuevo.meta=meta;
-      flujoNuevo(nuevo,function(st){reemplazar(st,'antes de borrar los datos de ejemplo')},function(){renderAll()});
+      /* Perfil nuevo: el libro arranca de cero, con el prólogo y el pacto */
+      abrirLibro({modo:'nuevo',estado:nuevo,listo:function(st){reemplazar(st,'antes de borrar los datos de ejemplo')},alCerrar:function(){renderAll()}});
     }
   });
   /* Modo discreto: un toque tapa o muestra todos los montos */
@@ -184,7 +187,7 @@ function arrancar(st){
 ctx.persist=persist;ctx.renderAll=renderAll;ctx.go=go;ctx.syncInputs=syncInputs;
 
 (async function boot(){
-  initPerfil();initInicio();initTour();initPin();
+  initPerfil();initInicio();initTour();initPin();initLibro();
   registrarSW(function(){return ctx.state?flush():null});
   pedirPersistencia().then(function(p){guardado.persistente=p});
   var d=await cargar();
@@ -193,5 +196,7 @@ ctx.persist=persist;ctx.renderAll=renderAll;ctx.go=go;ctx.syncInputs=syncInputs;
   /* Con PIN, primero el PIN: los datos no se muestran hasta ponerlo bien */
   if(d&&pinActivo())await pedirPin();
   if(d){arrancar(migrar(d));setStatus('Se guarda en este dispositivo.');return}
-  mostrarBienvenida(function(st){arrancar(st);flush()});
+  /* Primera vez: el libro cerrado. Al abrirlo, el prólogo y las tres preguntas del pacto. */
+  function listo(st){arrancar(st);flush()}
+  abrirLibro({modo:'nuevo',estado:defaults(),listo:listo,alImportar:listo,alEjemplo:function(){listo(ejemplo())}});
 })();

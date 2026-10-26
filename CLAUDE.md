@@ -58,8 +58,16 @@ PWA para iPhone de finanzas personales de Agus (Uruguay). La publica GitHub Page
 - Tamaños táctiles: bloque "Inicio 1.15" al final de app.css (botones/campos ≥ 48 px).
 
 ## Primer uso, tour y cierre (1.19)
-- Primera vez: bienvenida (texto corto) → `flujoNuevo()` en `ui/inicio.js`: perfil (4 pasos, `ui/perfil.js`) + plata de hoy, meta (atajos 10/20/30 %) y gastos fijos (3 pasos) + resumen «Te queda para gastar $X, $Y por día». 7 pasos en una sola barra de progreso. Cuentas puras en `logica/inicio.js` (probadas). Sin plata de hoy ni meta no se avanza; si la meta no se puede, se propone la posible.
+- (Hasta 1.19 la primera vez era `flujoNuevo()`; desde 2.0 es el prólogo del libro, ver abajo.) Las cuentas de `logica/inicio.js` siguen sirviendo a «Mis datos».
 - «Mis datos» (Ajustes) abre los mismos 3 pasos en modo edición; el saldo pasa por `ajustarSaldo` (igual que «Actualizar saldo»). Un solo estado (`plan`, `fijos`, `gastos`): ningún número se guarda duplicado.
 - Tour (`ui/tour.js`): globos sobre la pantalla real, arranca solo después de la primera configuración (`localStorage pa-tour`), se repite desde Ajustes. Si agregás una pestaña o botón principal, sumalo a `PASOS`.
 - Día de cobro: aviso «Llegó el día de cobro» en Plan (`renderCierre`), lleva a «Cerrar el mes» de Logros. Metas vacías sugieren el fondo de emergencia (3 meses de gastos, `fondoEmergencia`).
 - Pendiente a propósito: «Qué hacer con tus ahorros» (fase 4): se hace después de probar estas fases con uso real.
+
+## El Libro del Ahorro (2.0, etapa 1: prólogo y pacto)
+- La app pasa a ser un libro. Primera vez (o perfil nuevo al borrar el ejemplo): libro cerrado en 3D (`ui/libro.js`, `css/libro.css`) → al tocarlo se abre (~2,5 s, saltable) → prólogo (2 páginas) → 3 preguntas, una por página (con cuánta plata empezás, con dólares opcionales; cuánto querés ahorrar, con deslizador y «te quedan $X, ≈ $Y por día»; qué día cobrás, en un calendario que sugiere el 5.º día hábil o la regla del perfil) → «El pacto» y «Sellar el pacto» (sello de lacre).
+- Lógica pura en `logica/pacto.js` (probada en `tests/pacto.test.js`): `validarPacto` (total > 0, ahorro ≤ total y ≤ total − fijos, cobro futuro; avisos sin bloquear si queda < `DIA_BAJO` por día o si el ahorro es 0), `cuentaPacto`, `sellarPacto`, `sugerirCobro`, `mesCalendario` (marca solo los feriados no laborables).
+- Estado v14: `state.pacto = {sellado, numero, usd}`. Los tres datos del pacto viven en `state.plan` (monto, ahorro, cobro): no se guardan dos veces. Quien ya usaba la app migra con el pacto sellado el día de inicio de su plan y no ve el prólogo; lo puede releer desde Ajustes → Mis datos → «Releer el prólogo».
+- Diseño del libro: siempre de noche. Variables `--lb-*` en `:root` (neutros #060807…#1b221d, lima #c6f432 / #e6ff9a / #5f7a0e, oro viejo #b89a4a solo en herrajes). Serif Cormorant Garamond (600 y 700) dentro de `vendor/cormorant-garamond-5.3.0/`, en el service worker; solo para títulos y números grandes. Ojo: el atajo `font:` reinicia las cifras; por eso hay una regla con `lining-nums`.
+- Animaciones: solo `transform` y `opacity` (Web Animations). Con `prefers-reduced-motion`, solo fundidos. En segundo plano se pausan (`lb-pausa`). Sin Three.js ni dependencias.
+- Pendiente (etapas 2 a 4): capítulos, índice y marcapáginas, Ajustes del pacto, fin de ciclo, rediseño del resto de la app, pase de página que sigue al dedo, sonido opcional.

@@ -1,7 +1,7 @@
 /* Service worker: guarda la app para que funcione sin internet y avisa cuando hay una versión nueva.
    CADA CAMBIO EN LA APP: subí VERSION (y la de js/version.js). Así cambia el nombre del caché y el
    teléfono descarga la versión nueva. Si agregás un archivo, sumalo a ARCHIVOS (una prueba lo controla). */
-var VERSION='1.19.0';
+var VERSION='2.0.0';
 var CACHE='ahorros-'+VERSION;
 var FUENTES='ahorros-fuentes';
 var ARCHIVOS=[
@@ -9,6 +9,7 @@ var ARCHIVOS=[
   'index.html',
   'manifest.webmanifest',
   'css/app.css',
+  'css/libro.css',
   'js/app.js',
   'js/estado.js',
   'js/pwa.js',
@@ -32,6 +33,7 @@ var ARCHIVOS=[
   'js/logica/plan.js',
   'js/logica/recibos.js',
   'js/logica/inicio.js',
+  'js/logica/pacto.js',
   'js/logica/saldo.js',
   'js/logica/planilla.js',
   'js/logica/sueldo.js',
@@ -47,6 +49,7 @@ var ARCHIVOS=[
   'js/ui/logros.js',
   'js/ui/metas.js',
   'js/ui/inicio.js',
+  'js/ui/libro.js',
   'js/ui/perfil.js',
   'js/ui/pin.js',
   'js/ui/plan.js',
@@ -65,7 +68,9 @@ var ARCHIVOS=[
   'icons/maskable-192.png',
   'icons/maskable-512.png',
   'vendor/pdfjs-6.3.289/pdf.min.js',
-  'vendor/pdfjs-6.3.289/pdf.worker.min.js'
+  'vendor/pdfjs-6.3.289/pdf.worker.min.js',
+  'vendor/cormorant-garamond-5.3.0/cormorant-garamond-latin-600-normal.woff2',
+  'vendor/cormorant-garamond-5.3.0/cormorant-garamond-latin-700-normal.woff2'
 ];
 
 self.addEventListener('install',function(e){

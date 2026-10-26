@@ -26,31 +26,16 @@ document.getElementById('meta-tema').setAttribute('content',d?'#0D0D0D':'#1A72B5
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Figtree:wght@400;500;600;700;800&display=swap">
+<link rel="preload" href="vendor/cormorant-garamond-5.3.0/cormorant-garamond-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/libro.css">
 <script type="module" src="js/app.js"></script>
 </head>
 <body>
 <div class="sbar" aria-hidden="true"></div>
 <div class="upd" id="upd" role="status" hidden><span>Hay una versión nueva</span><button class="btn primary" type="button">Actualizar</button></div>
-<div class="welcome" id="bienvenida" hidden>
-  <div class="welcome-in stack">
-    <span class="welcome-sun" aria-hidden="true"></span>
-    <h1>Proyecto Ahorros</h1>
-    <p class="welcome-sub">Esta app te ayuda a organizar tus ingresos en un solo lugar y a ahorrar todos los meses.</p>
-    <div class="card stack"><div class="sec"><h2>Para empezar vas a necesitar</h2></div>
-      <ul class="welcome-need"><li>Tu último recibo de sueldo (o lo que cobrás)</li><li>La plata que tenés hoy</li><li>Cuánto querés ahorrar</li></ul>
-      <p class="note">Con eso, la app hace los cálculos por vos.</p></div>
-    <button class="btn primary" type="button" id="bv-perfil">Empezar</button>
-    <p class="note">Tus datos quedan solo en este celular: no hay cuentas ni servidores.</p>
-    <div class="card stack">
-      <div class="sec"><h2>¿Ya tenías datos?</h2><p class="note">Elegí un archivo de respaldo exportado desde esta app, o pegá el texto que copiaste con <b>Copiar mis datos (respaldo)</b>.</p></div>
-      <button class="btn" type="button" id="bv-importar">Importar mis datos</button>
-      <div id="bv-imp-wrap" hidden><div id="bv-import"></div></div>
-    </div>
-    <button class="btn quiet" type="button" id="bv-ejemplo">Solo mirar, con datos de ejemplo</button>
-    <p class="note">Los datos de ejemplo quedan marcados como ejemplo. Cuando quieras, los borrás y creás tu perfil.</p>
-  </div>
-</div>
+<div class="lb-mesa" id="libro" hidden role="dialog" aria-modal="true" aria-label="El Libro del Ahorro"></div>
+<div class="lb-hojas" id="lb-hojas" hidden role="dialog" aria-modal="true" aria-label="Prólogo del Libro del Ahorro"></div>
 
 <div class="pin" id="pin" hidden role="dialog" aria-modal="true" aria-labelledby="pin-t"><div class="pin-in stack" id="pin-box"></div></div>
 
@@ -391,7 +376,7 @@ document.getElementById('meta-tema').setAttribute('content',d?'#0D0D0D':'#1A72B5
       <div class="panel-head"><h2 class="ph-t">Ajustes y respaldo</h2><p class="ph-s">Tus datos viven solo en este teléfono. Exportá un respaldo de vez en cuando y guardalo en Archivos o en iCloud.</p></div>
       <div class="card stack">
         <div class="sec"><h2>Mis datos</h2><p class="note">Tu plata de hoy, tu meta de ahorro y tus gastos fijos. Al cambiarlos, se recalcula todo.</p></div>
-        <div class="row-btns"><button class="btn primary" type="button" id="aj-datos">Editar mis datos</button><button class="btn" type="button" id="aj-tour">Ver el tour otra vez</button></div>
+        <div class="row-btns"><button class="btn primary" type="button" id="aj-datos">Editar mis datos</button><button class="btn" type="button" id="aj-tour">Ver el tour otra vez</button><button class="btn" type="button" id="aj-prologo">Releer el prólogo</button></div>
       </div>
       <div class="card stack">
         <div class="sec"><h2>Mi perfil</h2><p class="note" id="aj-perfil"></p></div>

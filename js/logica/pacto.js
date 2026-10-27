@@ -148,6 +148,8 @@ export function sellarPacto(st,d,hoy){
   if(d.frecuencia&&st.perfil){var fr=frecDe({frecuencia:d.frecuencia});st.perfil.cobro=fr==='mensual'?Object.assign({},st.perfil.cobro,{frecuencia:'mensual'}):reglaDesdeFecha(fr,d.cobro,hoy,st.perfil.cobro)}
   /* (2.21) lo vendido y la ganancia guardada son de cada pacto */
   p.entradas=[];p.ganancia={};
+  /* (2.22) el gasto por día con el que arrancó el pacto: la vara de «Tu plata alcanza» hasta que haya gastos */
+  p.porDiaBase=Math.round(v.cuenta.porDia*100)/100;
   st.pacto.pct=v.cuenta.total>0?Math.round(v.cuenta.ahorro/v.cuenta.total*1000)/1000:0;
   st.pacto.sellado=hoy;st.pacto.numero=(Math.round(num(st.pacto.numero))||0)+1;
   st.pacto.usd=num(d.usd)>0&&num(d.cotiz)>0?Math.round(num(d.usd)*100)/100:0;

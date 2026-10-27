@@ -3,7 +3,9 @@
 import {num} from '../logica/util.js';
 import {frecDe} from '../logica/frecuencia.js';
 import {cobreJornal,deshacerCobre} from '../logica/pacto.js';
-import {ctx,$,today,money,toast,toastAccion} from './comun.js';
+import {tuPlataAlcanza} from '../logica/ventas.js';
+import {polvo} from './libro.js';
+import {ctx,$,today,money,toast,toastAccion,planNow} from './comun.js';
 
 export function renderCobre(){
   var el=$('#cobre');if(!el)return;
@@ -21,9 +23,13 @@ export function initCobre(){
   var el=$('#cobre');if(!el)return;
   el.addEventListener('submit',function(e){
     if(e.target.id!=='cobre-form')return;e.preventDefault();
+    var ventas=frecDe(ctx.state.perfil&&ctx.state.perfil.cobro)==='ventas',a=ventas?tuPlataAlcanza(ctx.state,planNow(),today()):null;
     var n=$('#cobre-nota'),u=cobreJornal(ctx.state,$('#cobre-in').value,today(),n?n.value:'');
     if(!u){toast('Poné cuánto cobraste.');return}
     ctx.persist();ctx.syncInputs();ctx.renderAll();
-    toastAccion('Sumé '+money(u.cobro)+(u.guarda>0?' y guardé '+money(u.guarda):''),'Deshacer',function(){deshacerCobre(ctx.state,u);ctx.persist();ctx.syncInputs();ctx.renderAll()});
+    /* (2.22) cada venta suma días: «+3 días» con polvo de estrellas sobre «Tu plata alcanza» */
+    var mas=0;if(a){var b=tuPlataAlcanza(ctx.state,planNow(),today());mas=b?b.dias-a.dias:0}
+    if(mas>0){var cd=$('#countdown .cd-v');if(cd){var x=document.createElement('span');x.className='cd-mas';x.textContent='+'+mas+(mas===1?' día':' días');cd.appendChild(x);setTimeout(function(){x.remove()},2200);polvo(cd,12,0)}}
+    toastAccion((mas>0?'+'+mas+(mas===1?' día':' días')+' de plata. ':'')+'Sumé '+money(u.cobro)+(u.guarda>0?' y guardé '+money(u.guarda):''),'Deshacer',function(){deshacerCobre(ctx.state,u);ctx.persist();ctx.syncInputs();ctx.renderAll()});
   });
 }

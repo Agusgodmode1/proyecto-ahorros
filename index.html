@@ -12,13 +12,13 @@
 <meta name="application-name" content="Ahorros">
 <meta name="format-detection" content="telephone=no">
 <meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#0D0D0D" id="meta-tema">
+<meta name="theme-color" content="#060807" id="meta-tema">
 <script>
 /* Tema: oscuro por defecto. Se aplica antes de dibujar para que no parpadee. Se cambia en Ajustes → Apariencia. */
 (function(){var t='oscuro';try{t=localStorage.getItem('pa-tema')||'oscuro'}catch(e){}
 var d=t==='auto'?matchMedia('(prefers-color-scheme: dark)').matches:t!=='claro';
 if(t!=='auto')document.documentElement.setAttribute('data-theme',d?'dark':'light');
-document.getElementById('meta-tema').setAttribute('content',d?'#0D0D0D':'#1A72B5')})();
+document.getElementById('meta-tema').setAttribute('content',d?'#060807':'#cfc3a6')})();
 </script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -46,6 +46,8 @@ document.getElementById('meta-tema').setAttribute('content',d?'#0D0D0D':'#1A72B5
 <div class="sheet" id="gasto-sheet" hidden role="dialog" aria-modal="true" aria-labelledby="gs-t"><div class="sheet-in stack" id="gasto-box"></div></div>
 
 <div class="wrap" id="app" hidden>
+  <nav class="tabs"><div class="tablist" role="tablist" id="tablist" aria-label="Capítulos"></div></nav>
+  <div class="hoja" id="hoja">
   <header class="hero">
     <div>
       <div class="hero-top"><button class="indice-btn" type="button" id="indice-abrir" aria-label="Abrir el índice del libro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v16H5.5c-.8 0-1.5-.7-1.5-1.5Z"/><path d="M20 5.5c0-.8-.7-1.5-1.5-1.5H13v16h5.5c.8 0 1.5-.7 1.5-1.5Z"/><path d="M15.5 4v6l1.5-1.2 1.5 1.2V4"/></svg><span>Índice</span></button><p class="hero-hi" id="saludo">Hola</p><button class="simple-btn" type="button" id="modo-simple" aria-pressed="false">Vista simple</button><button class="hero-cog hero-eye" type="button" id="discreto" aria-pressed="false" aria-label="Ocultar los montos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="ojo-a" d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle class="ojo-a" cx="12" cy="12" r="3"/><path class="ojo-c" d="M3 3l18 18M10.6 5.6A9.7 9.7 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-3 3.8M6.6 6.7C3.9 8.4 2.5 12 2.5 12S6 18.5 12 18.5c1.8 0 3.3-.5 4.6-1.3M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg></button><button class="hero-cog" type="button" data-goto="ajustes" aria-label="Ajustes y respaldo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg></button></div>
@@ -67,7 +69,6 @@ document.getElementById('meta-tema').setAttribute('content',d?'#0D0D0D':'#1A72B5
   </header>
   <div id="meta-alerta"></div>
 
-  <nav class="tabs"><div class="tablist" role="tablist" id="tablist" aria-label="Secciones"></div></nav>
 
   <main>
     <!-- PLAN -->
@@ -455,6 +456,7 @@ document.getElementById('meta-tema').setAttribute('content',d?'#0D0D0D':'#1A72B5
       <div class="card stack"><h2>Sobre la app</h2><div class="receipt" id="aj-info"></div></div>
     </section>
   </main>
+  </div>
 
   <button class="mic" id="mic" type="button" aria-label="Cargar por voz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg></button>
   <div class="voz-bg" id="voz" hidden><div class="voz" id="voz-box" role="dialog" aria-modal="true" aria-labelledby="voz-t"></div></div>

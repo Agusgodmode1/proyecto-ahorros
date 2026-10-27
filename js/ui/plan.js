@@ -22,6 +22,20 @@ function rankTxt(s){
 }
 /* El número grande: el signo de pesos va chico, la cifra enorme */
 function grande(m){var x=/^(\S{1,3})[\s\u00a0]+(.+)$/.exec(m);return x?'<span class="hh-cur">'+esc(x[1])+'</span>'+esc(x[2]):esc(m)}
+/* Cuando cambia «Hoy podés gastar» (al anotar un gasto), la cifra cuenta hasta el valor nuevo (≤ 400 ms) */
+var ultimoHoy=null;
+function contar(el,v){
+  var de=ultimoHoy;ultimoHoy=v;
+  if(!el||de===null||Math.round(de)===Math.round(v))return;
+  try{if(matchMedia('(prefers-reduced-motion: reduce)').matches||document.documentElement.classList.contains('discreto'))return}catch(e){}
+  var t0=performance.now(),D=380;
+  (function paso(t){
+    var k=Math.min(1,(t-t0)/D),e=1-Math.pow(1-k,3);
+    if(!el.isConnected)return;
+    el.innerHTML=grande(money(de+(v-de)*e));
+    if(k<1)requestAnimationFrame(paso);
+  })(t0);
+}
 /* Franja compacta que reemplaza a la portada en las otras pestañas */
 function heroMini(pc,H){
   var st=ctx.state,el=$('#hero-mini');if(!el)return;
@@ -46,6 +60,7 @@ function heroChips(pc){
         +'<span class="bar'+(w.left<0?' over':'')+'" role="img" aria-label="Gastaste el '+Math.round(pct)+'% de la semana"><i style="width:'+pct+'%"></i></span>';
     }else h+='<span class="hh-s">'+(t>=state.plan.cobro?'Llegó el cobro: empezá tu pacto nuevo acá abajo.':'Hoy está fuera de las fechas de tu plan.')+'</span>';
     el.innerHTML=h;
+    contar(el.querySelector('.hh-n'),Math.abs(H.queda));
   }
   heroMini(pc,H);
   /* Dos datos en la misma fila: cuánta plata tenés y cuánto guardás (el cobro tiene su propia tarjeta) */
@@ -130,7 +145,9 @@ function initGasto(){
     if(!e.target.getAttribute||e.target.getAttribute('data-gform')!=='q')return;
     e.preventDefault();
     var d=leerForm(e.target);if(!d)return;
-    var id=guardarGasto(d,null);cerrarGasto();ctx.renderAll();avisoAnotado(id,'Anotado: '+money(d.monto)+(d.nota?' en '+d.nota:''));
+    var id=guardarGasto(d,null);cerrarGasto();ctx.renderAll();
+    var li=document.querySelector('#hoy-out [data-delg="'+id+'"]');if(li&&li.closest('li'))li.closest('li').classList.add('tinta-nueva');
+    avisoAnotado(id,'Anotado: '+money(d.monto)+(d.nota?' en '+d.nota:''));
   });
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!s.hidden)cerrarGasto()});
   $('#hoy-hero').addEventListener('click',function(e){if(e.target.closest('#gasto-abrir'))abrirGasto()});

@@ -138,7 +138,7 @@ function temaActual(){try{return localStorage.getItem(TEMA)||'oscuro'}catch(e){r
 export function aplicarTema(t){
   var html=document.documentElement,oscuro=t==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:t!=='claro';
   if(t==='auto')html.removeAttribute('data-theme');else html.setAttribute('data-theme',oscuro?'dark':'light');
-  var m=document.getElementById('meta-tema');if(m)m.setAttribute('content',oscuro?'#14131C':'#1A72B5');
+  var m=document.getElementById('meta-tema');if(m)m.setAttribute('content',oscuro?'#060807':'#cfc3a6');
   document.querySelectorAll('[data-tema]').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-tema')===t))});
 }
 /* ---------- Copias automáticas ---------- */

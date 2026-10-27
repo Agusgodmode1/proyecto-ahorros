@@ -68,8 +68,9 @@ function marcarCapitulos(){
     var el=$(k==='semanas'?'#p-semana':PANELES[k]),c=capituloDe(k);
     if(el)el.setAttribute('data-cap',c?'capítulo '+c.n+' · '+c.t.toLowerCase():'fuera de los capítulos');
   });
-  var d=parse(today()),k=$('#cap-hoy');
+  var d=parse(today()),k=$('#cap-hoy'),c=capituloDe(ctx.tab),f=document.querySelector('.foot');
   if(k)k.textContent='capítulo I · '+DIAL[d.getDay()]+' '+d.getDate()+' de '+MESL[d.getMonth()];
+  if(f)f.setAttribute('data-folio','— '+(c?'capítulo '+c.n+' · '+c.t.toLowerCase():'ajustes del pacto')+' —');
 }
 function showPanels(){
   var tab=ctx.tab;marcarCapitulos();
@@ -108,13 +109,16 @@ function orden(t){
   var i=['resumen','semanas','fijos','sueldo','gastos','logros','ajustes'].indexOf(t);return i<0?9:i;
 }
 function quieto(){try{return matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){return false}}
-/* Pasar la hoja: la página nueva entra girando apenas desde el lomo (≤ 22°), 380 ms */
+/* Pasar la hoja (≤ 450 ms, solo transform y opacity). La hoja nueva aparece:
+   - hacia adelante, desde abajo de la que se fue (apenas más chica y oscura);
+   - hacia atrás, la anterior vuelve girando desde el lomo. */
+function hojaEl(){return document.getElementById('hoja')}
 function pasarHoja(dir){
-  var m=document.querySelector('main');if(!m||!m.animate)return;
-  if(quieto()){m.animate([{opacity:.4},{opacity:1}],{duration:180});return}
-  m.animate(dir>0?[{transform:'perspective(1600px) translateX(28px) rotateY(-14deg)',opacity:.35},{transform:'none',opacity:1}]
-    :[{transform:'perspective(1600px) translateX(-28px) rotateY(10deg)',opacity:.35},{transform:'none',opacity:1}],
-    {duration:380,easing:'cubic-bezier(.25,.7,.25,1)',transformOrigin:'left center'});
+  var h=hojaEl();if(!h||!h.animate)return;
+  if(quieto()){h.animate([{opacity:.3},{opacity:1}],{duration:200});return}
+  h.animate(dir>0?[{transform:'scale(.97) translateX(10px)',opacity:.35},{transform:'none',opacity:1}]
+    :[{transform:'perspective(1600px) rotateY(-24deg) translateX(-12px)',opacity:.2},{transform:'none',opacity:1}],
+    {duration:dir>0?360:420,easing:'cubic-bezier(.22,.7,.25,1)'});
 }
 function go(t){
   if(t==='semanas')t='w'+curWeek(planNow(),today());
@@ -124,23 +128,54 @@ function go(t){
   var m=document.querySelector('main');
   if(m&&m.getBoundingClientRect().top<0){try{m.scrollIntoView({block:'start'})}catch(e){}}
 }
-/* Deslizar a los costados pasa de capítulo (y de semana en semana dentro de Semanas).
-   No se activa desde campos, listas que se deslizan, ni con una hoja abierta. */
+/* Deslizar a los costados pasa la hoja: sigue al dedo (gira desde el lomo, hasta 22°) y, si la soltás
+   a mitad de camino, vuelve. Desde campos, listas que se deslizan u hojas abiertas no se activa. */
 function initDeslizar(){
-  var x0=null,y0=0,t0=0;
+  var x0=null,y0=0,t0=0,modo=null,dx=0,W=1,dest=null,h=null;
   var NO='input,textarea,select,.guia-grid,.frec-b,.wkpick,.days,.tablist,.sugs,.seg,.lb-rango,[data-nodeslizar]';
+  function bloqueado(){var c=document.documentElement.classList;return c.contains('voz-abierta')||c.contains('hoja')}
+  function poner(p){
+    /* p < 0: la hoja se va hacia la izquierda (siguiente); p > 0: vuelve la anterior */
+    var ang=p<0?p*22:p*10,tx=p<0?p*W*.08:p*W*.4;
+    h.style.transform='perspective(1600px) translateX('+tx.toFixed(1)+'px) rotateY('+ang.toFixed(2)+'deg)';
+    h.style.setProperty('--pl',Math.min(1,Math.abs(p)*1.6).toFixed(2));
+  }
+  function limpiar(){if(!h)return;h.style.transform='';h.style.removeProperty('--pl');h.classList.remove('hojeando')}
   document.addEventListener('pointerdown',function(e){
-    var enMain=e.target.closest('main,.hero');
-    x0=(!enMain||e.target.closest(NO)||e.pointerType==='mouse'&&e.button!==0)?null:e.clientX;y0=e.clientY;t0=Date.now();
+    var enHoja=e.target.closest('#hoja');
+    x0=(!ctx.state||!enHoja||e.target.closest(NO)||e.pointerType==='mouse'||bloqueado())?null:e.clientX;
+    y0=e.clientY;t0=Date.now();modo=null;dx=0;
   },{passive:true});
-  document.addEventListener('pointerup',function(e){
-    if(x0===null||!ctx.state)return;var dx=e.clientX-x0,dy=e.clientY-y0;x0=null;
-    if(Math.abs(dx)<80||Math.abs(dy)>Math.abs(dx)*.5||Date.now()-t0>900)return;
-    if(document.documentElement.classList.contains('voz-abierta')||document.documentElement.classList.contains('hoja'))return;
-    var pc=planNow(),n=vecina(ctx.tab,dx<0?1:-1,pc.weeks.length,curWeek(pc,today()));
-    if(n)go(n);
+  document.addEventListener('pointermove',function(e){
+    if(x0===null)return;
+    dx=e.clientX-x0;var dy=e.clientY-y0;
+    if(!modo){
+      if(Math.abs(dx)<10&&Math.abs(dy)<10)return;
+      if(Math.abs(dy)>Math.abs(dx)*.8){x0=null;return}
+      h=hojaEl();W=h.offsetWidth||1;
+      var pc=planNow();dest=vecina(ctx.tab,dx<0?1:-1,pc.weeks.length,curWeek(pc,today()));
+      modo='hoja';h.classList.add('hojeando');
+    }
+    var p=Math.max(-1,Math.min(1,dx/W));if(!dest)p*=.18; /* en los bordes del libro, resiste */
+    if(!quieto())poner(p);
   },{passive:true});
-  document.addEventListener('pointercancel',function(){x0=null});
+  function soltar(){
+    if(x0===null)return;x0=null;
+    if(modo!=='hoja')return;
+    var vel=Math.abs(dx)/Math.max(1,Date.now()-t0),pasa=dest&&(Math.abs(dx)>W*.28||vel>.6&&Math.abs(dx)>40);
+    var desde=h.style.transform||'none';
+    if(!pasa||quieto()){
+      if(pasa){limpiar();go(dest);return}
+      h.animate([{transform:desde},{transform:'none'}],{duration:240,easing:'cubic-bezier(.3,.7,.3,1)'});limpiar();return;
+    }
+    var ida=dx<0?'perspective(1600px) translateX(-6%) rotateY(-70deg)':'perspective(1600px) translateX(45%) rotateY(14deg)';
+    var a=h.animate([{transform:desde,opacity:1},{transform:ida,opacity:0}],{duration:200,easing:'cubic-bezier(.5,0,.8,.5)',fill:'forwards'});
+    var desdeTab=ctx.tab;
+    /* si mientras gira tocaste otro capítulo, manda lo que tocaste */
+    a.onfinish=function(){limpiar();a.cancel();if(ctx.tab===desdeTab)go(dest)};
+  }
+  document.addEventListener('pointerup',soltar,{passive:true});
+  document.addEventListener('pointercancel',function(){if(modo==='hoja'&&h){h.animate([{transform:h.style.transform||'none'},{transform:'none'}],{duration:200});limpiar()}x0=null},{passive:true});
 }
 function syncInputs(){syncPlan();syncSueldo();syncGastos()}
 
@@ -232,6 +267,9 @@ function arrancar(st){
   ctx.booted=true;
   $('#app').hidden=false;
   syncInputs();renderAll();
+  /* Al abrir: una transición corta (< 600 ms) hasta la página del día */
+  /* (en #app solo opacidad: la barra y el micrófono son fijos y no pueden moverse con la hoja) */
+  if(!quieto()&&$('#app').animate){$('#app').animate([{opacity:0},{opacity:1}],{duration:320});hojaEl().animate([{transform:'perspective(1600px) rotateY(-8deg) scale(.985)',opacity:.4},{transform:'none',opacity:1}],{duration:480,easing:'cubic-bezier(.22,.7,.25,1)'})}
 }
 ctx.persist=persist;ctx.renderAll=renderAll;ctx.go=go;ctx.syncInputs=syncInputs;
 

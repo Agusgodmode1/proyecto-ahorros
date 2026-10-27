@@ -19,6 +19,7 @@ import {montarImportador} from './respaldo.js';
 import {marcarTour} from './tour.js';
 import {$,today,money,usd,esc} from './comun.js';
 import {sonar} from './sonido.js';
+import {girar,terminar as terminarPase} from './pase.js';
 import {costuraHTML,bordadoHTML,tituloHTML,guardasHTML,montarTapa,soltarTapa,tapaQuieta,fueArrastre,avivar} from './tapa.js';
 
 export var TITULO='El Libro del Ahorro';
@@ -362,11 +363,19 @@ function guardarEdicion(){
   if(val&&!quieto())val.animate([{opacity:0,transform:'translateY(6px) scale(.98)'},{opacity:1,transform:'none'}],{duration:420,easing:'cubic-bezier(.2,.7,.2,1)'});
 }
 
-/* Pasar la hoja dentro del prólogo: la de ahora gira desde el lomo (con la esquina de abajo adelantada)
-   y la nueva asienta con un rebote leve. dir 0 = la misma página, redibujada (al cambiar o guardar un dato). */
+/* Pasar la hoja dentro del prólogo (2.9, ui/pase.js): hacia adelante, la de ahora gira sobre el lomo y descubre la nueva,
+   que ya está debajo; hacia atrás, la anterior vuelve desde la izquierda y se apoya sobre la de ahora.
+   dir 0 = la misma página, redibujada (al cambiar o guardar un dato). */
+function cajaDe(el){var r=el.getBoundingClientRect();return {left:r.left,top:r.top,width:r.width,height:r.height}}
+function fotoPag(pag){
+  var c=pag.cloneNode(true),a=pag.querySelector('.lb-pag-in'),b=c.querySelector('.lb-pag-in');
+  c.removeAttribute('aria-labelledby');c.querySelectorAll('[name]').forEach(function(x){x.removeAttribute('name')});
+  if(a&&b&&a.scrollTop){b.style.height='auto';b.style.minHeight='100%';b.style.overflow='visible';b.style.transform='translateY('+(-a.scrollTop)+'px)'}
+  return c;
+}
 function irA(i,dir){
   var pila=$('#lb-pila'),vieja=pila.querySelector('.lb-pag:last-child'),nueva=document.createElement('section');
-  devolverLetra();
+  terminarPase();devolverLetra();
   idx=i;nueva.className='lb-pag';nueva.setAttribute('aria-labelledby','lb-h');
   pila.querySelectorAll('#lb-h').forEach(function(x){x.removeAttribute('id')});
   nueva.innerHTML=pagHTML(PAGS[idx]);
@@ -374,15 +383,16 @@ function irA(i,dir){
   montarPagina();
   if(!vieja)return;
   if(dir===0){vieja.remove();return}
-  sonar('hoja');
   vieja.style.zIndex='2';vieja.setAttribute('aria-hidden','true');
-  var dur=quieto()?180:440;
-  var sale=quieto()?[{opacity:1},{opacity:0}]:dir>0?[{transform:'rotate3d(-.16,1,0,0deg)',opacity:1},{transform:'translateX(-3%) rotate3d(-.16,1,0,-70deg)',opacity:0}]:[{transform:'translateX(0)',opacity:1},{transform:'translateX(8%)',opacity:0}];
-  var entra=quieto()?[{opacity:0},{opacity:1}]
-    :dir>0?[{transform:'scale(.975)',opacity:.5},{transform:'scale(1.006)',opacity:1,offset:.78},{transform:'none',opacity:1}]
-    :[{transform:'rotate3d(-.16,1,0,-60deg)',opacity:0},{transform:'rotate3d(-.16,1,0,2deg)',opacity:1,offset:.8},{transform:'none',opacity:1}];
-  nueva.animate(entra,{duration:dur,easing:'cubic-bezier(.3,.6,.2,1)'});
-  vieja.animate(sale,{duration:dir>0?dur*.7:dur,easing:'cubic-bezier(.5,0,.7,.4)',fill:'forwards'}).onfinish=function(){vieja.remove()};
+  if(quieto()){
+    sonar('hoja');
+    nueva.animate([{opacity:0},{opacity:1}],{duration:180});
+    vieja.animate([{opacity:1},{opacity:0}],{duration:180,fill:'forwards'}).onfinish=function(){vieja.remove()};
+    return;
+  }
+  var caja=cajaDe(pila);
+  if(dir>0){var f=fotoPag(vieja);vieja.remove();girar({padre:$('#lb-hojas'),caja:caja,frente:f,sentido:1,z:3})}
+  else girar({padre:$('#lb-hojas'),caja:caja,frente:fotoPag(nueva),sentido:-1,z:3,alFinal:function(){vieja.remove()}});
 }
 function montarPagina(){
   var id=PAGS[idx];
@@ -438,7 +448,14 @@ function cerrarTodo(dir){
   var fin=function(){h.hidden=true;h.innerHTML='';m.hidden=true;m.innerHTML=''};
   if(h.hidden||quieto()){fin();return}
   var pag=h.querySelector('.lb-pag:last-child');
-  if(dir>0&&pag){pag.animate([{transform:'none',opacity:1},{transform:'translateX(-3%) rotate3d(-.16,1,0,-75deg)',opacity:0}],{duration:320,easing:'cubic-bezier(.5,0,.7,.4)',fill:'forwards'});h.animate([{opacity:1},{opacity:1,offset:.6},{opacity:0}],{duration:340,fill:'forwards'}).onfinish=fin;return}
+  terminarPase();
+  if(dir>0&&pag){
+    /* la última hoja gira sobre el lomo y descubre la página de hoy, que ya está debajo */
+    var caja=cajaDe(pag),f=fotoPag(pag);
+    $('#lb-pila').innerHTML='';h.classList.add('lb-transp');
+    girar({padre:h,caja:caja,frente:f,sentido:1,z:3,alFinal:function(){h.classList.remove('lb-transp');fin()}});
+    return;
+  }
   h.animate([{opacity:1},{opacity:0}],{duration:280,fill:'forwards'}).onfinish=fin;
 }
 function abrirHojas(pagina,dir){
@@ -447,8 +464,11 @@ function abrirHojas(pagina,dir){
   irA(Math.max(0,PAGS.indexOf(pagina||PAGS[0])),1);
   if(!quieto()){
     var pag=h.querySelector('.lb-pag');
-    h.animate([{opacity:0},{opacity:1}],{duration:260});
-    if(dir<0&&pag)pag.animate([{transform:'rotate3d(-.16,1,0,-70deg)',opacity:0},{transform:'rotate3d(-.16,1,0,2deg)',opacity:1,offset:.8},{transform:'none',opacity:1}],{duration:460,easing:'cubic-bezier(.3,.6,.2,1)'});
+    if(dir<0&&pag){
+      /* desde Hoy hacia atrás: la hoja del pacto vuelve desde la izquierda y se apoya sobre la página de hoy */
+      var pila=$('#lb-pila');h.classList.add('lb-transp');pila.style.visibility='hidden';
+      girar({padre:h,caja:cajaDe(pila),frente:fotoPag(pag),sentido:-1,z:3,alFinal:function(){h.classList.remove('lb-transp');pila.style.visibility=''}});
+    }else h.animate([{opacity:0},{opacity:1}],{duration:260});
   }
   $('#libro').hidden=true;
 }

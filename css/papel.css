@@ -204,7 +204,7 @@
 .v2 .chip-g b{font-family:var(--f-body)}
 
 /* En los otros capítulos: encabezado corrido de la página */
-.v2[data-vista="otra"] .mini:not([hidden]){background:transparent;box-shadow:none;border-radius:0;padding:0 2px var(--e3);border-bottom:1px solid var(--line)}
+.v2 .hoja[data-vista="otra"] .mini:not([hidden]){background:transparent;box-shadow:none;border-radius:0;padding:0 2px var(--e3);border-bottom:1px solid var(--line)}
 .v2 .mini small{font:600 var(--t1) var(--f-libro);letter-spacing:.14em;color:var(--muted)}
 .v2 .mini b{font-size:var(--t5);color:var(--azul)}
 .v2 .mini .mn-b b{color:var(--oro-t)}
@@ -293,10 +293,10 @@
     background:var(--fibra),linear-gradient(90deg,transparent calc(50% - 46px),rgba(60,40,10,.16) calc(50% - 4px),rgba(60,40,10,.26) 50%,rgba(60,40,10,.16) calc(50% + 4px),transparent calc(50% + 46px)),
       radial-gradient(130% 100% at 60% 40%,transparent 62%,color-mix(in srgb,var(--page-2) 75%,transparent) 100%),linear-gradient(90deg,var(--page-2) 0,var(--page) 3%,var(--page) 97%,var(--page-2) 100%)}
   /* Hoy: a la izquierda el cobro y lo que podés gastar; a la derecha tu día y el plan hasta cobrar */
-  .v2[data-vista="plan"] .hoja{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:92px;align-items:start}
-  .v2[data-vista="plan"] .hoja>.hero{grid-column:1;grid-row:1 / span 3}
-  .v2[data-vista="plan"] .hoja>#meta-alerta{grid-column:2;grid-row:1}
-  .v2[data-vista="plan"] .hoja>main{grid-column:2;grid-row:2}
+  .v2 .hoja[data-vista="plan"]{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:92px;align-items:start}
+  .v2 .hoja[data-vista="plan"]>.hero{grid-column:1;grid-row:1 / span 3}
+  .v2 .hoja[data-vista="plan"]>#meta-alerta{grid-column:2;grid-row:1}
+  .v2 .hoja[data-vista="plan"]>main{grid-column:2;grid-row:2}
   .v2 .hoja>.pie{grid-column:1 / -1}
   /* los demás capítulos: dos columnas, como dos páginas */
   .v2 main>section:not([hidden]):not(#p-resumen){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--e5) 92px;align-items:start}
@@ -547,3 +547,44 @@ html{font-variation-settings:'SOFT' 100,'WONK' 0}
 .lb-cae{position:absolute;left:50%;top:-6px;width:18px;height:18px;margin-left:-9px;pointer-events:none;filter:drop-shadow(0 0 6px rgba(255,210,122,.9))}
 .lb-cae svg{display:block;width:100%;height:100%}
 @media (prefers-reduced-motion:reduce){.lb-brote g{transition:opacity .3s ease;transform:none!important}}
+
+/* =====================================================================
+   Pasar de página (2.9, ui/pase.js): la hoja vieja (una copia liviana) gira sobre el lomo y descubre la nueva,
+   que ya está debajo. Dos tramos para que se curve, luz y sombra según el ángulo, dorso de papel y la sombra
+   que la hoja proyecta sobre la página de abajo. Solo transform y opacity.
+   ===================================================================== */
+.giro{position:fixed;inset:0;z-index:4;pointer-events:none}
+.giro .giro{z-index:auto}
+.giro-bajo,.giro-zona,.giro-eje{position:absolute}
+.giro-bajo,.giro-zona{overflow:hidden}
+.giro-oscuro{position:absolute;inset:0;background:#0b0702;opacity:0;will-change:opacity}
+.giro-sombra{position:absolute;top:0;bottom:0;transform-origin:0 50%;opacity:0;will-change:transform,opacity;
+  background:linear-gradient(90deg,rgba(12,7,0,.55),rgba(12,7,0,.2) 30%,rgba(12,7,0,0))}
+.giro-eje{perspective:2200px}
+.giro-a,.giro-b{position:absolute;top:0;bottom:0;transform-origin:0 50%;transform-style:preserve-3d;will-change:transform}
+.giro-a{left:0}
+.giro-cara{position:absolute;inset:0;overflow:hidden;-webkit-backface-visibility:hidden;backface-visibility:hidden}
+.giro-cara.d{transform:rotateY(180deg)}
+.giro-in{position:absolute;left:0;top:0}
+.giro-pag{position:absolute;inset:0}
+.giro-luz,.giro-osc{position:absolute;inset:0;opacity:0;pointer-events:none;will-change:opacity}
+/* el frente: cerca del lomo, un brillo donde la hoja se curva; hacia el borde, más sombra */
+.giro-a>.f>.giro-luz{background:linear-gradient(90deg,rgba(0,0,0,0) 0%,rgba(0,0,0,.05) 45%,rgba(255,248,228,.18) 84%,rgba(0,0,0,.06) 100%)}
+.giro-b>.f>.giro-luz{background:linear-gradient(90deg,rgba(255,248,228,.12) 0%,rgba(0,0,0,.14) 38%,rgba(0,0,0,.36) 100%)}
+/* el dorso se oscurece al pasar los 90° */
+.giro-osc{background:linear-gradient(90deg,rgba(14,9,2,.6),rgba(14,9,2,.28))}
+.giro-papel{background:var(--fibra),linear-gradient(90deg,var(--page-2) 0,var(--page) 5%,var(--page) 100%)}
+.giro-dorso{background:var(--fibra),linear-gradient(270deg,var(--page-2) 0,var(--page) 6%,var(--page) 100%)}
+.giro-b>.giro-cara.f{border-radius:0 12px 12px 0}
+.giro-b>.giro-cara.d{border-radius:12px 0 0 12px}
+.giro .giro-copia *,.giro .giro-copia{animation:none!important;transition:none!important}
+.giro .giro-copia{will-change:auto}
+@media (min-width:1000px){.giro .pie .flecha{visibility:hidden}}
+/* el prólogo mientras su hoja gira sobre la página de hoy: se ve lo de abajo */
+.lb-hojas.lb-transp{background:transparent}
+/* Ajustes → Sonido: el volumen */
+.v2 .vol{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:var(--e3);min-height:44px}
+.v2 .vol[hidden]{display:none}
+.v2 .vol span{font-size:16px;color:var(--muted)}
+.v2 .vol .lb-rango::-webkit-slider-runnable-track{background:linear-gradient(90deg,var(--azul) 0 var(--v,0%),color-mix(in srgb,var(--ink) 14%,transparent) var(--v,0%))}
+.v2 .vol .lb-rango::-webkit-slider-thumb{background:radial-gradient(circle at 35% 35%,#fff7e6,var(--cta) 55%,#9E3C1C);border-color:var(--page)}

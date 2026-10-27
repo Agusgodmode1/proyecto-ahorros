@@ -3,7 +3,7 @@ import {curWeek} from './logica/plan.js';
 import {migrar,cargar,guardar,pedirPersistencia,defaults,ejemplo,necesitaMigrar,guardarCopia,resumenDatos} from './estado.js';
 import {ctx,$,today,planNow,ICON,discreto,setDiscreto,toast,toastAccion,money} from './ui/comun.js';
 import {deshacerAjustePacto} from './logica/pacto.js';
-import {sonar,sonidoOn,setSonido} from './ui/sonido.js';
+import {sonar,sonidoOn,setSonido,volumen,setVolumen} from './ui/sonido.js';
 import {renderCountdown,renderResumen,syncPlan,initPlan} from './ui/plan.js';
 import {renderWeek,initSemanas} from './ui/semanas.js';
 import {renderSueldo,syncSueldo,initSueldo} from './ui/sueldo.js';
@@ -15,6 +15,7 @@ import {registrarSW} from './pwa.js';
 import {initVoz} from './ui/voz.js';
 import {abrirPerfil,initPerfil,resumenPerfil} from './ui/perfil.js';
 import {abrirLibro,initLibro} from './ui/libro.js';
+import {copiaVisible,girar,empezar,terminar as terminarPase} from './ui/pase.js';
 import {initIndice} from './ui/indice.js';
 import {renderGuardado,initGuardado} from './ui/guardado.js';
 import {CAPITULOS,capituloDe,vecina,numeroDePagina,nombreDePagina} from './logica/capitulos.js';
@@ -83,7 +84,8 @@ function renderPie(pc){
 }
 function showPanels(){
   var tab=ctx.tab;marcarCapitulos();
-  document.documentElement.setAttribute('data-vista',tab==='resumen'?'plan':'otra');
+  /* la vista va en la hoja (y no en <html>): así la copia que gira al pasar de página conserva la suya */
+  var vista=tab==='resumen'?'plan':'otra';document.documentElement.setAttribute('data-vista',vista);hojaEl().setAttribute('data-vista',vista);
   $('#p-resumen').hidden=tab!=='resumen';
   $('#p-semana').hidden=!/^w\d+$/.test(tab);
   $('#p-sueldo').hidden=tab!=='sueldo';
@@ -121,46 +123,54 @@ function orden(t){
   var i=['resumen','semanas','fijos','sueldo','gastos','logros','guardado','ajustes'].indexOf(t);return i<0?9:i;
 }
 function quieto(){try{return matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){return false}}
-/* Pasar la hoja (≤ 450 ms, solo transform y opacity). La hoja nueva aparece:
-   - hacia adelante, desde abajo de la que se fue (apenas más chica y oscura);
-   - hacia atrás, la anterior vuelve girando desde el lomo. */
+/* Pasar la hoja (2.9, ui/pase.js): la página nueva ya queda debajo y encima gira una copia liviana de la que se va.
+   En pantallas de doble página (≥ 1100 px) gira la mitad derecha sobre el pliegue: su dorso es la página que viene.
+   Con «reducir movimiento», un fundido corto, sin giro. */
 function hojaEl(){return document.getElementById('hoja')}
-function pasarHoja(dir,demora){
-  var h=hojaEl();if(!h||!h.animate)return;
-  sonar('hoja');
-  if(quieto()){h.animate([{opacity:.3},{opacity:1}],{duration:200});return}
-  h.animate(dir>0?[{transform:'scale(.975) translateX(10px)',opacity:.35},{transform:'scale(1.004)',opacity:1,offset:.8},{transform:'none',opacity:1}]
-    :[{transform:'perspective(1600px) rotate3d(-.16,1,0,-26deg) translateX(-12px)',opacity:.2},{transform:'perspective(1600px) rotate3d(-.16,1,0,1.5deg)',opacity:1,offset:.8},{transform:'none',opacity:1}],
-    {duration:dir>0?400:450,delay:demora||0,easing:'cubic-bezier(.22,.7,.25,1)',fill:'backwards'});
+function cajaPagina(){
+  var r=$('#app').getBoundingClientRect(),top=Math.max(0,r.top),bot=Math.min(window.innerHeight,r.bottom);
+  return {left:r.left,top:top,width:r.width,height:Math.max(1,bot-top)};
 }
-/* Saltar lejos desde el índice: varias hojas pasan rápido en abanico (≤ 700 ms) */
-function abanico(dir){
-  var app=$('#app');if(!app||quieto())return;
-  var r=app.getBoundingClientRect(),top=Math.max(0,r.top),alto=Math.min(window.innerHeight,r.bottom)-top;
-  var cont=document.createElement('div');cont.className='abanico';
-  cont.style.cssText='left:'+r.left+'px;top:'+top+'px;width:'+r.width+'px;height:'+alto+'px';
-  for(var i=0;i<3;i++){var f=document.createElement('i');cont.appendChild(f)}
-  document.body.appendChild(cont);
-  var hojas=cont.querySelectorAll('i'),hechas=0;
-  hojas.forEach(function(f,i){
-    var a=f.animate(dir>0?[{transform:'perspective(1800px) rotate3d(-.12,1,0,0deg)',opacity:1},{transform:'perspective(1800px) rotate3d(-.12,1,0,-150deg)',opacity:0}]
-      :[{transform:'perspective(1800px) rotate3d(-.12,1,0,-150deg)',opacity:0},{transform:'perspective(1800px) rotate3d(-.12,1,0,0deg)',opacity:1},{transform:'none',opacity:0}],
-      {duration:320,delay:i*110,easing:'cubic-bezier(.45,.05,.4,1)',fill:'both'});
-    a.onfinish=function(){if(++hechas===hojas.length)cont.remove()};
-  });
+/* La foto de la hoja (lo que se ve dentro de «caja»), lista para ponerla en una cara */
+function fotoHoja(caja){
+  var h=hojaEl(),hr=h.getBoundingClientRect(),box=document.createElement('div');box.className='giro-pag';
+  var c=copiaVisible(h,caja.top,caja.top+caja.height);
+  c.style.cssText='position:absolute;margin:0;left:'+(hr.left-caja.left)+'px;top:'+(hr.top-caja.top)+'px;width:'+hr.width+'px';
+  box.appendChild(c);return box;
+}
+function mitades(c){var w=c.width/2;return {izq:{left:c.left,top:c.top,width:w,height:c.height},der:{left:c.left+w,top:c.top,width:w,height:c.height}}}
+/* Saca las fotos, llama a cambiar() (que dibuja la página nueva) y devuelve cómo armar la hoja que gira */
+function prepararHoja(dir,cambiar,blancas){
+  var c0=cajaPagina(),o={padre:$('#app'),papel:'giro-papel',z:4,sentido:dir,blancas:blancas||0};
+  if(window.innerWidth<1100){
+    if(dir>0){o.frente=fotoHoja(c0);cambiar();o.caja=c0}
+    else{var bajo=fotoHoja(c0);cambiar();o.caja=cajaPagina();o.frente=fotoHoja(o.caja);o.bajos=[{caja:c0,nodo:bajo}]}
+  }else{
+    var m0=mitades(c0);
+    if(dir>0){o.frente=fotoHoja(m0.der);var izqVieja=fotoHoja(m0.izq);cambiar();o.dorso=fotoHoja(mitades(cajaPagina()).izq);o.caja=m0.der;o.bajos=[{caja:m0.izq,nodo:izqVieja}]}
+    else{var derVieja=fotoHoja(m0.der);o.dorso=fotoHoja(m0.izq);cambiar();var m1=mitades(cajaPagina());o.frente=fotoHoja(m1.der);o.caja=m1.der;o.bajos=[{caja:m0.der,nodo:derVieja}]}
+    o.zona=c0;
+  }
+  return o;
+}
+function pasarA(t,dir,blancas){
+  var cambiar=function(){
+    ctx.tab=t;renderAll();
+    var m=document.querySelector('main');if(m&&m.getBoundingClientRect().top<0){try{window.scrollTo(0,0)}catch(e){}}
+  };
+  var h=hojaEl();
+  if(quieto()||!h.animate){terminarPase();cambiar();sonar('hoja');if(h.animate)h.animate([{opacity:.3},{opacity:1}],{duration:200});return}
+  terminarPase();
+  girar(prepararHoja(dir,cambiar,blancas));
 }
 function go(t,opt){
   if(t==='prologo'){abrirPrologo('pacto',null,-1);return}
   if(t==='semanas')t='w'+curWeek(planNow(),today());
   var antes=ctx.tab,dir=orden(t)>=orden(antes)?1:-1;
-  ctx.tab=t;renderAll();
-  if(antes!==t){
-    var lejos=opt&&opt.abanico&&Math.abs(Math.floor(orden(t))-Math.floor(orden(antes)))>1;
-    if(lejos)abanico(dir);
-    pasarHoja(dir,lejos?260:0);
-  }
-  var m=document.querySelector('main');
-  if(m&&m.getBoundingClientRect().top<0){try{window.scrollTo(0,0)}catch(e){}}
+  if(antes===t){terminarPase();renderAll();return}
+  /* desde el índice, si el salto es lejos, pasan varias hojas en abanico (el mismo giro, ≤ 700 ms) */
+  var lejos=opt&&opt.abanico&&Math.abs(Math.floor(orden(t))-Math.floor(orden(antes)))>1;
+  pasarA(t,dir,lejos?3:0);
 }
 /* El prólogo con tus datos (modo hojear): se llega deslizando hacia atrás desde Hoy, desde el índice o desde «Tenés» y «Guardás» */
 function abrirPrologo(pagina,editar,dir){
@@ -169,7 +179,7 @@ function abrirPrologo(pagina,editar,dir){
       persist();syncInputs();renderAll();
       toastAccion('Listo: ≈ '+money(v.porDia)+' por día hasta que cobres','Deshacer',function(){deshacerAjustePacto(ctx.state,v.deshacer);persist();syncInputs();renderAll()});
     },
-    alCerrar:function(){if(ctx.tab!=='resumen'){ctx.tab='resumen';renderAll()}pasarHoja(1)}});
+    alCerrar:function(){if(ctx.tab!=='resumen'){ctx.tab='resumen';renderAll()}}});
 }
 /* «Cerrar el libro»: la tapa se cierra; al tocarla se abre de nuevo en Hoy */
 function cerrarLibro(){
@@ -181,54 +191,67 @@ function entrada(){
   $('#app').animate([{opacity:0},{opacity:1}],{duration:320});
   hojaEl().animate([{transform:'perspective(1600px) rotateY(-8deg) scale(.985)',opacity:.4},{transform:'none',opacity:1}],{duration:480,easing:'cubic-bezier(.22,.7,.25,1)'});
 }
-/* Deslizar a los costados pasa la hoja: sigue al dedo (gira desde el lomo, hasta 22°) y, si la soltás
-   a mitad de camino, vuelve. Desde campos, listas que se deslizan u hojas abiertas no se activa. */
+/* Deslizar a los costados pasa la hoja: la hoja sigue al dedo (con su curva y su sombra) y debajo ya está la página que viene.
+   Al soltar manda la velocidad: un gesto rápido la pasa aunque hayas recorrido poco; si no llegó (~28 %), vuelve.
+   En los bordes del libro resiste. Desde campos, listas que se deslizan u hojas abiertas no se activa. */
 function initDeslizar(){
-  var x0=null,y0=0,t0=0,modo=null,dx=0,W=1,dest=null,h=null;
+  var x0=null,y0=0,modo=null,dx=0,W=1,dest=null,h=null,arr=null,antes=null,scroll0=0,muestras=[];
   var NO='input,textarea,select,.guia-grid,.frec-b,.wkpick,.days,.tablist,.sugs,.seg,.lb-rango,[data-nodeslizar]';
   function bloqueado(){var c=document.documentElement.classList;return c.contains('voz-abierta')||c.contains('hoja')}
-  function poner(p){
-    /* p < 0: la hoja se va hacia la izquierda (siguiente); p > 0: vuelve la anterior */
+  /* sin página al lado (o hacia el prólogo): la hoja de verdad apenas gira y vuelve */
+  function resistir(p){
     var ang=p<0?p*22:p*10,tx=p<0?p*W*.08:p*W*.4;
-    h.style.transform='perspective(1600px) translateX('+tx.toFixed(1)+'px) rotate3d(-.16,1,0,'+ang.toFixed(2)+'deg)'; /* el eje inclinado adelanta la esquina de abajo */
-    h.style.setProperty('--pl',Math.min(1,Math.abs(p)*1.6).toFixed(2));
+    h.style.transform='perspective(1600px) translateX('+tx.toFixed(1)+'px) rotate3d(-.16,1,0,'+ang.toFixed(2)+'deg)';
   }
-  function limpiar(){if(!h)return;h.style.transform='';h.style.removeProperty('--pl');h.classList.remove('hojeando')}
+  function limpiar(){if(!h)return;h.style.transform='';h.classList.remove('hojeando')}
+  function irSinGiro(t){
+    ctx.tab=t;renderAll();
+    var m=document.querySelector('main');if(m&&m.getBoundingClientRect().top<0){try{window.scrollTo(0,0)}catch(e){}}
+  }
   document.addEventListener('pointerdown',function(e){
-    var enHoja=e.target.closest('#hoja');
+    var enPase=e.target.closest('.giro');if(enPase)terminarPase();
+    var enHoja=e.target.closest('#hoja')||enPase;
     x0=(!ctx.state||!enHoja||e.target.closest(NO)||e.pointerType==='mouse'||bloqueado())?null:e.clientX;
-    y0=e.clientY;t0=Date.now();modo=null;dx=0;
+    y0=e.clientY;modo=null;dx=0;muestras=[];
   },{passive:true});
   document.addEventListener('pointermove',function(e){
     if(x0===null)return;
     dx=e.clientX-x0;var dy=e.clientY-y0;
+    muestras.push({x:e.clientX,t:performance.now()});if(muestras.length>8)muestras.shift();
     if(!modo){
       if(Math.abs(dx)<10&&Math.abs(dy)<10)return;
       if(Math.abs(dy)>Math.abs(dx)*.8){x0=null;return}
-      h=hojaEl();W=h.offsetWidth||1;
+      h=hojaEl();W=Math.min(h.offsetWidth||1,window.innerWidth);
       var pc=planNow();dest=vecina(ctx.tab,dx<0?1:-1,pc.weeks.length,curWeek(pc,today()));
-      modo='hoja';h.classList.add('hojeando');
+      if(dest&&dest!=='prologo'&&!quieto()){
+        antes=ctx.tab;scroll0=window.scrollY;
+        var o=prepararHoja(dx<0?1:-1,function(){irSinGiro(dest)});
+        o.volver=function(){irSinGiro(antes);try{window.scrollTo(0,scroll0)}catch(x){}};
+        if(window.innerWidth>=1100)W=o.caja.width;
+        arr=empezar(o);modo='hoja';
+      }else{modo='borde';h.classList.add('hojeando')}
     }
-    var p=Math.max(-1,Math.min(1,dx/W));if(!dest)p*=.18; /* en los bordes del libro, resiste */
-    if(!quieto())poner(p);
+    if(modo==='hoja')arr.mover(dx);
+    else if(!quieto()){var p=Math.max(-1,Math.min(1,dx/W));if(!dest)p*=.18;resistir(p)}
   },{passive:true});
-  function soltar(){
-    if(x0===null)return;x0=null;
-    if(modo!=='hoja')return;
-    var vel=Math.abs(dx)/Math.max(1,Date.now()-t0),pasa=dest&&(Math.abs(dx)>W*.28||vel>.6&&Math.abs(dx)>40);
-    var desde=h.style.transform||'none';
-    if(!pasa||quieto()){
-      if(pasa){limpiar();go(dest);return}
-      h.animate([{transform:desde},{transform:'none'}],{duration:240,easing:'cubic-bezier(.3,.7,.3,1)'});limpiar();return;
-    }
-    var ida=dx<0?'perspective(1600px) translateX(-6%) rotate3d(-.16,1,0,-70deg)':'perspective(1600px) translateX(45%) rotate3d(-.16,1,0,14deg)';
-    var a=h.animate([{transform:desde,opacity:1},{transform:ida,opacity:0}],{duration:200,easing:'cubic-bezier(.5,0,.8,.5)',fill:'forwards'});
-    var desdeTab=ctx.tab;
-    /* si mientras gira tocaste otro capítulo, manda lo que tocaste */
-    a.onfinish=function(){limpiar();a.cancel();if(ctx.tab===desdeTab)go(dest)};
+  function velocidad(){
+    var n=muestras.length;if(n<2||performance.now()-muestras[n-1].t>80)return 0; /* si te quedaste quieto antes de soltar, es lento */
+    var a=muestras[0],b=muestras[n-1];for(var i=0;i<n;i++)if(b.t-muestras[i].t<=100){a=muestras[i];break}
+    return (b.x-a.x)/Math.max(1,b.t-a.t);
   }
-  document.addEventListener('pointerup',soltar,{passive:true});
-  document.addEventListener('pointercancel',function(){if(modo==='hoja'&&h){h.animate([{transform:h.style.transform||'none'},{transform:'none'}],{duration:200});limpiar()}x0=null},{passive:true});
+  function soltar(cancelado){
+    if(x0===null)return;x0=null;
+    var v=cancelado?0:velocidad(),hacia=dx<0?-1:1;
+    var pasa=!cancelado&&!!dest&&(Math.abs(dx)>W*.28||Math.abs(v)>.35&&v*hacia>0&&Math.abs(dx)>24);
+    if(modo==='hoja'){arr.soltar(pasa,v);arr=null;return}
+    if(modo!=='borde')return;
+    var desde=h.style.transform||'none';
+    if(pasa){limpiar();go(dest);return}
+    if(!quieto())h.animate([{transform:desde},{transform:'none'}],{duration:240,easing:'cubic-bezier(.3,.7,.3,1)'});
+    limpiar();
+  }
+  document.addEventListener('pointerup',function(){soltar(false)},{passive:true});
+  document.addEventListener('pointercancel',function(){soltar(true)},{passive:true});
 }
 function syncInputs(){syncPlan();syncSueldo();syncGastos()}
 
@@ -289,6 +312,9 @@ function initGlobal(){
       abrirLibro({modo:'nuevo',estado:nuevo,listo:function(st){reemplazar(st,'antes de borrar los datos de ejemplo')},alCerrar:function(){renderAll()}});
     }
   });
+  /* el volumen: se escucha la hoja al soltar el control */
+  document.addEventListener('input',function(e){if(e.target.id==='aj-volumen'){setVolumen(Number(e.target.value)/100);e.target.style.setProperty('--v',e.target.value+'%')}});
+  document.addEventListener('change',function(e){if(e.target.id==='aj-volumen')sonar('hoja',{dur:.45,fuerza:.55})});
   document.addEventListener('click',function(e){var so=e.target.closest('[data-sonido]');if(so){setSonido(so.getAttribute('data-sonido')==='1');marcarSonido();sonar('hoja');toast(sonidoOn()?'Sonido prendido':'Sin sonido')}});
   document.addEventListener('click',function(e){var d=e.target.closest('[data-discreto]');if(d){setDiscreto(d.getAttribute('data-discreto')==='1');marcarDiscreto();renderAll()}});
   /* Modo discreto: un toque tapa o muestra todos los montos */
@@ -300,7 +326,10 @@ function initGlobal(){
   window.addEventListener('pagehide',flushPendiente);
 }
 
-function marcarSonido(){document.querySelectorAll('[data-sonido]').forEach(function(b){b.setAttribute('aria-pressed',String((b.getAttribute('data-sonido')==='1')===sonidoOn()))})}
+function marcarSonido(){
+  document.querySelectorAll('[data-sonido]').forEach(function(b){b.setAttribute('aria-pressed',String((b.getAttribute('data-sonido')==='1')===sonidoOn()))});
+  var v=$('#aj-volumen');if(v){v.value=String(Math.round(volumen()*100));v.style.setProperty('--v',v.value+'%');$('#aj-vol-box').hidden=!sonidoOn()}
+}
 function marcarDiscreto(){
   var b=$('#discreto');b.setAttribute('aria-pressed',String(discreto.on));b.setAttribute('aria-label',discreto.on?'Mostrar los montos':'Ocultar los montos');
   document.documentElement.classList.toggle('discreto',discreto.on);

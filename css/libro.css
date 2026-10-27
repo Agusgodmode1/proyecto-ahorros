@@ -4,8 +4,9 @@
    - Solo se animan transform y opacity. Con «reducir movimiento», solo fundidos (ver al final).
    - Todo color sale de las variables --lb-* de :root.
    ===================================================================== */
-@font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:600;font-display:swap;src:url(../vendor/cormorant-garamond-5.3.0/cormorant-garamond-latin-600-normal.woff2) format('woff2')}
-@font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:700;font-display:swap;src:url(../vendor/cormorant-garamond-5.3.0/cormorant-garamond-latin-700-normal.woff2) format('woff2')}
+/* Letras del libro (2.7): Fraunces (variable, con SOFT alto y WONK en 0) para títulos y números grandes; Nunito para todo lo demás */
+@font-face{font-family:'Fraunces';font-style:normal;font-weight:100 900;font-display:swap;src:url(../vendor/fraunces-5.3.0/fraunces-latin-full-normal.woff2) format('woff2-variations'),url(../vendor/fraunces-5.3.0/fraunces-latin-full-normal.woff2) format('woff2')}
+@font-face{font-family:'Nunito';font-style:normal;font-weight:200 1000;font-display:swap;src:url(../vendor/nunito-5.3.0/nunito-latin-wght-normal.woff2) format('woff2-variations'),url(../vendor/nunito-5.3.0/nunito-latin-wght-normal.woff2) format('woff2')}
 
 :root{
   --lb-n0:#060807; --lb-n1:#0c0f0d; --lb-n2:#131814; --lb-n3:#1b221d;

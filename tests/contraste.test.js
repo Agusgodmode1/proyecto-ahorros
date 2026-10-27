@@ -25,6 +25,17 @@ var TEXTO=['ink','muted','azul','bien','ojo','mal','oro-t','naranja-t','sky','mi
       });
     });
   });
+  test(nom+': lo importante también se lee dentro de los recuadros (4,5:1)',function(){
+    ['ink','muted','azul','bien','mal','ojo','oro-t'].forEach(function(k){
+      ['surface','surface-2'].forEach(function(f){
+        var c=contraste(P[k],P[f]);
+        assert.ok(c>=4.5,nom+': --'+k+' '+P[k]+' sobre --'+f+' '+P[f]+' da '+c.toFixed(2));
+      });
+    });
+  });
+  test(nom+': lo elegido (la semana, el día) se lee: letra de papel sobre azul tinta (4,5:1)',function(){
+    assert.ok(contraste(P['on-sel'],P.sel)>=4.5,'elegido: '+contraste(P['on-sel'],P.sel).toFixed(2));
+  });
   test(nom+': los botones de acción se leen (4,5:1) y los títulos dorados grandes (3:1)',function(){
     assert.ok(contraste(P['on-cta'],P.cta)>=4.5,'texto del botón: '+contraste(P['on-cta'],P.cta).toFixed(2));
     assert.ok(contraste(P.oro,P.page)>=3,'títulos dorados: '+contraste(P.oro,P.page).toFixed(2));

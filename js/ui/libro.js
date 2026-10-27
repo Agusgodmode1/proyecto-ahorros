@@ -179,7 +179,7 @@ function vistaHTML(id){
   else if(id==='q2'){h='¿Cuánto querés ahorrar?';val=money(A.ahorro);nota=num(p.monto)>0?'Es el '+pctTxt(A.ahorro/Math.max(1,num(p.monto)))+' de lo que tenías al empezar.':''}
   else{var dd=diffDays(today(),p.cobro);h='¿Qué día volvés a cobrar?';val=esc(fLarga(p.cobro));nota=dd>0?'Faltan '+dd+(dd===1?' día.':' días.'):'Ya llegó el día de cobro.'}
   return '<h1 class="lb-h lb-tinta" id="lb-h">'+tinta(h)+'</h1>'
-    +'<p class="lb-valor'+(id==='q3'?' fecha':'')+'" id="lb-valor">'+val+'</p>'
+    +'<p class="lb-valor '+(id==='q1'?'plata':id==='q2'?'guardado':'fecha')+'" id="lb-valor">'+val+'</p>'
     +'<p class="lb-p">'+esc(nota)+'</p>'
     +'<div class="lb-acc"><button class="lb-btn" type="button" data-lb="cambiar">Cambiar</button></div>'+ORLA;
 }

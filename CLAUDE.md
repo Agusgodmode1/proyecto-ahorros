@@ -49,16 +49,19 @@ La app es un libro: tapa cósmica, prólogo (el pacto), índice, seis capítulos
 
 **Archivos**
 - `css/app.css`: las capas viejas (estructura, formularios, listas). No le agregues diseño nuevo.
-- `css/libro.css`: la tapa en 3D, el prólogo, el pacto, el índice y el pie con flechas.
+- `css/libro.css`: los `@font-face` de Fraunces y Nunito, la tapa en 3D, el prólogo, el pacto, el índice y el pie con flechas.
 - `css/papel.css`: el sistema visual (tokens, papel, tinta, piezas, capítulos, doble página, pulido). Va último.
 - `js/ui/libro.js` (tapa y prólogo), `js/ui/indice.js` (índice), `js/ui/sonido.js` (sonido), `js/logica/pacto.js`, `js/logica/ciclo.js` y `js/logica/capitulos.js` (puros, con pruebas).
 
 **Paleta y letra** (`css/papel.css`)
 - Bloques de tokens `@papel` (claro) y `@noche` (papel de noche); el de `@media` tiene que ser igual al de `[data-theme="dark"]` (una prueba lo controla).
-- Cosmos (tapa y lo que rodea la página): #070B24 → #0E1640 → #1B2A6B, nebulosa #4B3FA8, estrellas #F4F1FF, estrella fugaz #FFD27A. Papel #F3E6C8 / sombra #E6D3A8 / canto #CDB27E; noche #2A2620 con tinta #EFE4CC.
-- Tinta #1C2440 (secundaria #4A5170). Dorado viejo `--oro` solo en títulos y números grandes (degradado `--oro-deg`); texto chico dorado `--oro-t`. Botones de acción: relleno naranja `--cta` con letra `--on-cta`. Enlaces `--azul`. Estados `--bien`, `--ojo`, `--mal`, siempre con ícono o texto. Los nombres viejos (`--sky`, `--mint`…) siguen existiendo con la paleta del libro.
-- **Contraste: `tests/contraste.test.js` exige AA** (4,5:1 texto, 3:1 títulos dorados grandes) en los dos papeles. Si un color no pasa, se ajusta la luminosidad y se conserva el tono.
-- Escalas fijas: espacios `--e1…--e6` (4/8/12/16/24/32) y letra `--t1…--t8`. Texto con la letra del sistema; títulos y números grandes en Cormorant Garamond (600 y 700, dentro de `vendor/cormorant-garamond-5.3.0/`, en el service worker). Números `lining-nums tabular-nums` (el atajo `font:` las reinicia: hay una regla con `!important`).
+- Cosmos (tapa y lo que rodea la página): #070B24 → #0E1640 → #1B2A6B, nebulosa #4B3FA8, estrellas #F4F1FF, estrella fugaz #FFD27A.
+- Papel claro (2.7): página #F6ECD6, sombra #ECDFC3, superficie #FBF5E7 / #EFE2C6, canto #D2B98A, tinta #1C2440.
+- Papel de noche (2.7, azul tinta, conecta con el cosmos): página #191C30, superficie #20243C / #282D4A, canto #3A4066, tinta #F1E7D0 (secundaria #B9B6C8), dorado #E2B65A (claro #F3D488), naranja #F08A4B, azul #9DB4FF, bien #79C28A, cuidado #E2A84A, te pasaste #EE8A7A.
+- **Jerarquía de colores (fija):** dorado = el tiempo y los títulos (Cobrás en, títulos de capítulo, capitulares, folios); azul = la plata disponible (Hoy podés gastar, Tenés, te quedan de la semana, para gastar); verde = lo guardado y «vas bien» (Guardás, ahorraste); naranja = solo acciones (+ Gasto, Sellar, Guardar, micrófono), nunca texto que informa; rojo = te pasaste. Lo elegido (la semana, el día de cobro) va con relleno `--sel` (azul tinta) y letra `--on-sel`, con una línea dorada; las cintas de lo elegido son doradas.
+- Tinta #1C2440 (secundaria #4A5170). Dorado `--oro` solo en títulos y números grandes (degradado `--oro-deg`); texto chico dorado `--oro-t`. Botones de acción: relleno naranja `--cta` con letra `--on-cta`. Enlaces `--azul`. Estados `--bien`, `--ojo`, `--mal`, siempre con ícono o texto. Los nombres viejos (`--sky`, `--mint`…) siguen existiendo con la paleta del libro.
+- **Contraste: `tests/contraste.test.js` exige AA** (4,5:1 texto sobre el papel y dentro de los recuadros, lo elegido y los botones; 3:1 títulos dorados grandes) en los dos papeles. Si un color no pasa, se ajusta la luminosidad y se conserva el tono.
+- Escalas fijas: espacios `--e1…--e6` (4/8/12/16/24/32) y letra `--t1…--t8`. Letra (2.7): títulos y números grandes en **Fraunces** variable (`vendor/fraunces-5.3.0/`, con `font-variation-settings:'SOFT' 100,'WONK' 0` en `html`; números en 600); todo el texto, etiquetas y botones en **Nunito** variable (`vendor/nunito-5.3.0/`). Las etiquetas chicas («Cobrás en», «capítulo I · …», «nota al margen») van en Nunito 600 a 13–14 px con espaciado ≤ 0,04em: nada de serif espaciada en chico. Las dos letras están en el service worker. Números `lining-nums tabular-nums` (el atajo `font:` las reinicia: hay una regla con `!important`).
 - `--cielo` tiene 8 capas: todo `background-size` que lo use repite el tamaño 8 veces (si no, aparecen bandas).
 - Tema: sigue al teléfono; se fuerza en Ajustes → Apariencia (pa-tema).
 

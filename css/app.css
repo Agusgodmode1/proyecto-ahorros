@@ -987,3 +987,82 @@ input[type=number],input[type=date],input[type=text],input[type=time],select{min
 .tour-n{font-size:13px;font-weight:700;color:var(--muted)}
 .tour-bx .row-btns{display:flex;align-items:center;gap:8px;margin-top:6px}
 .tour-sp{flex:1}
+
+/* =====================================================================
+   Libro del Ahorro 2.0, etapa 2: capítulos.
+   - Barra de abajo: lomos/marcapáginas con número romano (no íconos).
+   - Cada capítulo lleva su encabezado («capítulo II · semanas», data-cap).
+   - Hoy (cap. I): los días para cobrar bien grandes; «Hoy podés gastar» de tamaño medio.
+   ===================================================================== */
+.v2{--f-libro:'Cormorant Garamond','Iowan Old Style',Palatino,Georgia,serif}
+.v2 .indice-btn{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 14px 0 10px;border:0;border-radius:99px;background:var(--surface);color:var(--ink);font:600 15px var(--f-body);cursor:pointer}
+.v2 .indice-btn svg{width:22px;height:22px;color:var(--sky)}
+.v2 .hero-top{align-items:center}
+.v2 .hero-hi{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v2 .cap-kick{margin:10px 2px 0;font:600 16px/1.2 var(--f-libro);letter-spacing:.14em;color:var(--sky);font-variant-numeric:lining-nums}
+.v2[data-vista="otra"] .cap-kick{display:none}
+.v2 .hero h1{font:700 clamp(30px,9vw,40px)/1.05 var(--f-libro);letter-spacing:0;margin:2px 0 0}
+.v2 .en-uso .hero h1,.v2.en-uso .hero h1{display:none}
+.v2 main>section[data-cap]::before{content:attr(data-cap);display:block;margin:0 2px -6px;font:600 15px/1.2 var(--f-libro);letter-spacing:.16em;color:var(--c,var(--sky))}
+.v2 main>#p-resumen::before{display:none}
+.v2 .ph-t{font-family:var(--f-libro);font-weight:700;letter-spacing:0}
+
+/* Hoy: el cobro manda */
+.v2 .hero{grid-template-areas:"top top" "cd cd" "hoy hoy" "saldo saldo" "ch ch" "mini mini"}
+.v2 .hero-chips{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto}
+.v2 .cd{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"l l" "v seg" "v d";align-items:end;column-gap:18px;row-gap:4px;padding:18px 20px 20px}
+.v2 .cd-l{grid-area:l}
+.v2 .cd-v{grid-area:v;flex-direction:row;align-items:baseline;gap:8px}
+.v2 .cd-n{font:700 clamp(104px,34vw,150px)/.8 var(--f-libro);letter-spacing:-.02em;font-variant-numeric:lining-nums}
+.v2 .cd-t{font:700 22px var(--f-libro);align-self:flex-end;margin-bottom:6px}
+.v2 .cd-seg{grid-area:seg;align-self:end;margin-bottom:4px}
+.v2 .cd-d{grid-area:d;font-size:15px}
+.v2 .hoy-hero{background:var(--surface);border-radius:var(--r-l);padding:16px 18px 18px}
+.v2 .hoy-hero .hh-n{font:700 clamp(44px,13vw,58px)/1 var(--f-libro);letter-spacing:-.01em;margin:6px 0 4px -2px;font-variant-numeric:lining-nums}
+.v2 .hh-cur{font-size:.5em;margin-top:.12em}
+.v2 .hoy-hero .bar{background:var(--surface-2)}
+.v2 #hoy-out{display:flex;flex-direction:column;gap:14px}
+.v2 #hoy-out .frec .sub-l{font:600 15px var(--f-libro);letter-spacing:.12em;color:var(--sky)}
+/* Las semanas de cualquier formulario de gasto: solo nombre y monto (la categoría se elige sola por la nota) */
+.v2 [data-gform="q"] .f-cat,.v2 [data-gform="g"] .f-cat{display:none}
+
+/* Fin del capítulo */
+.v2 .fin-cap{display:grid;gap:8px;padding:22px 20px;border-radius:var(--r-l);background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--sky)}
+.v2 .fin-cap .cap-kick{margin:0}
+.v2 .fin-cap h2{margin:0;font:700 32px/1.05 var(--f-libro)}
+.v2 .fin-n{margin:4px 0 0;font-size:17px;color:var(--muted)}
+.v2 .fin-n b{display:block;font:700 clamp(44px,13vw,60px)/1 var(--f-libro);color:var(--mint);font-variant-numeric:lining-nums}
+.v2 .fin-s{margin:0;color:var(--muted)}
+.v2 .fin-s b{color:var(--ink)}
+
+/* Ajustes del pacto */
+.v2 .pacto-card{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--sky) 55%,transparent)}
+.v2 .pacto-card h2{font:700 26px/1.1 var(--f-libro)}
+.v2 .pacto-form{display:grid;gap:14px}
+.v2 .pa-prev{margin:0;font-size:16px;color:var(--muted)}
+.v2 .pa-prev b{color:var(--ink)}
+.v2 .pa-ojo{color:var(--sun)}
+.v2 .pacto-card .btn:disabled{opacity:.45}
+
+/* Barra de capítulos: lomos con número romano */
+.v2 .tab.lomo{position:relative;gap:1px}
+.v2 .lomo-n{font:700 19px/1 var(--f-libro);color:var(--muted)}
+.v2 .lomo-t{font-size:11px;font-weight:600}
+.v2 .tab.lomo[aria-selected="true"] .lomo-n{color:var(--c)}
+@media (max-width:767px){
+  .v2 .tab.lomo{min-height:46px;padding:6px 0 5px;border-radius:12px 12px 6px 6px}
+  .v2 .tab.lomo[aria-selected="true"]{background:var(--c-soft)}
+  /* el marcapáginas del capítulo abierto: una cinta que asoma por arriba */
+  .v2 .tab.lomo[aria-selected="true"]::before{content:"";position:absolute;left:50%;top:-12px;width:12px;height:16px;margin-left:-6px;background:var(--c);clip-path:polygon(0 0,100% 0,100% 100%,50% 72%,0 100%)}
+}
+@media (min-width:768px){.v2 .tab.lomo{flex-direction:column}}
+@media (max-width:360px){.v2 .tab.lomo .lomo-t{display:none}}
+@media (max-width:360px){.v2 .tab.lomo .lomo-n{display:block}}
+/* Fin del ciclo: la tarjeta va arriba de todo y «Hoy podés gastar» se esconde (ya no corre) */
+.v2 .hero{grid-template-areas:"top top" "fin fin" "cd cd" "hoy hoy" "saldo saldo" "ch ch" "mini mini"}
+.v2 .cierre-aviso{grid-area:fin}
+.v2 .cierre-aviso:empty{display:none}
+.v2[data-vista="otra"] .cierre-aviso{display:none}
+.v2.fin-ciclo .hoy-hero{display:none}
+.v2 .cd-n.txt{font-size:clamp(60px,19vw,84px)}
+@media (max-width:430px){.v2 .hero-hi{display:none}.v2 .hero-top .simple-btn{margin-left:auto}}

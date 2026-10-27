@@ -11,7 +11,10 @@ import {aniosSinFeriados} from '../logica/avisos.js';
 import {ritmoDelMes,minimoDe} from '../logica/mes.js';
 import {sensibilidadDolar} from '../logica/recibos.js';
 import {formGasto,initFormsGasto,leerForm,avisoAnotado,guardarGasto,borrarGasto,itemGasto,chipsFrecuentes,anotarFrecuente} from './gastos.js';
-import {editarGasto} from './semanas.js';
+import {editarGasto,resetWeekSel} from './semanas.js';
+import {cicloTerminado,resumenCiclo,cerrarCiclo} from '../logica/ciclo.js';
+import {abrirLibro} from './libro.js';
+import {irAlPacto} from './indice.js';
 
 function rankTxt(s){
   var r=bizRank(s),d=parse(s);
@@ -41,7 +44,7 @@ function heroChips(pc){
         +(pc.ajuste&&pc.ajuste.estado==='minimo'?'<span class="hh-s">El objetivo ya no se alcanza: esto cuida tu mínimo de '+money(pc.ajuste.minimo)+'.</span>':'')
         +(pc.ajuste&&pc.ajuste.estado==='nada'?'<span class="hh-s neg">Para tu mínimo faltan '+money(pc.ajuste.falta)+' aunque no gastes nada más.</span>':'')
         +'<span class="bar'+(w.left<0?' over':'')+'" role="img" aria-label="Gastaste el '+Math.round(pct)+'% de la semana"><i style="width:'+pct+'%"></i></span>';
-    }else h+='<span class="hh-s">'+(t>=state.plan.cobro?'Ya cobraste: cerrá el mes en Logros para arrancar uno nuevo.':'Hoy está fuera de las fechas de tu plan.')+'</span>';
+    }else h+='<span class="hh-s">'+(t>=state.plan.cobro?'Llegó el cobro: empezá tu pacto nuevo acá abajo.':'Hoy está fuera de las fechas de tu plan.')+'</span>';
     el.innerHTML=h;
   }
   heroMini(pc,H);
@@ -61,14 +64,26 @@ function renderAlertaMeta(pc){
   el.innerHTML='<div class="banner alerta" role="alert"><p><b>Esa meta no se puede.</b> Tenés '+money(d)+', así que lo máximo que podés guardar es '+money(mx)+' y no los '+money(ped)+' que pusiste. Bajá la meta o actualizá tu saldo si tenés más plata.</p>'
     +'<span class="row-btns">'+(p.modo==='monto'&&mx>=1?'<button class="btn" type="button" id="meta-bajar" data-mx="'+Math.floor(mx)+'">Guardar '+money(Math.floor(mx))+'</button>':'')+'<button class="btn quiet" type="button" id="meta-plan">Cambiar la meta</button></span></div>';
 }
-/* Día de cobro: resumen de lo que quedó sin gastar frente a la meta y el botón para cerrar el mes (alimenta Logros) */
+/* Fin del capítulo: el día de cobro, el libro resume el ciclo (lo ahorrado y la racha) y ofrece un pacto nuevo.
+   El pacto nuevo cierra el mes en el historial (igual que «Cerrar el mes» de Logros) y vuelve a hacer las 3 preguntas. */
 function renderCierre(pc){
   var el=$('#cierre-aviso');if(!el)return;
-  var st=ctx.state,p=st.plan,t=today();
-  if(st.ejemplo||!(num(p.monto)>0)||t<p.cobro){el.innerHTML='';return}
-  var sobra=Math.round(maxAhorro(st,pc)),meta=Math.round(pc.ahorro),txt;
-  txt=sobra>=meta?'¡Lo lograste! Te quedaron '+money(sobra)+' sin gastar y tu meta era '+money(meta)+'.':'Te quedaron '+money(sobra)+' sin gastar y tu meta era '+money(meta)+': faltaron '+money(meta-sobra)+'.';
-  el.innerHTML='<div class="banner cierre"><p><b>Llegó el día de cobro.</b> '+txt+' Cerrá el mes para guardarlo en tus logros y arrancar el siguiente.</p><button class="btn primary" type="button" id="cierre-ir">Cerrar el mes</button></div>';
+  var st=ctx.state,t=today();
+  var fin=cicloTerminado(st,t);document.documentElement.classList.toggle('fin-ciclo',fin);
+  if(!fin){el.innerHTML='';return}
+  var r=resumenCiclo(st,t);
+  var tit=r.cumplido?'¡Cumpliste el pacto!':r.minimoOk?'Llegaste a tu mínimo':'Se terminó este capítulo';
+  el.innerHTML='<section class="fin-cap" aria-labelledby="fin-t"><p class="cap-kick">fin del capítulo</p><h2 id="fin-t">'+tit+'</h2>'
+    +'<p class="fin-n">Ahorraste <b>'+money(r.ahorrado)+'</b></p>'
+    +'<p class="fin-s">'+(r.racha>0?'Tu racha va en <b>'+r.racha+(r.racha===1?' mes':' meses')+'</b>. ':'Esta vez no sumaste a la racha: el próximo pacto es otra oportunidad. ')+'Tu meta era '+money(r.meta)+'.</p>'
+    +'<div class="row-btns"><button class="btn primary" type="button" id="ciclo-nuevo">Empezar un pacto nuevo</button><button class="btn quiet" type="button" id="cierre-ir">Cerrarlo a mano en Logros</button></div></section>';
+}
+function pactoNuevo(){
+  var st=ctx.state,r=resumenCiclo(st,today());
+  abrirLibro({modo:'ciclo',estado:st,total:r.total,sobra:r.ahorrado,cobro:r.cobro,real:r.real,
+    antes:function(s){cerrarCiclo(s,today())},
+    listo:function(){resetWeekSel();ctx.syncInputs();ctx.persist();ctx.tab='resumen';ctx.renderAll();toast('Empieza un capítulo nuevo. Tu racha va en '+r.racha+(r.racha===1?' mes.':' meses.'))},
+    alCerrar:function(){}});
 }
 /* Debajo de la portada: lo que gastaste hoy (o, en vista simple, tus últimos 3 gastos). Anotar se hace desde la hoja. */
 function renderHoy(pc){
@@ -81,9 +96,9 @@ function renderHoy(pc){
   }else{lista=state.gastos.filter(function(g){return g.fecha===t});tit='Gastaste hoy'}
   if(!lista.length){
     var vacio='<div class="card stack hoy tone-mint"><h2>'+(simple?'Tus últimos gastos':'Todavía no anotaste gastos')+'</h2><p class="note">Tocá «+ Gasto» o el micrófono y decí, por ejemplo, «gasté 350 en un café». Cada gasto baja lo que podés gastar hoy.</p></div>';
-    el.innerHTML=simple||(!state.gastos.length&&!state.ejemplo)?vacio:'';return;
+    el.innerHTML=(simple?'':chipsFrecuentes('h'))+(simple||(!state.gastos.length&&!state.ejemplo)?vacio:'');return;
   }
-  el.innerHTML='<div class="card stack hoy tone-mint"><h2>'+tit+'</h2><ul class="list glist">'+lista.map(function(g){return itemGasto(g,g.fecha===t?'hoy':fCorta(g.fecha))}).join('')+'</ul></div>';
+  el.innerHTML=(simple?'':chipsFrecuentes('h'))+'<div class="card stack hoy tone-mint"><h2>'+tit+'</h2><ul class="list glist">'+lista.map(function(g){return itemGasto(g,g.fecha===t?'hoy':fCorta(g.fecha))}).join('')+'</ul></div>';
 }
 /* Vista simple: solo lo esencial (se recuerda en este celular) */
 var VS='pa-simple';
@@ -136,7 +151,7 @@ export function renderCountdown(){
   var on=tot>0?Math.max(0,Math.min(12,Math.round(12*pas/tot))):0,seg='';
   if(d<=0)on=12;
   for(var i=0;i<12;i++)seg+='<i'+(i<on?' class="on"':'')+'></i>';
-  el.innerHTML='<span class="cd-l">'+lab+'</span><span class="cd-v"><span class="cd-n">'+esc(big)+'</span><span class="cd-t">'+esc(small)+'</span></span><span class="cd-seg" aria-hidden="true">'+seg+'</span><span class="cd-d">'+esc(fLarga(state.plan.cobro))+'</span>';
+  el.innerHTML='<span class="cd-l">'+lab+'</span><span class="cd-v"><span class="cd-n'+(d>0?'':' txt')+'">'+esc(big)+'</span><span class="cd-t">'+esc(small)+'</span></span><span class="cd-seg" aria-hidden="true">'+seg+'</span><span class="cd-d">'+esc(fLarga(state.plan.cobro))+'</span>';
   el.setAttribute('aria-label',(d>0?d+' '+small+' para cobrar':(d===0?'Cobrás hoy':'Ya cobraste'))+', '+fLarga(state.plan.cobro));
 }
 
@@ -218,7 +233,7 @@ function syncMontoCampo(pc){
 export function syncPlan(){
   var p=ctx.state.plan;
   /* El formulario del plan arranca plegado cuando ya está configurado */
-  var aj=$('#plan-aj');if(aj)aj.open=!(num(p.monto)>0);
+  var aj=$('#plan-aj');if(aj)aj.open=false;
   syncMontoCampo();
   $('#in-inicio').value=p.inicio;$('#in-cobro').value=p.cobro;
   syncAhorro();cobroNote();
@@ -279,19 +294,10 @@ function onPlanInput(){
   p.inicio=ini;p.cobro=cob;
   cobroNote();ahorroNote();ctx.persist();ctx.renderAll();
 }
-function abrirPlan(){
-  ctx.go('resumen');var aj=$('#plan-aj');aj.open=true;
-  try{aj.scrollIntoView({block:'start',behavior:'smooth'})}catch(er){}
-  var m=$('#in-monto');if(m)setTimeout(function(){m.focus()},300);
-}
-/* Desde «Guardás»: abre el plan y deja el cursor en la meta de ahorro */
-function abrirMeta(){
-  if(!(num(ctx.state.plan.monto)>0)){abrirPlan();return}
-  ctx.go('resumen');var aj=$('#plan-aj');aj.open=true;
-  var m=ctx.state.plan.modo==='monto'?$('#in-ahorro'):$('#in-pct');
-  try{(m.closest('.field')||aj).scrollIntoView({block:'center',behavior:'smooth'})}catch(er){}
-  setTimeout(function(){if(m&&!m.closest('[hidden]')){m.focus();try{m.select()}catch(er){}}},300);
-}
+/* El plan se cambia en Ajustes del pacto */
+function abrirPlan(){irAlPacto('tenes')}
+/* Desde «Guardás»: Ajustes del pacto, con el cursor en el ahorro */
+function abrirMeta(){irAlPacto('ahorro')}
 /* ---------- Actualizar saldo: decís cuánta plata tenés y la app anota la diferencia ---------- */
 function saldoPrev(){
   var st=ctx.state,i=$('#saldo-in'),pv=$('#saldo-prev');if(!i||!pv)return;
@@ -351,11 +357,13 @@ export function initPlan(){
   $('#hero-chips').addEventListener('click',function(e){if(e.target.closest('#saldo-abrir'))abrirSaldo();if(e.target.closest('#ahorro-abrir'))abrirMeta()});
   initGasto();
   $('#cierre-aviso').addEventListener('click',function(e){
+    if(e.target.closest('#ciclo-nuevo')){pactoNuevo();return}
     if(!e.target.closest('#cierre-ir'))return;
     ctx.go('logros');setTimeout(function(){var c=$('#cierre-card');if(c)try{c.scrollIntoView({block:'start',behavior:'smooth'})}catch(er){}},120);
   });
   pr.addEventListener('toggle',function(e){var f=e.target.closest&&e.target.closest('[data-fold]');if(f&&e.target===f)plegados[f.getAttribute('data-fold')]=f.open},true);
   pr.addEventListener('click',function(e){
+    var fr=e.target.closest('#hoy-out [data-frec]');if(fr){anotarFrecuente(Number(fr.getAttribute('data-frec')),today());return}
     var dg=e.target.closest('#hoy-out [data-delg]');if(dg){borrarGasto(dg.getAttribute('data-delg'));return}
     var eg=e.target.closest('#hoy-out [data-editg]');if(eg){var id=eg.getAttribute('data-editg'),w=ctx.state.gastos.filter(function(g){return g.id===id})[0];if(w)editarGasto(id)}
   });

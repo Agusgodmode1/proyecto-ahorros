@@ -231,3 +231,29 @@
   .lb-tinta .w{animation:none;opacity:1;transform:none}
   .lb-btn,.lb-dia{transition:none}
 }
+
+/* ---------- Índice del libro (2.0, etapa 2) ---------- */
+.indice{position:fixed;inset:0;z-index:58;display:flex;justify-content:center;background:rgba(3,5,4,.72);
+  padding:calc(10px + env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px));
+  color:var(--lb-tx);font:400 17px/1.5 var(--lb-sans)}
+.indice[hidden]{display:none}
+.indice *{font-variant-numeric:lining-nums tabular-nums!important}
+.indice-pag{position:relative;width:100%;max-width:520px;max-height:100%;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:14px;
+  padding:24px 22px 22px 26px;border-radius:3px 14px 14px 3px;transform-origin:left center;
+  background:var(--lb-fibra),linear-gradient(90deg,#0d110e 0,#161c17 4%,#141914 60%,#121712 100%);
+  box-shadow:0 18px 50px rgba(0,0,0,.7),inset 0 0 0 1px rgba(198,244,50,.06),inset 18px 0 22px -14px rgba(0,0,0,.9)}
+.ix-list{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.ix-list li{position:relative}
+.ix-i{appearance:none;width:100%;display:grid;grid-template-columns:40px auto minmax(12px,1fr) auto;align-items:baseline;gap:8px;min-height:58px;padding:12px 30px 12px 0;
+  background:none;border:0;border-radius:10px;color:var(--lb-tx);text-align:left;cursor:pointer;font:inherit;transition:transform .14s ease}
+.ix-i:active{transform:translateX(3px)}
+.ix-i:focus-visible{outline:2px solid var(--lb-lima);outline-offset:2px}
+.ix-n{font:700 20px/1 var(--lb-serif);color:var(--lb-lima);text-align:center}
+.ix-t{font:700 24px/1.1 var(--lb-serif)}
+.ix-dots{border-bottom:2px dotted rgba(169,179,166,.3);transform:translateY(-5px)}
+.ix-p{font-size:14.5px;color:var(--lb-tx2);text-align:right;max-width:46vw}
+/* las cintas: cada capítulo tiene la suya, la del capítulo abierto cuelga más larga */
+.ix-cinta{position:absolute;right:4px;top:-2px;width:14px;height:22px;background:var(--c,var(--lb-lima));opacity:.55;clip-path:polygon(0 0,100% 0,100% 100%,50% 76%,0 100%)}
+.ix-list li.actual .ix-cinta{height:44px;opacity:1;box-shadow:0 0 12px rgba(198,244,50,.3)}
+.ix-list li.actual .ix-t{color:var(--lb-lima-cl)}
+.ix-aj .ix-n{font-size:18px}

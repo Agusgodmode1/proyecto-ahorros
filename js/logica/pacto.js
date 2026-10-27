@@ -7,6 +7,7 @@
 import {num} from './util.js';
 import {iso,parse,addDays,diffDays,esFeriado,esLaborable,bizRank} from './fechas.js';
 import {planCalc,cobroDesde,cfgCobro} from './plan.js';
+import {disponible,maxAhorro,ajustarSaldo,deshacerAjuste} from './saldo.js';
 
 /* Por debajo de esto por día se avisa (sin bloquear): es poco para el día a día */
 export var DIA_BAJO=300;
@@ -107,3 +108,46 @@ export function mesCalendario(y,m,hoy){
 
 /* Texto corto de días: "1 día", "23 días" */
 export function diasTxt(a,b){var n=diffDays(a,b);return n+' '+(n===1?'día':'días')}
+
+/* ---------- Ajustes del pacto: cambiar los tres datos a mitad de camino ----------
+   d = {tenes, ahorro, cobro}. «tenes» es la plata que tenés de verdad hoy: si es distinta de lo anotado,
+   pasa por ajustarSaldo (gasto «Ajuste de saldo» o plata que entró), igual que «Actualizar saldo».
+   Topes: nunca negativo y el ahorro no pasa de lo que podés guardar (tenés − fijos que faltan pagar). */
+function copia(x){return JSON.parse(JSON.stringify(x))}
+/* Los pagos de los fijos se guardan por fecha de cobro: si cambia el cobro, pasan a la fecha nueva */
+function moverPagos(st,de,a){
+  if(de===a||!st.fijosPagos||!st.fijosPagos[de]||st.fijosPagos[a])return false;
+  st.fijosPagos[a]=st.fijosPagos[de];delete st.fijosPagos[de];return true;
+}
+export function previaAjuste(st,d,hoy){
+  var e={},tenes=num(d.tenes),ahorro=num(d.ahorro);
+  if(d.tenes===''||d.tenes===null||d.tenes===undefined||!isFinite(tenes)||tenes<0)e.tenes='Poné cuánta plata tenés hoy. No puede ser negativa.';
+  if(d.ahorro===''||d.ahorro===null||d.ahorro===undefined||!isFinite(ahorro)||ahorro<0)e.ahorro='Poné cuánto querés guardar (puede ser cero).';
+  if(!fechaOk(d.cobro))e.cobro='Elegí qué día cobrás.';
+  else if(d.cobro<=hoy)e.cobro='El día de cobro tiene que ser después de hoy.';
+  else if(d.cobro<=st.plan.inicio)e.cobro='El día de cobro tiene que ser después del inicio del plan.';
+  else if(diffDays(st.plan.inicio,d.cobro)>120)e.cobro='El plan cubriría más de 120 días. Revisá la fecha.';
+  var c=copia(st);
+  if(!e.cobro){moverPagos(c,c.plan.cobro,d.cobro);c.plan.cobro=d.cobro}
+  if(!e.tenes)ajustarSaldo(c,tenes,hoy);
+  var mx=maxAhorro(c,planCalc(c));
+  if(!e.ahorro&&ahorro>mx+0.5)e.ahorro='max'; /* la pantalla dice el máximo con money() */
+  c.plan.modo='monto';c.plan.ahorro=Math.round(Math.min(Math.max(0,ahorro),mx));
+  var pc=planCalc(c),resto=pc.gastar-pc.spentInPlan,dias=Math.max(1,diffDays(hoy<c.plan.inicio?c.plan.inicio:hoy,c.plan.cobro));
+  return {ok:!Object.keys(e).length,errores:e,maxAhorro:mx,disponible:disponible(c,pc),gastar:resto,porDia:resto/dias,dias:dias,bajo:resto/dias<DIA_BAJO};
+}
+/* Aplica el ajuste y devuelve lo necesario para «Deshacer» (en v.deshacer). Si no es válido, no toca nada. */
+export function aplicarAjuste(st,d,hoy){
+  var v=previaAjuste(st,d,hoy);if(!v.ok)return v;
+  var p=st.plan,u={cobro:p.cobro,ahorro:p.ahorro,modo:p.modo,movio:false};
+  u.movio=moverPagos(st,p.cobro,d.cobro);p.cobro=d.cobro;
+  u.saldo=ajustarSaldo(st,num(d.tenes),hoy);
+  p.modo='monto';p.ahorro=Math.round(num(d.ahorro));
+  v.deshacer=u;return v;
+}
+export function deshacerAjustePacto(st,u){
+  var p=st.plan;
+  if(u.saldo)deshacerAjuste(st,u.saldo);
+  if(u.movio)moverPagos(st,p.cobro,u.cobro);
+  p.cobro=u.cobro;p.ahorro=u.ahorro;p.modo=u.modo;
+}

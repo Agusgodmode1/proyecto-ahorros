@@ -1,7 +1,7 @@
 /* Service worker: guarda la app para que funcione sin internet y avisa cuando hay una versión nueva.
    CADA CAMBIO EN LA APP: subí VERSION (y la de js/version.js). Así cambia el nombre del caché y el
    teléfono descarga la versión nueva. Si agregás un archivo, sumalo a ARCHIVOS (una prueba lo controla). */
-var VERSION='2.0.0';
+var VERSION='2.1.0';
 var CACHE='ahorros-'+VERSION;
 var FUENTES='ahorros-fuentes';
 var ARCHIVOS=[
@@ -16,6 +16,8 @@ var ARCHIVOS=[
   'js/version.js',
   'js/logica/aguinaldo.js',
   'js/logica/categorias.js',
+  'js/logica/capitulos.js',
+  'js/logica/ciclo.js',
   'js/logica/avisos.js',
   'js/logica/control.js',
   'js/logica/csv.js',
@@ -50,6 +52,7 @@ var ARCHIVOS=[
   'js/ui/metas.js',
   'js/ui/inicio.js',
   'js/ui/libro.js',
+  'js/ui/indice.js',
   'js/ui/perfil.js',
   'js/ui/pin.js',
   'js/ui/plan.js',

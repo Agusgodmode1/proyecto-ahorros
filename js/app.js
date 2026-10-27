@@ -14,6 +14,9 @@ import {initVoz} from './ui/voz.js';
 import {abrirPerfil,initPerfil,resumenPerfil} from './ui/perfil.js';
 import {abrirInicio,initInicio} from './ui/inicio.js';
 import {abrirLibro,initLibro} from './ui/libro.js';
+import {initIndice,renderPacto} from './ui/indice.js';
+import {CAPITULOS,capituloDe,vecina} from './logica/capitulos.js';
+import {DIAL,MESL,parse} from './logica/fechas.js';
 import {initTour,iniciarTour,tourSiPendiente} from './ui/tour.js';
 import {aplicarFeriados,renderFeriados,initFeriados} from './ui/feriados.js';
 import {prepararGuardado,juntar} from './logica/sync.js';
@@ -47,19 +50,29 @@ async function flush(){
 function flushPendiente(){if(timer)flush()}
 
 /* ---------- Pestañas ---------- */
-var TABS=[['resumen','Plan','tone-sky','plan'],['semanas','Semanas','tone-mint','semanas'],['fijos','Fijos','tone-teal','fijos'],['sueldo','Sueldo','tone-grape','sueldo'],['gastos','Tarjeta','tone-coral','gastos'],['logros','Logros','tone-sun','logros']];
+/* Capítulos: la barra de abajo son los lomos (marcapáginas) del libro, con su número romano */
 var TK='pa-tab';
 function renderTabs(pc){
   var tab=ctx.tab,cw='w'+curWeek(pc,today()),h='',isW=/^w\d+$/.test(tab);
-  TABS.forEach(function(t){
-    var id=t[0]==='semanas'?(isW?tab:cw):t[0];
-    var sel=t[0]==='semanas'?isW:tab===t[0];
-    h+='<button class="tab '+t[2]+'" role="tab" type="button" data-tab="'+id+'" aria-selected="'+sel+'">'+ICON[t[3]]+'<span>'+t[1]+'</span></button>';
+  CAPITULOS.forEach(function(c){
+    var id=c.id==='semanas'?(isW?tab:cw):c.id;
+    var sel=c.id==='semanas'?isW:tab===c.id;
+    h+='<button class="tab lomo '+c.tono+'" role="tab" type="button" data-tab="'+id+'" aria-selected="'+sel+'" aria-label="Capítulo '+c.n+': '+c.t+'"><span class="lomo-n" aria-hidden="true">'+c.n+'</span><span class="lomo-t">'+c.t+'</span></button>';
   });
   $('#tablist').innerHTML=h;
 }
+/* El encabezado de cada capítulo («capítulo II · semanas») */
+var PANELES={resumen:'#p-resumen',fijos:'#p-fijos',sueldo:'#p-sueldo',gastos:'#p-gastos',logros:'#p-logros',ajustes:'#p-ajustes'};
+function marcarCapitulos(){
+  Object.keys(PANELES).concat(['semanas']).forEach(function(k){
+    var el=$(k==='semanas'?'#p-semana':PANELES[k]),c=capituloDe(k);
+    if(el)el.setAttribute('data-cap',c?'capítulo '+c.n+' · '+c.t.toLowerCase():'fuera de los capítulos');
+  });
+  var d=parse(today()),k=$('#cap-hoy');
+  if(k)k.textContent='capítulo I · '+DIAL[d.getDay()]+' '+d.getDate()+' de '+MESL[d.getMonth()];
+}
 function showPanels(){
-  var tab=ctx.tab;
+  var tab=ctx.tab;marcarCapitulos();
   document.documentElement.setAttribute('data-vista',tab==='resumen'?'plan':'otra');
   $('#p-resumen').hidden=tab!=='resumen';
   $('#p-semana').hidden=!/^w\d+$/.test(tab);
@@ -85,15 +98,49 @@ function renderAll(){
   if(ctx.tab==='gastos')renderGastos();
   if(ctx.tab==='fijos')renderFijos(pc);
   if(ctx.tab==='logros')renderLogros(pc);
-  if(ctx.tab==='ajustes'){renderAjustes(guardado);renderFeriados();renderCategorias();renderAjustesPin();
+  if(ctx.tab==='ajustes'){renderPacto();renderAjustes(guardado);renderFeriados();renderCategorias();renderAjustesPin();
     document.querySelectorAll('[data-sobrante]').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-sobrante')===(ctx.state.plan.sobrante||'siguiente')))});renderCopias();$('#aj-perfil').innerHTML=resumenPerfil(ctx.state)}
   tourSiPendiente();
 }
+/* Orden de las páginas, para saber si pasar la hoja hacia adelante o hacia atrás */
+function orden(t){
+  if(/^w\d+$/.test(t))return 1+Number(t.slice(1))/100;
+  var i=['resumen','semanas','fijos','sueldo','gastos','logros','ajustes'].indexOf(t);return i<0?9:i;
+}
+function quieto(){try{return matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){return false}}
+/* Pasar la hoja: la página nueva entra girando apenas desde el lomo (≤ 22°), 380 ms */
+function pasarHoja(dir){
+  var m=document.querySelector('main');if(!m||!m.animate)return;
+  if(quieto()){m.animate([{opacity:.4},{opacity:1}],{duration:180});return}
+  m.animate(dir>0?[{transform:'perspective(1600px) translateX(28px) rotateY(-14deg)',opacity:.35},{transform:'none',opacity:1}]
+    :[{transform:'perspective(1600px) translateX(-28px) rotateY(10deg)',opacity:.35},{transform:'none',opacity:1}],
+    {duration:380,easing:'cubic-bezier(.25,.7,.25,1)',transformOrigin:'left center'});
+}
 function go(t){
   if(t==='semanas')t='w'+curWeek(planNow(),today());
+  var antes=ctx.tab;
   ctx.tab=t;renderAll();
+  if(antes!==t)pasarHoja(orden(t)>=orden(antes)?1:-1);
   var m=document.querySelector('main');
   if(m&&m.getBoundingClientRect().top<0){try{m.scrollIntoView({block:'start'})}catch(e){}}
+}
+/* Deslizar a los costados pasa de capítulo (y de semana en semana dentro de Semanas).
+   No se activa desde campos, listas que se deslizan, ni con una hoja abierta. */
+function initDeslizar(){
+  var x0=null,y0=0,t0=0;
+  var NO='input,textarea,select,.guia-grid,.frec-b,.wkpick,.days,.tablist,.sugs,.seg,.lb-rango,[data-nodeslizar]';
+  document.addEventListener('pointerdown',function(e){
+    var enMain=e.target.closest('main,.hero');
+    x0=(!enMain||e.target.closest(NO)||e.pointerType==='mouse'&&e.button!==0)?null:e.clientX;y0=e.clientY;t0=Date.now();
+  },{passive:true});
+  document.addEventListener('pointerup',function(e){
+    if(x0===null||!ctx.state)return;var dx=e.clientX-x0,dy=e.clientY-y0;x0=null;
+    if(Math.abs(dx)<80||Math.abs(dy)>Math.abs(dx)*.5||Date.now()-t0>900)return;
+    if(document.documentElement.classList.contains('voz-abierta')||document.documentElement.classList.contains('hoja'))return;
+    var pc=planNow(),n=vecina(ctx.tab,dx<0?1:-1,pc.weeks.length,curWeek(pc,today()));
+    if(n)go(n);
+  },{passive:true});
+  document.addEventListener('pointercancel',function(){x0=null});
 }
 function syncInputs(){syncPlan();syncSueldo();syncGastos()}
 
@@ -160,6 +207,7 @@ function initGlobal(){
       abrirLibro({modo:'nuevo',estado:nuevo,listo:function(st){reemplazar(st,'antes de borrar los datos de ejemplo')},alCerrar:function(){renderAll()}});
     }
   });
+  document.addEventListener('click',function(e){var d=e.target.closest('[data-discreto]');if(d){setDiscreto(d.getAttribute('data-discreto')==='1');marcarDiscreto();renderAll()}});
   /* Modo discreto: un toque tapa o muestra todos los montos */
   $('#discreto').addEventListener('click',function(){setDiscreto(!discreto.on);marcarDiscreto();renderAll();toast(discreto.on?'Montos ocultos':'Montos visibles')});
   document.addEventListener('visibilitychange',function(){
@@ -172,6 +220,7 @@ function initGlobal(){
 function marcarDiscreto(){
   var b=$('#discreto');b.setAttribute('aria-pressed',String(discreto.on));b.setAttribute('aria-label',discreto.on?'Mostrar los montos':'Ocultar los montos');
   document.documentElement.classList.toggle('discreto',discreto.on);
+  document.querySelectorAll('[data-discreto]').forEach(function(x){x.setAttribute('aria-pressed',String((x.getAttribute('data-discreto')==='1')===discreto.on))});
 }
 /* ---------- Arranque ---------- */
 function arrancar(st){
@@ -187,7 +236,7 @@ function arrancar(st){
 ctx.persist=persist;ctx.renderAll=renderAll;ctx.go=go;ctx.syncInputs=syncInputs;
 
 (async function boot(){
-  initPerfil();initInicio();initTour();initPin();initLibro();
+  initPerfil();initInicio();initTour();initPin();initLibro();initIndice();initDeslizar();
   registrarSW(function(){return ctx.state?flush():null});
   pedirPersistencia().then(function(p){guardado.persistente=p});
   var d=await cargar();

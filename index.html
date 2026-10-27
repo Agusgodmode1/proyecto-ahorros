@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Proyecto Ahorros</title>
+<title>El Libro del Ahorro</title>
 <meta name="description" content="Tu plan hasta el próximo sueldo: cuánto guardar, cuánto gastar por día y cuánto vas a cobrar.">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -35,6 +35,7 @@ document.getElementById('meta-tema').setAttribute('content',d?'#0D0D0D':'#1A72B5
 <div class="sbar" aria-hidden="true"></div>
 <div class="upd" id="upd" role="status" hidden><span>Hay una versión nueva</span><button class="btn primary" type="button">Actualizar</button></div>
 <div class="lb-mesa" id="libro" hidden role="dialog" aria-modal="true" aria-label="El Libro del Ahorro"></div>
+<div class="indice" id="indice" hidden role="dialog" aria-modal="true" aria-labelledby="ix-t"><div class="indice-pag" id="indice-box"></div></div>
 <div class="lb-hojas" id="lb-hojas" hidden role="dialog" aria-modal="true" aria-label="Prólogo del Libro del Ahorro"></div>
 
 <div class="pin" id="pin" hidden role="dialog" aria-modal="true" aria-labelledby="pin-t"><div class="pin-in stack" id="pin-box"></div></div>
@@ -47,10 +48,12 @@ document.getElementById('meta-tema').setAttribute('content',d?'#0D0D0D':'#1A72B5
 <div class="wrap" id="app" hidden>
   <header class="hero">
     <div>
-      <div class="hero-top"><p class="hero-hi" id="saludo">Hola</p><button class="simple-btn" type="button" id="modo-simple" aria-pressed="false">Vista simple</button><button class="hero-cog hero-eye" type="button" id="discreto" aria-pressed="false" aria-label="Ocultar los montos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="ojo-a" d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle class="ojo-a" cx="12" cy="12" r="3"/><path class="ojo-c" d="M3 3l18 18M10.6 5.6A9.7 9.7 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-3 3.8M6.6 6.7C3.9 8.4 2.5 12 2.5 12S6 18.5 12 18.5c1.8 0 3.3-.5 4.6-1.3M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg></button><button class="hero-cog" type="button" data-goto="ajustes" aria-label="Ajustes y respaldo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg></button></div>
-      <h1>Proyecto Ahorros</h1>
+      <div class="hero-top"><button class="indice-btn" type="button" id="indice-abrir" aria-label="Abrir el índice del libro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v16H5.5c-.8 0-1.5-.7-1.5-1.5Z"/><path d="M20 5.5c0-.8-.7-1.5-1.5-1.5H13v16h5.5c.8 0 1.5-.7 1.5-1.5Z"/><path d="M15.5 4v6l1.5-1.2 1.5 1.2V4"/></svg><span>Índice</span></button><p class="hero-hi" id="saludo">Hola</p><button class="simple-btn" type="button" id="modo-simple" aria-pressed="false">Vista simple</button><button class="hero-cog hero-eye" type="button" id="discreto" aria-pressed="false" aria-label="Ocultar los montos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="ojo-a" d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle class="ojo-a" cx="12" cy="12" r="3"/><path class="ojo-c" d="M3 3l18 18M10.6 5.6A9.7 9.7 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-3 3.8M6.6 6.7C3.9 8.4 2.5 12 2.5 12S6 18.5 12 18.5c1.8 0 3.3-.5 4.6-1.3M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg></button><button class="hero-cog" type="button" data-goto="ajustes" aria-label="Ajustes y respaldo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg></button></div>
+      <p class="cap-kick" id="cap-hoy"></p>
+      <h1>El Libro del Ahorro</h1>
       <p class="hero-sub">Tu plan hasta el próximo sueldo: cuánto guardar, cuánto podés gastar por día y cuánto vas a cobrar.</p>
     </div>
+    <div id="cierre-aviso" class="cierre-aviso"></div>
     <div class="cd" id="countdown" aria-live="polite"></div>
     <div class="hoy-hero" id="hoy-hero"></div>
     <form class="saldo-card tone-sky" id="saldo-card" autocomplete="off" hidden>
@@ -69,7 +72,6 @@ document.getElementById('meta-tema').setAttribute('content',d?'#0D0D0D':'#1A72B5
   <main>
     <!-- PLAN -->
     <section id="p-resumen" role="tabpanel" class="tone-sky stack">
-      <div id="cierre-aviso"></div>
       <div id="resp-aviso"></div>
       <div id="ritmo-aviso"></div>
       <div id="fer-aviso"></div>
@@ -86,62 +88,6 @@ document.getElementById('meta-tema').setAttribute('content',d?'#0D0D0D':'#1A72B5
         </div>
       </div>
 
-      <details class="plan-aj" id="plan-aj" open>
-      <summary><span class="pa-t">Ajustar mi plan</span><span class="pa-s" id="plan-aj-sum"></span></summary>
-      <div class="panel-head"><h2 class="ph-t">Tu plan hasta cobrar</h2><p class="ph-s">Completá los tres pasos. Con eso te digo cuánto podés gastar cada día y cada semana sin tocar lo que guardás.</p></div>
-
-      <div class="card">
-        <ol class="steps">
-          <li class="step"><span class="badge" aria-hidden="true">1</span>
-            <div class="field">
-              <label for="in-monto">¿Cuánta plata tenés hasta cobrar?</label>
-              <div class="money"><span>$</span><input id="in-monto" type="number" inputmode="numeric" min="0" step="1"></div>
-              <small>Lo que tenés ahora en la cuenta y en efectivo. Si lo cambiás, se recalcula todo, igual que con «Actualizar saldo» en la portada.</small>
-            </div>
-          </li>
-          <li class="step"><span class="badge" aria-hidden="true">2</span>
-            <div class="field">
-              <span class="lab" id="lab-pct">¿Cuánto querés guardar?</span>
-              <div class="seg" role="group" aria-label="Cómo definir el ahorro">
-                <button type="button" data-modo="monto">En pesos</button>
-                <button type="button" data-modo="pct">En porcentaje</button>
-              </div>
-              <div id="ahorro-monto-wrap" class="stack" style="gap:8px">
-                <div class="money"><span>$</span><input id="in-ahorro" type="number" inputmode="numeric" min="0" step="100" aria-label="Monto a guardar en pesos" placeholder="10000"></div>
-                <div class="seg" role="group" aria-label="Montos rápidos">
-                  <button type="button" data-ahorro="5000">5.000</button>
-                  <button type="button" data-ahorro="10000">10.000</button>
-                  <button type="button" data-ahorro="15000">15.000</button>
-                </div>
-              </div>
-              <div id="ahorro-pct-wrap" class="stack" style="gap:8px">
-                <div class="seg" role="group" aria-labelledby="lab-pct">
-                  <button type="button" data-pct="30">30%</button>
-                  <button type="button" data-pct="50">50%</button>
-                  <button type="button" data-pct="otro">Otro</button>
-                </div>
-                <div class="money suf" id="pct-otro-wrap" hidden><input id="in-pct" type="number" inputmode="numeric" min="0" max="100" step="1" aria-label="Porcentaje a guardar"><span>%</span></div>
-              </div>
-              <small id="ahorro-note"></small>
-              <div class="field min-field"><label for="in-minimo" class="sub-l">Mínimo aceptable (opcional)</label>
-                <div class="money" id="min-wrap"><span id="min-pre">$</span><input id="in-minimo" type="number" inputmode="numeric" min="0" step="any" placeholder="lo mismo que tu objetivo"></div>
-                <small id="minimo-note">Si llegás a esto, el mes ya cuenta como logrado. Lo de arriba es tu objetivo.</small></div>
-            </div>
-          </li>
-          <li class="step"><span class="badge" aria-hidden="true">3</span>
-            <div class="field">
-              <span class="lab">¿Desde cuándo y hasta cuándo?</span>
-              <div class="two-in">
-                <div class="field"><label for="in-inicio" class="sub-l">Desde</label><input id="in-inicio" type="date"></div>
-                <div class="field"><label for="in-cobro" class="sub-l">Cobrás el</label><input id="in-cobro" type="date"></div>
-              </div>
-              <small id="cobro-note"></small>
-            </div>
-          </li>
-        </ol>
-        <p class="err" id="plan-err" role="alert" hidden></p>
-      </div>
-      </details>
       <div id="resumen-out" class="stack"></div>
     </section>
 
@@ -373,10 +319,81 @@ document.getElementById('meta-tema').setAttribute('content',d?'#0D0D0D':'#1A72B5
     </section>
     <!-- AJUSTES Y RESPALDO -->
     <section id="p-ajustes" role="tabpanel" class="tone-sky stack" hidden>
-      <div class="panel-head"><h2 class="ph-t">Ajustes y respaldo</h2><p class="ph-s">Tus datos viven solo en este teléfono. Exportá un respaldo de vez en cuando y guardalo en Archivos o en iCloud.</p></div>
+      <div class="panel-head"><h2 class="ph-t">Ajustes del pacto</h2><p class="ph-s">Cambiá los tres datos de tu pacto cuando quieras: se recalcula todo. Más abajo, tu perfil y tus respaldos (tus datos viven solo en este teléfono).</p></div>
+      <div class="card stack pacto-card" id="pacto-card">
+        <div class="sec"><h2>Tu pacto</h2><p class="note" id="pa-nota"></p></div>
+        <form class="pacto-form" id="pacto-form" autocomplete="off" novalidate>
+          <div class="field"><label for="pa-tenes" class="sub-l">Tengo hoy</label><div class="money"><span>$</span><input id="pa-tenes" type="number" inputmode="decimal" min="0" step="any"></div><small>¿Gastaste algo sin anotarlo? Poné la plata que tenés de verdad y anoto la diferencia.</small></div>
+          <div class="field"><label for="pa-ahorro" class="sub-l">Quiero guardar</label><div class="money"><span>$</span><input id="pa-ahorro" type="number" inputmode="numeric" min="0" step="1"></div></div>
+          <div class="field"><label for="pa-cobro" class="sub-l">Cobro el</label><input id="pa-cobro" type="date"></div>
+          <p class="pa-prev" id="pa-prev" aria-live="polite"></p>
+          <p class="err" id="pa-err" role="alert" hidden></p>
+          <div class="row-btns"><button class="btn primary" type="submit" id="pa-ok">Guardar el pacto</button><button class="btn quiet" type="button" id="pa-reset">Dejarlo como estaba</button></div>
+        </form>
+      </div>
+      <details class="plan-aj" id="plan-aj" open>
+      <summary><span class="pa-t">Más opciones del plan</span><span class="pa-s" id="plan-aj-sum"></span></summary>
+      <p class="note">El ahorro en porcentaje, un mínimo aceptable y desde qué día cuenta el plan.</p>
+
+      <div class="card">
+        <ol class="steps">
+          <li class="step"><span class="badge" aria-hidden="true">1</span>
+            <div class="field">
+              <label for="in-monto">¿Cuánta plata tenés hasta cobrar?</label>
+              <div class="money"><span>$</span><input id="in-monto" type="number" inputmode="numeric" min="0" step="1"></div>
+              <small>Lo que tenés ahora en la cuenta y en efectivo. Si lo cambiás, se recalcula todo, igual que con «Actualizar saldo» en la portada.</small>
+            </div>
+          </li>
+          <li class="step"><span class="badge" aria-hidden="true">2</span>
+            <div class="field">
+              <span class="lab" id="lab-pct">¿Cuánto querés guardar?</span>
+              <div class="seg" role="group" aria-label="Cómo definir el ahorro">
+                <button type="button" data-modo="monto">En pesos</button>
+                <button type="button" data-modo="pct">En porcentaje</button>
+              </div>
+              <div id="ahorro-monto-wrap" class="stack" style="gap:8px">
+                <div class="money"><span>$</span><input id="in-ahorro" type="number" inputmode="numeric" min="0" step="100" aria-label="Monto a guardar en pesos" placeholder="10000"></div>
+                <div class="seg" role="group" aria-label="Montos rápidos">
+                  <button type="button" data-ahorro="5000">5.000</button>
+                  <button type="button" data-ahorro="10000">10.000</button>
+                  <button type="button" data-ahorro="15000">15.000</button>
+                </div>
+              </div>
+              <div id="ahorro-pct-wrap" class="stack" style="gap:8px">
+                <div class="seg" role="group" aria-labelledby="lab-pct">
+                  <button type="button" data-pct="30">30%</button>
+                  <button type="button" data-pct="50">50%</button>
+                  <button type="button" data-pct="otro">Otro</button>
+                </div>
+                <div class="money suf" id="pct-otro-wrap" hidden><input id="in-pct" type="number" inputmode="numeric" min="0" max="100" step="1" aria-label="Porcentaje a guardar"><span>%</span></div>
+              </div>
+              <small id="ahorro-note"></small>
+              <div class="field min-field"><label for="in-minimo" class="sub-l">Mínimo aceptable (opcional)</label>
+                <div class="money" id="min-wrap"><span id="min-pre">$</span><input id="in-minimo" type="number" inputmode="numeric" min="0" step="any" placeholder="lo mismo que tu objetivo"></div>
+                <small id="minimo-note">Si llegás a esto, el mes ya cuenta como logrado. Lo de arriba es tu objetivo.</small></div>
+            </div>
+          </li>
+          <li class="step"><span class="badge" aria-hidden="true">3</span>
+            <div class="field">
+              <span class="lab">¿Desde cuándo y hasta cuándo?</span>
+              <div class="two-in">
+                <div class="field"><label for="in-inicio" class="sub-l">Desde</label><input id="in-inicio" type="date"></div>
+                <div class="field"><label for="in-cobro" class="sub-l">Cobrás el</label><input id="in-cobro" type="date"></div>
+              </div>
+              <small id="cobro-note"></small>
+            </div>
+          </li>
+        </ol>
+        <p class="err" id="plan-err" role="alert" hidden></p>
+      </div>
+      </details>
       <div class="card stack">
-        <div class="sec"><h2>Mis datos</h2><p class="note">Tu plata de hoy, tu meta de ahorro y tus gastos fijos. Al cambiarlos, se recalcula todo.</p></div>
-        <div class="row-btns"><button class="btn primary" type="button" id="aj-datos">Editar mis datos</button><button class="btn" type="button" id="aj-tour">Ver el tour otra vez</button><button class="btn" type="button" id="aj-prologo">Releer el prólogo</button></div>
+        <div class="sec"><h2>El libro</h2><p class="note">Volvé a leer el prólogo o mirá otra vez cómo se usa.</p></div>
+        <div class="row-btns"><button class="btn" type="button" id="aj-prologo">Releer el prólogo</button><button class="btn" type="button" id="aj-tour">Ver el tour otra vez</button></div>
+      </div>
+      <div class="card stack">
+        <div class="sec"><h2>Modo discreto</h2><p class="note">Tapa todos los montos, por ejemplo si alguien mira tu pantalla. También con el ojo de arriba.</p></div>
+        <div class="seg" role="group" aria-label="Modo discreto" id="aj-discreto"><button type="button" data-discreto="0">Montos visibles</button><button type="button" data-discreto="1">Montos ocultos</button></div>
       </div>
       <div class="card stack">
         <div class="sec"><h2>Mi perfil</h2><p class="note" id="aj-perfil"></p></div>

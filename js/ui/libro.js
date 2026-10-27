@@ -98,10 +98,9 @@ var o=null,st=null,D=null,idx=0,PAGS=[],vista=null;
 
 function pagHTML(id){
   var n=PAGS.length,folio='<p class="lb-folio">— '+(idx+1)+' de '+n+' —</p>';
-  var cab='<div class="lb-cab"><span class="lb-cap">'+(id==='pacto'||id==='actual'?'el pacto':'prólogo')+'</span>'
-    +'<button class="lb-link" type="button" data-lb="cerrar-libro">'+(o.modo==='releer'?'Cerrar el libro':'')+'</button></div>';
-  if(o.modo!=='releer')cab=cab.replace('<button class="lb-link" type="button" data-lb="cerrar-libro"></button>','');
-  var h='',atras='<button class="lb-btn chico" type="button" data-lb="atras" aria-label="Página anterior">‹ Atrás</button>';
+  var ciclo=o.modo==='ciclo',cab='<div class="lb-cab"><span class="lb-cap">'+(ciclo?'pacto nuevo':id==='pacto'||id==='actual'?'el pacto':'prólogo')+'</span>'
+    +(o.modo==='releer'||ciclo?'<button class="lb-link" type="button" data-lb="cerrar-libro">'+(ciclo?'Ahora no':'Cerrar el libro')+'</button>':'')+'</div>';
+  var h='',atras=idx>0?'<button class="lb-btn chico" type="button" data-lb="atras" aria-label="Página anterior">‹ Atrás</button>':'';
   if(id==='p1'){
     h='<h1 class="lb-h lb-tinta" id="lb-h">'+tinta('Este libro tiene un solo propósito')+'</h1>'
       +'<p class="lb-cita">que generes un ahorro, por más mínimo que sea.</p>'+ORLA
@@ -114,7 +113,7 @@ function pagHTML(id){
       +'<div class="lb-acc">'+atras+'<button class="lb-btn si" type="button" data-lb="sig">'+(o.modo==='releer'?'Pasar la página':'Empezar')+'</button></div>';
   }else if(id==='q1'){
     h='<h1 class="lb-h lb-tinta" id="lb-h">'+tinta('¿Con cuánta plata empezás el desafío?')+'</h1>'
-      +'<p class="lb-p">Todo lo que tenés hoy, en la cuenta y en efectivo.</p>'
+      +'<p class="lb-p">'+(ciclo?'Te puse lo que te quedó del pacto anterior ('+money(o.sobra)+') más tu cobro '+(o.real?'':'estimado ')+'('+money(o.cobro)+'). Cambialo por lo que tengas de verdad.':'Todo lo que tenés hoy, en la cuenta y en efectivo.')+'</p>'
       +'<div class="lb-campo"><label for="lb-pesos">Tengo hoy</label><div class="lb-monto"><span>$</span><input id="lb-pesos" type="number" inputmode="decimal" min="0" step="any" placeholder="0" value="'+esc(D.pesos)+'"></div></div>'
       +'<label class="lb-check"><input type="checkbox" id="lb-conusd"'+(D.conUsd?' checked':'')+'> También tengo dólares</label>'
       +'<div class="lb-dos" id="lb-usd-box"'+(D.conUsd?'':' hidden')+'>'
@@ -298,14 +297,20 @@ function abrirHojas(){
   $('#libro').hidden=true;
 }
 
-/* opt: {modo:'nuevo'|'releer', estado, listo(estado), alImportar(estado), alEjemplo(), alCerrar()} */
+/* opt: {modo:'nuevo'|'releer'|'ciclo', estado, listo(estado), alImportar(estado), alEjemplo(), alCerrar(), antes(estado)}
+   'ciclo' (pacto nuevo al cobrar): sin portada ni prólogo, solo las 3 preguntas; total precargado (o.total = o.sobra + o.cobro)
+   y o.antes(estado) se llama justo antes de sellar (cierra el ciclo anterior). */
 export function abrirLibro(opt){
   o=opt;st=opt.estado;vista='portada';
   aplicarFeriados(st);
   var sg=sugerirCobro(st,today()),c=parse(sg.fecha);
   D={pesos:'',usd:'',cotiz:cotizacion(st)?String(cotizacion(st)):'',conUsd:false,ahorro:null,cobro:sg.fecha,mes:[c.getFullYear(),c.getMonth()]};
-  PAGS=o.modo==='releer'?['p1','p2','actual']:['p1','p2','q1','q2','q3','pacto'];
+  PAGS=o.modo==='releer'?['p1','p2','actual']:o.modo==='ciclo'?['q1','q2','q3','pacto']:['p1','p2','q1','q2','q3','pacto'];
   var m=$('#libro');
+  if(o.modo==='ciclo'){
+    D.pesos=String(Math.round(num(o.total))||'');D.ahorro=String(Math.round(num(st.plan.ahorro))||'');
+    document.documentElement.classList.add('voz-abierta','lb-abierto');vista='hojas';abrirHojas();return;
+  }
   m.innerHTML=htmlPortada(!!o.alEjemplo);m.hidden=false;m.style.opacity='';
   document.documentElement.classList.add('voz-abierta','lb-abierto');
   if(o.alEjemplo)montarImportador($('#lb-import'),function(e){cerrarTodo();o.alImportar(e)},'Usar estos datos');
@@ -347,7 +352,9 @@ export function initLibro(){
     if(a==='dia'){D.cobro=b.getAttribute('data-f');error('');pintarCal();return}
     if(a==='cerrar-libro'){cerrarTodo();if(o.alCerrar)o.alCerrar();return}
     if(a==='sellar'){
-      var v=sellarPacto(st,datos(),today());
+      var v=validarPacto(st,datos(),today());
+      if(v.ok&&o.antes)o.antes(st);
+      if(v.ok)v=sellarPacto(st,datos(),today());
       if(!v.ok){var k=Object.keys(v.errores)[0];irA(PAGS.indexOf(k==='total'?'q1':k==='ahorro'?'q2':'q3'),-1);return}
       var t=estampar();
       $('#lb-acc-pacto').innerHTML='';
@@ -358,7 +365,7 @@ export function initLibro(){
       },t);
       return;
     }
-    if(a==='empezar'){marcarTour();cerrarTodo();o.listo(st)}
+    if(a==='empezar'){if(o.modo==='nuevo')marcarTour();cerrarTodo();o.listo(st)}
   });
   /* Deslizar para pasar de página (no desde un campo ni desde el deslizador) */
   var x0=null,y0=0;

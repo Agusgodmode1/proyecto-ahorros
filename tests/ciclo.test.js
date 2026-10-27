@@ -118,11 +118,11 @@ test('capítulos: deslizar pasa de página y frena en los bordes',function(){
 });
 
 test('capítulos: el folio de cada página',function(){
-  assert.equal(numeroDePagina('p1',3),1);assert.equal(numeroDePagina('pacto',3),5);
-  assert.equal(numeroDePagina('indice',3),6);assert.equal(numeroDePagina('resumen',3),7);
-  assert.equal(numeroDePagina('w0',3),8);assert.equal(numeroDePagina('w2',3),10);
-  assert.equal(numeroDePagina('fijos',3),11);assert.equal(numeroDePagina('logros',3),14);
-  assert.equal(numeroDePagina('guardado',3),15);assert.equal(numeroDePagina('ajustes',3),16);assert.equal(numeroDePagina('semanas',3),8);
+  assert.equal(numeroDePagina('p1',3),1);assert.equal(numeroDePagina('qa',3),3);assert.equal(numeroDePagina('pacto',3),6);
+  assert.equal(numeroDePagina('indice',3),7);assert.equal(numeroDePagina('resumen',3),8);
+  assert.equal(numeroDePagina('w0',3),9);assert.equal(numeroDePagina('w2',3),11);
+  assert.equal(numeroDePagina('fijos',3),12);assert.equal(numeroDePagina('logros',3),15);
+  assert.equal(numeroDePagina('guardado',3),16);assert.equal(numeroDePagina('ajustes',3),17);assert.equal(numeroDePagina('semanas',3),9);
   assert.equal(numeroDePagina('nada',3),null);
   assert.equal(nombreDePagina('w1'),'Semana 2');assert.equal(nombreDePagina('sueldo'),'Sueldo');assert.equal(nombreDePagina('guardado'),'Lo guardado');assert.equal(nombreDePagina('prologo'),'El pacto');
 });

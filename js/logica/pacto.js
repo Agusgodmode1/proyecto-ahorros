@@ -12,7 +12,37 @@ import {disponible,maxAhorro,ajustarSaldo,deshacerAjuste} from './saldo.js';
 /* Por debajo de esto por día se avisa (sin bloquear): es poco para el día a día */
 export var DIA_BAJO=300;
 
-export function pactoBase(){return {sellado:null,numero:0,usd:0}}
+export function pactoBase(){return {sellado:null,numero:0,usd:0,apartado:[]}}
+
+/* ---------- La plata apartada (2.17) ----------
+   De lo que tenés, una parte puede no ser para gastar: ahorro que ya tenías, plata para algo puntual
+   (una deuda, una compra, un viaje) o plata de otra persona. Vive en state.pacto.apartado
+   [{id, tipo, monto, nota}] y NO entra en el plan: plan.monto es solo lo que se puede usar.
+   Cuando decís cuánta plata tenés (el total, como lo ves en el banco), se descuenta sola. */
+export var TIPOS_APARTADO=[
+  {id:'ahorro',t:'Ahorro que ya tenía',c:'Mi ahorro'},
+  {id:'reserva',t:'Para algo puntual',c:'Para pagar algo',ej:'una deuda, una compra, un viaje'},
+  {id:'ajena',t:'Plata de otra persona',c:'De otra persona'}
+];
+function tipoOk(t){for(var i=0;i<TIPOS_APARTADO.length;i++)if(TIPOS_APARTADO[i].id===t)return t;return 'reserva'}
+/* Deja la lista prolija: solo montos positivos, tipos conocidos, nota corta, pesos redondeados */
+export function normApartado(l){
+  if(!Array.isArray(l))return [];
+  return l.map(function(x,i){x=x&&typeof x==='object'?x:{};return {id:String(x.id||('ap'+i)),tipo:tipoOk(x.tipo),monto:Math.round(Math.max(0,num(x.monto))),nota:String(x.nota||'').trim().slice(0,40)}})
+    .filter(function(x){return x.monto>0});
+}
+/* Total apartado: de una lista o del estado */
+export function totalApartado(x){
+  var l=Array.isArray(x)?x:(x&&x.pacto&&x.pacto.apartado)||[],t=0;
+  l.forEach(function(a){t+=Math.max(0,num(a&&a.monto))});return Math.round(t);
+}
+/* Lo apartado por tipo: {ahorro, reserva, ajena} */
+export function apartadoPorTipo(st){
+  var r={ahorro:0,reserva:0,ajena:0};
+  normApartado(st&&st.pacto&&st.pacto.apartado).forEach(function(a){r[a.tipo]+=a.monto});return r;
+}
+/* Lo que queda para el plan: el total menos lo apartado (nunca negativo) */
+export function totalLibre(total,apartado){return Math.max(0,Math.round(num(total))-totalApartado(normApartado(apartado)))}
 
 /* Pesos + dólares a la cotización que pusiste, redondeado a pesos */
 export function totalPacto(pesos,usd,cotiz){
@@ -38,11 +68,11 @@ function fechaOk(s){return typeof s==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(s)&&i
 /* Lo que se ve al instante: cuánto queda para gastar, por día y por cuántos días.
    Los fijos que vencen antes de cobrar se descuentan primero (con un pacto nuevo y fijos ya cargados). */
 export function cuentaPacto(st,d,hoy){
-  var total=Math.max(0,num(d.total)),cobro=fechaOk(d.cobro)&&d.cobro>hoy?d.cobro:sugerirCobro(st,hoy).fecha;
+  var bruto=Math.max(0,num(d.total)),apartado=totalApartado(normApartado(d.apartado)),total=Math.max(0,bruto-apartado),cobro=fechaOk(d.cobro)&&d.cobro>hoy?d.cobro:sugerirCobro(st,hoy).fecha;
   var pc=planCalc(conPacto(st,{total:total,ahorro:d.ahorro,cobro:cobro},hoy));
   var maxAhorro=Math.max(0,total-pc.fijos),ahorro=Math.min(Math.max(0,Math.round(num(d.ahorro))),maxAhorro);
   var gastar=Math.max(0,total-pc.fijos-ahorro);
-  return {total:total,ahorro:ahorro,pct:total>0?ahorro/total:0,fijos:pc.fijos,maxAhorro:maxAhorro,gastar:gastar,dias:pc.total,porDia:gastar/pc.total,cobro:cobro};
+  return {total:total,bruto:bruto,apartado:apartado,ahorro:ahorro,pct:total>0?ahorro/total:0,fijos:pc.fijos,maxAhorro:maxAhorro,gastar:gastar,dias:pc.total,porDia:gastar/pc.total,cobro:cobro};
 }
 
 /* Valida los tres datos. Devuelve {ok, errores:{total?,ahorro?,cobro?}, avisos:[texto], cuenta}.
@@ -51,12 +81,16 @@ export function validarPacto(st,d,hoy){
   var e={},avisos=[],total=num(d.total),ahorro=num(d.ahorro);
   if(!(total>0))e.total='Escribí con cuánta plata empezás: tiene que ser más que cero.';
   if(d.ahorro===''||d.ahorro===null||d.ahorro===undefined||!isFinite(ahorro)||ahorro<0)e.ahorro='Elegí cuánto querés ahorrar (puede ser poquito).';
-  else if(total>0&&ahorro>total)e.ahorro='No podés ahorrar más de lo que tenés: como mucho, todo.';
+  var ap=totalApartado(normApartado(d.apartado));
+  /* 'mas' = lo apartado pasa lo que tenés; 'todo' = no queda nada para el plan (la pantalla arma el texto con money()) */
+  if(!e.total&&ap>0&&ap>=total)e.apartado=ap>total?'mas':'todo';
+  var libre=Math.max(0,total-ap);
+  if(!e.ahorro&&!e.apartado&&total>0&&ahorro>libre)e.ahorro=ap>0?'No podés ahorrar más de lo que te queda para usar: como mucho, todo eso.':'No podés ahorrar más de lo que tenés: como mucho, todo.';
   if(!fechaOk(d.cobro))e.cobro='Elegí qué día volvés a cobrar.';
   else if(d.cobro<=hoy)e.cobro='El día de cobro tiene que ser después de hoy.';
   var c=cuentaPacto(st,d,hoy);
-  if(!e.ahorro&&!e.total&&ahorro>c.maxAhorro+0.5)e.ahorro='fijos'; /* la pantalla dice el máximo con money() */
-  if(!e.total&&!e.ahorro&&!e.cobro){
+  if(!e.ahorro&&!e.total&&!e.apartado&&ahorro>c.maxAhorro+0.5)e.ahorro='fijos'; /* la pantalla dice el máximo con money() */
+  if(!e.total&&!e.ahorro&&!e.cobro&&!e.apartado){
     if(ahorro<0.5)avisos.push('cero');
     if(c.porDia<DIA_BAJO)avisos.push('bajo');
   }
@@ -76,8 +110,9 @@ export function atajosPacto(total){
 export function sellarPacto(st,d,hoy){
   var v=validarPacto(st,d,hoy);if(!v.ok)return v;
   var p=st.plan;
-  p.monto=Math.round(num(d.total));p.modo='monto';p.ahorro=Math.round(v.cuenta.ahorro);p.inicio=hoy;p.cobro=d.cobro;
+  p.monto=v.cuenta.total;p.modo='monto';p.ahorro=Math.round(v.cuenta.ahorro);p.inicio=hoy;p.cobro=d.cobro;
   if(!st.pacto)st.pacto=pactoBase();
+  st.pacto.apartado=normApartado(d.apartado);
   st.pacto.sellado=hoy;st.pacto.numero=(Math.round(num(st.pacto.numero))||0)+1;
   st.pacto.usd=num(d.usd)>0&&num(d.cotiz)>0?Math.round(num(d.usd)*100)/100:0;
   if(st.pacto.usd&&st.monedas){st.monedas.cotizacion=num(d.cotiz);st.monedas.fecha=hoy}
@@ -87,7 +122,7 @@ export function sellarPacto(st,d,hoy){
 /* Quien ya usaba la app no ve el prólogo: su plan de siempre pasa a ser su pacto, sellado el día que empezó. */
 export function pactoDesdePlan(st,hoy){
   var p=st.plan||{};
-  return {sellado:fechaOk(p.inicio)?p.inicio:hoy,numero:1,usd:0};
+  return {sellado:fechaOk(p.inicio)?p.inicio:hoy,numero:1,usd:0,apartado:[]};
 }
 
 /* Calendario del mes (para elegir el cobro): semanas de lunes a domingo, con huecos (null) al principio y al final.
@@ -151,3 +186,23 @@ export function deshacerAjustePacto(st,u){
   if(u.movio)moverPagos(st,p.cobro,u.cobro);
   p.cobro=u.cobro;p.ahorro=u.ahorro;p.modo=u.modo;
 }
+
+/* ---------- Cambiar lo apartado a mitad del pacto (2.17) ----------
+   Apartar más saca esa plata de lo que podés usar; liberar algo la suma. El total que tenés no cambia.
+   No se puede apartar más de lo que tenés disponible hoy. */
+export function previaApartado(st,lista){
+  var nueva=normApartado(lista),antes=totalApartado(st),despues=totalApartado(nueva),diff=despues-antes;
+  var pc=planCalc(st),disp=disponible(st,pc);
+  if(diff>0&&diff>disp+0.5)return {ok:false,error:'max',max:Math.max(0,Math.floor(disp)),diff:diff,lista:nueva};
+  return {ok:true,diff:diff,lista:nueva,total:despues};
+}
+export function aplicarApartado(st,lista){
+  var v=previaApartado(st,lista);if(!v.ok)return v;
+  if(!st.pacto)st.pacto=pactoBase();
+  v.deshacer={lista:copia(st.pacto.apartado||[]),monto:st.plan.monto,ahorro:st.plan.ahorro};
+  st.pacto.apartado=v.lista;st.plan.monto=Math.max(0,Math.round((num(st.plan.monto)-v.diff)*100)/100);
+  /* si quedó un ahorro más grande de lo que se puede, se baja al máximo */
+  var mx=maxAhorro(st,planCalc(st));if(st.plan.modo==='monto'&&num(st.plan.ahorro)>mx)st.plan.ahorro=Math.floor(mx);
+  return v;
+}
+export function deshacerApartado(st,u){if(!st.pacto)st.pacto=pactoBase();st.pacto.apartado=u.lista;st.plan.monto=u.monto;st.plan.ahorro=u.ahorro}

@@ -192,6 +192,7 @@ function abrirPrologo(pagina,editar,dir){
       persist();syncInputs();renderAll();
       toastAccion('Listo: ≈ '+money(v.porDia)+' por día hasta que cobres','Deshacer',function(){deshacerAjustePacto(ctx.state,v.deshacer);persist();syncInputs();renderAll()});
     },
+    alApartado:function(){persist();syncInputs();renderAll()},
     alCerrar:function(){if(ctx.tab!=='resumen'){ctx.tab='resumen';renderAll()}},
     /* desde la primera página del prólogo, hacia atrás: la tapa cerrada (al tocarla se abre en Hoy) */
     alTapa:function(){cerrarLibro()}});

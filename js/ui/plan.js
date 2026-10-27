@@ -16,6 +16,7 @@ import {editarGasto,resetWeekSel} from './semanas.js';
 import {cicloTerminado,resumenCiclo,cerrarCiclo} from '../logica/ciclo.js';
 import {abrirPostal} from './postal.js';
 import {abrirLibro,polvo} from './libro.js';
+import {totalApartado} from '../logica/pacto.js';
 import {irAlPacto} from './indice.js';
 
 function rankTxt(s){
@@ -67,7 +68,9 @@ function heroChips(pc){
   /* Dos datos en la misma fila: cuánta plata tenés y cuánto guardás (el cobro tiene su propia tarjeta) */
   $('#hero-chips').innerHTML=''
     +'<button class="hchip hc-saldo" type="button" id="saldo-abrir"><span>Tenés</span><b>'+money(Math.max(0,disponible(state,pc)))+'</b><small>actualizar</small></button>'
-    +'<button class="hchip hc-ahorro" type="button" id="ahorro-abrir"><span>Guardás este mes</span><b>'+money(pc.ahorro)+'</b><small>actualizar</small></button>';
+    +'<button class="hchip hc-ahorro" type="button" id="ahorro-abrir"><span>Guardás este mes</span><b>'+money(pc.ahorro)+'</b><small>actualizar</small></button>'
+    /* (2.17) la plata apartada: se ve, pero aparte de lo que podés usar */
+    +(totalApartado(state)>0?'<button class="hc-ap" type="button" id="apartado-abrir">Además tenés <b>'+money(totalApartado(state))+'</b> apartados, que no se tocan<small>ver</small></button>':'');
 }
 /* Aviso grande cuando la meta de ahorro no se puede cumplir con la plata que tenés */
 function renderAlertaMeta(pc){
@@ -381,7 +384,7 @@ export function initPlan(){
   });
   pr.addEventListener('click',function(e){if(e.target.closest('#saldo-abrir2'))abrirSaldo()});
   $('#hoy-hero').addEventListener('click',function(e){if(e.target.closest('#hoy-empezar'))abrirPlan()});
-  $('#hero-chips').addEventListener('click',function(e){if(e.target.closest('#saldo-abrir'))abrirSaldo();if(e.target.closest('#ahorro-abrir'))abrirMeta()});
+  $('#hero-chips').addEventListener('click',function(e){if(e.target.closest('#apartado-abrir')){ctx.abrirPrologo('qa');return}if(e.target.closest('#saldo-abrir'))abrirSaldo();if(e.target.closest('#ahorro-abrir'))abrirMeta()});
   initGasto();
   $('#cierre-aviso').addEventListener('click',function(e){
     if(e.target.closest('#ciclo-nuevo')){pactoNuevo();return}

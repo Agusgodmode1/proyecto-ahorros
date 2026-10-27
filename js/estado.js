@@ -8,7 +8,7 @@ import {feriadosActivos} from './logica/feriados.js';
 import {monedasBase} from './logica/monedas.js';
 import {horasPorDefecto} from './logica/sueldo.js';
 import {categoriasBase,categoriasDesde} from './logica/categorias.js';
-import {pactoBase,pactoDesdePlan} from './logica/pacto.js';
+import {pactoBase,pactoDesdePlan,normApartado} from './logica/pacto.js';
 
 /* Subí este número cuando cambie la forma del estado y agregá el paso en migrar().
    v1–v3: archivo HTML · v4: voz y meta · v5: perfil propio y feriados editables · v6: sincronización
@@ -22,8 +22,10 @@ import {pactoBase,pactoDesdePlan} from './logica/pacto.js';
    v15: fijos compartidos: state.grupos (con quién compartís y cómo se reparte); cada fijo puede tener grupo, reparto,
         paga y pagador; los pagos guardan el total, tu parte y lo que te devolvieron. Los fijos de antes quedan como «Solo míos».
    v16: Sueldo ordenado: perfil.horas.preguntado («¿hay horas extra?» se pregunta una sola vez; quien ya armó su perfil no la ve),
-        perfil.horas.multFeriado (opcional, p. ej. ×2,5), perfil.ingreso.factura y sueldo.factura (cobro con factura). */
-export var VERSION_ESTADO=18;
+        perfil.horas.multFeriado (opcional, p. ej. ×2,5), perfil.ingreso.factura y sueldo.factura (cobro con factura).
+   v19: la plata apartada (state.pacto.apartado [{id, tipo, monto, nota}]): lo que tenés pero no es para gastar.
+        Quien ya usaba la app arranca sin nada apartado (nada cambia en las cuentas). */
+export var VERSION_ESTADO=19;
 
 function hoyISO(){return iso(new Date())}
 /* Feriados: por defecto solo cuentan los 5 no laborables (1/1, 1/5, 18/7, 25/8, 25/12).
@@ -152,6 +154,8 @@ export function migrar(d){
     repetidos:Array.isArray(x.repetidos)?x.repetidos:[]};
   /* v14: a quien ya usaba la app no se le muestra el prólogo: su plan pasa a ser su pacto */
   if(vx<14&&!state.pacto.sellado)state.pacto=pactoDesdePlan(state,hoyISO());
+  /* v19: la plata apartada, siempre como lista prolija (sin nada apartado, nada cambia) */
+  state.pacto.apartado=normApartado(state.pacto.apartado);
   /* v11: las categorías de siempre pasan a ser tu lista, más las que ya usaban tus gastos. Ningún gasto cambia. */
   if(!state.categorias)state.categorias=categoriasDesde(state);
   /* v12: sin mínimo (vale lo mismo que el objetivo) y lo que sobra pasa a la semana siguiente, como siempre */

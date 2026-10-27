@@ -134,6 +134,8 @@ export function sellarPacto(st,d,hoy){
   p.monto=v.cuenta.total;p.modo='monto';p.ahorro=Math.round(v.cuenta.ahorro);p.inicio=hoy;p.cobro=d.cobro;
   /* (2.18) de la plata que esperabas, sigue la que todavía no llegó y entra antes de este cobro */
   p.esperado=(Array.isArray(p.esperado)?p.esperado:[]).filter(function(x){return x&&x.fecha>=hoy&&x.fecha<d.cobro});
+  /* (2.20) de los ingresos fijos respondidos, quedan solo los de hoy en adelante */
+  p.vistos=(Array.isArray(p.vistos)?p.vistos:[]).filter(function(id){return String(id).slice(-10)>=hoy});
   if(!st.pacto)st.pacto=pactoBase();
   /* (2.19) la reserva para los fijos: lo que tenía, menos lo que se usa para pagar los que vencen, más la parte de este pacto */
   var rf=v.cuenta.reserva,ap=normApartado(d.apartado).filter(function(a){return a.id!==RESERVA_FIJOS});

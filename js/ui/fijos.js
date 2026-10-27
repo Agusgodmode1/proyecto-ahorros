@@ -12,6 +12,7 @@ import {YO,TIPOS,grupoDe,repartoDe,partesDe,miParte,quienPaga,nombreDe,proporcio
 import {PLANTILLAS,nuevoGrupo,balance,saldarCon,deshacerSaldo,resumenCasa,textoResumen,porcentajes} from '../logica/compartidos.js';
 import {ctx,$,planNow,liqNow,exAnalisis,money,usd,esc,fCorta,fLarga,titulo,tile,armar,toast,toastAccion,today} from './comun.js';
 import {fijosPagadosParte} from '../logica/saldo.js';
+import {renderIngresos,initIngresos} from './ingresos.js';
 
 export var FCATS=[['Vivienda','var(--sky)'],['Servicios','var(--sun)'],['Celular e internet','var(--grape)'],['Suscripciones','var(--pink)'],['Salud','var(--mint)'],['Transporte','var(--teal)'],['Deudas y cuotas','var(--coral)'],['Educación','var(--slate)'],['Otros','var(--muted)']];
 var FSUG=[['Alquiler','Vivienda'],['Gastos comunes','Vivienda'],['UTE','Servicios'],['OSE','Servicios'],['Internet','Celular e internet'],['Celular','Celular e internet'],['Netflix','Suscripciones'],['Spotify','Suscripciones'],['Gimnasio','Salud'],['Mutualista','Salud'],['Boleto STM','Transporte'],['Préstamo','Deudas y cuotas'],['Tarjeta de crédito','Deudas y cuotas']];
@@ -27,6 +28,7 @@ function pesos(n){return '$ '+Math.round(num(n)).toLocaleString('es-UY')} /* par
 
 /* ---------- La página ---------- */
 export function renderFijos(pc){
+  renderIngresos();
   var state=ctx.state;
   pc=pc||planNow();
   var p=state.plan,fp=fijosPeriodo(state.fijos,p.inicio,p.cobro),R=resumenCasa(state),L=liqNow(true);
@@ -262,6 +264,7 @@ function saldo(k){
 }
 
 export function initFijos(){
+  initIngresos();
   $('#f-cat').innerHTML=FCATS.map(function(c){return '<option>'+esc(c[0])+'</option>'}).join('');$('#f-cat').value='Otros';
   $('#fijo-sug').innerHTML=FSUG.map(function(s){return '<button class="btn" type="button" data-fsug="'+esc(s[0])+'" data-fcat="'+esc(s[1])+'">'+esc(s[0])+'</button>'}).join('');
   $('#fijo-form').addEventListener('submit',function(e){

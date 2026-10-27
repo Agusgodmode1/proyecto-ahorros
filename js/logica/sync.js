@@ -4,7 +4,7 @@
    Al juntar dos versiones, en cada dato gana el cambio más reciente. */
 
 export var SECCIONES=['perfil','plan','sueldo','extracto','recibo','fijosPagos','logros','feriados','voz','meta','ejemplo','monedas','plantillasRecibo','pacto'];
-export var LISTAS={gastos:'id',horas:'id',fijos:'id',hist:'k',metas:'id',categorias:'id',recibos:'id',grupos:'id',repetidos:'id'};
+export var LISTAS={gastos:'id',horas:'id',fijos:'id',hist:'k',metas:'id',categorias:'id',recibos:'id',grupos:'id',repetidos:'id',ingresosFijos:'id'};
 
 function j(x){return JSON.stringify(x===undefined?null:x)}
 function sinU(o){var c=Object.assign({},o);delete c._u;return j(c)}

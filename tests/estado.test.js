@@ -172,3 +172,12 @@ test('v17 → v18: suma los gastos que se repiten solos, sin tocar nada más',fu
   assert.equal(e.repetidos.length,1,'«Solo mirar» trae un gasto que se repite');
   assert.equal(e.repetidos[0].ultimo,'2026-10-26','el de hoy se anota solo al abrir');
 });
+
+test('v21: ingresos fijos y respondidos, sin cambiar nada de lo que había',function(){
+  var d=defaults('2026-10-26');d.v=20;delete d.ingresosFijos;delete d.plan.vistos;d.plan.monto=20000;
+  var s=migrar(d);
+  assert.equal(VERSION_ESTADO,21);
+  assert.deepEqual(s.ingresosFijos,[]);assert.deepEqual(s.plan.vistos,[]);assert.equal(s.plan.monto,20000);
+  d.ingresosFijos=[{id:'a',nombre:' Ayuda ',monto:'5000',dia:40},{monto:0}];
+  assert.deepEqual(migrar(d).ingresosFijos,[{id:'a',nombre:'Ayuda',monto:5000,dia:31}]);
+});

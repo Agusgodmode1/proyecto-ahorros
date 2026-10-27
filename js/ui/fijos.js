@@ -11,6 +11,7 @@ import {cotizacion,aPesos} from '../logica/monedas.js';
 import {YO,TIPOS,grupoDe,repartoDe,partesDe,miParte,quienPaga,nombreDe,proporciones,calcular,repartoBase} from '../logica/reparto.js';
 import {PLANTILLAS,nuevoGrupo,balance,saldarCon,deshacerSaldo,resumenCasa,textoResumen,porcentajes} from '../logica/compartidos.js';
 import {ctx,$,planNow,liqNow,exAnalisis,money,usd,esc,fCorta,fLarga,titulo,tile,armar,toast,toastAccion,today} from './comun.js';
+import {fijosPagadosParte} from '../logica/saldo.js';
 
 export var FCATS=[['Vivienda','var(--sky)'],['Servicios','var(--sun)'],['Celular e internet','var(--grape)'],['Suscripciones','var(--pink)'],['Salud','var(--mint)'],['Transporte','var(--teal)'],['Deudas y cuotas','var(--coral)'],['Educación','var(--slate)'],['Otros','var(--muted)']];
 var FSUG=[['Alquiler','Vivienda'],['Gastos comunes','Vivienda'],['UTE','Servicios'],['OSE','Servicios'],['Internet','Celular e internet'],['Celular','Celular e internet'],['Netflix','Suscripciones'],['Spotify','Suscripciones'],['Gimnasio','Salud'],['Mutualista','Salud'],['Boleto STM','Transporte'],['Préstamo','Deudas y cuotas'],['Tarjeta de crédito','Deudas y cuotas']];
@@ -34,7 +35,8 @@ export function renderFijos(pc){
   $('#fijos-sum').innerHTML='<div class="card stack toca"><span class="cd-l">Te toca este mes</span><b class="toca-n">'+money(R.teToca)+'</b>'
     +(R.hayCompartidos?'<p class="toca-d"><span>solo tuyos <b>'+money(R.soloMios)+'</b></span><span>tu parte compartida <b>'+money(R.parteCompartida)+'</b></span></p><p class="note">Total de la casa: <b>'+money(R.totalCasa)+'</b></p>':'<p class="note">'+state.fijos.length+' '+(state.fijos.length===1?'gasto fijo':'gastos fijos')+(state.fijos.length?', todos solo tuyos':'')+'.</p>')
     +'</div><div class="tiles">'
-    +tile('tone-sky','Antes de cobrar',money(pc.fijos),fp.length?fp.length+' vencen antes del '+esc(fCorta(p.cobro)):'ninguno vence antes del '+esc(fCorta(p.cobro)))
+    /* (2.15) lo que falta pagar antes de cobrar, en lugar de repetir el total */
+    +tile('tone-sky','Falta pagar',money(Math.max(0,pc.fijos-Math.min(pc.fijos,fijosPagadosParte(state)))),fp.length?(fp.length===state.fijos.length?'todos vencen':fp.length+' vencen')+' antes del '+esc(fCorta(p.cobro)):'ninguno vence antes del '+esc(fCorta(p.cobro)))
     +tile('tone-mint','Pagados',pag+' de '+fp.length,'en este período')
     +tile('tone-grape','Parte de tu sueldo',L.liquido>0?Math.round(R.teToca/L.liquido*100)+'%':'—','de lo que cobrás en mano')
     +'</div>';

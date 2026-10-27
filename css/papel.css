@@ -1095,3 +1095,13 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 .v2 .nota-pag{flex-basis:100%;display:flex;align-items:center;justify-content:flex-end;gap:2px;margin:var(--e1) -8px -8px 0;font:600 13px var(--f-body);color:var(--muted)}
 .v2 .nota-pag button{min-width:44px;min-height:44px;border:0;background:transparent;color:var(--oro-t);font:600 22px/1 var(--f-libro);cursor:pointer;border-radius:var(--r-m)}
 .v2 .nota-pag button:active{background:color-mix(in srgb,var(--ink) 8%,transparent)}
+
+/* =====================================================================
+   Menos cajas (2.15): los datos van en columnas separadas por líneas finas, sin recuadros ni tintes
+   ===================================================================== */
+.v2 .tiles{gap:0;overflow:hidden;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));margin-left:calc(-1 * var(--e4));margin-right:calc(-1 * var(--e4))}
+.v2 .tiles>*,.v2 .tiles .tile{background:transparent;border-radius:0;box-shadow:-1px 0 0 var(--line),0 -1px 0 var(--line);padding:var(--e2) var(--e4) var(--e3)}
+.v2 .tiles .tile-l{color:var(--muted)}
+.v2 .tiles .tile-h{color:var(--muted)}
+.v2 #fijos-sum{display:grid;gap:var(--e3)}
+.v2 #fijos-sum>.tiles{margin-left:0;margin-right:0}

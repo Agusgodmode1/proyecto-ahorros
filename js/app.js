@@ -1,5 +1,6 @@
 /* Arranque, pestañas y render general. */
 import {curWeek} from './logica/plan.js';
+import {charNoPermitido,limpiarNumero} from './logica/util.js';
 import {migrar,cargar,guardar,pedirPersistencia,defaults,ejemplo,necesitaMigrar,guardarCopia,resumenDatos,borrarTodo} from './estado.js';
 import {ctx,$,today,planNow,ICON,discreto,setDiscreto,toast,toastAccion,money} from './ui/comun.js';
 import {deshacerAjustePacto} from './logica/pacto.js';
@@ -302,6 +303,19 @@ var GK='pa-guia-oculta';
 function guiaInit(){
   document.querySelectorAll('[data-icon]').forEach(function(el){el.innerHTML=ICON[el.getAttribute('data-icon')]||''});
 }
+
+/* Campos de números: no dejar escribir «e», «+» ni «-» (el navegador los acepta por la notación científica).
+   Va al cargar el módulo (no en initGlobal) para que también cuide el prólogo, que se abre antes del arranque. */
+(function guardarNumeros(){
+  function negOk(el){var m=el.getAttribute('min');return !(m!==null&&Number(m)>=0)}
+  function esNum(el){return el&&el.tagName==='INPUT'&&el.type==='number'}
+  document.addEventListener('keydown',function(e){if(esNum(e.target)&&e.key&&e.key.length===1&&!e.ctrlKey&&!e.metaKey&&charNoPermitido(e.key,negOk(e.target)))e.preventDefault()},true);
+  document.addEventListener('beforeinput',function(e){if(esNum(e.target)&&e.data&&charNoPermitido(e.data,negOk(e.target)))e.preventDefault()},true);
+  document.addEventListener('paste',function(e){
+    if(!esNum(e.target))return;var t=(e.clipboardData||window.clipboardData);t=t&&t.getData('text');
+    if(t&&limpiarNumero(t,negOk(e.target))!==t.trim()){e.preventDefault();e.target.value=limpiarNumero(t,negOk(e.target));e.target.dispatchEvent(new Event('input',{bubbles:true}))}
+  },true);
+})();
 
 /* ---------- Eventos globales ---------- */
 function initGlobal(){

@@ -132,13 +132,13 @@ export function renderAjustes(estadoGuardado){
     +row('Protegidos contra borrado',estadoGuardado&&estadoGuardado.persistente?'sí':'no confirmado','',estadoGuardado&&estadoGuardado.persistente?'':'iOS puede borrar datos de webs que no usás hace semanas. Instalada en la pantalla de inicio y abriéndola seguido, no pasa.');
   $('#aj-info').innerHTML=info;
 }
-/* ---------- Apariencia (oscuro por defecto; se guarda en este aparato) ---------- */
+/* ---------- Apariencia (sigue al teléfono por defecto; se guarda en este aparato) ---------- */
 var TEMA='pa-tema';
-function temaActual(){try{return localStorage.getItem(TEMA)||'oscuro'}catch(e){return 'oscuro'}}
+function temaActual(){try{return localStorage.getItem(TEMA)||'auto'}catch(e){return 'auto'}}
 export function aplicarTema(t){
   var html=document.documentElement,oscuro=t==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:t!=='claro';
   if(t==='auto')html.removeAttribute('data-theme');else html.setAttribute('data-theme',oscuro?'dark':'light');
-  var m=document.getElementById('meta-tema');if(m)m.setAttribute('content',oscuro?'#060807':'#cfc3a6');
+  var m=document.getElementById('meta-tema');if(m)m.setAttribute('content',oscuro?'#070B24':'#0E1640');
   document.querySelectorAll('[data-tema]').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-tema')===t))});
 }
 /* ---------- Copias automáticas ---------- */

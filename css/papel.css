@@ -1,0 +1,252 @@
+/* =====================================================================
+   El Libro del Ahorro 2.3 · sistema visual: tapa cósmica y páginas de papel.
+   - Tokens: cosmos (la tapa y lo que rodea la página), papel claro y papel de noche, tinta, acentos y estados.
+     Los nombres viejos (--sky, --mint…) siguen existiendo: toda la app los usa.
+   - Contraste: tests/contraste.test.js lee los bloques @papel y @noche de este archivo y exige AA
+     (4,5:1 en texto; 3:1 en títulos grandes). Si cambiás un color, corré node --test.
+   - Escala de espacios 4/8/12/16/24/32 (--e1…--e6) y escala tipográfica fija (--t1…--t8).
+   - Solo se animan transform y opacity. Con «reducir movimiento», nada gira.
+   ===================================================================== */
+
+/* @papel (tema claro, el de siempre si el teléfono está en claro) */
+:root.v2{
+  --cosmos-1:#070B24; --cosmos-2:#0E1640; --cosmos-3:#1B2A6B; --nebulosa:#4B3FA8; --estrella:#F4F1FF; --fugaz:#FFD27A;
+  --bg:#0E1640;
+  --page:#F3E6C8; --page-2:#E6D3A8; --canto:#CDB27E; --surface:#F7EDD6; --surface-2:#EAD9B2;
+  --ink:#1C2440; --muted:#4A5170; --line:rgba(28,36,64,.16); --line-2:rgba(28,36,64,.28);
+  --oro:#A87A1F; --oro-t:#765616; --oro-cl:#D9B25A;
+  --cta:#E07A3C; --on-cta:#1C2440; --naranja-t:#8E4419;
+  --azul:#2A4FB8;
+  --bien:#326739; --ojo:#7E5415; --mal:#9E3C2C;
+  /* los colores de siempre, con la paleta del libro */
+  --sky:#2A4FB8; --sky-soft:#E4DCCB; --sky-ink:#1C2F78;
+  --mint:#326739; --mint-soft:#DFDDB9; --mint-ink:#224A28;
+  --teal:#35567F; --teal-soft:#E1D9C3; --teal-ink:#223C5C;
+  --grape:#765616; --grape-soft:#EBD9AE; --grape-ink:#553D0D;
+  --coral:#8E4419; --coral-soft:#EFD5B4; --coral-ink:#66300F;
+  --sun:#765616; --sun-soft:#EED8A6; --sun-ink:#553D0D;
+  --slate:#4A5170; --slate-soft:#E6D8BB; --slate-ink:#2E3450;
+  --bad:#9E3C2C; --bad-soft:#F0D3BF;
+  --hero:#F3E6C8; --on-accent:#F3E6C8; --on-sun:#F3E6C8; --on-color:#1C2440;
+  --cobro:#A87A1F; --cuero:#0E1640;
+  --fibra:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85 .05' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .33 0 0 0 0 .15 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23f)'/%3E%3C/svg%3E");
+  color-scheme:light;
+}
+/* @noche (papel de noche: atenuado y cálido). Sigue al modo del teléfono; se fuerza desde Ajustes. */
+:root.v2[data-theme="dark"]{
+  --bg:#070B24;
+  --page:#2A2620; --page-2:#221F1A; --canto:#4A4234; --surface:#302B24; --surface-2:#38322A;
+  --ink:#EFE4CC; --muted:#BDB29A; --line:rgba(239,228,204,.14); --line-2:rgba(239,228,204,.26);
+  --oro:#D4A64A; --oro-t:#D4A64A; --oro-cl:#F0CF7E;
+  --cta:#DB6E33; --on-cta:#2A2620; --naranja-t:#E58B55;
+  --azul:#8BA3E8;
+  --bien:#6FB377; --ojo:#D69A3C; --mal:#E0806F;
+  --sky:#8BA3E8; --sky-soft:#33323A; --sky-ink:#B9C8F2;
+  --mint:#6FB377; --mint-soft:#2E3426; --mint-ink:#A6D6AB;
+  --teal:#8FB3D9; --teal-soft:#2F3238; --teal-ink:#C0D6EC;
+  --grape:#D4A64A; --grape-soft:#3A3122; --grape-ink:#F0CF7E;
+  --coral:#E58B55; --coral-soft:#3B2C22; --coral-ink:#F3B48C;
+  --sun:#D4A64A; --sun-soft:#3A3122; --sun-ink:#F0CF7E;
+  --slate:#BDB29A; --slate-soft:#35302A; --slate-ink:#E3D8BF;
+  --bad:#E0806F; --bad-soft:#40271F;
+  --hero:#2A2620; --on-accent:#2A2620; --on-sun:#2A2620; --on-color:#EFE4CC;
+  --cobro:#D4A64A; --cuero:#070B24;
+  --fibra:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85 .05' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 .95 0 0 0 0 .88 0 0 0 0 .75 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23f)'/%3E%3C/svg%3E");
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: dark){
+  :root.v2:not([data-theme="light"]){
+    --bg:#070B24;
+    --page:#2A2620; --page-2:#221F1A; --canto:#4A4234; --surface:#302B24; --surface-2:#38322A;
+    --ink:#EFE4CC; --muted:#BDB29A; --line:rgba(239,228,204,.14); --line-2:rgba(239,228,204,.26);
+    --oro:#D4A64A; --oro-t:#D4A64A; --oro-cl:#F0CF7E;
+    --cta:#DB6E33; --on-cta:#2A2620; --naranja-t:#E58B55;
+    --azul:#8BA3E8;
+    --bien:#6FB377; --ojo:#D69A3C; --mal:#E0806F;
+    --sky:#8BA3E8; --sky-soft:#33323A; --sky-ink:#B9C8F2;
+    --mint:#6FB377; --mint-soft:#2E3426; --mint-ink:#A6D6AB;
+    --teal:#8FB3D9; --teal-soft:#2F3238; --teal-ink:#C0D6EC;
+    --grape:#D4A64A; --grape-soft:#3A3122; --grape-ink:#F0CF7E;
+    --coral:#E58B55; --coral-soft:#3B2C22; --coral-ink:#F3B48C;
+    --sun:#D4A64A; --sun-soft:#3A3122; --sun-ink:#F0CF7E;
+    --slate:#BDB29A; --slate-soft:#35302A; --slate-ink:#E3D8BF;
+    --bad:#E0806F; --bad-soft:#40271F;
+    --hero:#2A2620; --on-accent:#2A2620; --on-sun:#2A2620; --on-color:#EFE4CC;
+    --cobro:#D4A64A; --cuero:#070B24;
+    --fibra:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85 .05' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 .95 0 0 0 0 .88 0 0 0 0 .75 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23f)'/%3E%3C/svg%3E");
+    color-scheme:dark;
+  }
+}
+:root.v2{
+  --e1:4px; --e2:8px; --e3:12px; --e4:16px; --e5:24px; --e6:32px;
+  --t1:13px; --t2:15px; --t3:17px; --t4:20px; --t5:24px; --t6:32px; --t7:44px; --t8:64px;
+  --r-l:10px; --r-m:8px; --r-s:6px;
+  --f-libro:'Cormorant Garamond','Iowan Old Style',Palatino,Georgia,serif;
+  --f-body:system-ui,-apple-system,'SF Pro Text','Segoe UI',Roboto,sans-serif;
+  --f-display:var(--f-libro);
+  /* dorado de los números grandes */
+  --oro-deg:linear-gradient(180deg,var(--oro-cl) 0%,var(--oro) 55%,var(--oro-t) 100%);
+  /* cielo de estrellas (estático, barato): puntos dibujados con gradientes */
+  --cielo:radial-gradient(1px 1px at 12% 18%,rgba(244,241,255,.9),transparent 60%),radial-gradient(1px 1px at 72% 9%,rgba(244,241,255,.7),transparent 60%),
+    radial-gradient(1.5px 1.5px at 38% 62%,rgba(244,241,255,.8),transparent 60%),radial-gradient(1px 1px at 88% 44%,rgba(244,241,255,.6),transparent 60%),
+    radial-gradient(1px 1px at 22% 84%,rgba(244,241,255,.7),transparent 60%),radial-gradient(1.5px 1.5px at 58% 31%,rgba(255,210,122,.8),transparent 60%),
+    radial-gradient(1px 1px at 93% 78%,rgba(244,241,255,.8),transparent 60%),radial-gradient(1px 1px at 6% 52%,rgba(244,241,255,.6),transparent 60%);
+}
+
+/* ---------- Lo que rodea la página: el interior de la tapa, cielo nocturno ---------- */
+.v2 body{color:var(--ink);font:400 var(--t3)/1.5 var(--f-body);
+  background:var(--cielo),radial-gradient(90% 55% at 80% 0%,color-mix(in srgb,var(--nebulosa) 22%,transparent),transparent 70%),linear-gradient(180deg,var(--cosmos-2),var(--cosmos-1));
+  background-size:240px 240px,auto,auto;background-attachment:fixed;
+  padding:calc(var(--e2) + env(safe-area-inset-top,0px)) max(var(--e2),env(safe-area-inset-right,0px)) calc(104px + env(safe-area-inset-bottom,0px)) max(var(--e2),env(safe-area-inset-left,0px))}
+
+/* ---------- La página ---------- */
+.v2 #app{position:relative;gap:var(--e5);max-width:720px;
+  padding:var(--e6) var(--e4) var(--e5) calc(var(--e5) + 4px);
+  border-radius:3px 12px 12px 3px;color:var(--ink);
+  background:var(--fibra),radial-gradient(130% 100% at 60% 40%,transparent 62%,color-mix(in srgb,var(--page-2) 75%,transparent) 100%),linear-gradient(90deg,var(--page-2) 0,var(--page) 5%,var(--page) 100%);
+  box-shadow:0 24px 60px rgba(3,6,20,.6),inset 22px 0 26px -20px rgba(60,40,10,.45),inset 0 0 0 1px var(--line)}
+/* cantos de las hojas a la derecha y abajo */
+.v2 #app::after{content:"";position:absolute;top:12px;bottom:6px;right:-6px;width:6px;border-radius:0 4px 4px 0;pointer-events:none;
+  background:repeating-linear-gradient(90deg,var(--canto) 0 1px,var(--page-2) 1px 2px)}
+.v2 #app::before{content:"";position:absolute;left:10px;right:2px;bottom:-5px;height:5px;border-radius:0 0 4px 4px;pointer-events:none;
+  background:repeating-linear-gradient(0deg,var(--canto) 0 1px,var(--page-2) 1px 2px)}
+.v2 .hoja{position:relative;display:flex;flex-direction:column;gap:var(--e5);transform-origin:left center}
+.v2 .hoja.hojeando{will-change:transform}
+/* sombra del pliegue sobre la página de abajo mientras la hoja gira */
+.v2 .hoja::after{content:"";position:absolute;inset:-8px;pointer-events:none;opacity:var(--pl,0);
+  background:linear-gradient(270deg,rgba(20,12,0,.45),rgba(20,12,0,0) 50%)}
+.v2 main{display:flex;flex-direction:column;touch-action:pan-y pinch-zoom}
+.v2 .hero{touch-action:pan-y pinch-zoom}
+
+/* ---------- Tipografía ---------- */
+.v2 h1,.v2 h2,.v2 .card h2,.v2 .fold-t,.v2 .sec-h h2{font-family:var(--f-libro);font-weight:700;letter-spacing:0;color:var(--ink)}
+.v2 h2,.v2 .card h2{font-size:var(--t5);line-height:1.15}
+.v2 .fold-t{font-size:22px}
+.v2 h3{font:600 var(--t2)/1.3 var(--f-libro);letter-spacing:.12em;color:var(--oro-t)}
+.v2 .note{font-size:var(--t2);color:var(--muted)}
+.v2 .note b,.v2 b{color:inherit}
+.v2 a,.v2 .linklike{color:var(--azul)}
+.v2 .ph-t{font:700 clamp(40px,11.5vw,52px)/1 var(--f-libro);color:var(--ink)}
+.v2 .ph-s{font-size:var(--t3);color:var(--muted)}
+/* capitular */
+.v2 .ph-s::first-letter{float:left;font:700 3.2em/.8 var(--f-libro);color:var(--oro);margin:.06em .1em 0 0}
+/* orla bajo el título de cada capítulo */
+.v2 .panel-head::after{content:"";display:block;width:140px;height:14px;margin-top:var(--e2);background:var(--oro);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 14' fill='none' stroke='black' stroke-width='1.3'%3E%3Cpath d='M2 7h46M72 7h46'/%3E%3Cpath d='M60 1l6 6-6 6-6-6Z'/%3E%3Ccircle cx='60' cy='7' r='1.6' fill='black'/%3E%3C/svg%3E") no-repeat left center/contain;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 14' fill='none' stroke='black' stroke-width='1.3'%3E%3Cpath d='M2 7h46M72 7h46'/%3E%3Cpath d='M60 1l6 6-6 6-6-6Z'/%3E%3Ccircle cx='60' cy='7' r='1.6' fill='black'/%3E%3C/svg%3E") no-repeat left center/contain}
+/* encabezado de capítulo («capítulo II · semanas») */
+.v2 main>section[data-cap]::before,.v2 .cap-kick{font:600 var(--t2)/1.2 var(--f-libro);letter-spacing:.16em;color:var(--oro-t)}
+/* números: siempre a la misma altura y del mismo ancho */
+.v2,.v2 *{font-variant-numeric:lining-nums tabular-nums!important}
+.v2 .tile-v,.v2 .hchip b,.v2 .wk-bv,.v2 .wk-v,.v2 .mini b,.v2 .cfg-n,.v2 .rate b,.v2 .hh-n,.v2 .cd-n,.v2 .fin-n b{font-family:var(--f-libro)!important;font-weight:700!important;letter-spacing:0!important}
+.v2 .tile-v{font-size:clamp(26px,7.6vw,var(--t6))}
+.v2 .hchip b{font-size:clamp(26px,7.4vw,var(--t6))}
+.v2 .wk-bv{font-size:clamp(46px,14vw,var(--t8))}
+/* el número más importante de la página: dorado */
+.v2 .cd-n,.v2 .wk-bv,.v2 .fin-n b{background:var(--oro-deg);-webkit-background-clip:text;background-clip:text;color:transparent}
+.v2 .wk-bv.neg{background:none;color:var(--mal)}
+.v2 .hoy-hero .hh-n{color:var(--azul)}
+.v2 .hoy-hero .hh-n.neg{color:var(--mal)}
+.v2 .hchip:last-child b{color:var(--bien)}
+.v2 .neg,.v2 .err{color:var(--mal)}
+
+/* ---------- Bloques: recuadros finos sobre el papel, no tarjetas ---------- */
+.v2 .card,.v2 #resumen-out>.fold,.v2 .plan-aj>summary,.v2 .hoy-hero,.v2 .cd,.v2 .hchip,.v2 .wk,.v2 .tile,.v2 .day,.v2 .fin-cap,.v2 .pacto-card,.v2 .tiles>*{
+  background:color-mix(in srgb,var(--surface) 55%,transparent);border:0;box-shadow:inset 0 0 0 1px var(--line);border-radius:var(--r-l)}
+.v2 .tile{background:color-mix(in srgb,var(--c-soft,var(--surface-2)) 45%,transparent)}
+.v2 .banner{background:color-mix(in srgb,var(--surface-2) 50%,transparent);color:var(--ink);border-radius:var(--r-m);box-shadow:inset 3px 0 0 var(--oro),inset 0 0 0 1px var(--line)}
+.v2 .banner.alerta,.v2 .banner.ritmo-nada{box-shadow:inset 3px 0 0 var(--mal),inset 0 0 0 1px var(--line)}
+.v2 .banner.ritmo-minimo{box-shadow:inset 3px 0 0 var(--ojo),inset 0 0 0 1px var(--line)}
+.v2 .banner.ritmo-bien{box-shadow:inset 3px 0 0 var(--bien),inset 0 0 0 1px var(--line)}
+.v2 .receipt .row.final .v,.v2 .receipt .row.final .l{font-family:var(--f-libro);font-weight:700;font-size:var(--t4)}
+.v2 .pill{border-radius:99px}
+.v2 .pill.ok{background:color-mix(in srgb,var(--bien) 16%,transparent);color:var(--bien)}
+.v2 .pill.bad{background:color-mix(in srgb,var(--mal) 14%,transparent);color:var(--mal)}
+.v2 .pill.now{background:color-mix(in srgb,var(--azul) 14%,transparent);color:var(--azul)}
+.v2 .bar{background:color-mix(in srgb,var(--ink) 10%,transparent)}
+.v2 .bar>i{background:var(--azul)}
+.v2 .bar.over>i{background:var(--mal)}
+.v2 .cd-seg i{background:color-mix(in srgb,var(--ink) 12%,transparent)}
+.v2 .cd-seg i.on{background:var(--oro)}
+.v2 .fin-cap{box-shadow:inset 0 0 0 1.5px var(--oro)}
+.v2 .pacto-card{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--oro) 70%,transparent)}
+
+/* ---------- Botones: se hunden en el papel al tocarlos ---------- */
+.v2 .btn{min-height:48px;border-radius:var(--r-m);border:1.5px solid var(--line-2);background:transparent;color:var(--ink);font-weight:600;
+  box-shadow:0 2px 0 var(--line-2);transition:transform .12s ease,box-shadow .12s ease}
+.v2 .btn:active{transform:translateY(2px);box-shadow:0 0 0 var(--line-2)}
+.v2 .btn.primary,.v2 .gasto-btn,.v2 .lb-btn.si{background:var(--cta);border-color:var(--cta);color:var(--on-cta);box-shadow:0 2px 0 color-mix(in srgb,var(--cta) 55%,#3a1500)}
+.v2 .btn.primary:active,.v2 .gasto-btn:active{transform:translateY(2px);box-shadow:0 0 0 transparent}
+.v2 .btn.quiet{border-color:transparent;box-shadow:none;color:var(--azul)}
+.v2 .btn.danger{color:var(--mal);border-color:color-mix(in srgb,var(--mal) 45%,transparent)}
+.v2 .gasto-btn{border-radius:var(--r-m);border-width:0;font-weight:700}
+.v2 .seg{background:color-mix(in srgb,var(--ink) 6%,transparent);border-radius:var(--r-m)}
+.v2 .seg button[aria-pressed="true"]{background:var(--page);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--azul)}
+.v2 .indice-btn,.v2 .hero-cog,.v2 .simple-btn{background:color-mix(in srgb,var(--surface) 70%,transparent);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.v2 .simple-btn[aria-pressed="true"]{background:var(--azul);color:var(--page)}
+:focus-visible{outline-color:var(--azul)}
+
+/* ---------- Campos: como renglones para escribir ---------- */
+.v2 input[type=number],.v2 input[type=date],.v2 input[type=text],.v2 input[type=time],.v2 input[type=month],.v2 select,.v2 textarea{
+  font-size:max(16px,1em);background:color-mix(in srgb,var(--surface) 80%,transparent);color:var(--ink);
+  border:1px solid var(--line);border-bottom:2px solid var(--line-2);border-radius:var(--r-s) var(--r-s) 2px 2px}
+.v2 input:focus,.v2 select:focus,.v2 textarea:focus{border-bottom-color:var(--azul);outline:none;box-shadow:0 2px 0 -1px var(--azul)}
+.v2 .money>span,.v2 .mon-btn{color:var(--oro-t);font-family:var(--f-libro);font-weight:700}
+.v2 .gform .money input{flex:1 1 auto;width:100%;min-width:0}
+.v2 [data-gform="q"] .f-monto,.v2 [data-gform="g"] .f-monto{grid-column:1 / -1}
+@media (min-width:641px){.v2 [data-gform="q"] .f-monto,.v2 [data-gform="g"] .f-monto{grid-column:auto}.v2 [data-gform="q"] .f-nota,.v2 [data-gform="g"] .f-nota{grid-column:span 2}}
+
+/* ---------- Hoy ---------- */
+.v2 .cd-l,.v2 .hoy-hero .hh-l,.v2 .hchip span{font:600 var(--t2) var(--f-libro);letter-spacing:.12em;color:var(--muted)}
+.v2 .chip-g{background:color-mix(in srgb,var(--surface) 70%,transparent);box-shadow:inset 0 0 0 1px var(--line);border-radius:var(--r-m);color:var(--ink)}
+.v2 .chip-g b{font-family:var(--f-body)}
+
+/* En los otros capítulos: encabezado corrido de la página */
+.v2[data-vista="otra"] .mini:not([hidden]){background:transparent;box-shadow:none;border-radius:0;padding:0 2px var(--e3);border-bottom:1px solid var(--line)}
+.v2 .mini small{font:600 var(--t1) var(--f-libro);letter-spacing:.14em;color:var(--muted)}
+.v2 .mini b{font-size:var(--t5);color:var(--azul)}
+.v2 .mini .mn-b b{color:var(--oro-t)}
+
+/* ---------- La cinta del índice: cuelga del borde de arriba de la página ---------- */
+.v2 .indice-btn{position:absolute;top:-10px;right:22px;z-index:3;width:40px;min-height:0;height:72px;padding:0;border-radius:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:4px;padding-top:16px;
+  background:linear-gradient(90deg,#22379A,var(--azul) 45%,#22379A);color:#F3E6C8;box-shadow:0 4px 6px rgba(3,6,20,.35);
+  clip-path:polygon(0 0,100% 0,100% 100%,50% 84%,0 100%);transition:transform .14s ease}
+.v2 .indice-btn:active{transform:translateY(3px)}
+.v2 .indice-btn svg{width:20px;height:20px;color:inherit}
+.v2 .indice-btn span{font:600 10px/1 var(--f-body);letter-spacing:.04em}
+.v2 .hero>div:first-child{padding-right:52px}
+
+/* ---------- Pie: el folio ---------- */
+.v2 .foot{display:flex;flex-direction:column;align-items:center;gap:var(--e2);text-align:center;color:var(--muted);font-size:var(--t1)}
+.v2 .foot::before{content:attr(data-folio);font:600 var(--t3) var(--f-libro);font-style:italic;color:var(--oro-t);letter-spacing:.06em}
+
+/* ---------- Barra de capítulos: lomos azul cósmico con números dorados ---------- */
+@media (max-width:767px){
+  :root.v2 .tabs{background:var(--cielo),linear-gradient(180deg,var(--cosmos-3),var(--cosmos-1));background-size:180px 180px,auto;border-radius:16px;
+    -webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:0 12px 30px rgba(3,6,20,.6),inset 0 1px 0 rgba(255,210,122,.35),inset 0 0 0 1px rgba(255,210,122,.18)}
+  .v2 .tab.lomo{background:transparent;color:#C9CBE0;border-radius:var(--r-m)}
+  .v2 .tab.lomo+.tab.lomo{box-shadow:inset 1px 0 0 rgba(255,210,122,.14)}
+  .v2 .tab.lomo .lomo-n{color:#E2C27A}
+  .v2 .tab.lomo[aria-selected="true"]{background:rgba(255,210,122,.14);color:#F4F1FF}
+  .v2 .tab.lomo[aria-selected="true"] .lomo-n{color:#FFD27A}
+  .v2 .tab.lomo[aria-selected="true"]::before{background:var(--cta)}
+}
+@media (min-width:768px){
+  :root.v2 .tabs{position:static;background:transparent;margin:0;-webkit-backdrop-filter:none;backdrop-filter:none}
+  .v2 .tab.lomo{background:color-mix(in srgb,var(--surface) 60%,transparent);border:0;box-shadow:inset 0 0 0 1px var(--line);border-radius:var(--r-m) var(--r-m) 3px 3px;color:var(--ink)}
+  .v2 .tab.lomo .lomo-n{color:var(--oro-t)}
+  .v2 .tab.lomo[aria-selected="true"]{background:var(--page);box-shadow:inset 0 -3px 0 var(--cta),inset 0 0 0 1px var(--line-2)}
+}
+.v2 .mic{background:var(--cta);color:var(--on-cta);box-shadow:0 10px 30px rgba(3,6,20,.55),inset 0 0 0 2px rgba(255,255,255,.25)}
+
+/* ---------- Hojas emergentes y avisos: papel ---------- */
+.v2 .sheet-in,.v2 .voz,.v2 .welcome-in,.v2 .tour-bx{background:var(--fibra),var(--page);color:var(--ink);box-shadow:0 -10px 40px rgba(3,6,20,.5),inset 0 0 0 1px var(--line)}
+.v2 .toast{background:var(--cosmos-2);color:#F4F1FF;box-shadow:0 10px 30px rgba(3,6,20,.5),inset 0 0 0 1px rgba(255,210,122,.3)}
+.v2 .toast-btn{color:#FFD27A}
+
+/* Un gasto recién anotado aparece como tinta */
+.v2 .tinta-nueva{animation:tinta-in .5s cubic-bezier(.2,.7,.2,1)}
+@keyframes tinta-in{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+.lb-pausa *{animation-play-state:paused!important}
+@media (prefers-reduced-motion:reduce){.v2 .tinta-nueva{animation:none}.v2 .btn,.v2 .indice-btn{transition:none}}

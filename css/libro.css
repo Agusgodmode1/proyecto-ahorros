@@ -257,3 +257,37 @@
 .ix-list li.actual .ix-cinta{height:44px;opacity:1;box-shadow:0 0 12px rgba(198,244,50,.3)}
 .ix-list li.actual .ix-t{color:var(--lb-lima-cl)}
 .ix-aj .ix-n{font-size:18px}
+
+/* =====================================================================
+   Tapa cósmica (2.3): azul de cielo nocturno con nebulosa, estrellas que titilan,
+   una estrella fugaz cada tanto y el título grabado en dorado.
+   Todo es gradiente estático + opacity/transform animados (barato para el iPhone).
+   ===================================================================== */
+.lb-mesa{background:radial-gradient(110% 70% at 50% 40%,#151d4a 0%,#0a0f2e 50%,#04061a 100%)}
+.lb-mesa::before{background:var(--cielo);background-size:220px 220px;opacity:.55}
+.lb-tapa-f{background:radial-gradient(120% 90% at 30% 20%,#1B2A6B 0%,#0E1640 52%,#070B24 100%);
+  box-shadow:inset 6px 0 12px -4px rgba(0,0,0,.7),inset -2px -3px 8px rgba(0,0,0,.5),inset 1px 1px 0 rgba(255,255,255,.08)}
+.lb-tapa-f::before{border-color:rgba(255,210,122,.5);box-shadow:inset 0 0 0 4px rgba(0,0,0,.2),inset 0 0 0 5px rgba(255,210,122,.22)}
+.lb-neb{position:absolute;inset:-10%;background:radial-gradient(40% 30% at 70% 30%,rgba(75,63,168,.28),transparent 70%),radial-gradient(35% 28% at 25% 75%,rgba(75,63,168,.2),transparent 70%),radial-gradient(25% 20% at 55% 60%,rgba(42,79,184,.18),transparent 70%)}
+.lb-astros{position:absolute;inset:0;background:var(--cielo);background-size:110px 130px;opacity:.8;animation:lb-titila 7s ease-in-out infinite}
+.lb-astros.b{background-size:150px 90px;background-position:40px 25px;opacity:.5;animation-duration:11s;animation-delay:-4s}
+@keyframes lb-titila{0%,100%{opacity:.85}50%{opacity:.35}}
+/* la estrella fugaz: cruza en ~0,9 s y después espera (ciclo de 9 s) */
+.lb-fugaz{position:absolute;top:18%;left:-30%;width:42%;height:2px;border-radius:2px;opacity:0;transform:rotate(-18deg);
+  background:linear-gradient(90deg,rgba(255,210,122,0),rgba(255,210,122,.85) 70%,#F4F1FF);box-shadow:0 0 6px rgba(255,210,122,.6);
+  animation:lb-fugaz 9s cubic-bezier(.3,.6,.4,1) infinite;animation-delay:2.5s}
+@keyframes lb-fugaz{0%{opacity:0;transform:rotate(-18deg) translateX(0)}2%{opacity:1}10%{opacity:0;transform:rotate(-18deg) translateX(330%)}100%{opacity:0;transform:rotate(-18deg) translateX(330%)}}
+.lb-orn{color:#E2C27A}
+.lb-tit{color:#E2B65C}
+.lb-tit-g{color:transparent;background:linear-gradient(180deg,#FFE7A6 0%,#E2B65C 45%,#A87A1F 100%);-webkit-background-clip:text;background-clip:text}
+.lb-tit small{color:#E2C27A;opacity:.9;-webkit-text-fill-color:#E2C27A}
+.lb-tit-g::after{color:#FFD27A;-webkit-text-fill-color:#FFD27A}
+.lb-lema{color:#C9CBE0}
+.lb-contra{background:#0b1234}
+.lb-lomo{background:linear-gradient(90deg,#050821,#16225a 45%,#050821)}
+.lb-broche>b::after{background:radial-gradient(circle at 35% 35%,#FFF3D0,#FFD27A 45%,#A87A1F);box-shadow:0 0 10px rgba(255,210,122,.6)}
+.lb-libro:focus-visible .lb-tapa-f{box-shadow:0 0 0 3px #FFD27A}
+.lb-toca{color:#C9CBE0}
+.lb-link{color:#C9CBE0;text-decoration-color:rgba(201,203,224,.45)}
+.lb-nota{color:#A9ACC8}
+@media (prefers-reduced-motion:reduce){.lb-astros,.lb-fugaz{animation:none}.lb-fugaz{display:none}}

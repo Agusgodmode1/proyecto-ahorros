@@ -40,7 +40,7 @@ function htmlPortada(nuevo){
     +'<div class="lb-sombra"></div><div class="lb-contra"></div><div class="lb-bloque"></div>'
     +'<div class="lb-canto lb-canto-d"></div><div class="lb-canto lb-canto-a"></div>'+hojas
     +'<div class="lb-lomo"></div>'
-    +'<div class="lb-tapa"><div class="lb-tapa-f"><i class="lb-esq a"></i><i class="lb-esq b"></i><i class="lb-esq c"></i><i class="lb-esq d"></i>'
+    +'<div class="lb-tapa"><div class="lb-tapa-f"><i class="lb-neb"></i><i class="lb-astros a"></i><i class="lb-astros b"></i><i class="lb-fugaz"></i><i class="lb-esq a"></i><i class="lb-esq b"></i><i class="lb-esq c"></i><i class="lb-esq d"></i>'
     +ORN+'<h1 class="lb-tit"><small>el libro del</small><span class="lb-tit-g" data-t="Ahorro">Ahorro</span></h1><p class="lb-lema">Para que guardes algo, por más mínimo que sea</p></div>'
     +'<div class="lb-tapa-d"></div></div>'
     +'<div class="lb-broche"><b></b></div>'

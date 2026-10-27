@@ -135,6 +135,22 @@ var plegados={};/* tarjetas plegables abiertas, por id */
 function foldIni(id,tono,tit,sub){return '<details class="card fold '+tono+'" data-fold="'+id+'"'+(plegados[id]?' open':'')+'><summary><span class="fold-t">'+tit+'</span><span class="fold-s">'+sub+'</span></summary><div class="stack fold-b">'}
 /* Cuenta regresiva del cobro, con su propia tarjeta y una barra de 12 tramos */
 var estrellasVistas=null,polvoDia=null;
+/* (2.15) Las 12 estrellitas como una constelación, igual que el bordado de la tapa: estrellas de cinco puntas
+   sobre una onda suave; las encendidas se unen con un hilo dorado y la última (hoy) brilla un poco más. */
+function estrella(x,y,R){
+  var p='';for(var k=0;k<10;k++){var a=(-90+k*36)*Math.PI/180,r=k%2?R*.42:R;p+=(k?'L':'M')+(x+r*Math.cos(a)).toFixed(1)+' '+(y+r*Math.sin(a)).toFixed(1)}
+  return p+'Z';
+}
+function constelacion(on,desde){
+  var pts=[],i,h='';
+  for(i=0;i<12;i++)pts.push([12+i*276/11,19+8*Math.sin(i*.95+.4)]);
+  if(on>1)h+='<polyline class="hilo" points="'+pts.slice(0,on).map(function(q){return q[0].toFixed(1)+','+q[1].toFixed(1)}).join(' ')+'"/>';
+  for(i=0;i<12;i++){
+    var lit=i<on,hoy=lit&&i===on-1;
+    h+='<path class="st'+(lit?' on':'')+(hoy?' hoy':'')+(lit&&i>=desde?' nueva':'')+'"'+(lit&&i>=desde?' style="--i:'+(i-desde)+'"':'')+' d="'+estrella(pts[i][0],pts[i][1],hoy?8.5:lit?6.5:4.5)+'"/>';
+  }
+  return '<svg viewBox="0 0 300 38" preserveAspectRatio="xMidYMid meet">'+h+'</svg>';
+}
 export function renderCountdown(){
   var state=ctx.state,el=$('#countdown');if(!el)return;
   var t=today(),d=diffDays(t,state.plan.cobro),big,small,lab;
@@ -146,11 +162,11 @@ export function renderCountdown(){
   if(d<=0)on=12;
   /* 12 estrellitas que se van encendiendo; solo las que se encienden ahora tienen su brillo de entrada */
   var desde=estrellasVistas===null?0:Math.min(estrellasVistas,on);estrellasVistas=on;
-  for(var i=0;i<12;i++)seg+='<i'+(i<on?' class="on'+(i>=desde?' nueva':'')+'" style="--i:'+(i-desde)+'"':'')+'></i>';
+  seg=constelacion(on,desde);
   /* el color se calienta a medida que se acerca el cobro: lejos, oro pálido; cerca, dorado; los últimos 3 días, ámbar; el día, dorado con polvo de estrellas */
   el.classList.remove('cd-lejos','cd-cerca','cd-ya','cd-hoy');
   el.classList.add(d<=0?'cd-hoy':d<=3?'cd-ya':d<=7?'cd-cerca':'cd-lejos');
-  el.innerHTML='<span class="cd-l">'+lab+'</span><span class="cd-v"><span class="cd-n'+(d>0?'':' txt')+'">'+esc(big)+'</span><span class="cd-t">'+esc(small)+'</span></span><span class="cd-seg" aria-hidden="true">'+seg+'</span><span class="cd-d">'+esc(fLarga(state.plan.cobro))+'</span>';
+  el.innerHTML='<span class="cd-l">'+lab+'</span><span class="cd-v"><span class="cd-n'+(d>0?'':' txt')+'">'+esc(big)+'</span><span class="cd-t">'+esc(small)+'</span></span><span class="cd-seg cd-const" aria-hidden="true">'+seg+'</span><span class="cd-d">'+esc(fLarga(state.plan.cobro))+'</span>';
   if(d===0&&polvoDia!==t&&ctx.tab==='resumen'){polvoDia=t;setTimeout(function(){polvo(el.querySelector('.cd-v'),18,0)},250)}
   el.setAttribute('aria-label',(d>0?d+' '+small+' para cobrar':(d===0?'Cobrás hoy':'Ya cobraste'))+', '+fLarga(state.plan.cobro));
 }

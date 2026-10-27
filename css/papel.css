@@ -1075,3 +1075,15 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 .v2 .ph-intro>summary::after,.v2 .wk-de>summary::after,.v2 .f-rep>summary::after,.v2 .sub-d>summary::after,.v2 .lec-ren>summary::after{color:var(--oro-t)}
 .v2 .btn.quiet:hover,.v2 .linklike:hover,.v2 a:hover{text-decoration-color:var(--ink)}
 .v2 button.hchip small{color:var(--ink);text-decoration:underline;text-decoration-color:var(--oro-t);text-decoration-thickness:1.5px;text-underline-offset:4px}
+
+/* =====================================================================
+   El cobro como constelación (2.15): estrellas de cinco puntas unidas por un hilo dorado
+   ===================================================================== */
+.v2 .hoja .cd .cd-const{display:block;width:100%;margin:4px 0 0;gap:0}
+.v2 .cd-const svg{display:block;width:100%;height:auto;max-height:44px;overflow:visible}
+.v2 .cd-const .st{fill:color-mix(in srgb,var(--ink) 16%,transparent)}
+.v2 .cd-const .st.on{fill:var(--cobro-c)}
+.v2 .cd-const .st.hoy{filter:drop-shadow(0 0 4px color-mix(in srgb,var(--cobro-c) 70%,transparent))}
+.v2 .cd-const .hilo{fill:none;stroke:var(--cobro-c);stroke-width:1.1;stroke-opacity:.55;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.v2 .cd-const .st.nueva{transform-box:fill-box;transform-origin:center;animation:cd-estrella .34s cubic-bezier(.3,1.6,.5,1) backwards;animation-delay:calc(var(--i,0)*45ms)}
+@media (prefers-reduced-motion:reduce){.v2 .cd-const .st.nueva{animation:none}}

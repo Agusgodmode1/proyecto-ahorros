@@ -18,6 +18,7 @@ import {abrirLibro,initLibro} from './ui/libro.js';
 import {copiaVisible,girar,empezar,terminar as terminarPase} from './ui/pase.js';
 import {introCapitulo,olvidarIntros} from './ui/intro.js';
 import {initIndice} from './ui/indice.js';
+import {initFlechas,actualizarFlechas} from './ui/flechas.js';
 import {renderGuardado,initGuardado} from './ui/guardado.js';
 import {CAPITULOS,capituloDe,vecina,numeroDePagina,nombreDePagina} from './logica/capitulos.js';
 import {DIAL,MESL,parse} from './logica/fechas.js';
@@ -113,7 +114,7 @@ function renderAll(){
   if(ctx.tab==='fijos')renderFijos(pc);
   if(ctx.tab==='logros')renderLogros(pc);
   if(ctx.tab==='guardado')renderGuardado();
-  renderPie(pc);
+  renderPie(pc);actualizarFlechas();
   /* la introducción del capítulo: completa la primera vez, después en una línea */
   var capA=capituloDe(ctx.tab);if(capA&&capA.id!=="resumen")introCapitulo($(capA.id==="semanas"?"#p-semana":PANELES[capA.id]),capA.id);else if(ctx.tab==='ajustes')introCapitulo($('#p-ajustes'),'ajustes');
   if(ctx.tab==='ajustes'){renderAjustes(guardado);renderFeriados();renderAjustesPin();marcarSonido();
@@ -182,7 +183,9 @@ function abrirPrologo(pagina,editar,dir){
       persist();syncInputs();renderAll();
       toastAccion('Listo: ≈ '+money(v.porDia)+' por día hasta que cobres','Deshacer',function(){deshacerAjustePacto(ctx.state,v.deshacer);persist();syncInputs();renderAll()});
     },
-    alCerrar:function(){if(ctx.tab!=='resumen'){ctx.tab='resumen';renderAll()}}});
+    alCerrar:function(){if(ctx.tab!=='resumen'){ctx.tab='resumen';renderAll()}},
+    /* desde la primera página del prólogo, hacia atrás: la tapa cerrada (al tocarla se abre en Hoy) */
+    alTapa:function(){cerrarLibro()}});
 }
 /* «Cerrar el libro»: la tapa se cierra; al tocarla se abre de nuevo en Hoy */
 function cerrarLibro(){
@@ -356,6 +359,11 @@ ctx.persist=persist;ctx.renderAll=renderAll;ctx.go=go;ctx.syncInputs=syncInputs;
 
 (async function boot(){
   initPerfil();initTour();initPin();initLibro();initIndice();initDeslizar();
+  initFlechas({ir:function(d){go(d)},capitulos:function(){
+    if(!ctx.state)return {};
+    var pc=planNow(),n=pc.weeks.length,cw=curWeek(pc,today()),a=vecina(ctx.tab,-1,n,cw),s=vecina(ctx.tab,1,n,cw);
+    return {ant:a,sig:s,antNom:a==='prologo'?'el pacto':a&&nombreDePagina(a),sigNom:s&&nombreDePagina(s)};
+  }});
   registrarSW(function(){return ctx.state?flush():null});
   pedirPersistencia().then(function(p){guardado.persistente=p});
   var d=await cargar();

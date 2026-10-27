@@ -167,7 +167,8 @@ function pagHTML(id){
   var cab='<div class="lb-cab'+(conBrote?' con-brote':'')+'"><span class="lb-cap">'+(ciclo?'pacto nuevo':id==='pacto'?'el pacto':'prólogo')+'</span>'
     +(conBrote?broteHTML(Math.min(broteVisto,3)):'')
     +(hojear()||ciclo?'<button class="lb-link" type="button" data-lb="cerrar-libro">'+(ciclo?'Ahora no':'Ir a Hoy')+'</button>':conBrote?'<span></span>':'')+'</div>';
-  var atras=idx>0?'<button class="lb-btn chico" type="button" data-lb="atras" aria-label="Página anterior">‹ Atrás</button>':'';
+  var atras=idx>0?'<button class="lb-btn chico" type="button" data-lb="atras" aria-label="Página anterior">‹ Atrás</button>'
+    :(hojear()&&o.alTapa?'<button class="lb-btn chico" type="button" data-lb="atras" aria-label="Cerrar el libro: la tapa">‹ La tapa</button>':'');
   var sig='<button class="lb-btn si" type="button" data-lb="sig">'+(id==='p1'?(hojear()?'Pasar la página':'Empezar'):'Seguir')+'</button>';
   var acc='<div class="lb-acc">'+atras+sig+'</div>',h='';
   if(id==='p1'){
@@ -458,6 +459,13 @@ function cerrarTodo(dir){
   }
   h.animate([{opacity:1},{opacity:0}],{duration:280,fill:'forwards'}).onfinish=fin;
 }
+/* Desde la primera página del prólogo hacia atrás: el libro se cierra y queda la tapa */
+function aLaTapa(){
+  var f=o.alTapa,h=$('#lb-hojas');
+  devolverLetra();terminarPase();
+  h.hidden=true;h.innerHTML='';h.classList.remove('lb-transp');
+  f();
+}
 function abrirHojas(pagina,dir){
   var h=$('#lb-hojas');
   h.innerHTML='<div class="lb-pila" id="lb-pila"></div>';h.hidden=false;
@@ -531,7 +539,7 @@ export function initLibro(){
     var b=e.target.closest('[data-lb]');if(!b||b.closest('[aria-hidden="true"]'))return;
     var a=b.getAttribute('data-lb');leer();
     if(a==='sig'){if(!valida(PAGS[idx]))return;if(idx<PAGS.length-1)irA(idx+1,1);return}
-    if(a==='atras'){if(idx>0){E.edit=null;irA(idx-1,-1)}return}
+    if(a==='atras'){if(idx>0){E.edit=null;irA(idx-1,-1)}else if(hojear()&&o.alTapa)aLaTapa();return}
     if(a==='cambiar'){empezarEdicion(PAGS[idx]);return}
     if(a==='cancelar'){E.edit=null;irA(idx,0);return}
     if(a==='guardar'){guardarEdicion();return}

@@ -990,3 +990,29 @@ html{font-variation-settings:'SOFT' 100,'WONK' 0}
 .v2 .hoja .cd.cd-ya .cd-v::before{inset:-12px -20px -8px;background:radial-gradient(closest-side,color-mix(in srgb,var(--cobro-tinta) 22%,transparent),transparent)}
 /* el cobro va solo en Hoy: también con «Hoy en versión corta» (antes aparecía en todos los capítulos y desarmaba el encabezado) */
 .v2 #app.simple .hoja[data-vista="otra"] .cd{display:none}
+
+/* =====================================================================
+   Flechas para pasar de página (2.14): dos puntas de papel en los bordes, discretas.
+   El toque mide 44 × 64; lo que se ve es una lengüeta de 22 px con la flecha dorada.
+   ===================================================================== */
+.flechas{position:fixed;inset:0;z-index:62;pointer-events:none}
+.flechas .fl{position:fixed;top:calc(50% - 32px);width:44px;height:64px;padding:0;border:0;background:transparent;pointer-events:auto;cursor:pointer;
+  display:grid;place-items:center;color:var(--oro-t,#8A6A1F);opacity:.9;transition:opacity .18s ease;-webkit-tap-highlight-color:transparent}
+.flechas .fl[hidden]{display:none}
+.flechas .fl::before{content:"";position:absolute;top:8px;bottom:8px;width:22px;background:color-mix(in srgb,var(--surface,#FBF5E7) 92%,transparent);
+  box-shadow:inset 0 0 0 1px var(--line-2,rgba(28,36,64,.28)),0 2px 6px rgba(0,0,0,.12)}
+.flechas .fl-ant{left:env(safe-area-inset-left,0px)}
+.flechas .fl-ant::before{left:0;border-radius:0 12px 12px 0}
+.flechas .fl-sig{right:env(safe-area-inset-right,0px)}
+.flechas .fl-sig::before{right:0;border-radius:12px 0 0 12px}
+.flechas .fl span{position:relative;font:600 24px/1 var(--f-libro,Georgia,serif);margin-top:-2px}
+.flechas .fl-ant span{transform:translateX(-11px)}
+.flechas .fl-sig span{transform:translateX(11px)}
+.flechas .fl:active::before{background:var(--surface-2,#EFE2C6)}
+.flechas .fl:focus-visible{outline:none}
+.flechas .fl:focus-visible::before{box-shadow:inset 0 0 0 2px var(--azul,#2A4FB8)}
+/* mientras bajás por la página, más tenues; con el teclado, una hoja o el índice abiertos, no están */
+html.fl-mueve .flechas .fl{opacity:.3}
+html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .flechas{display:none}
+/* en la compu, en los capítulos ya están las flechas grandes del pie */
+@media (min-width:1100px){html:not(.lb-abierto) .flechas{display:none}}

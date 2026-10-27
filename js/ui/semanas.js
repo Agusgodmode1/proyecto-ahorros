@@ -1,6 +1,7 @@
 /* Pestaña Semanas: selector, "te quedan", los 7 días, anotar y borrar gastos. */
+import {textoCada} from '../logica/repetidos.js';
 import {parse,addDays,iso,diffDays,DIA,DIAL,MES} from '../logica/fechas.js';
-import {ctx,$,today,planNow,money,n0,esc,fLarga,rango,cap,toast} from './comun.js';
+import {ctx,$,today,planNow,money,n0,esc,fLarga,rango,cap,toast,toastAccion} from './comun.js';
 import {sobranteDe} from '../logica/mes.js';
 import {semanaDe} from '../logica/plan.js';
 import {borrarGasto,renglonGasto,abrirHojaGasto,diasHasta} from './gastos.js';
@@ -79,6 +80,11 @@ export function renderWeek(pc){
   if(!items.length)h+='<div class="empty">'+(fut?'Esta semana todavía no empezó.':'Todavía no anotaste gastos esta semana. Cada gasto que anotes baja lo que te queda.')+'</div>';
   else h+='<ul class="list glist gl-1">'+items.map(renglonGasto).join('')+'</ul>';
   h+='</div>';
+  /* (2.16) los gastos que se repiten solos: pausar o dejar de repetir */
+  var R=state.repetidos||[];
+  if(R.length)h+='<div class="card stack rep-card"><div class="sec"><h2>Se repiten solos</h2><p class="note">Se anotan solos cada vez que toca, hasta hoy. Si un día no lo gastaste, borrá ese gasto de la lista.</p></div><ul class="list rep-l">'
+    +R.map(function(r){return '<li><span class="what"><b>'+esc(r.nota||'Sin detalle')+'</b><span class="src">'+money(r.monto)+' · '+textoCada(r.cada)+(r.pausa?' · en pausa':'')+'</span></span>'
+      +'<span class="cat-btns"><button class="btn quiet sm" type="button" data-repp="'+esc(r.id)+'">'+(r.pausa?'Seguir':'Pausar')+'</button><button class="btn quiet sm" type="button" data-repb="'+esc(r.id)+'">Dejar de repetir</button></span></li>'}).join('')+'</ul></div>';
   el.innerHTML=h;
 }
 
@@ -93,6 +99,15 @@ export function initSemanas(){
   });
   p.addEventListener('toggle',function(e){var d=e.target;if(d.matches&&d.matches('[data-wkde]'))abiertoDe[d.getAttribute('data-wkde')]=d.open},true);
   p.addEventListener('click',function(e){
+    var rp=e.target.closest('[data-repp]'),rb=e.target.closest('[data-repb]');
+    if(rp||rb){
+      var id=(rp||rb).getAttribute(rp?'data-repp':'data-repb'),R=ctx.state.repetidos||[],r=R.filter(function(x){return x.id===id})[0];if(!r)return;
+      /* al seguir, se arranca desde hoy: lo que tocó mientras estuvo en pausa no se anota */
+      if(rp){r.pausa=!r.pausa;if(!r.pausa){var ay=iso(addDays(parse(today()),-1));if(!r.ultimo||r.ultimo<ay)r.ultimo=ay}ctx.persist();ctx.renderAll();toast(r.pausa?'En pausa: no se anota más hasta que toques «Seguir»':'Sigue: se anota solo '+textoCada(r.cada));return}
+      var i=R.indexOf(r);R.splice(i,1);ctx.persist();ctx.renderAll();
+      toastAccion('Ya no se repite «'+(r.nota||'el gasto')+'» (lo anotado queda)','Deshacer',function(){(ctx.state.repetidos=ctx.state.repetidos||[]).splice(i,0,r);ctx.persist();ctx.renderAll()});
+      return;
+    }
     var m=e.target.closest('[data-gsem]');
     if(m){var w=planNow().weeks[Number(m.getAttribute('data-gsem'))];if(!w)return;var f=diasDeSemana(w),t=today();
       abrirHojaGasto({titulo:'Gasto de la semana',fechas:f,fecha:f.some(function(x){return x[0]===t})?t:f[f.length-1][0]});return}

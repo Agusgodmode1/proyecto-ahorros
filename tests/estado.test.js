@@ -160,3 +160,15 @@ test('v16 → v17: el extracto queda igual y suma dónde recordar columnas y avi
   assert.deepEqual(defaults().extracto.columnas,{});
   assert.ok(ejemplo('2026-10-27').extracto.texto.indexOf('ejemplo inventado')>0,'«Solo mirar» trae un extracto de ejemplo');
 });
+test('v17 → v18: suma los gastos que se repiten solos, sin tocar nada más',function(){
+  var g=[{id:'g1',fecha:'2026-10-20',monto:50,nota:'Boleto'}];
+  var m=migrar({v:17,gastos:g,plan:{monto:1,inicio:'2026-10-01',cobro:'2026-11-06'},pacto:{sellado:'2026-10-01',numero:1}});
+  assert.equal(m.v,VERSION_ESTADO);
+  assert.deepEqual(m.gastos,g);
+  assert.deepEqual(m.repetidos,[]);
+  assert.deepEqual(migrar({v:17,repetidos:'roto'}).repetidos,[]);
+  assert.deepEqual(defaults().repetidos,[]);
+  var e=ejemplo('2026-10-27');
+  assert.equal(e.repetidos.length,1,'«Solo mirar» trae un gasto que se repite');
+  assert.equal(e.repetidos[0].ultimo,'2026-10-26','el de hoy se anota solo al abrir');
+});

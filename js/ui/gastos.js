@@ -1,5 +1,6 @@
 /* Anotar, editar y borrar gastos. Lo usan Semanas y Plan.
    La categoría se sugiere sola a partir de la nota (el mismo clasificador que la voz) y aprende si la corregís. */
+import {nuevoRepetido,textoCada} from '../logica/repetidos.js';
 import {categoriaGasto,aprender} from '../logica/voz.js';
 import {num,uid} from '../logica/util.js';
 import {cotizacion,gastoUSD,aPesos} from '../logica/monedas.js';
@@ -27,6 +28,9 @@ export function formGasto(p,o){
     +'<div class="field f-nota"><label for="'+p+'-nota" class="sub-l">¿En qué?</label><input id="'+p+'-nota" type="text" maxlength="60" placeholder="almuerzo, boleto, súper" value="'+esc(g.nota||'')+'"></div>';
   if(o.fechas&&o.fechas.length)h+='<div class="field f-fecha"><label for="'+p+'-fecha" class="sub-l">¿Qué día?</label><select id="'+p+'-fecha">'+o.fechas.map(function(f){return '<option value="'+f[0]+'"'+(f[0]===(g.fecha||o.fecha)?' selected':'')+'>'+esc(f[1])+'</option>'}).join('')+'</select></div>';
   else h+='<input type="hidden" id="'+p+'-fecha" value="'+esc(g.fecha||o.fecha)+'">';
+  /* (2.16) ¿se repite solo? (al anotar uno nuevo): plegado, para que anotar siga siendo monto, nota y día */
+  if(!g.id&&o.repite)h+='<div class="f-rep-g" data-rep=""><button type="button" class="linklike f-rep-abrir" data-grep-abrir aria-expanded="false">¿Se repite? ▸</button>'
+    +'<div class="seg f-rep-op" role="group" aria-label="¿Se repite?" hidden><button type="button" data-grep="" aria-pressed="true">No</button><button type="button" data-grep="dia" aria-pressed="false">Cada día</button><button type="button" data-grep="semana" aria-pressed="false">Cada semana</button><button type="button" data-grep="mes" aria-pressed="false">Cada mes</button></div></div>';
   h+='<div class="row-btns f-btn"><button class="btn primary" type="submit">'+esc(o.boton||(g.id?'Guardar cambios':'Anotar'))+'</button>'
     +(g.id?'<button class="btn quiet" type="button" data-gcancel="'+p+'">Cancelar</button>':'')+'</div></form>';
   return h;
@@ -69,6 +73,7 @@ export function leerForm(f){
   var m=num(q('monto').value);
   if(!(m>0)){q('monto').focus();return null}
   var sel=q('cat'),d={monto:Math.round(m*100)/100,nota:q('nota').value.trim().slice(0,60),cat:sel.value,sugerida:sugerir(q('nota').value),fecha:q('fecha').value};
+  var rg=f.querySelector('.f-rep-g');if(rg&&rg.getAttribute('data-rep'))d.rep=rg.getAttribute('data-rep');
   if(f.getAttribute('data-moneda')==='USD'){
     /* Un gasto que ya estaba en dólares conserva su cotización; uno nuevo usa la de hoy */
     var cot=num(f.getAttribute('data-cotiz'))||cotizacion(ctx.state);
@@ -138,7 +143,7 @@ export function borrarGasto(id){
 export function itemGasto(g,cuando){
   var c=catDe(g);
   return '<li><div class="gi-main"><i class="dot" style="background:'+catColor(c)+'"></i><span class="gi-nota">'+(g.nota?esc(g.nota):'<span class="muted">Sin detalle</span>')+'</span><span class="amt">'+money(g.monto)+(g.usd?'<small class="amt-usd">'+usd(g.usd)+'</small>':'')+'</span></div>'
-    +'<div class="gi-sub"><span class="src">'+esc(cuando)+' · '+esc(c)+(g.src==='brou'?' · del extracto':g.src==='voz'?' · por voz':g.src==='ajuste'?' · ajuste de saldo':'')+'</span>'
+    +'<div class="gi-sub"><span class="src">'+esc(cuando)+' · '+esc(c)+(g.src==='brou'?' · del extracto':g.src==='voz'?' · por voz':g.src==='ajuste'?' · ajuste de saldo':g.src==='repite'?' · se repite solo':'')+'</span>'
     +'<span class="gbtns"><button class="btn quiet sm" type="button" data-editg="'+esc(g.id)+'" aria-label="Editar gasto">Editar</button><button class="btn quiet sm" type="button" data-delg="'+esc(g.id)+'" aria-label="Borrar gasto">Borrar</button></span></div></li>';
 }
 
@@ -149,7 +154,7 @@ export function renglonGasto(g){
   var c=catDe(g),d=parse(g.fecha),qué=g.nota?esc(g.nota):'<span class="muted">Sin detalle</span>';
   /* todo el renglón se toca para corregir; al lado, borrar */
   return '<li class="gl1"><button class="gl-e" type="button" data-editg="'+esc(g.id)+'" aria-label="Corregir: '+esc((g.nota||'sin detalle')+', '+DIA[d.getDay()]+' '+d.getDate()+', '+money(g.monto))+'">'
-    +'<i class="dot" style="background:'+catColor(c)+'"></i><span class="gl-q">'+qué+'</span><span class="gl-d">'+DIA[d.getDay()]+' '+d.getDate()+'</span>'
+    +'<i class="dot" style="background:'+catColor(c)+'"></i><span class="gl-q">'+qué+(g.rep?' <small class="gl-rep" title="Se repite solo">↻</small>':'')+'</span><span class="gl-d">'+DIA[d.getDay()]+' '+d.getDate()+'</span>'
     +'<b class="amt">'+money(g.monto)+'</b>'+LAPIZ+'</button>'
     +'<button class="gl-b" type="button" data-delg="'+esc(g.id)+'" aria-label="Borrar '+esc(g.nota||'el gasto')+'">'+TACHO+'</button></li>';
 }
@@ -171,7 +176,7 @@ export function abrirHojaGasto(o){
   hojaEdit=g?g.id:null;
   b.innerHTML='<div class="sheet-top"><h2 id="gs-t">'+esc(g?'Corregir el gasto':o.titulo||'Anotar un gasto')+'</h2><button class="btn quiet" type="button" id="gasto-x">Cerrar</button></div>'
     +(g?'':chipsFrecuentes('q'))
-    +formGasto('q',{fecha:g?g.fecha:o.fecha||fechas[0][0],fechas:fechas,gasto:g,boton:g?'Guardar cambios':'Anotar'});
+    +formGasto('q',{fecha:g?g.fecha:o.fecha||fechas[0][0],fechas:fechas,gasto:g,boton:g?'Guardar cambios':'Anotar',repite:true});
   s.hidden=false;document.documentElement.classList.add('hoja');
   /* En iPhone el teclado solo aparece si el foco se pone en el mismo toque (sin esperar) */
   var m=$('#q-monto');if(m)try{m.focus({preventScroll:true});if(g)m.select()}catch(e){m.focus()}
@@ -182,14 +187,21 @@ export function initHojaGasto(){
   initFormsGasto(s);
   s.addEventListener('click',function(e){
     if(e.target===s||e.target.closest('#gasto-x')||e.target.closest('[data-gcancel="q"]')){cerrarHojaGasto();return}
+    var ra=e.target.closest('[data-grep-abrir]');if(ra){var op=ra.parentNode.querySelector('.f-rep-op');op.hidden=!op.hidden;ra.setAttribute('aria-expanded',String(!op.hidden));return}
+    var rb=e.target.closest('[data-grep]');if(rb){var rg=rb.closest('.f-rep-g');rg.setAttribute('data-rep',rb.getAttribute('data-grep'));rg.querySelectorAll('[data-grep]').forEach(function(x){x.setAttribute('aria-pressed',String(x===rb))});
+      rg.querySelector('[data-grep-abrir]').textContent=rb.getAttribute('data-grep')?'Se repite '+textoCada(rb.getAttribute('data-grep'))+' ▸':'¿Se repite? ▸';return}
     var fr=e.target.closest('[data-frec]');if(fr){var fe=$('#q-fecha');anotarFrecuente(Number(fr.getAttribute('data-frec')),fe?fe.value:today());cerrarHojaGasto();return}
   });
   s.addEventListener('submit',function(e){
     if(!e.target.getAttribute||e.target.getAttribute('data-gform')!=='q')return;
     e.preventDefault();
     var d=leerForm(e.target);if(!d)return;
-    var era=hojaEdit,id=guardarGasto(d,era);cerrarHojaGasto();ctx.renderAll();
+    var era=hojaEdit,id=guardarGasto(d,era);
+    /* (2.16) si se repite, desde ahora se anota solo */
+    if(!era&&d.rep){var gn=ctx.state.gastos.filter(function(x){return x.id===id})[0];if(gn){var nr=nuevoRepetido(gn,d.rep);gn.rep=nr.id;ctx.state.repetidos=ctx.state.repetidos||[];ctx.state.repetidos.push(nr);ctx.persist()}}
+    cerrarHojaGasto();ctx.renderAll();
     if(era){toast('Listo: corregido');return}
+    if(d.rep){toast('Anotado. Desde ahora se anota solo '+textoCada(d.rep)+' (lo pausás o borrás en Semanas)');return}
     var li=document.querySelector('#hoy-out [data-delg="'+id+'"],#p-semana [data-delg="'+id+'"]');if(li&&li.closest('li'))li.closest('li').classList.add('tinta-nueva');
     avisoAnotado(id,'Anotado: '+money(d.monto)+(d.nota?' en '+d.nota:''));
   });

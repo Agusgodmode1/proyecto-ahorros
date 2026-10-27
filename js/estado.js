@@ -23,7 +23,7 @@ import {pactoBase,pactoDesdePlan} from './logica/pacto.js';
         paga y pagador; los pagos guardan el total, tu parte y lo que te devolvieron. Los fijos de antes quedan como «Solo míos».
    v16: Sueldo ordenado: perfil.horas.preguntado («¿hay horas extra?» se pregunta una sola vez; quien ya armó su perfil no la ve),
         perfil.horas.multFeriado (opcional, p. ej. ×2,5), perfil.ingreso.factura y sueldo.factura (cobro con factura). */
-export var VERSION_ESTADO=17;
+export var VERSION_ESTADO=18;
 
 function hoyISO(){return iso(new Date())}
 /* Feriados: por defecto solo cuentan los 5 no laborables (1/1, 1/5, 18/7, 25/8, 25/12).
@@ -57,7 +57,8 @@ export function defaults(hoy){
     recibos:[],                          /* recibos de sueldo confirmados, mes a mes (logica/recibos.js) */
     plantillasRecibo:{},                 /* por empleador: qué renglón del PDF es cada campo */
     pacto:pactoBase(),                   /* {sellado:fecha|null, numero, usd}: los datos del pacto viven en plan */
-    grupos:[]                            /* con quién compartís fijos (logica/reparto.js y compartidos.js) */
+    grupos:[],                           /* con quién compartís fijos (logica/reparto.js y compartidos.js) */
+    repetidos:[]                         /* gastos que se repiten solos (logica/repetidos.js) */
   };
 }
 
@@ -107,6 +108,9 @@ export function ejemplo(hoy){
   s.perfil.horas.preguntado=true;
   /* un recibo de ejemplo del mes anterior (inventado), para ver «¿Te pagaron bien?» */
   s.recibos=[{id:'ej-rec',mes:'2026-09',moneda:'UYU',nominal:45000,haberes:47812.5,aportes:7171.88,fonasa:2151.56,irpf:0,otros:47.81,liquido:38441.25,horasCant:7.5,horasMonto:2812.5,fuente:'ejemplo'}];
+  /* un gasto que se repite solo (2.16): el boleto de cada día; al abrir el ejemplo se anota solo el de hoy */
+  var ayer=iso(new Date(parse(hoy||hoyISO()).getTime()-864e5));
+  s.repetidos=[{id:'ej-rep',nota:'Boleto',monto:50,cat:'Transporte',cada:'dia',desde:ayer,ultimo:ayer,pausa:false}];
   /* un extracto de ejemplo (inventado) para ver el detector de la Tarjeta */
   s.extracto.texto=extractoEjemplo();
   var k=s.plan.cobro;s.fijosPagos={};s.fijosPagos[k]={'ej-alq':{monto:22000,parte:11000,fecha:'2026-10-15',nombre:'Alquiler',paga:'yo'}};
@@ -143,7 +147,9 @@ export function migrar(d){
     plantillasRecibo:obj(x.plantillasRecibo),
     pacto:Object.assign(pactoBase(),obj(x.pacto)),
     /* v15: sin grupos, todos los fijos son solo tuyos (nada cambia en las cuentas) */
-    grupos:Array.isArray(x.grupos)?x.grupos:[]};
+    grupos:Array.isArray(x.grupos)?x.grupos:[],
+    /* v18: sin gastos que se repiten solos (nada cambia) */
+    repetidos:Array.isArray(x.repetidos)?x.repetidos:[]};
   /* v14: a quien ya usaba la app no se le muestra el prólogo: su plan pasa a ser su pacto */
   if(vx<14&&!state.pacto.sellado)state.pacto=pactoDesdePlan(state,hoyISO());
   /* v11: las categorías de siempre pasan a ser tu lista, más las que ya usaban tus gastos. Ningún gasto cambia. */

@@ -70,6 +70,7 @@ function pintar(){
       +(d.cobro.tipo!=='fijo'?'<div class="field"><span class="lab">Los feriados laborables (Carnaval, Turismo, 12 de octubre…), ¿cuentan como día hábil para tu cobro?</span>'+seg('labhabil',d.cobro.laborableHabil!==false,[[true,'Sí, son días comunes'],[false,'No']])+'<small>En Uruguay solo 5 feriados son no laborables: 1/1, 1/5, 18/7, 25/8 y 25/12. Los demás son días comunes.</small></div>':'')
         :frecDe(d.cobro)==='quincenal'?'<div class="grid2 wiz-grid">'+campo('w-q1','Primer día','<input id="w-q1" type="number" inputmode="numeric" min="1" max="31" step="1" value="'+((d.cobro.dias||[1,15])[0])+'">')+campo('w-q2','Segundo día','<input id="w-q2" type="number" inputmode="numeric" min="1" max="31" step="1" value="'+((d.cobro.dias||[1,15])[1])+'">','31 = el último día del mes.')+'</div>'
         :frecDe(d.cobro)==='semanal'?'<div class="field"><span class="lab">¿Qué día de la semana?</span>'+seg('dow',d.cobro.dow===undefined?5:d.cobro.dow,[[1,'lu'],[2,'ma'],[3,'mi'],[4,'ju'],[5,'vi'],[6,'sá'],[0,'do']])+'</div>'
+        :frecDe(d.cobro)==='ventas'?'<p class="note">Armo el plan por mes y lo miramos semana a semana. Cada venta la sumás en Hoy con «Entró plata»; la meta es que lo de cada semana cubra su parte de los fijos y lo que sobra es ganancia.</p>'
         :'<div class="field"><span class="lab">¿Para cuántos días armo cada plan?</span>'+seg('horiz',d.cobro.horizonte||7,[[7,'Una semana'],[14,'Dos semanas']])+'<small>Lo que cobres en el medio lo sumás en Hoy con «Cobré».</small></div>')
       +'<p class="note" id="w-prox"></p>';
   }else if(paso===3){
@@ -229,7 +230,7 @@ export function initPerfil(){
 export function resumenPerfil(st){
   var p=st.perfil,H=p.horas,c=p.cobro;
   var DS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],fq=frecDe(c),qd=c.dias||[1,15];
-  var cobro=fq==='semanal'?'cada '+DS[c.dow===undefined?5:c.dow]:fq==='quincenal'?'el '+qd[0]+' y el '+(qd[1]>=31?'último día':qd[1])+' de cada mes':fq==='jornal'?'por día (planes de '+(c.horizonte||7)+' días)'
+  var cobro=fq==='ventas'?'a medida que vendés (planes por mes, semana a semana)':fq==='semanal'?'cada '+DS[c.dow===undefined?5:c.dow]:fq==='quincenal'?'el '+qd[0]+' y el '+(qd[1]>=31?'último día':qd[1])+' de cada mes':fq==='jornal'?'por día (planes de '+(c.horizonte||7)+' días)'
     :c.tipo==='ultimoHabil'?'el último día hábil':c.tipo==='fijo'?'el día '+c.dia:'el 5.º día hábil';
   var ti=p.ingreso&&p.ingreso.factura?'factura':(p.ingreso&&p.ingreso.tipo)||'uy',tipoTxt=TIPOS.filter(function(t){return t[0]===ti})[0][1].toLowerCase()+(ti!=='uy'&&p.ingreso.moneda==='USD'?', en dólares':'');
   return (p.nombre?'<b>'+esc(p.nombre)+'</b> · ':'')+tipoTxt+' · cobrás '+cobro+' · '

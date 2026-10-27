@@ -176,8 +176,18 @@ test('v17 → v18: suma los gastos que se repiten solos, sin tocar nada más',fu
 test('v21: ingresos fijos y respondidos, sin cambiar nada de lo que había',function(){
   var d=defaults('2026-10-26');d.v=20;delete d.ingresosFijos;delete d.plan.vistos;d.plan.monto=20000;
   var s=migrar(d);
-  assert.equal(VERSION_ESTADO,21);
+  assert.ok(VERSION_ESTADO>=21);
   assert.deepEqual(s.ingresosFijos,[]);assert.deepEqual(s.plan.vistos,[]);assert.equal(s.plan.monto,20000);
   d.ingresosFijos=[{id:'a',nombre:' Ayuda ',monto:'5000',dia:40},{monto:0}];
   assert.deepEqual(migrar(d).ingresosFijos,[{id:'a',nombre:'Ayuda',monto:5000,dia:31}]);
+});
+
+test('v22: lo que entró y la ganancia guardada, sin cambiar nada de lo que había',function(){
+  var d=defaults('2026-10-26');d.v=21;delete d.plan.entradas;delete d.plan.ganancia;d.plan.monto=20000;
+  var s=migrar(d);
+  assert.equal(VERSION_ESTADO,22);
+  assert.deepEqual(s.plan.entradas,[]);assert.deepEqual(s.plan.ganancia,{});assert.equal(s.plan.monto,20000);
+  d.plan.entradas=[{id:'a',fecha:'2026-10-27',monto:'1500'},{fecha:'mal',monto:5}];d.plan.ganancia={'2026-10-26':'300',x:5};
+  var m=migrar(d);
+  assert.deepEqual(m.plan.entradas,[{id:'a',fecha:'2026-10-27',monto:1500,nota:''}]);assert.deepEqual(m.plan.ganancia,{'2026-10-26':300});
 });

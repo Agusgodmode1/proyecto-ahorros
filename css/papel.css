@@ -1268,3 +1268,21 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 .v2 .ing-lista li>span:first-child{flex:1;min-width:0}
 .v2 .ing-acc{display:flex;gap:4px;width:100%;justify-content:flex-end}
 .v2 .ing-acc .btn{min-height:44px}
+
+/* ---------- Cuando vendo (2.21) ---------- */
+.v2 .ventas{box-shadow:inset 3px 0 0 var(--oro),inset 0 0 0 1px var(--line)}
+.v2 .vt-n{margin:0;display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.v2 .vt-n span{font:600 15px/1.2 var(--f-body);color:var(--muted)}
+.v2 .vt-n b{font:600 32px/1.1 var(--f-display);color:var(--azul);font-variant-numeric:lining-nums}
+.v2 .ventas .bar.ok i{background:var(--bien)}
+.v2 .vt-estado{margin:0;font-weight:700}
+.v2 .vt-estado.bien{color:var(--bien)}
+.v2 .vt-estado.falta{color:var(--ink)}
+.v2 .vt-gan{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border-radius:14px;background:color-mix(in srgb,var(--bien) 9%,transparent)}
+.v2 .vt-gan p{margin:0;display:grid;gap:2px}
+.v2 .vt-gan span{font:600 13.5px/1.2 var(--f-body);color:var(--muted)}
+.v2 .vt-gan b{font:600 24px/1.1 var(--f-display);color:var(--bien);font-variant-numeric:lining-nums}
+.v2 .vt-gan small{color:var(--muted);font-size:14px}
+.v2 .vt-pas summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-weight:600}
+.v2 .vt-g{color:var(--bien);font-weight:700;font-size:14px}
+.v2 #cobre-nota{width:100%}

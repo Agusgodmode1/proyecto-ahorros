@@ -214,10 +214,11 @@ function pagHTML(id){
       +'<p class="lb-err" id="lb-err" role="alert" hidden></p>'+(ed2?accEdit():acc);
   }else if(id==='q3'){
     var sg=sugerirCobro(st,today(),D.frec),fq=D.frec,edQ3=hojear();
-    h='<h1 class="lb-h lb-tinta" id="lb-h">'+tinta(fq==='jornal'?'¿Hasta cuándo armamos el plan?':'¿Qué día volvés a cobrar?')+'</h1>'
+    h='<h1 class="lb-h lb-tinta" id="lb-h">'+tinta(fq==='jornal'||fq==='ventas'?'¿Hasta cuándo armamos el plan?':'¿Qué día volvés a cobrar?')+'</h1>'
       +(edQ3?'':'<div class="lb-campo"><span class="lb-l">¿Cada cuánto cobrás?</span><div class="lb-chips" role="group" aria-label="¿Cada cuánto cobrás?">'
         +FRECUENCIAS.map(function(f){return '<button class="lb-chip" type="button" data-lb="frec" data-f="'+f[0]+'" aria-pressed="'+(fq===f[0])+'">'+esc(f[1])+'</button>'}).join('')+'</div></div>')
-      +'<p class="lb-p">'+(fq==='jornal'?'Cobrás por día o cuando sale: armemos el plan por una semana (o tocá otro día). Lo que cobres en el medio lo sumás en Hoy con «Cobré», y guardo solo el mismo porcentaje.'
+      +'<p class="lb-p">'+(fq==='ventas'?'La plata te entra a medida que vendés. Armamos el plan por mes (hasta el 1 del mes que viene; si falta poco, el siguiente; o tocá otro día) y lo miramos semana a semana: cada venta la sumás en Hoy con «Entró plata». La meta es que lo de cada semana cubra su parte de los fijos; lo que sobra es ganancia y la podés guardar.'
+        :fq==='jornal'?'Cobrás por día o cuando sale: armemos el plan por una semana (o tocá otro día). Lo que cobres en el medio lo sumás en Hoy con «Cobré», y guardo solo el mismo porcentaje.'
         :fq==='semanal'?'Tocá el día en que cobrás esta vez. Después, cada semana el mismo día.'
         :fq==='quincenal'?'Tocá el día de tu próximo cobro. El otro de la quincena lo calculo solo (el 1 va con el 15, y el último día del mes con el 15).'
         :sg.perfil?'Según tu perfil, cobrás el <b>'+esc(fLarga(sg.fecha))+'</b>. Si esta vez es otro día, tocalo.'
@@ -252,7 +253,7 @@ function pactoNuevoHTML(){
     +'<li><span>Empiezo con</span><b>'+money(c.bruto)+(D.conUsd&&num(D.usd)>0?'<small>incluye '+usd(num(D.usd))+' a '+money(num(D.cotiz))+'</small>':'')+'</b></li>'
     +(c.apartado>0?'<li><span>Apartado</span><b>− '+money(c.apartado)+'<small>no se toca</small></b></li>':'')
     +'<li class="ah"><span>Guardo</span><b>'+money(c.ahorro)+'<small>el '+pctTxt(c.pct)+(c.apartado>0?' de lo que podés usar':' del total')+'</small></b></li>'
-    +'<li><span>'+(D.frec==='jornal'?'El plan llega hasta el':'Cobro el')+'</span><b>'+esc(fLarga(D.cobro))+'<small>dentro de '+dias+' '+(dias===1?'día':'días')+'</small></b></li>'
+    +'<li><span>'+(D.frec==='jornal'||D.frec==='ventas'?'El plan llega hasta el':'Cobro el')+'</span><b>'+esc(fLarga(D.cobro))+'<small>dentro de '+dias+' '+(dias===1?'día':'días')+'</small></b></li>'
     +(c.reserva&&c.reserva.usa>0?'<li><span>Sale de tu reserva para los fijos</span><b>+ '+money(c.reserva.usa)+'</b></li>':'')
     +(c.fijos>0?'<li><span>Gastos fijos</span><b>− '+money(c.fijos)+'</b></li>':'')
     +(c.reserva&&c.reserva.parte>0?'<li><span>Para los fijos del mes</span><b>− '+money(c.reserva.parte)+'<small>tu parte de '+(D.frec==='semanal'?'esta semana':D.frec==='quincenal'?'esta quincena':'estos días')+', queda apartada</small></b></li>':'')
@@ -418,7 +419,7 @@ function pintarCal(){
   h+='</tbody></table><div class="lb-cal-ley"><span><i class="s"></i>sugerido</span><span><i class="f"></i>feriado no laborable</span></div>';
   box.innerHTML=h;
   var t=q('#lb-cobro-txt'),n=D.cobro?diffDays(today(),D.cobro):0;
-  if(t)t.innerHTML=D.cobro&&n>0?(D.frec==='jornal'?'El plan llega hasta el <b>':'Cobrás el <b>')+esc(fLarga(D.cobro))+'</b>: <span class="n">'+(D.frec==='jornal'?'son ':'faltan ')+n+' '+(n===1?'día':'días')+'</span>.':'Tocá el día en que cobrás.';
+  if(t)t.innerHTML=D.cobro&&n>0?(D.frec==='jornal'||D.frec==='ventas'?'El plan llega hasta el <b>':'Cobrás el <b>')+esc(fLarga(D.cobro))+'</b>: <span class="n">'+(D.frec==='jornal'||D.frec==='ventas'?'son ':'faltan ')+n+' '+(n===1?'día':'días')+'</span>.':'Tocá el día en que cobrás.';
   if(hojear())error(errAjuste(previaAjuste(st,datosAjuste(),today())));
 }
 function leer(){

@@ -305,6 +305,9 @@
   .v2 .hoja[data-vista="plan"]>.hero{grid-column:1;grid-row:1 / span 3}
   .v2 .hoja[data-vista="plan"]>#meta-alerta{grid-column:2;grid-row:1}
   .v2 .hoja[data-vista="plan"]>main{grid-column:2;grid-row:2}
+  /* (2.16) la columna derecha de Hoy empieza debajo de la cinta del índice, que cuelga del borde */
+  .v2 .hoja[data-vista="plan"]>main,.v2 .hoja[data-vista="plan"]>#meta-alerta{margin-top:30px}
+  .v2 .hoja[data-vista="plan"]>#meta-alerta:not([hidden]):not(:empty)+main{margin-top:0}
   .v2 .hoja>.pie{grid-column:1 / -1}
   /* los demás capítulos: dos columnas, como dos páginas */
   .v2 main>section:not([hidden]):not(#p-resumen){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--e5) 92px;align-items:start}

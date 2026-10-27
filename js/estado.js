@@ -19,14 +19,16 @@ import {pactoBase,pactoDesdePlan} from './logica/pacto.js';
    v13: recibos de sueldo guardados mes a mes (state.recibos) y plantillas por empleador para leer PDFs
    v14: el pacto del Libro del Ahorro (state.pacto: cuándo se selló); quien ya usaba la app lo tiene sellado
    v15: fijos compartidos: state.grupos (con quién compartís y cómo se reparte); cada fijo puede tener grupo, reparto,
-        paga y pagador; los pagos guardan el total, tu parte y lo que te devolvieron. Los fijos de antes quedan como «Solo míos». */
-export var VERSION_ESTADO=15;
+        paga y pagador; los pagos guardan el total, tu parte y lo que te devolvieron. Los fijos de antes quedan como «Solo míos».
+   v16: Sueldo ordenado: perfil.horas.preguntado («¿hay horas extra?» se pregunta una sola vez; quien ya armó su perfil no la ve),
+        perfil.horas.multFeriado (opcional, p. ej. ×2,5), perfil.ingreso.factura y sueldo.factura (cobro con factura). */
+export var VERSION_ESTADO=16;
 
 function hoyISO(){return iso(new Date())}
 /* Feriados: por defecto solo cuentan los 5 no laborables (1/1, 1/5, 18/7, 25/8, 25/12).
    cobro.laborableHabil: los feriados laborables (Carnaval, Turismo, 12/10…) son días hábiles para el cobro.
    horas.feriadoLaborable: un feriado laborable trabajado se paga como día 'comun' o como 'feriado'. */
-export function perfilBase(){return {nombre:'',hecho:false,ingreso:{tipo:'uy',moneda:'UYU'},cobro:{tipo:'habil5',dia:30,laborableHabil:true},horas:Object.assign(horasPorDefecto(),{feriadoLaborable:'comun'}),recibosAgus:false}}
+export function perfilBase(){return {nombre:'',hecho:false,ingreso:{tipo:'uy',moneda:'UYU'},cobro:{tipo:'habil5',dia:30,laborableHabil:true},horas:Object.assign(horasPorDefecto(),{feriadoLaborable:'comun',preguntado:false}),recibosAgus:false}}
 /* descuentos: los del sueldo personalizado [{id,nombre,tipo:'pct'|'monto',valor}].
    ingresosMes: lo que cobraste cada mes con ingreso variable {'aaaa-mm': monto}. */
 function sueldoBase(){return {nominal:0,bonoFijo:0,hijos:0,conyuge:false,otros:0,bpc:6864,bpcAnio:new Date().getFullYear(),tarifaManual:null,diasLicencia:0,descuentos:[],ingresosMes:{}}}
@@ -101,6 +103,9 @@ export function ejemplo(hoy){
     {id:'ej-net',nombre:'Netflix',monto:690,dia:16,cat:'Suscripciones',grupo:'g-amigos',paga:'otro',pagador:'p-leo'},
     {id:'ej-cel',nombre:'Celular',monto:1100,dia:25,cat:'Celular e internet'}
   ];
+  s.perfil.horas.preguntado=true;
+  /* un recibo de ejemplo del mes anterior (inventado), para ver «¿Te pagaron bien?» */
+  s.recibos=[{id:'ej-rec',mes:'2026-09',moneda:'UYU',nominal:45000,haberes:47812.5,aportes:7171.88,fonasa:2151.56,irpf:0,otros:47.81,liquido:38441.25,horasCant:7.5,horasMonto:2812.5,fuente:'ejemplo'}];
   var k=s.plan.cobro;s.fijosPagos={};s.fijosPagos[k]={'ej-alq':{monto:22000,parte:11000,fecha:'2026-10-15',nombre:'Alquiler',paga:'yo'}};
   return s;
 }
@@ -174,6 +179,8 @@ export function migrar(d){
   if(!Array.isArray(state.sueldo.descuentos))state.sueldo.descuentos=[];
   state.sueldo.ingresosMes=obj(state.sueldo.ingresosMes);
   if(vx<7)corregirCobroV7(state);
+  /* v16: «¿hay horas extra?» ya está contestado para quien armó su perfil o cargó horas */
+  if(vx<16&&state.perfil.horas&&obj(obj(x.perfil).horas).preguntado===undefined)state.perfil.horas.preguntado=!!(state.perfil.hecho||state.perfil.recibosAgus||state.horas.length);
   /* Los datos que venían de los recibos de Agus son del puesto de CRM */
   if(state.perfil.recibosAgus&&!state.perfil.puesto)state.perfil.puesto='crm';
   return state;

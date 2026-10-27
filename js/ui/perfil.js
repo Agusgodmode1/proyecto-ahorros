@@ -6,6 +6,11 @@ import {cobroDesde} from '../logica/plan.js';
 import {ctx,$,today,esc,money2,fLarga,fMin} from './comun.js';
 import {aplicarFeriados} from './feriados.js';
 import {PUESTOS,puesto} from '../logica/puestos.js';
+import {facturaBase} from '../logica/factura.js';
+/* «Cobro con factura» (2.12) se elige como un tipo más; se guarda como ingreso independiente con factura:true
+   (así el cálculo de siempre, en sueldo.js, lo trata como independiente: sin horas extra ni aguinaldo) */
+var TIPOS=TIPOS_INGRESO.concat([['factura','Cobro con factura']]);
+function sinHoras(t){return t==='variable'||t==='factura'}
 
 var d=null,paso=1,opciones=null,vio3=false;
 var PASOS=['Tu nombre','Cómo cobrás','Horas extra','Descuentos'];
@@ -17,6 +22,7 @@ export function abrirPerfil(n,opt){
   d={nombre:p.nombre||'',cobro:Object.assign({tipo:'habil5',dia:30,laborableHabil:true},p.cobro),horas:Object.assign(horasPorDefecto(),{feriadoLaborable:'comun'},p.horas),
      ingreso:Object.assign({tipo:'uy',moneda:'UYU'},p.ingreso),descuentos:JSON.parse(JSON.stringify(Array.isArray(s.descuentos)?s.descuentos:[])),
      puesto:p.puesto||'otro',nominal:num(s.nominal)||'',hijos:num(s.hijos),conyuge:!!s.conyuge,otros:num(s.otros)||'',bpc:num(s.bpc)||6864,manual:!!s.tarifaManual};
+  if(p.ingreso&&p.ingreso.factura)d.ingreso.tipo='factura';
   paso=n||1;vio3=false;
   $('#wiz').hidden=false;document.documentElement.classList.add('voz-abierta');
   pintar();
@@ -30,10 +36,12 @@ function campo(id,label,input,ayuda){return '<div class="field"><label for="'+id
 function moneyIn(id,v,usd){return '<div class="money"><span>'+(usd?'US$':'$')+'</span><input id="'+id+'" type="number" inputmode="decimal" min="0" step="any" value="'+v+'"></div>'}
 var AYUDA_TIPO={uy:'Con BPS, FONASA, FRL e IRPF, como en un recibo de sueldo de Uruguay.',
   personalizado:'Ponés tu sueldo y tus descuentos a mano (en pesos o en %), sin las reglas de Uruguay.',
-  variable:'Freelance, comisiones o facturas: cada mes cargás lo que cobraste y el plan usa ese valor.'};
+  variable:'Freelance o comisiones: cada mes cargás lo que cobraste y el plan usa ese valor.',
+  factura:'Unipersonal o profesional: cargás tus facturas y tus costos (BPS, FONASA, IVA, contador) y te digo cuánto te queda.'};
 var NOMINAL_TXT={uy:['Sueldo nominal mensual','El sueldo antes de descuentos, sin horas extra. Lo ves en el recibo.'],
   personalizado:['Sueldo mensual, antes de tus descuentos','Si solo sabés lo que te queda en mano, ponelo acá y dejá los descuentos vacíos.'],
-  variable:['¿Cuánto cobrás en un mes normal?','En mano. Lo uso hasta que cargues lo que cobraste de verdad cada mes, en la pestaña Sueldo.']};
+  variable:['¿Cuánto cobrás en un mes normal?','En mano. Lo uso hasta que cargues lo que cobraste de verdad cada mes, en la pestaña Sueldo.'],
+  factura:['¿Cuánto facturás en un mes normal (sin IVA)?','Lo uso hasta que cargues las facturas de cada mes, en la pestaña Sueldo.']};
 function filaDesc(x,i,usd){
   return '<li class="desc-fila"><input type="text" maxlength="30" data-desc="'+i+'" data-k="nombre" value="'+esc(x.nombre||'')+'" placeholder="Nombre (aportes, sindicato…)" aria-label="Nombre del descuento">'
     +'<div class="desc-v"><input type="number" inputmode="decimal" min="0" step="any" data-desc="'+i+'" data-k="valor" value="'+(x.valor===undefined||x.valor===''?'':x.valor)+'" aria-label="Valor del descuento">'
@@ -51,7 +59,7 @@ function pintar(){
   }else if(paso===2){
     var ti=d.ingreso.tipo,usd=ti!=='uy'&&d.ingreso.moneda==='USD';
     h+='<h1 id="wiz-t">¿Cómo cobrás?</h1>'
-      +'<div class="field"><span class="lab">¿Qué tipo de ingreso tenés?</span>'+seg('tipo',ti,TIPOS_INGRESO)+'<small>'+AYUDA_TIPO[ti]+'</small></div>'
+      +'<div class="field"><span class="lab">¿Qué tipo de ingreso tenés?</span>'+seg('tipo',ti,TIPOS)+'<small>'+AYUDA_TIPO[ti]+'</small></div>'
       +(ti!=='uy'?'<div class="field"><span class="lab">¿En qué moneda cobrás?</span>'+seg('moneda',d.ingreso.moneda,[['UYU','Pesos'],['USD','Dólares']])+(usd?'<small>Lo paso a pesos con la cotización del dólar que cargás en Ajustes.</small>':'')+'</div>':'')
       +campo('w-nominal',NOMINAL_TXT[ti][0],moneyIn('w-nominal',d.nominal,usd),NOMINAL_TXT[ti][1])
       +'<div class="field"><span class="lab">¿Qué día cobrás?</span>'+seg('cobro',d.cobro.tipo,[['habil5','5.º día hábil'],['ultimoHabil','Último día hábil'],['fijo','Un día fijo']])+'</div>'
@@ -59,9 +67,9 @@ function pintar(){
       +(d.cobro.tipo!=='fijo'?'<div class="field"><span class="lab">Los feriados laborables (Carnaval, Turismo, 12 de octubre…), ¿cuentan como día hábil para tu cobro?</span>'+seg('labhabil',d.cobro.laborableHabil!==false,[[true,'Sí, son días comunes'],[false,'No']])+'<small>En Uruguay solo 5 feriados son no laborables: 1/1, 1/5, 18/7, 25/8 y 25/12. Los demás son días comunes.</small></div>':'')
       +'<p class="note" id="w-prox"></p>';
   }else if(paso===3){
-    var H=d.horas,on=H.activo!==false,variable=d.ingreso.tipo==='variable';
+    var H=d.horas,on=H.activo!==false,variable=sinHoras(d.ingreso.tipo);
     h+='<h1 id="wiz-t">Horas extra</h1>';
-    if(variable)h+='<p class="welcome-sub">Con ingreso variable no cuento horas extra: lo que cobrás cada mes ya las incluye. Seguí al último paso.</p>';
+    if(variable)h+='<p class="welcome-sub">'+(d.ingreso.tipo==='factura'?'Cobrando con factura no cuento horas extra: lo que facturás ya las incluye.':'Con ingreso variable no cuento horas extra: lo que cobrás cada mes ya las incluye.')+' Seguí al último paso.</p>';
     else h+='<label class="check wiz-big"><input id="w-sinhoras" type="checkbox"'+(on?'':' checked')+'> No hago horas extra</label>';
     if(on&&!variable){
       var P=puesto(d.puesto);
@@ -89,6 +97,8 @@ function pintar(){
     h+='<h1 id="wiz-t">Descuentos</h1><p class="welcome-sub">Lo que te descuentan cada mes. Un % se calcula sobre todo lo que ganás (con horas extra); un monto fijo se resta igual todos los meses.</p>'
       +(d.descuentos.length?'<ul class="desc-lista">'+d.descuentos.map(function(x,i){return filaDesc(x,i,u)}).join('')+'</ul>':'<p class="note">Sin descuentos: lo que pusiste es lo que cobrás.</p>')
       +'<div class="row-btns"><button class="btn" type="button" data-dadd>Agregar un descuento</button></div>';
+  }else if(d.ingreso.tipo==='factura'){
+    h+='<h1 id="wiz-t">Costos</h1><p class="welcome-sub">Tus costos de cada mes (aporte a BPS, FONASA, IVA, contador) y tus facturas se cargan en la pestaña Sueldo → «Tus facturas y costos». Ahí te digo cuánto te queda.</p><p class="note">No reemplaza a tu contador: es para planificar.</p>';
   }else if(d.ingreso.tipo==='variable'){
     h+='<h1 id="wiz-t">Descuentos</h1><p class="welcome-sub">Con ingreso variable cargás lo que te queda en mano cada mes, así que no hay descuentos que calcular. Listo.</p>';
   }else{
@@ -145,7 +155,7 @@ function previa(){
 function error(m){var e=$('#w-err');e.textContent=m;e.hidden=!m}
 function valida(){
   if(paso===1&&!d.nombre){error('Escribí tu nombre.');return false}
-  if(paso===2&&!(d.nominal>0)){error(d.ingreso.tipo==='variable'?'Escribí cuánto cobrás en un mes normal.':'Escribí tu sueldo.');return false}
+  if(paso===2&&!(d.nominal>0)){error(d.ingreso.tipo==='variable'?'Escribí cuánto cobrás en un mes normal.':d.ingreso.tipo==='factura'?'Escribí cuánto facturás en un mes normal.':'Escribí tu sueldo.');return false}
   if(paso===3&&d.horas.activo!==false&&(!(d.horas.divisor>0)||!(d.horas.multSem>0)||!(d.horas.multFin>0))){error('Revisá el divisor y los multiplicadores.');return false}
   return true;
 }
@@ -153,7 +163,8 @@ function terminar(){
   var st=opciones.estado,p=st.perfil,s=st.sueldo;
   var reglasAntes=JSON.stringify(p.horas),cobroAntes=JSON.stringify(p.cobro);
   p.nombre=d.nombre;p.cobro=d.cobro;p.horas=d.horas;p.puesto=d.puesto;p.hecho=true;
-  p.ingreso={tipo:d.ingreso.tipo,moneda:d.ingreso.tipo==='uy'?'UYU':d.ingreso.moneda};
+  p.ingreso=d.ingreso.tipo==='factura'?{tipo:'variable',factura:true,moneda:d.ingreso.moneda}:{tipo:d.ingreso.tipo,moneda:d.ingreso.tipo==='uy'?'UYU':d.ingreso.moneda};
+  if(d.ingreso.tipo==='factura'&&!s.factura)s.factura=facturaBase();
   s.descuentos=d.descuentos.filter(function(x){return num(x.valor)>0}).map(function(x){return {id:x.id||uid(),nombre:x.nombre||'Descuento',tipo:x.tipo==='pct'?'pct':'monto',valor:num(x.valor)}});
   if(!s.ingresosMes)s.ingresosMes={};
   s.nominal=num(d.nominal);s.hijos=d.hijos;s.conyuge=d.conyuge;s.otros=num(d.otros);s.bpc=d.bpc;
@@ -195,7 +206,7 @@ export function initPerfil(){
     if(a==='fin'){
       /* Al guardar desde la mitad, controla también los pasos con datos obligatorios */
       if(!d.nombre){paso=1;pintar();error('Escribí tu nombre.');return}
-      if(!(num(d.nominal)>0)){paso=2;pintar();error(d.ingreso.tipo==='variable'?'Escribí cuánto cobrás en un mes normal.':'Escribí tu sueldo.');return}
+      if(!(num(d.nominal)>0)){paso=2;pintar();error(d.ingreso.tipo==='variable'?'Escribí cuánto cobrás en un mes normal.':d.ingreso.tipo==='factura'?'Escribí cuánto facturás en un mes normal.':'Escribí tu sueldo.');return}
       terminar();
     }
   });
@@ -209,8 +220,8 @@ export function initPerfil(){
 export function resumenPerfil(st){
   var p=st.perfil,H=p.horas,c=p.cobro;
   var cobro=c.tipo==='ultimoHabil'?'el último día hábil':c.tipo==='fijo'?'el día '+c.dia:'el 5.º día hábil';
-  var ti=(p.ingreso&&p.ingreso.tipo)||'uy',tipoTxt=TIPOS_INGRESO.filter(function(t){return t[0]===ti})[0][1].toLowerCase()+(ti!=='uy'&&p.ingreso.moneda==='USD'?', en dólares':'');
+  var ti=p.ingreso&&p.ingreso.factura?'factura':(p.ingreso&&p.ingreso.tipo)||'uy',tipoTxt=TIPOS.filter(function(t){return t[0]===ti})[0][1].toLowerCase()+(ti!=='uy'&&p.ingreso.moneda==='USD'?', en dólares':'');
   return (p.nombre?'<b>'+esc(p.nombre)+'</b> · ':'')+tipoTxt+' · cobrás '+cobro+' · '
-    +(ti==='variable'||H.activo===false?'sin horas extra':'hora normal = sueldo ÷ '+num(H.divisor)+', extra ×'+String(H.multSem).replace('.',',')+', finde ×'+String(H.multFin).replace('.',',')+', cuenta si pasás '+fMin(num(H.umbral)));
+    +(sinHoras(ti)||H.activo===false?'sin horas extra':'hora normal = sueldo ÷ '+num(H.divisor)+', extra ×'+String(H.multSem).replace('.',',')+', finde ×'+String(H.multFin).replace('.',',')+', cuenta si pasás '+fMin(num(H.umbral)));
 }
 

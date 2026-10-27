@@ -6,6 +6,7 @@ import {CAMPOS,leerRecibo,renglones,aprenderPlantilla,compararRecibo,enPesosReci
 import {mesTrabajo,ingresoDe} from '../logica/sueldo.js';
 import {cotizacion} from '../logica/monedas.js';
 import {ctx,$,money,usd,esc,cap,toast,armar} from './comun.js';
+import {lectorHTML,lectorAbierto} from './lector.js';
 
 var PDFJS='../../vendor/pdfjs-6.3.289/';
 var edit=null,abierto=null; /* edit = {datos, fuente, lineas, detectado, empleador} */
@@ -21,7 +22,7 @@ async function pdfjs(){
   }
   return lib;
 }
-async function textoPdf(file){
+export async function textoPdf(file){
   var L=await pdfjs(),doc=await L.getDocument({data:new Uint8Array(await file.arrayBuffer()),isEvalSupported:false}).promise,items=[];
   for(var p=1;p<=Math.min(doc.numPages,3);p++){
     var pg=await doc.getPage(p),tc=await pg.getTextContent();
@@ -74,15 +75,14 @@ export function renderRecibos(){
   var st=ctx.state,l=(st.recibos||[]).slice().sort(function(a,b){return a.mes<b.mes?1:-1}),mt=mesTrabajo(st);
   var h='';
   if(edit)h+=formRecibo();
-  else h+='<div class="row-btns"><button class="btn primary" type="button" data-reca="manual">Cargar un recibo a mano</button><label class="btn filebtn">Leer un PDF<input type="file" class="sr-only" accept="application/pdf,.pdf" id="rec-pdf"></label></div>'
-    +'<p class="note">El PDF se lee en este teléfono y no se guarda: solo los números que confirmes.</p>';
+  else h+=lectorHTML();
   if(l.length)h+='<ul class="list rec-lista">'+l.map(function(r){
     var abiertoEste=abierto===r.id;
     return '<li><div class="rec-fila"><span class="what"><b>'+esc(mesTxt(r.mes))+(r.mes===mt?' · este cobro':'')+'</b><span class="src">Líquido '+fmt(r,r.liquido)+(r.moneda==='USD'?' = '+money(enPesosRecibo(r,r.liquido)):'')+(r.fuente==='pdf'?' · del PDF':'')+'</span></span>'
       +'<span class="cat-btns"><button class="btn quiet sm" type="button" data-recver="'+esc(r.id)+'">'+(abiertoEste?'Cerrar':'Comparar')+'</button><button class="btn quiet sm" type="button" data-receditar="'+esc(r.id)+'">Editar</button><button class="btn quiet sm" type="button" data-recdel="'+esc(r.id)+'">Borrar</button></span></div>'
       +(abiertoEste?comparacion(r):'')+'</li>';
   }).join('')+'</ul>';
-  else if(!edit)h+='<div class="empty">Todavía no guardaste recibos. Cada recibo que guardes pasa a ser lo que cobraste ese mes (para el plan y el aguinaldo).</div>';
+  else if(!edit&&!lectorAbierto())h+='<div class="empty">Todavía no guardaste recibos. Cada recibo que guardes pasa a ser lo que cobraste ese mes (para el plan y el aguinaldo).</div>';
   el.innerHTML=h;
 }
 

@@ -204,17 +204,13 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
       <div id="ej-banner"></div>
       <div id="bpc-aviso"></div>
       <div id="sueldo-hero"></div>
-      <div class="card stack tone-grape" id="aguinaldo-card">
-        <div id="aguinaldo-out" class="stack"></div>
-        <div class="sv-row"><div class="field"><label for="sv-dias" class="sub-l">Días de licencia que te vas a tomar</label><input id="sv-dias" type="number" inputmode="numeric" min="0" max="60" step="1" placeholder="0"></div><p class="note" id="sv-out"></p></div>
-        <p class="note">Son estimaciones: el aguinaldo paga aportes como el sueldo y el IRPF se ajusta aparte; el salario vacacional solo paga IRPF.</p>
-      </div>
-      <div class="sec" id="sec-rates"><h2>Cuánto vale cada hora</h2><div id="sueldo-rates"></div></div>
-      <div class="pay">
-        <div class="out" id="sueldo-out"></div>
-
-        <div class="card tiempo stack" id="card-horas">
-          <div class="sec"><h2>Sumá tus horas extra</h2>
+      <div id="sueldo-pregunta"></div>
+      <details class="card sdes" data-sdes="horas" id="sd-horas">
+        <summary><span class="sdes-t">Horas extra</span><span class="sdes-d" id="sd-horas-d"></span></summary>
+        <div class="stack sdes-in">
+          <div class="sec" id="sec-rates"><h3>Cuánto vale cada hora</h3><div id="sueldo-rates"></div></div>
+        <div class="tiempo stack" id="card-horas">
+          <div class="sec"><h3>Sumá tus horas extra</h3>
             <p class="note" id="horas-nota"></p></div>
           <div id="planilla-box" class="stack pl-box"></div>
           <div class="pl-o"><span>o cargá un día</span></div>
@@ -265,8 +261,18 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
           <div id="log-out" class="stack"></div>
         </div>
 
-        <div class="card control stack" id="card-control">
-          <div class="sec"><h2>¿Te pagaron bien?</h2>
+        </div>
+      </details>
+      <details class="card sdes" data-sdes="control" id="sd-control">
+        <summary><span class="sdes-t">¿Te pagaron bien?</span><span class="sdes-d" id="sd-control-d"></span></summary>
+        <div class="stack sdes-in">
+        <div class="stack" id="card-recibos">
+          <div class="sec"><h3>Tus recibos</h3><p class="note">Guardá el recibo de cada mes: pasa a ser lo que cobraste de verdad (para el plan y el aguinaldo), y te muestro qué renglón explica cualquier diferencia con lo calculado.</p></div>
+          <div id="recibos-out" class="stack"></div>
+        </div>
+
+        <details class="sub-d control" id="card-control"><summary>Comparar a mano, número por número</summary><div class="stack">
+          <div class="sec">
             <p class="note">Cuando llegue el recibo, copiá estos números del papel. Te marco en verde lo que coincide y en rojo lo que hay que revisar. Podés dejar vacío lo que no quieras comparar.</p></div>
           <div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px">
             <div class="field"><label for="r-sue" class="sub-l">Sueldo mensual</label><div class="money"><span>$</span><input id="r-sue" type="number" inputmode="decimal" step="any"></div></div>
@@ -281,16 +287,34 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
           </div>
           <div id="ctrl-out"></div>
           <div class="row-btns"><button class="btn quiet" type="button" id="r-clear">Vaciar los números</button></div>
+        </div></details>
         </div>
-
-        <div class="card stack" id="card-recibos">
-          <div class="sec"><h2>Tus recibos</h2><p class="note">Guardá el recibo de cada mes: pasa a ser lo que cobraste de verdad (para el plan y el aguinaldo), y te muestro qué renglón explica cualquier diferencia con lo calculado.</p></div>
-          <div id="recibos-out" class="stack"></div>
+      </details>
+      <details class="card sdes" data-sdes="recibo" id="sd-recibo">
+        <summary><span class="sdes-t">Recibo estimado completo</span><span class="sdes-d" id="sd-recibo-d"></span></summary>
+        <div class="stack sdes-in">
+          <div class="out" id="sueldo-out"></div>
         </div>
-
-        <details class="card datos">
-          <summary><span><span class="sum-t">Ajustes del sueldo</span><span class="note">Sueldo, bono y descuentos. Las reglas de las horas extra y el día de cobro están en Mi perfil.</span></span></summary>
-          <div class="stack" style="margin-top:16px">
+      </details>
+      <details class="card sdes" data-sdes="aguinaldo" id="sd-aguinaldo">
+        <summary><span class="sdes-t">Aguinaldo y licencia</span><span class="sdes-d" id="sd-aguinaldo-d"></span></summary>
+        <div class="stack sdes-in">
+      <div class="stack" id="aguinaldo-card">
+        <div id="aguinaldo-out" class="stack"></div>
+        <div class="sv-row"><div class="field"><label for="sv-dias" class="sub-l">Días de licencia que te vas a tomar</label><input id="sv-dias" type="number" inputmode="numeric" min="0" max="60" step="1" placeholder="0"></div><p class="note" id="sv-out"></p></div>
+        <p class="note">Son estimaciones: el aguinaldo paga aportes como el sueldo y el IRPF se ajusta aparte; el salario vacacional solo paga IRPF.</p>
+      </div>
+        </div>
+      </details>
+      <details class="card sdes" data-sdes="factura" id="sd-factura" hidden>
+        <summary><span class="sdes-t">Tus facturas y costos</span><span class="sdes-d" id="sd-factura-d"></span></summary>
+        <div class="stack sdes-in">
+          <div class="stack" id="factura-out"></div>
+        </div>
+      </details>
+      <details class="card sdes datos" data-sdes="ajustes" id="sd-ajustes">
+          <summary><span class="sdes-t">Ajustes del sueldo</span><span class="sdes-d">sueldo, bono, descuentos y BPC · las reglas de las horas y el día de cobro están en Mi perfil</span></summary>
+          <div class="stack sdes-in">
             <div class="grid2">
               <div class="field">
                 <label for="s-nominal">Sueldo nominal mensual</label>
@@ -333,7 +357,6 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
             </details>
           </div>
         </details>
-      </div>
     </section>
     <!-- AJUSTES Y RESPALDO -->
     <section id="p-ajustes" role="tabpanel" class="tone-sky stack" hidden>

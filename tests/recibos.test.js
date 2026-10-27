@@ -107,7 +107,7 @@ test('comparar con lo calculado: muestra qué renglón explica la diferencia',fu
 });
 
 test('el aguinaldo usa los sueldos reales de los recibos',function(){
-  var s=ejemplo();
+  var s=ejemplo();s.recibos=[];
   var antes=aguinaldo(s,'2026-10-15');
   s.recibos=[{id:'a',mes:'2026-06',moneda:'UYU',haberes:60000,liquido:48000},{id:'b',mes:'2026-07',moneda:'UYU',haberes:60000,liquido:48000}];
   var A=aguinaldo(s,'2026-10-15');

@@ -4,7 +4,9 @@
    state.plantillasRecibo = {empleador: {campo: 'texto de la etiqueta'}}: lo que corregiste en un PDF de ese empleador.
    El PDF nunca se guarda: solo los valores que confirmás. */
 import {num} from './util.js';
-import {liq,mesTrabajo,pagoSem} from './sueldo.js';
+import {mesTrabajo,pagoSem} from './sueldo.js';
+import {liqCompleta as liq} from './liquidacion.js';
+import {esFactura} from './factura.js';
 
 export var CAMPOS=[
   ['nominal','Sueldo básico'],['haberes','Total haberes'],['aportes','Aporte jubilatorio'],['fonasa','FONASA'],
@@ -117,7 +119,8 @@ export function enPesosRecibo(r,v){return r.moneda==='USD'?num(v)*num(r.cotiz):n
 export function reciboDe(state,mes){var l=state.recibos||[];for(var i=0;i<l.length;i++)if(l[i].mes===mes)return l[i];return null}
 /* Lo que cobrás: el recibo real del mes trabajado si lo cargaste; si no, la estimación de siempre */
 export function liqReal(state){
-  var est=liq(state,true),r=reciboDe(state,mesTrabajo(state));
+  var est=liq(state,true);if(esFactura(state))return est;
+  var r=reciboDe(state,mesTrabajo(state));
   if(!r||!(num(r.liquido)>0))return est;
   var hab=num(r.haberes)>0?enPesosRecibo(r,r.haberes):est.N;
   return Object.assign({},est,{N:hab,liquido:enPesosRecibo(r,r.liquido),real:true,recibo:r,estimado:est});

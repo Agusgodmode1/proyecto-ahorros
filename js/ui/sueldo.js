@@ -8,6 +8,34 @@ import {aguinaldo,salarioVacacional} from '../logica/aguinaldo.js';
 import {extraPorHorario,tipoDeDia,minimoExtra} from '../logica/horario.js';
 import {renderPlanilla,initPlanilla} from './planilla.js';
 import {revisarBPC} from '../logica/avisos.js';
+import {MES,DIA} from '../logica/fechas.js';
+import {precision} from '../logica/precision.js';
+import {reciboDe,compararRecibo} from '../logica/recibos.js';
+import {esFactura} from '../logica/factura.js';
+import {renderFactura,initFactura} from './factura.js';
+import {initLector} from './lector.js';
+
+/* ---------- Arriba de todo (2.12): «Vas a cobrar ≈ $X el vie 6 nov», el recibo en miniatura y la precisión ---------- */
+function fechaCorta(s){var d=parse(s);return DIA[d.getDay()]+' '+d.getDate()+' '+MES[d.getMonth()]}
+function heroHTML(Lr,lineas){
+  var state=ctx.state,P=precision(state,Lr),dots='';for(var i=0;i<4;i++)dots+='<i'+(i<=P.nivel?' class="on"':'')+'></i>';
+  var a=P.falta?(/recibo|horas extra/.test(P.falta)?'control':/factura|costos/.test(P.falta)?'factura':/cobraste/.test(P.falta)?'recibo':'ajustes'):null;
+  return '<div class="card cobro-hero"><span class="cd-l">Vas a cobrar</span><div class="ch-n"><b class="pay-big">'+(P.nivel<3?'≈ ':'')+money(Lr.liquido)+'</b><span>el '+esc(fechaCorta(state.plan.cobro))+'</span></div>'
+    +'<div class="mini-rec">'+lineas.map(function(l){return '<p class="'+(l[2]||'')+'"><span>'+esc(l[0])+'</span><b>'+l[1]+'</b></p>'}).join('')+'</div>'
+    +'<div class="precision"><span class="pr-l">Precisión del cálculo</span><span class="pr-dots n'+P.nivel+'" aria-hidden="true">'+dots+'</span><b>'+esc(P.nombre)+'</b>'+(P.margen?'<small>± '+money(P.margen)+'</small>':'')+'</div>'
+    +(P.falta?'<p class="pr-falta">Para afinarla: <button class="linklike" type="button" data-sdir="'+a+'">'+esc(P.falta)+'</button>.</p>':'')+'</div>';
+}
+/* Los desplegables: cerrados de entrada; se recuerda si los abriste (pa-sueldo-abiertos) */
+var KA='pa-sueldo-abiertos';
+function abiertos(){try{return JSON.parse(localStorage.getItem(KA)||'{}')||{}}catch(e){return {}}}
+function datoDe(id,txt){var el=$('#sd-'+id+'-d');if(el)el.textContent=txt||''}
+function mostrar(id,si){var el=$('#sd-'+id);if(el)el.hidden=!si}
+/* ¿En tu trabajo hay horas extra? (se pregunta una sola vez) */
+function renderPregunta(conHoras,tipo){
+  var p=ctx.state.perfil,H=p.horas||{},el=$('#sueldo-pregunta');if(!el)return;
+  if(!H.preguntado&&(p.recibosAgus||ctx.state.horas.length)){H.preguntado=true}
+  el.innerHTML=!H.preguntado&&tipo!=='variable'?'<div class="card stack pregunta-horas"><h2>¿En tu trabajo hay horas extra?</h2><p class="note">Te lo pregunto una sola vez. Si no hay, saco todo lo de las horas extra de esta página (lo podés cambiar en Mi perfil).</p><div class="row-btns"><button class="btn primary" type="button" data-hx="si">Sí, a veces</button><button class="btn" type="button" data-hx="no">No, nunca</button></div></div>':'';
+}
 
 var tipoSel='sem',confirmClear=false;
 var REDTXT={media:' y se pagan redondeados a la media hora',cuarto:' y se pagan redondeados al cuarto de hora',no:' y se pagan sin redondear'};
@@ -19,22 +47,24 @@ export function renderSueldo(){
   var desc=L.mont+L.fon+L.frl+L.irpf+L.otros,extras=L.N-nom;
   var ing=ingresoDe(state),uy=ing.tipo==='uy';
   /* Lo que es solo del sueldo en Uruguay: aguinaldo, BPC, control del recibo y descuentos de ley */
-  $('#aguinaldo-card').hidden=!uy;$('#card-control').hidden=!uy;$('#card-recibos').hidden=ing.tipo==='variable';
+  var fac=esFactura(state);
+  mostrar('aguinaldo',uy);$('#card-control').hidden=!uy;mostrar('control',ing.tipo!=='variable');mostrar('factura',fac);mostrar('horas',conHoras);
+  mostrar('recibo',!fac);var tr=$('#sd-recibo .sdes-t');if(tr)tr.textContent=ing.tipo==='variable'?'Lo que cobraste cada mes':ing.tipo==='personalizado'?'Tu recibo completo':'Recibo estimado completo';
+  renderPregunta(conHoras,ing.tipo);
+  if(fac)renderFactura();
   ['s-otros','s-hijos','s-conyuge','s-bpc'].forEach(function(id){var f=$('#'+id).closest('.field');if(f)f.hidden=!uy});
   var fb=$('#s-bonofijo').closest('.field');if(fb)fb.hidden=ing.tipo==='variable';
   var ln=document.querySelector('label[for="s-nominal"]');if(ln)ln.textContent=ing.tipo==='variable'?'Lo que cobrás en un mes normal (en mano)':ing.tipo==='personalizado'?'Sueldo mensual, antes de tus descuentos':'Sueldo nominal mensual';
   /* Sin horas extra, el control del recibo no pregunta por horas */
   ['r-heh','r-hem','r-des','r-fer'].forEach(function(id){var f=$('#'+id).closest('.field');if(f)f.hidden=!conHoras});
-  if(!uy){renderOtroIngreso(Lr,conHoras);return}
+  if(!uy){renderOtroIngreso(Lr,conHoras);datosDesplegables(Lr,L0,conHoras,mc,me);return}
   var ban='';
   if(state.ejemplo)ban='<div class="banner"><p><b>Estás viendo valores de ejemplo.</b> Sueldo, valor de las horas y registro de tiempo son de muestra. Borralos y creá tu perfil cuando quieras.</p><button class="btn" type="button" data-cero>Borrar el ejemplo y crear mi perfil</button></div>';
   $('#ej-banner').innerHTML=ban;
 
-  $('#sueldo-hero').innerHTML='<div class="card pay-hero"><div class="ph-main"><span class="tile-l" style="color:var(--grape-ink)">'+(Lr.real?'Vas a cobrar':'Vas a cobrar, más o menos')+'</span><b class="pay-big">'+money(Lr.liquido)+'</b><span class="tile-h">El '+esc(fLarga(state.plan.cobro))+', ya con los descuentos. '+(Lr.real?'Es lo que dice tu recibo; mi estimación daba '+money(L.liquido)+'. ':'')+(conHoras?'Las horas extra te suman <b>'+money(L.liquido-L0.liquido)+'</b> en mano.':'')+'</span></div><div class="tiles">'
-    +tile('tone-sky','Sueldo base',money(nom),'el mismo todos los meses')
-    +(conHoras?tile('tone-mint','Extras de este mes','+ '+money(extras),'horas extra, descanso y bono'):tile('tone-mint','Bono','+ '+money(extras),'bono fijo del mes'))
-    +tile('tone-coral','Descuentos','− '+money(desc),'BPS, FONASA y FRL'+(L.irpf>0?' e IRPF':''))
-    +'</div></div>';
+  /* el recibo en miniatura: del recibo real si lo cargaste; si no, la estimación */
+  var rr=Lr.real&&Lr.recibo,nomV=rr&&num(rr.nominal)>0?num(rr.nominal):nom,habV=rr?Lr.N:L.N,descV=rr?Lr.N-Lr.liquido:desc;
+  $('#sueldo-hero').innerHTML=heroHTML(Lr,[['Sueldo',money(nomV)],['+ Extras',money(habV-nomV),'mas'],['− Descuentos',money(descV),'menos'],['= En mano',money(Lr.liquido),'fin']]);
 
   $('#sueldo-rates').innerHTML='<div class="rates">'
     +'<div class="rate tone-sky"><span class="rate-k">Hora extra entre semana</span><b class="rate-v">'+money2(t.heCom)+'</b>'+(hn>0?'<span class="rate-x">'+veces(t.heCom/hn)+' tu hora</span>':'')+'<p>Los minutos que llegás antes o te quedás. Se suman en el mes'+REDTXT[R.redondeo]+'.</p></div>'
@@ -70,10 +100,21 @@ export function renderSueldo(){
     :(conHoras?'Salen de tu sueldo y tu perfil: hora normal '+money2(hn)+', extra de semana '+money2(t.heCom)+', finde o feriado '+money2(finH)+'.':'En tu perfil dice que no hacés horas extra.');
   $('#horas-nota').innerHTML='Tu horario es de <b>'+esc(R.entrada||'12:00')+' a '+esc(R.salida||'21:00')+'</b>. Entre semana se suman los minutos que llegás antes y los que te quedás después (cuentan desde '+fMin(Math.max(0,num(R.umbral)-num(R.jornada)))+' en el día). Fin de semana y feriados no laborables: el turno entero.';
   renderLog(mc,me,L);renderCtrl();renderAguinaldo();renderPlanilla();
+  datosDesplegables(Lr,L0,conHoras,mc,me);
   /* La BPC cambia cada enero */
   var y=today().slice(0,4);
   $('#bpc-aviso').innerHTML=revisarBPC(state,today())?'<div class="banner"><p><b>¿Cambió la BPC?</b> Estamos en '+y+' y estás usando la de '+esc(String(s.bpcAnio))+' ('+money(bpc)+'). Cada enero el BPS publica un valor nuevo, y cambia los tramos del IRPF.</p><div class="row-btns"><button class="btn" type="button" id="bpc-ir">Cargar la nueva</button><button class="btn quiet" type="button" id="bpc-igual">Sigue igual</button></div></div>':'';
   $('#bpc-nota').textContent='Valor de '+(s.bpcAnio||y)+'. Cambia cada enero: actualizala cuando el BPS publique la nueva.';
+}
+/* El dato clave de cada desplegable, en su título */
+function datosDesplegables(Lr,L0,conHoras,mc,me){
+  var state=ctx.state,est=Lr.estimado||Lr;
+  if(conHoras)datoDe('horas',fMin(mc)+(me?' · '+fmtH(me/60)+' h de finde':'')+' · + '+money(Math.max(0,est.liquido-L0.liquido)));
+  var mt=mesTrabajo(state),r=reciboDe(state,mt),mn=MESL[Number(mt.slice(5,7))-1];
+  if(r){var c=compararRecibo(state,r),d=Math.abs(num(c.liquidoDif));datoDe('control',mn+': '+(c.liquidoDif===null||d<=5?'coincide ✓':'difiere '+money(d)))}
+  else datoDe('control','falta el recibo de '+mn);
+  datoDe('recibo',Lr.tipo==='variable'?'lo que cobraste cada mes':'en mano '+money(est.liquido));
+  if(!$('#sd-aguinaldo').hidden){var A=aguinaldo(state,today());datoDe('aguinaldo','aguinaldo ≈ '+money(A.liquido))}
 }
 /* ---------- Sueldo personalizado e ingreso variable ---------- */
 function enMoneda(L,v){return L.moneda==='USD'&&L.cotiz?' <span class="src">('+usd(v/L.cotiz)+')</span>':''}
@@ -84,10 +125,10 @@ function renderOtroIngreso(L,conHoras){
   $('#ej-banner').innerHTML=ban;$('#bpc-aviso').innerHTML='';
   var mesN=MESL[Number(String(L.mes||mesIngreso(state)).slice(5,7))-1];
   var sub=variable?(L.estimado?'Todavía no cargaste lo de '+mesN+': uso lo que cobrás en un mes normal.':'Lo que cargaste para '+mesN+'.'):'El '+esc(fLarga(state.plan.cobro))+', con tus descuentos.';
-  $('#sueldo-hero').innerHTML='<div class="card pay-hero"><div class="ph-main"><span class="tile-l" style="color:var(--grape-ink)">'+(variable?'Vas a cobrar este mes':'Vas a cobrar, más o menos')+'</span><b class="pay-big">'+money(L.liquido)+'</b><span class="tile-h">'+sub+(L.moneda==='USD'&&L.orig?' Son '+usd(L.orig.liquido)+(L.cotiz?' a $ '+String(L.cotiz).replace('.',',')+' el dólar':'')+'.':'')+'</span></div>'
-    +(variable?'':'<div class="tiles">'+tile('tone-sky','Sueldo',money(L.N-L.bono-L.extraCom-L.extraEsp),'antes de descuentos')
-      +(conHoras||L.bono>0?tile('tone-mint','Extras de este mes','+ '+money(L.bono+L.extraCom+L.extraEsp),conHoras?'horas extra y bono':'bono fijo'):'')
-      +tile('tone-coral','Tus descuentos','− '+money(L.otros),L.descuentos.length?L.descuentos.length+(L.descuentos.length===1?' descuento':' descuentos'):'no cargaste descuentos')+'</div>')+'</div>';
+  var lin=L.tipo==='factura'?[['Facturado (sin IVA)',money(L.N)],['− Costos',money(L.otros),'menos'],['= Te queda',money(L.liquido),'fin']]
+    :variable?[[L.estimado?'Un mes normal':'Lo de '+mesN,money(L.liquido),'fin']]
+    :[['Sueldo',money(L.N-L.bono-L.extraCom-L.extraEsp)],['+ Extras',money(L.bono+L.extraCom+L.extraEsp),'mas'],['− Tus descuentos',money(L.otros),'menos'],['= En mano',money(L.liquido),'fin']];
+  $('#sueldo-hero').innerHTML=heroHTML(L,lin)+(L.moneda==='USD'&&L.orig?'<p class="note">Son '+usd(L.orig.liquido)+(L.cotiz?' a $ '+String(L.cotiz).replace('.',',')+' el dólar':'')+'.</p>':'')+'<p class="note">'+sub+'</p>';
   var h;
   if(variable){
     var im=s.ingresosMes||{},meses=Object.keys(im).sort().reverse(),m=L.mes;
@@ -243,7 +284,16 @@ function horNota(){
   b.disabled=!x.cuenta;b.textContent=x.cuenta?'Sumar '+fMin(x.min):'Sumar';
 }
 export function initSueldo(){
-  initPlanilla();
+  initPlanilla();initLector();initFactura();
+  /* los desplegables recuerdan si los abriste */
+  var ab=abiertos();document.querySelectorAll('#p-sueldo [data-sdes]').forEach(function(d){d.open=!!ab[d.getAttribute('data-sdes')]});
+  $('#p-sueldo').addEventListener('toggle',function(e){var d=e.target;if(!d.matches||!d.matches('[data-sdes]'))return;var a=abiertos();a[d.getAttribute('data-sdes')]=d.open?1:0;try{localStorage.setItem(KA,JSON.stringify(a))}catch(x){}},true);
+  $('#p-sueldo').addEventListener('click',function(e){
+    /* «Para afinarla»: abre el desplegable que hace falta */
+    var dir=e.target.closest('[data-sdir]');if(dir){var d=$('#sd-'+dir.getAttribute('data-sdir'));if(d){d.open=true;try{d.scrollIntoView({block:'start',behavior:'smooth'})}catch(x){}}return}
+    var hx=e.target.closest('[data-hx]');
+    if(hx){var p=ctx.state.perfil;p.horas=Object.assign({},p.horas,{preguntado:true,activo:hx.getAttribute('data-hx')==='si'});ctx.persist();ctx.renderAll();toast(p.horas.activo?'Listo: sumá tus horas extra en «Horas extra»':'Listo: sin horas extra');return}
+  });
   $('#bpc-aviso').addEventListener('click',function(e){
     if(e.target.id==='bpc-igual'){ctx.state.sueldo.bpcAnio=Number(today().slice(0,4));ctx.persist();renderSueldo()}
     if(e.target.id==='bpc-ir'){var d=$('#s-bpc').closest('details');if(d)d.open=true;var i=$('#s-bpc');try{i.scrollIntoView({block:'center'})}catch(er){}i.focus();i.select()}

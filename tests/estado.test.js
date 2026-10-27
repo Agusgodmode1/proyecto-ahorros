@@ -136,3 +136,12 @@ test('v14 → v15: suma los grupos para compartir fijos; los fijos y sus pagos q
   assert.deepEqual(st.fijosPagos,d.fijosPagos);
   assert.equal(st.pacto.numero,3);
 });
+
+test('v15 → v16: «¿hay horas extra?» queda contestado para quien ya tenía perfil o horas; los demás lo ven una vez',function(){
+  var con=migrar({v:15,perfil:{nombre:'Ana',hecho:true,horas:{activo:true}},plan:{monto:1,inicio:'2026-10-01',cobro:'2026-11-06'},pacto:{sellado:'2026-10-01',numero:1}});
+  assert.equal(con.perfil.horas.preguntado,true);
+  var sin=migrar({v:15,perfil:{nombre:'',hecho:false},plan:{monto:1,inicio:'2026-10-01',cobro:'2026-11-06'},horas:[],pacto:{sellado:'2026-10-01',numero:1}});
+  assert.equal(sin.perfil.horas.preguntado,false);
+  assert.equal(sin.perfil.horas.divisor,240,'las reglas de siempre no cambian');
+  assert.equal(defaults().perfil.horas.preguntado,false);
+});

@@ -748,3 +748,70 @@ html{font-variation-settings:'SOFT' 100,'WONK' 0}
 .v2 .cc-n .btn{min-width:48px;font-size:22px}
 .v2 .cc-res .list li{display:flex;justify-content:space-between;align-items:center}
 .v2 .pagado-txt .linklike{display:inline-flex;align-items:center;min-height:44px;padding:0 6px}
+
+/* =====================================================================
+   Sueldo ordenado (2.12): arriba lo importante; todo lo demás en desplegables
+   ===================================================================== */
+.v2 .cobro-hero{gap:var(--e2)}
+.v2 .cobro-hero .ch-n{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px var(--e3)}
+.v2 .cobro-hero .pay-big{font:600 clamp(40px,12vw,58px)/1 var(--f-libro);color:var(--azul);font-variant-numeric:lining-nums tabular-nums}
+.v2 .cobro-hero .ch-n span{font:600 16px var(--f-body);color:var(--oro-t)}
+.v2 .mini-rec{display:grid;gap:2px;padding:var(--e2) var(--e3);border-radius:var(--r-m);background:color-mix(in srgb,var(--surface-2) 70%,transparent);font-variant-numeric:tabular-nums}
+.v2 .mini-rec p{display:flex;justify-content:space-between;gap:var(--e2);margin:0;font-size:15px;color:var(--muted)}
+.v2 .mini-rec p b{color:var(--ink);font-weight:600}
+.v2 .mini-rec .fin{border-top:1px solid var(--line);padding-top:4px;margin-top:2px}
+.v2 .mini-rec .fin span,.v2 .mini-rec .fin b{color:var(--ink);font-weight:700}
+.v2 .precision{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;font-size:15px;color:var(--muted)}
+.v2 .precision b{color:var(--ink)}
+.v2 .precision small{font-size:14px}
+.v2 .pr-dots{display:inline-flex;gap:3px}
+.v2 .pr-dots i{width:18px;height:6px;border-radius:99px;background:color-mix(in srgb,var(--ink) 14%,transparent)}
+.v2 .pr-dots i.on{background:var(--bien)}
+.v2 .pr-dots.n0 i.on{background:var(--ojo)}
+.v2 .pr-falta{margin:0;font-size:15px;color:var(--muted)}
+/* los desplegables, con su dato clave en el título */
+.v2 .sdes>summary{list-style:none;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:2px 10px;min-height:56px;cursor:pointer}
+.v2 .sdes>summary::-webkit-details-marker{display:none}
+.v2 .sdes>summary::before{content:none;display:none}
+.v2 .sdes>summary::after{content:"";grid-column:2;grid-row:1 / span 2;width:10px;height:10px;border-right:2.5px solid var(--muted);border-bottom:2.5px solid var(--muted);transform:rotate(45deg);transition:transform .15s;margin-right:4px}
+.v2 .sdes[open]>summary::after{transform:rotate(-135deg)}
+.v2 .sdes-t{font:700 var(--t5)/1.15 var(--f-libro);color:var(--ink)}
+.v2 .sdes-d{grid-column:1;font:600 14px var(--f-body);color:var(--muted)}
+.v2 .sdes-in{margin-top:var(--e3)}
+.v2 .sdes[hidden]{display:none}
+.v2 .sdes h3{font:700 var(--t4) var(--f-libro);color:var(--ink);margin:0}
+.v2 .sub-d>summary,.v2 .lec-ren>summary{list-style:none;display:inline-flex;align-items:center;gap:6px;min-height:44px;cursor:pointer;font:600 15px var(--f-body);color:var(--azul)}
+.v2 .sub-d>summary::-webkit-details-marker,.v2 .lec-ren>summary::-webkit-details-marker{display:none}
+.v2 .sub-d>summary::before,.v2 .lec-ren>summary::before{content:none;display:none}
+.v2 .sub-d>summary::after,.v2 .lec-ren>summary::after{content:"▸";display:inline-block;transition:transform .15s ease}
+.v2 .sub-d[open]>summary::after,.v2 .lec-ren[open]>summary::after{transform:rotate(90deg)}
+.v2 .pregunta-horas h2{margin:0}
+/* el lector de recibos */
+.v2 .lector textarea,.v2 #fac-texto{width:100%;min-height:140px;padding:10px 12px;border-radius:var(--r-m);border:1.5px solid var(--line-2);background:var(--surface);color:var(--ink);font:400 16px/1.4 var(--f-body);resize:vertical}
+.v2 .lec-prop{padding:var(--e3);border:1.5px solid var(--line-2);border-radius:var(--r-m);background:color-mix(in srgb,var(--surface) 60%,transparent)}
+.v2 .lec-enc{margin:0;font-size:16px;color:var(--ink)}
+.v2 .ok-t{color:var(--bien);font-weight:700}
+.v2 .ojo-t{color:var(--ojo);font-weight:700}
+.v2 .lec-ren li{display:grid;gap:2px}
+.v2 .lec-r{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+.v2 .lec-r select{min-height:44px;font-size:16px}
+.v2 .lec-ren small{color:var(--muted);font-size:13px}
+/* cobro con factura */
+.v2 .fac-res{display:grid;gap:2px;padding:var(--e2) var(--e3);border-radius:var(--r-m);background:color-mix(in srgb,var(--surface-2) 70%,transparent);font-variant-numeric:tabular-nums}
+.v2 .fac-res p{display:flex;justify-content:space-between;margin:0;color:var(--muted)}
+.v2 .fac-res b{color:var(--ink)}
+.v2 .fac-res .fin{border-top:1px solid var(--line);padding-top:4px}
+.v2 .fac-res .fin b{color:var(--azul);font:600 20px var(--f-libro)}
+/* (2.12) las horas cargadas: arriba el día, el tiempo y borrar; abajo el detalle a todo el ancho
+   (antes la columna del detalle quedaba tan angosta que «ejemplo del Excel» se leía letra por letra) */
+.v2 #log-out .list li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"when amt btn" "what what what";align-items:center;gap:2px 10px}
+.v2 #log-out .list li .when{grid-area:when;width:auto;white-space:nowrap}
+.v2 #log-out .list li .what{grid-area:what;min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px}
+.v2 #log-out .list li .amt{grid-area:amt;justify-self:end}
+.v2 #log-out .list li>button{grid-area:btn}
+/* la lista de recibos: el mes entero, y los botones abajo si no entran */
+.v2 .rec-fila{display:flex;flex-wrap:wrap;align-items:center;gap:4px var(--e2)}
+.v2 .rec-fila .what{flex:1 1 180px;min-width:0}
+.v2 .rec-fila .what b{white-space:nowrap}
+/* dentro de los desplegables, sin tarjeta dentro de tarjeta */
+.v2 .sdes-in>.out>.card,.v2 .sdes-in .receipt.card{box-shadow:none;background:transparent;border:0;padding:0}

@@ -2,6 +2,7 @@
 import {iso,parse,addDays,diffDays,bizRank} from './fechas.js';
 import {num} from './util.js';
 import {miParte} from './reparto.js';
+import {frecDe,cobroFrec,fraccionMes} from './frecuencia.js';
 
 /* Para gastar = plata − fijos que vencen antes de cobrar − ahorro. Semanas de 7 días desde el inicio;
    presupuesto de cada una = para gastar × días ÷ días totales, y lo que sobra o falta pasa a la siguiente. */
@@ -108,17 +109,20 @@ export function fechaCobro(y,m,cfg){
     return iso(new Date(base.getFullYear(),base.getMonth(),Math.min(Math.max(1,Math.round(num(cfg.dia))||1),last),12))}
   return quintoHabil(y,m);
 }
-export function nextCobro(s,cfg){var p=parse(s);return fechaCobro(p.getFullYear(),p.getMonth()+1,cfg)}
+/* (2.19) quincenal, semanal o por jornal: frecuencia.js. Mensual: como siempre. */
+export function nextCobro(s,cfg){if(frecDe(cfg)!=='mensual')return cobroFrec(s,cfg);var p=parse(s);return fechaCobro(p.getFullYear(),p.getMonth()+1,cfg)}
 /* Primer cobro después de hoy (para arrancar un plan nuevo). */
-export function cobroDesde(hoy,cfg){var p=parse(hoy),f=fechaCobro(p.getFullYear(),p.getMonth(),cfg);return f>hoy?f:fechaCobro(p.getFullYear(),p.getMonth()+1,cfg)}
+export function cobroDesde(hoy,cfg){if(frecDe(cfg)!=='mensual')return cobroFrec(hoy,cfg);var p=parse(hoy),f=fechaCobro(p.getFullYear(),p.getMonth(),cfg);return f>hoy?f:fechaCobro(p.getFullYear(),p.getMonth()+1,cfg)}
 export function cfgCobro(state){return (state.perfil&&state.perfil.cobro)||{tipo:'habil5'}}
 
 /* "Cuando cobres": líquido estimado − fijos del mes − meta = libre para el mes siguiente. */
 export function proximo(state,L){
-  var p=state.plan,nc=nextCobro(p.cobro,cfgCobro(state)),dias=Math.max(1,diffDays(p.cobro,nc));
-  var fij=totalFijos(state.fijos,state),metaPedida=p.modo==='monto'?Math.max(0,Math.round(num(p.ahorro))):Math.round(L.liquido*num(p.pct)/100);
+  var p=state.plan,cfg=cfgCobro(state),nc=nextCobro(p.cobro,cfg),dias=Math.max(1,diffDays(p.cobro,nc));
+  /* (2.19) cobrando cada 15 días o cada semana, el sueldo y los fijos del mes se reparten en la parte que toca */
+  var fr=fraccionMes(cfg,p.cobro,nc);if(fr!==1)L=Object.assign({},L,{liquido:L.liquido*fr});
+  var fij=totalFijos(state.fijos,state)*fr,metaPedida=p.modo==='monto'?Math.max(0,Math.round(num(p.ahorro))):Math.round(L.liquido*num(p.pct)/100);
   /* Tope: no se puede guardar más de lo que cobrás menos los fijos */
   var meta=Math.min(metaPedida,Math.max(0,L.liquido-fij));
   var libre=L.liquido-fij-meta;
-  return {nc:nc,dias:dias,fij:fij,meta:meta,metaPedida:metaPedida,libre:libre,dia:libre/dias,semana:libre*7/dias};
+  return {nc:nc,dias:dias,fij:fij,meta:meta,metaPedida:metaPedida,libre:libre,dia:libre/dias,semana:libre*7/dias,liquido:L.liquido,fraccion:fr};
 }

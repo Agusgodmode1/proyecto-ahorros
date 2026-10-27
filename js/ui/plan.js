@@ -1,7 +1,7 @@
 /* Pestaña Plan: portada con "Hoy podés gastar", anotar un gasto, plan plegable, hasta que cobres, semanas y "cuando cobres". */
 import {parse,diffDays,bizRank,MESL,addDays,iso} from '../logica/fechas.js';
 import {num} from '../logica/util.js';
-import {fijosPeriodo,totalFijos,proximo,hoyPodes,planCalc} from '../logica/plan.js';
+import {fijosPeriodo,totalFijos,proximo,hoyPodes,planCalc,cfgCobro} from '../logica/plan.js';
 import {disponible,fijosPagadosParte,maxAhorro,previaSaldo,ajustarSaldo,deshacerAjuste} from '../logica/saldo.js';
 import {balanceHTML} from './fijos.js';
 import {mesTrabajo,mins,reglasHoras} from '../logica/sueldo.js';
@@ -18,6 +18,8 @@ import {abrirPostal} from './postal.js';
 import {abrirLibro,polvo} from './libro.js';
 import {totalApartado} from '../logica/pacto.js';
 import {renderSuperv,initSuperv} from './supervivencia.js';
+import {renderCobre,initCobre} from './cobre.js';
+import {periodoTxt} from '../logica/frecuencia.js';
 import {irAlPacto} from './indice.js';
 
 function rankTxt(s){
@@ -69,7 +71,7 @@ function heroChips(pc){
   /* Dos datos en la misma fila: cuánta plata tenés y cuánto guardás (el cobro tiene su propia tarjeta) */
   $('#hero-chips').innerHTML=''
     +'<button class="hchip hc-saldo" type="button" id="saldo-abrir"><span>Tenés</span><b>'+money(Math.max(0,disponible(state,pc)))+'</b><small>actualizar</small></button>'
-    +'<button class="hchip hc-ahorro" type="button" id="ahorro-abrir"><span>Guardás este mes</span><b>'+money(pc.ahorro)+'</b><small>actualizar</small></button>'
+    +'<button class="hchip hc-ahorro" type="button" id="ahorro-abrir"><span>Guardás '+periodoTxt(cfgCobro(state)).este+'</span><b>'+money(pc.ahorro)+'</b><small>actualizar</small></button>'
     /* (2.17) la plata apartada: se ve, pero aparte de lo que podés usar */
     +(totalApartado(state)>0?'<button class="hc-ap" type="button" id="apartado-abrir">Además tenés <b>'+money(totalApartado(state))+'</b> apartados, que no se tocan<small>ver</small></button>':'');
 }
@@ -185,7 +187,7 @@ export function renderResumen(pc){
   var sum=$('#plan-aj-sum');if(sum)sum.textContent=num(state.plan.monto)>0?money(Math.max(0,disponible(state,pc)))+' disponibles · guardás '+money(pc.ahorro)+' · hasta el '+fCorta(state.plan.cobro):'Completá los tres pasos';
   /* (2.15) la página de Hoy se dibuja solo cuando se ve: así pasar a otro capítulo no la rehace cada vez */
   if(ctx.tab!=='resumen')return;
-  renderCierre(pc);renderHoy(pc);renderSuperv(pc);renderRitmo(pc);
+  renderCierre(pc);renderHoy(pc);renderCobre();renderSuperv(pc);renderRitmo(pc);
   var sf=aniosSinFeriados(state,today()),fa=$('#fer-aviso');
   if(fa)fa.innerHTML=sf.length?'<div class="banner"><p><b>No tengo los feriados de '+sf.join(' y ')+'.</b> Sin ellos, el día de cobro puede salir mal. Actualizá la app o agregalos en Ajustes → Feriados.</p><button class="btn" type="button" data-goto="ajustes">Ir a Feriados</button></div>':'';
   var p=state.plan,t=today(),L=liqNow(true),fp=fijosPeriodo(state.fijos,p.inicio,p.cobro);
@@ -235,18 +237,19 @@ export function renderResumen(pc){
   /* Si el aguinaldo cae en ese mes, se suma a lo libre */
   var AG=aguinaldo(state,t),conAg=AG.pago>=p.cobro&&AG.pago<nx.nc&&AG.liquido>0;
   if(conAg){nx=Object.assign({},nx,{libre:nx.libre+AG.liquido});nx.dia=nx.libre/nx.dias;nx.semana=nx.libre*7/nx.dias}
-  h+=foldIni('cuando','tone-grape','Cuando cobres',nx.libre>=0?'El mes que viene: '+money(nx.semana)+' por semana':'El mes que viene te faltan '+money(-nx.libre));
-  h+='<p class="lead">'+(nx.libre>=0?'El mes que viene vas a poder gastar unos <b class="c-mint">'+money(nx.semana)+' por semana</b>.':'El mes que viene no te alcanza para la meta: te faltan <b class="neg">'+money(-nx.libre)+'</b>.')+'</p>';
+  var QV=periodoTxt(cfgCobro(state)).que,QVc=QV.charAt(0).toUpperCase()+QV.slice(1),parte=nx.fraccion!==1;
+  h+=foldIni('cuando','tone-grape','Cuando cobres',nx.libre>=0?QVc+': '+money(nx.semana)+' por semana':QVc+' te faltan '+money(-nx.libre));
+  h+='<p class="lead">'+(nx.libre>=0?QVc+' vas a poder gastar unos <b class="c-mint">'+money(nx.semana)+' por semana</b>.':QVc+' no te alcanza para la meta: te faltan <b class="neg">'+money(-nx.libre)+'</b>.')+'</p>';
   h+='<div class="receipt">'
-    +row(L.real?'Tu sueldo (según tu recibo)':'Tu sueldo, estimado',money(L.liquido),'','<button class="linklike" type="button" data-goto="sueldo">ver el cálculo</button>')
-    +row('Gastos fijos del mes','− '+money(nx.fij),'sub minus',state.fijos.length?state.fijos.length+' cargados':'<button class="linklike" type="button" data-goto="fijos">cargalos</button>')
+    +row(parte?'Tu cobro, estimado (la parte del mes)':L.real?'Tu sueldo (según tu recibo)':'Tu sueldo, estimado',money(parte?nx.liquido:L.liquido),'','<button class="linklike" type="button" data-goto="sueldo">ver el cálculo</button>')
+    +row(parte?'Tu parte de los fijos del mes':'Gastos fijos del mes','− '+money(nx.fij),'sub minus',state.fijos.length?state.fijos.length+' cargados':'<button class="linklike" type="button" data-goto="fijos">cargalos</button>')
     +(conAg?row('Aguinaldo de '+AG.nombre,'+ '+money(AG.liquido),'sub','<button class="linklike" type="button" data-goto="sueldo">estimado</button>, antes del '+Number(AG.pago.slice(8,10))+' de '+AG.nombre):'')
     +row('Lo que vas a guardar','− '+money(nx.meta),'sub save','tu meta de ahorro')
     +row('Libre para gastar',money(nx.libre),'final')+'</div>';
   if(nx.metaPedida>nx.meta)h+='<p class="note">Tu meta de '+money(nx.metaPedida)+' es más de lo que te queda después de los fijos. Se usa '+money(nx.meta)+'.</p>';
   var sd=sensibilidadDolar(L);
   if(sd)h+='<p class="note">Cobrás en dólares y gastás en pesos: si el dólar se mueve un '+sd.pct+' %, lo que te queda libre cambia unos <b>'+money(sd.cambio)+'</b>, para arriba o para abajo.</p>';
-  h+='<div class="tiles">'+tile('tone-sky','Por día',money(nx.dia),nx.dias+' días hasta el '+esc(fCorta(nx.nc)))+tile('tone-sun','Ese día tenés',money(pc.ahorro+L.liquido),'lo guardado más el sueldo')+'</div>';
+  h+='<div class="tiles">'+tile('tone-sky','Por día',money(nx.dia),nx.dias+' días hasta el '+esc(fCorta(nx.nc)))+tile('tone-sun','Ese día tenés',money(pc.ahorro+(parte?nx.liquido:L.liquido)),'lo guardado más el '+(parte?'cobro':'sueldo'))+'</div>';
   h+='<p class="note">El sueldo ya tiene descontados BPS, FONASA y FRL'+(reglasHoras(state).activo!==false?', e incluye las horas extra de '+mtN:'')+'. Si te sobra plata de las semanas, se suma.</p></div></details>';
   $('#resumen-out').innerHTML=h;
 }
@@ -373,7 +376,7 @@ function confirmarSaldo(real){
 }
 export function initPlan(){
   var pr=$('#p-resumen');
-  initSaldo();initSuperv();
+  initSaldo();initSuperv();initCobre();
   $('#meta-alerta').addEventListener('click',function(e){
     var b=e.target.closest('#meta-bajar');
     if(b){ctx.state.plan.ahorro=Number(b.getAttribute('data-mx'))||0;ctx.persist();ctx.syncInputs();ctx.renderAll();toast('Meta bajada a '+money(ctx.state.plan.ahorro));return}

@@ -1255,3 +1255,8 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 .v2 .sv-form[hidden]{display:none}
 .lb-superv b{color:var(--ink)}
 .v2 .sv-llego small{display:block;color:var(--muted);font-size:14px;margin-top:2px}
+
+/* ---------- Cobro por jornal: «Cobré» (2.19) ---------- */
+.v2 .cobre h2{margin:0}
+.v2 .cobre-fila{display:flex;gap:10px;align-items:center}
+.v2 .cobre-fila .money{flex:1;min-width:0}

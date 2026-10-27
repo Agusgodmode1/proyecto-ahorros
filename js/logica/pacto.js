@@ -6,7 +6,8 @@
    state.pacto solo anota cuándo se selló, cuántos pactos llevás y si parte de la plata era en dólares. */
 import {num} from './util.js';
 import {iso,parse,addDays,diffDays,esFeriado,esLaborable,bizRank} from './fechas.js';
-import {planCalc,cobroDesde,cfgCobro} from './plan.js';
+import {planCalc,cobroDesde,cfgCobro,totalFijos} from './plan.js';
+import {frecDe,fraccionMes,reglaDesdeFecha} from './frecuencia.js';
 import {disponible,maxAhorro,ajustarSaldo,deshacerAjuste} from './saldo.js';
 
 /* Por debajo de esto por día se avisa (sin bloquear): es poco para el día a día */
@@ -52,10 +53,26 @@ export function totalPacto(pesos,usd,cotiz){
 
 /* El cobro que te propone el libro: con el perfil de sueldo, su regla (5.º día hábil, último hábil o día fijo);
    sin perfil, el 5.º día hábil. Solo cuentan los feriados no laborables (fechas.js). */
-export function sugerirCobro(st,hoy){
-  var conPerfil=!!(st&&st.perfil&&st.perfil.hecho);
-  var cfg=conPerfil?cfgCobro(st):{tipo:'habil5'};
-  return {fecha:cobroDesde(hoy,cfg),perfil:conPerfil,tipo:cfg.tipo||'habil5'};
+export function sugerirCobro(st,hoy,frec){
+  var conPerfil=!!(st&&st.perfil&&st.perfil.hecho),guardada=frecDe(st&&st.perfil&&st.perfil.cobro);
+  frec=frec?frecDe({frecuencia:frec}):guardada;
+  /* (2.19) otra frecuencia: la regla guardada si es la misma; si no, la de por defecto (viernes, 1 y 15, una semana) */
+  var cfg=frec!=='mensual'?(guardada===frec?cfgCobro(st):{frecuencia:frec}):conPerfil?Object.assign({},cfgCobro(st),{frecuencia:'mensual'}):{tipo:'habil5'};
+  if(frec==='semanal'&&guardada!=='semanal')cfg.dow=parse(hoy).getDay(); /* sin saber el día: dentro de una semana */
+  return {fecha:cobroDesde(hoy,cfg),perfil:conPerfil||guardada===frec&&frec!=='mensual',tipo:cfg.tipo||'habil5',frecuencia:frec};
+}
+
+/* ---------- Los fijos cuando no cobrás por mes (2.19) ----------
+   Cobrando cada semana, cada 15 días o por jornal, cada pacto aparta su parte de los fijos del mes
+   (un alquiler de $ 20.000 son unos $ 4.600 por semana) en «Para los fijos», dentro de lo apartado.
+   Cuando un fijo vence en el pacto, se paga primero con esa reserva. Mensual: nada cambia. */
+export var RESERVA_FIJOS='res-fijos';
+export function reservaFijos(st,frec,apartado,desde,hasta,vencen){
+  var f=frecDe({frecuencia:frec}),r=0;
+  (Array.isArray(apartado)?apartado:[]).forEach(function(a){if(a&&a.id===RESERVA_FIJOS)r+=Math.max(0,num(a.monto))});
+  if(f==='mensual'||!(st.fijos||[]).length)return {parte:0,usa:0,reserva:r,queda:r};
+  var parte=Math.round(totalFijos(st.fijos,st)*fraccionMes({frecuencia:f},desde,hasta)),usa=Math.min(r,Math.max(0,num(vencen)));
+  return {parte:parte,usa:usa,reserva:r,queda:r-usa+parte};
 }
 
 /* Copia del estado con el pacto puesto, para hacer las cuentas sin tocar el original */
@@ -70,9 +87,11 @@ function fechaOk(s){return typeof s==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(s)&&i
 export function cuentaPacto(st,d,hoy){
   var bruto=Math.max(0,num(d.total)),apartado=totalApartado(normApartado(d.apartado)),total=Math.max(0,bruto-apartado),cobro=fechaOk(d.cobro)&&d.cobro>hoy?d.cobro:sugerirCobro(st,hoy).fecha;
   var pc=planCalc(conPacto(st,{total:total,ahorro:d.ahorro,cobro:cobro},hoy));
+  var rf=reservaFijos(st,d.frecuencia||frecDe(st.perfil&&st.perfil.cobro),normApartado(d.apartado),hoy,cobro,pc.fijos);
+  total=Math.max(0,total+rf.usa-rf.parte);
   var maxAhorro=Math.max(0,total-pc.fijos),ahorro=Math.min(Math.max(0,Math.round(num(d.ahorro))),maxAhorro);
   var gastar=Math.max(0,total-pc.fijos-ahorro);
-  return {total:total,bruto:bruto,apartado:apartado,ahorro:ahorro,pct:total>0?ahorro/total:0,fijos:pc.fijos,maxAhorro:maxAhorro,gastar:gastar,dias:pc.total,porDia:gastar/pc.total,cobro:cobro,
+  return {total:total,bruto:bruto,apartado:apartado,reserva:rf,ahorro:ahorro,pct:total>0?ahorro/total:0,fijos:pc.fijos,maxAhorro:maxAhorro,gastar:gastar,dias:pc.total,porDia:gastar/pc.total,cobro:cobro,
     /* (2.18) aunque no guardes nada, da menos de DIA_BAJO por día: modo supervivencia */
     supervivencia:total>0&&(total-pc.fijos)/Math.max(1,pc.total)<DIA_BAJO};
 }
@@ -116,7 +135,13 @@ export function sellarPacto(st,d,hoy){
   /* (2.18) de la plata que esperabas, sigue la que todavía no llegó y entra antes de este cobro */
   p.esperado=(Array.isArray(p.esperado)?p.esperado:[]).filter(function(x){return x&&x.fecha>=hoy&&x.fecha<d.cobro});
   if(!st.pacto)st.pacto=pactoBase();
-  st.pacto.apartado=normApartado(d.apartado);
+  /* (2.19) la reserva para los fijos: lo que tenía, menos lo que se usa para pagar los que vencen, más la parte de este pacto */
+  var rf=v.cuenta.reserva,ap=normApartado(d.apartado).filter(function(a){return a.id!==RESERVA_FIJOS});
+  if(rf.queda>0)ap.push({id:RESERVA_FIJOS,tipo:'reserva',monto:Math.round(rf.queda),nota:'para los fijos'});
+  st.pacto.apartado=ap;
+  /* (2.19) cada cuánto cobrás: la regla sale del día que tocaste */
+  if(d.frecuencia&&st.perfil){var fr=frecDe({frecuencia:d.frecuencia});st.perfil.cobro=fr==='mensual'?Object.assign({},st.perfil.cobro,{frecuencia:'mensual'}):reglaDesdeFecha(fr,d.cobro,hoy,st.perfil.cobro)}
+  st.pacto.pct=v.cuenta.total>0?Math.round(v.cuenta.ahorro/v.cuenta.total*1000)/1000:0;
   st.pacto.sellado=hoy;st.pacto.numero=(Math.round(num(st.pacto.numero))||0)+1;
   st.pacto.usd=num(d.usd)>0&&num(d.cotiz)>0?Math.round(num(d.usd)*100)/100:0;
   if(st.pacto.usd&&st.monedas){st.monedas.cotizacion=num(d.cotiz);st.monedas.fecha=hoy}
@@ -210,3 +235,15 @@ export function aplicarApartado(st,lista){
   return v;
 }
 export function deshacerApartado(st,u){if(!st.pacto)st.pacto=pactoBase();st.pacto.apartado=u.lista;st.plan.monto=u.monto;st.plan.ahorro=u.ahorro}
+
+/* ---------- «Cobré» (2.19, cobro por jornal) ----------
+   Lo que cobrás se suma a tu plata y se guarda solo el mismo porcentaje del pacto (state.pacto.pct). */
+export function cobreJornal(st,monto){
+  var x=Math.round(num(monto));if(!(x>0))return null;
+  var p=st.plan,pct=Math.max(0,Math.min(1,num(st.pacto&&st.pacto.pct))),g=Math.round(x*pct);
+  var u={monto:p.monto,ahorro:p.ahorro,modo:p.modo,cobro:x,guarda:g};
+  p.monto=Math.round((num(p.monto)+x)*100)/100;
+  if(p.modo==='monto')p.ahorro=Math.round(num(p.ahorro))+g;
+  return u;
+}
+export function deshacerCobre(st,u){var p=st.plan;p.monto=u.monto;p.ahorro=u.ahorro;p.modo=u.modo}

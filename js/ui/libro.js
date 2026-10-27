@@ -16,6 +16,7 @@ import {disponible,maxAhorro} from '../logica/saldo.js';
 import {totalPacto,validarPacto,cuentaPacto,sellarPacto,sugerirCobro,atajosPacto,pasoAhorro,mesCalendario,previaAjuste,aplicarAjuste,TIPOS_APARTADO,normApartado,totalApartado,totalLibre,previaApartado,aplicarApartado,deshacerApartado} from '../logica/pacto.js';
 import {PROLOGO} from '../logica/capitulos.js';
 import {atajosSupervivencia} from '../logica/supervivencia.js';
+import {FRECUENCIAS,frecDe} from '../logica/frecuencia.js';
 import {aplicarFeriados} from './feriados.js';
 import {montarImportador} from './respaldo.js';
 import {marcarTour} from './tour.js';
@@ -212,9 +213,14 @@ function pagHTML(id){
       +'<div id="lb-avisos"></div>'
       +'<p class="lb-err" id="lb-err" role="alert" hidden></p>'+(ed2?accEdit():acc);
   }else if(id==='q3'){
-    var sg=sugerirCobro(st,today());
-    h='<h1 class="lb-h lb-tinta" id="lb-h">'+tinta('¿Qué día volvés a cobrar?')+'</h1>'
-      +'<p class="lb-p">'+(sg.perfil?'Según tu perfil, cobrás el <b>'+esc(fLarga(sg.fecha))+'</b>. Si esta vez es otro día, tocalo.'
+    var sg=sugerirCobro(st,today(),D.frec),fq=D.frec,edQ3=hojear();
+    h='<h1 class="lb-h lb-tinta" id="lb-h">'+tinta(fq==='jornal'?'¿Hasta cuándo armamos el plan?':'¿Qué día volvés a cobrar?')+'</h1>'
+      +(edQ3?'':'<div class="lb-campo"><span class="lb-l">¿Cada cuánto cobrás?</span><div class="lb-chips" role="group" aria-label="¿Cada cuánto cobrás?">'
+        +FRECUENCIAS.map(function(f){return '<button class="lb-chip" type="button" data-lb="frec" data-f="'+f[0]+'" aria-pressed="'+(fq===f[0])+'">'+esc(f[1])+'</button>'}).join('')+'</div></div>')
+      +'<p class="lb-p">'+(fq==='jornal'?'Cobrás por día o cuando sale: armemos el plan por una semana (o tocá otro día). Lo que cobres en el medio lo sumás en Hoy con «Cobré», y guardo solo el mismo porcentaje.'
+        :fq==='semanal'?'Tocá el día en que cobrás esta vez. Después, cada semana el mismo día.'
+        :fq==='quincenal'?'Tocá el día de tu próximo cobro. El otro de la quincena lo calculo solo (el 1 va con el 15, y el último día del mes con el 15).'
+        :sg.perfil?'Según tu perfil, cobrás el <b>'+esc(fLarga(sg.fecha))+'</b>. Si esta vez es otro día, tocalo.'
         :'Te marqué el <b>5.º día hábil</b> del mes (contando solo los feriados no laborables). Si cobrás otro día, tocalo.')+'</p>'
       +'<div class="lb-cal" id="lb-cal"></div>'
       +'<p class="lb-queda" id="lb-cobro-txt" aria-live="polite"></p>'
@@ -246,8 +252,10 @@ function pactoNuevoHTML(){
     +'<li><span>Empiezo con</span><b>'+money(c.bruto)+(D.conUsd&&num(D.usd)>0?'<small>incluye '+usd(num(D.usd))+' a '+money(num(D.cotiz))+'</small>':'')+'</b></li>'
     +(c.apartado>0?'<li><span>Apartado</span><b>− '+money(c.apartado)+'<small>no se toca</small></b></li>':'')
     +'<li class="ah"><span>Guardo</span><b>'+money(c.ahorro)+'<small>el '+pctTxt(c.pct)+(c.apartado>0?' de lo que podés usar':' del total')+'</small></b></li>'
-    +'<li><span>Cobro el</span><b>'+esc(fLarga(D.cobro))+'<small>dentro de '+dias+' '+(dias===1?'día':'días')+'</small></b></li>'
+    +'<li><span>'+(D.frec==='jornal'?'El plan llega hasta el':'Cobro el')+'</span><b>'+esc(fLarga(D.cobro))+'<small>dentro de '+dias+' '+(dias===1?'día':'días')+'</small></b></li>'
+    +(c.reserva&&c.reserva.usa>0?'<li><span>Sale de tu reserva para los fijos</span><b>+ '+money(c.reserva.usa)+'</b></li>':'')
     +(c.fijos>0?'<li><span>Gastos fijos</span><b>− '+money(c.fijos)+'</b></li>':'')
+    +(c.reserva&&c.reserva.parte>0?'<li><span>Para los fijos del mes</span><b>− '+money(c.reserva.parte)+'<small>tu parte de '+(D.frec==='semanal'?'esta semana':D.frec==='quincenal'?'esta quincena':'estos días')+', queda apartada</small></b></li>':'')
     +'<li class="tot"><span>Para gastar</span><b>'+money(c.gastar)+'<small>≈ '+money(c.porDia)+' por día</small></b></li></ul>'
     +avisosHTML(v)
     +'<div class="lb-firma" id="lb-firma"><div class="lb-flor">'+broteHTML(Math.min(broteVisto,3))+'</div>'+SELLO+'<p class="lb-sellado" id="lb-sellado"></p></div>'
@@ -284,7 +292,7 @@ function avisosHTML(v){
   return h;
 }
 function total(){return totalPacto(D.pesos,D.conUsd?D.usd:0,D.conUsd?D.cotiz:0)}
-function datos(){return {total:total(),usd:D.conUsd?D.usd:0,cotiz:D.conUsd?D.cotiz:0,ahorro:D.ahorro,cobro:D.cobro,apartado:D.hayAp?D.ap:[]}}
+function datos(){return {total:total(),usd:D.conUsd?D.usd:0,cotiz:D.conUsd?D.cotiz:0,ahorro:D.ahorro,cobro:D.cobro,apartado:D.hayAp?D.ap:[],frecuencia:D.frec}}
 /* La plata apartada que estás escribiendo (2.17) y lo que queda para el plan */
 function apartadoD(){return D.hayAp?totalApartado(normApartado(D.ap)):0}
 function libre(){return totalLibre(total(),D.hayAp?D.ap:[])}
@@ -396,7 +404,7 @@ function vivoQ2(desdeRango){
 }
 function pintarCal(){
   var box=q('#lb-cal');if(!box)return;
-  var c=mesCalendario(D.mes[0],D.mes[1],today()),hoy=parse(today()),sg=sugerirCobro(st,today()).fecha;
+  var c=mesCalendario(D.mes[0],D.mes[1],today()),hoy=parse(today()),sg=sugerirCobro(st,today(),D.frec).fecha;
   var antes=c.y*12+c.m<=hoy.getFullYear()*12+hoy.getMonth();
   var h='<div class="lb-cal-h"><button type="button" data-lb="mes" data-d="-1" aria-label="Mes anterior"'+(antes?' disabled':'')+'>‹</button><b>'+MESL[c.m]+' '+c.y+'</b><button type="button" data-lb="mes" data-d="1" aria-label="Mes siguiente">›</button></div>'
     +'<table role="grid" aria-label="'+MESL[c.m]+' '+c.y+'"><thead><tr>'+['lu','ma','mi','ju','vi','sá','do'].map(function(d){return '<th scope="col">'+d+'</th>'}).join('')+'</tr></thead><tbody>';
@@ -410,7 +418,7 @@ function pintarCal(){
   h+='</tbody></table><div class="lb-cal-ley"><span><i class="s"></i>sugerido</span><span><i class="f"></i>feriado no laborable</span></div>';
   box.innerHTML=h;
   var t=q('#lb-cobro-txt'),n=D.cobro?diffDays(today(),D.cobro):0;
-  if(t)t.innerHTML=D.cobro&&n>0?'Cobrás el <b>'+esc(fLarga(D.cobro))+'</b>: <span class="n">faltan '+n+' '+(n===1?'día':'días')+'</span>.':'Tocá el día en que cobrás.';
+  if(t)t.innerHTML=D.cobro&&n>0?(D.frec==='jornal'?'El plan llega hasta el <b>':'Cobrás el <b>')+esc(fLarga(D.cobro))+'</b>: <span class="n">'+(D.frec==='jornal'?'son ':'faltan ')+n+' '+(n===1?'día':'días')+'</span>.':'Tocá el día en que cobrás.';
   if(hojear())error(errAjuste(previaAjuste(st,datosAjuste(),today())));
 }
 function leer(){
@@ -586,7 +594,7 @@ export function abrirLibro(opt){
   o=opt;st=opt.estado;vista='portada';E={edit:null};
   aplicarFeriados(st);
   var sg=sugerirCobro(st,today()),c=parse(sg.fecha);
-  D={nombre:null,pesos:'',usd:'',cotiz:cotizacion(st)?String(cotizacion(st)):'',conUsd:false,ahorro:null,cobro:sg.fecha,mes:[c.getFullYear(),c.getMonth()],hayAp:null,ap:[]};
+  D={nombre:null,pesos:'',usd:'',cotiz:cotizacion(st)?String(cotizacion(st)):'',conUsd:false,ahorro:null,cobro:sg.fecha,mes:[c.getFullYear(),c.getMonth()],hayAp:null,ap:[],frec:frecDe(st.perfil&&st.perfil.cobro)};
   broteVisto=0;
   PAGS=o.modo==='ciclo'?PROLOGO.slice(1):PROLOGO.slice();
   var m=$('#libro');
@@ -650,6 +658,7 @@ export function initLibro(){
     if(a==='atajo'){D.ahorro=b.getAttribute('data-val');q('#lb-ahorro').value=D.ahorro;vivoQ2(false);return}
     if(a==='mes'){var d=new Date(D.mes[0],D.mes[1]+Number(b.getAttribute('data-d')),1,12);D.mes=[d.getFullYear(),d.getMonth()];pintarCal();return}
     if(a==='dia'){D.cobro=b.getAttribute('data-f');error('');pintarCal();return}
+    if(a==='frec'){D.frec=b.getAttribute('data-f');var sf=sugerirCobro(st,today(),D.frec),pf=parse(sf.fecha);D.cobro=sf.fecha;D.mes=[pf.getFullYear(),pf.getMonth()];error('');irA(idx,0);return}
     if(a==='cerrar-libro'){cerrarTodo(1);if(o.alCerrar)o.alCerrar(1);return}
     if(a==='sellar'){
       var v=validarPacto(st,datos(),today());

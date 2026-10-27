@@ -82,7 +82,7 @@ test('sugiere el 5.º día hábil contando solo los feriados no laborables',func
   var s=sugerirCobro(nuevo(),HOY);
   assert.equal(s.fecha,'2026-11-06');assert.equal(s.perfil,false);
   var st=nuevo();st.perfil.hecho=true;st.perfil.cobro={tipo:'fijo',dia:15,laborableHabil:true};
-  assert.deepEqual(sugerirCobro(st,HOY),{fecha:'2026-11-15',perfil:true,tipo:'fijo'});
+  assert.deepEqual(sugerirCobro(st,HOY),{fecha:'2026-11-15',perfil:true,tipo:'fijo',frecuencia:'mensual'});
 });
 
 test('sellar pasa los datos al plan, arranca hoy y anota el sello',function(){
@@ -91,7 +91,7 @@ test('sellar pasa los datos al plan, arranca hoy y anota el sello',function(){
   assert.equal(v.ok,true);
   assert.equal(st.plan.monto,24050);assert.equal(st.plan.ahorro,5000);assert.equal(st.plan.modo,'monto');
   assert.equal(st.plan.inicio,HOY);assert.equal(st.plan.cobro,'2026-11-06');
-  assert.deepEqual(st.pacto,{sellado:HOY,numero:1,usd:100,apartado:[]});
+  assert.deepEqual(st.pacto,{sellado:HOY,numero:1,usd:100,apartado:[],pct:0.208});
   assert.equal(st.monedas.cotizacion,40.5);
 });
 

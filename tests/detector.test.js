@@ -62,6 +62,7 @@ test('se ordenan por plata por mes y los 3 principales no son de una sola vez', 
   assert.equal(P.length,3);
   assert.ok(P.every(function(h){return !h.unaVez}));
   assert.equal(P[0].nombre,'PedidosYa','lo evitable va antes que el súper');
+  assert.ok(P.every(function(h){return h.tipo!=='ritmo'}),'«a este ritmo» va aparte');
 });
 
 test('el aviso de Hoy: uno solo, primero lo urgente, y el que descartaste no vuelve', function(){

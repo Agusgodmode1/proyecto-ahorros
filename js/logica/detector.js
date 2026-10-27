@@ -177,9 +177,10 @@ export function textos(h,money,fecha){
   return {titulo:'',cifra:'',detalle:'',consejo:''};
 }
 
-/* «Por dónde se te va»: los 3 que más pesan cada mes (sin lo de una sola vez, y lo necesario después) */
+/* «Por dónde se te va»: los 3 que más pesan cada mes (sin lo de una sola vez, y lo necesario después).
+   «A este ritmo» no entra: es un resumen de todo, y va aparte (2.15). */
 export function principales(hallazgos,n){
-  return hallazgos.filter(function(h){return !h.unaVez&&h.mes>0}).slice().sort(function(a,b){return (b.necesario?b.mes*0.4:b.mes)-(a.necesario?a.mes*0.4:a.mes)}).slice(0,n||3);
+  return hallazgos.filter(function(h){return !h.unaVez&&h.mes>0&&h.tipo!=='ritmo'}).slice().sort(function(a,b){return (b.necesario?b.mes*0.4:b.mes)-(a.necesario?a.mes*0.4:a.mes)}).slice(0,n||3);
 }
 /* El aviso para Hoy: uno solo, el más importante que no descartaste.
    Primero lo que conviene saber ya (cobro repetido, algo que subió, cargos del banco); después el de más plata. */

@@ -78,36 +78,43 @@ export function render(){
   if(inD)inD.textContent=(r.banco.id!=='generico'?r.banco.nombre+' · ':'')+r.movs.length+' movimientos · '+fCorta(A.desde)+' al '+fCorta(A.hasta);
   var h='';
   if(r.tabla&&(!r.tabla.seguro||vista.colsAbierto))h+=columnasHTML(x);
-  var H=x.H,P=principales(H,3),pd=planDia();
+  var H=x.H,P=principales(H,3),pd=planDia(),rit=H.filter(function(hh){return hh.tipo==='ritmo'})[0];
+  /* (2.15) un índice para no perderse en una página larga */
+  var ind=[['tj-ritmo','Ritmo',pd>0],['tj-pdv','Por dónde',P.length],['tj-an','Categorías',1],['tj-cals','Calendario',1],['tj-subs','Suscripciones',H.some(function(hh){return hh.tipo==='subs'})],
+    ['tj-todo','Encontré',H.length>P.length],['tj-rit','Mes a mes',1],['control-card','Control',1],['tj-com','Comercios',1]].filter(function(z){return z[2]});
+  h+='<nav class="tj-ind" aria-label="Partes de la Tarjeta" data-nodeslizar>'+ind.map(function(z){return '<button type="button" data-tjir="'+z[0]+'">'+z[1]+'</button>'}).join('')+'</nav>';
+  /* (2.15) «a este ritmo», aparte: es el resumen de todo */
+  if(pd>0)h+='<div class="tj-ritmo'+(rit?' mal':'')+'" id="tj-ritmo"><p class="tj-ritmo-t">A este ritmo</p><p>Gastás <b>'+money(A.porDia)+'</b> por día y tu plan da <b>'+money(pd)+'</b>'
+    +(rit?': en un mes serían <b class="mal-t">'+money(rit.mes)+' de más</b>. Bajar '+money(A.porDia-pd)+' por día te deja dentro.':': <b class="bien-t">vas dentro de tu plan</b>.')+'</p></div>';
 
   /* Por dónde se te va */
-  if(P.length)h+='<section class="card stack tj-pdv"><div class="sec"><h2>Por dónde se te va</h2><p class="note">Lo que más pesa cada mes, a este ritmo.</p></div>'+porDondeHTML(P,function(hh){return txt(hh,x)})+'</section>';
+  if(P.length)h+='<section class="card stack tj-pdv" id="tj-pdv"><div class="sec"><h2>Por dónde se te va</h2><p class="note">Lo que más pesa cada mes, a este ritmo.</p></div>'+porDondeHTML(P,function(hh){return txt(hh,x)})+'</section>';
 
   /* En qué gastaste: el anillo */
   var an=anillo(A.cats,5).map(function(c){return Object.assign(c,{color:c.resto?'color-mix(in srgb,var(--cat-muted) 45%,transparent)':colorCat(colorDe(state,c.c))})});
   if(vista.an>=an.length)vista.an=-1;
-  h+='<section class="card stack tj-an"><div class="sec"><h2>En qué gastaste</h2><p class="note">Tocá una categoría para ver cuánto es.</p></div><div id="tj-anillo">'+anilloHTML(an,A.totG,money,{sel:vista.an,sub:'en '+A.dias+(A.dias===1?' día':' días')})+'</div></section>';
+  h+='<section class="card stack tj-an" id="tj-an"><div class="sec"><h2>En qué gastaste</h2><p class="note">Tocá una categoría para ver cuánto es.</p></div><div id="tj-anillo">'+anilloHTML(an,A.totG,money,{sel:vista.an,sub:'en '+A.dias+(A.dias===1?' día':' días')})+'</div></section>';
 
   /* Tu mes, día por día */
   var meses=A.meses.map(function(m){return m.k});
   if(!vista.mes||meses.indexOf(vista.mes)<0)vista.mes=meses[meses.length-1];
-  h+='<section class="card stack tj-cal"><div class="sec"><h2>Tu mes, día por día</h2><p class="note">Cada día contra lo que da tu plan. Tocá uno para ver qué gastaste.</p></div><div id="tj-cal">'+calHTML(x)+'</div><div id="cal-dia" aria-live="polite">'+diaHTML(vista.dia,vista.dia?porDiaDelMes(A,vista.dia.slice(0,7))[vista.dia]:null,money,nom)+'</div></section>';
+  h+='<section class="card stack tj-cal" id="tj-cals"><div class="sec"><h2>Tu mes, día por día</h2><p class="note">Cada día contra lo que da tu plan. Tocá uno para ver qué gastaste.</p></div><div id="tj-cal">'+calHTML(x)+'</div><div id="cal-dia" aria-live="polite">'+diaHTML(vista.dia,vista.dia?porDiaDelMes(A,vista.dia.slice(0,7))[vista.dia]:null,money,nom)+'</div></section>';
 
   /* Suscripciones, como un ticket */
   var subs=H.filter(function(hh){return hh.tipo==='subs'})[0];
-  if(subs)h+='<section class="card stack tj-subs"><div class="sec"><h2>Lo que pagás todos los meses</h2><p class="note">Suscripciones que encontré en el extracto. Si alguna no la usás, darte de baja es plata que vuelve cada mes.</p></div>'+ticketHTML(subs,money)+'</section>';
+  if(subs)h+='<section class="card stack tj-subs" id="tj-subs"><div class="sec"><h2>Lo que pagás todos los meses</h2><p class="note">Suscripciones que encontré en el extracto. Si alguna no la usás, darte de baja es plata que vuelve cada mes.</p></div>'+ticketHTML(subs,money)+'</section>';
 
   /* Además encontré: lo urgente primero, después de lo que más pesa a lo que menos (sin repetir los 3 de arriba) */
   var resto=H.filter(function(hh){return P.indexOf(hh)<0}),urg=resto.filter(function(hh){return hh.urgente});
   resto=urg.concat(resto.filter(function(hh){return !hh.urgente}));
   var item=function(hh){var t=txt(hh,x);return '<li class="hall-i'+(hh.urgente?' urg':'')+'"><p class="hall-t"><b>'+esc(t.titulo)+'</b><span>'+esc(t.cifra)+'</span></p><p class="hall-d">'+esc(t.detalle)+'</p><p class="hall-c">'+esc(t.consejo)+'</p></li>'};
-  if(resto.length)h+='<section class="card stack tj-todo"><div class="sec"><h2>'+(P.length?'Además encontré':'Lo que encontré')+'</h2><p class="note">Primero lo que conviene mirar ya; después, de lo que más pesa a lo que menos.</p></div><ul class="hall">'
+  if(resto.length)h+='<section class="card stack tj-todo" id="tj-todo"><div class="sec"><h2>'+(P.length?'Además encontré':'Lo que encontré')+'</h2><p class="note">Primero lo que conviene mirar ya; después, de lo que más pesa a lo que menos.</p></div><ul class="hall">'
     +resto.slice(0,5).map(item).join('')+'</ul>'
     +(resto.length>5?'<details class="sub-d"><summary>Ver '+(resto.length-5===1?'uno más':'los otros '+(resto.length-5))+'</summary><ul class="hall">'+resto.slice(5).map(item).join('')+'</ul></details>':'')+'</section>';
 
   /* Mes a mes y tu ritmo contra tu plan */
   var serie=serieRitmo(A,pd);vista.serie=serie;
-  if(A.meses.length>1||serie)h+='<section class="card stack tj-rit">'
+  if(A.meses.length>1||serie)h+='<section class="card stack tj-rit" id="tj-rit">'
     +(serie?'<div class="sec"><h2>Tu ritmo contra tu plan</h2><p class="note">'+esc(serie.nota)+' Tocá o deslizá el dedo sobre el dibujo para ver cada día.</p></div>'+ritmoSVG(serie.p,money):'')
     +(A.meses.length>1?'<div class="sec"><h2>Mes a mes</h2><p class="note">Lo que gastaste cada mes del extracto.</p></div>'+mesAMesSVG(A.meses,money):'')+'</section>';
 
@@ -152,7 +159,7 @@ function controlHTML(A,nom){
 }
 function detalleHTML(x,nom,pd){
   var state=ctx.state,ex=state.extracto,A=x.A,h='';
-  h+='<details class="card sdes" data-tjd="comercios"><summary><span class="sdes-t">Comercios y categorías</span><span class="sdes-d">Dónde gastaste más · acá corregís la categoría</span></summary><div class="sdes-in stack">'
+  h+='<details class="card sdes" data-tjd="comercios" id="tj-com"><summary><span class="sdes-t">Comercios y categorías</span><span class="sdes-d">Dónde gastaste más · acá corregís la categoría</span></summary><div class="sdes-in stack">'
     +'<p class="note">Si la categoría no es la correcta, cambiala: lo recuerdo para la próxima.</p><ul class="list com-l">'
     +A.com.slice(0,15).map(function(c){
       var rit=c.fijo?'<span class="pill ex">cobro fijo</span>':(c.n>=3&&c.cada>0?'cada ~'+Math.round(c.cada)+' días':'');
@@ -205,6 +212,11 @@ export function click(e){
     return true;
   }
   if(!x||!x.A)return false;
+  if((b=e.target.closest('[data-tjir]'))){
+    var dest=document.getElementById(b.getAttribute('data-tjir'));
+    if(dest){if(dest.tagName==='DETAILS')dest.open=true;var y=dest.getBoundingClientRect().top+window.scrollY-64;try{window.scrollTo({top:y,behavior:'smooth'})}catch(x2){window.scrollTo(0,y)}}
+    return true;
+  }
   if((b=e.target.closest('[data-anillo]'))){
     var i=Number(b.getAttribute('data-anillo'));vista.an=vista.an===i?-1:i;
     var an=anillo(x.A.cats,5).map(function(c){return Object.assign(c,{color:c.resto?'color-mix(in srgb,var(--cat-muted) 45%,transparent)':colorCat(colorDe(ctx.state,c.c))})});

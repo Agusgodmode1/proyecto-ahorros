@@ -173,10 +173,13 @@ export function renderCountdown(){
 
 export function renderResumen(pc){
   var state=ctx.state;
-  syncMontoCampo(pc);ahorroNote();heroChips(pc);renderAlertaMeta(pc);renderCierre(pc);renderHoy(pc);renderRitmo(pc);
+  syncMontoCampo(pc);ahorroNote();heroChips(pc);renderAlertaMeta(pc);
+  var sum=$('#plan-aj-sum');if(sum)sum.textContent=num(state.plan.monto)>0?money(Math.max(0,disponible(state,pc)))+' disponibles · guardás '+money(pc.ahorro)+' · hasta el '+fCorta(state.plan.cobro):'Completá los tres pasos';
+  /* (2.15) la página de Hoy se dibuja solo cuando se ve: así pasar a otro capítulo no la rehace cada vez */
+  if(ctx.tab!=='resumen')return;
+  renderCierre(pc);renderHoy(pc);renderRitmo(pc);
   var sf=aniosSinFeriados(state,today()),fa=$('#fer-aviso');
   if(fa)fa.innerHTML=sf.length?'<div class="banner"><p><b>No tengo los feriados de '+sf.join(' y ')+'.</b> Sin ellos, el día de cobro puede salir mal. Actualizá la app o agregalos en Ajustes → Feriados.</p><button class="btn" type="button" data-goto="ajustes">Ir a Feriados</button></div>':'';
-  var sum=$('#plan-aj-sum');if(sum)sum.textContent=num(state.plan.monto)>0?money(Math.max(0,disponible(state,pc)))+' disponibles · guardás '+money(pc.ahorro)+' · hasta el '+fCorta(state.plan.cobro):'Completá los tres pasos';
   var p=state.plan,t=today(),L=liqNow(true),fp=fijosPeriodo(state.fijos,p.inicio,p.cobro);
   /* Todo en base a la plata que tenés AHORA (la misma del botón de la portada) */
   var disp=Math.max(0,disponible(state,pc)),pagF=Math.min(pc.fijos,fijosPagadosParte(state)),pend=Math.max(0,pc.fijos-pagF),resto=pc.gastar-pc.spentInPlan;

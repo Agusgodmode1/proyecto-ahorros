@@ -22,8 +22,10 @@ function planDia(){var p=ctx.state.plan,pd=Math.max(1,diffDays(p.inicio,p.cobro)
 export function analisis(){
   var st=ctx.state,ex=st.extracto;
   if(!ex.texto||!ex.texto.trim())return null;
+  /* (2.15) la clave es barata: no recalcula el plan (eso se hace solo si cambió algo) */
+  var pl=st.plan,fx=0;(st.fijos||[]).forEach(function(f){fx+=Number(f.monto)||0});
   var k=[ex.texto.length,ex.texto.slice(0,300),ex.texto.slice(-300),ex.formato,ex.hormiga,JSON.stringify(ex.cat),JSON.stringify(ex.columnas||{}),today(),
-    JSON.stringify((st.categorias||[]).map(function(c){return [c.nombre,c.oculta,c.bases]})),Math.round(planDia())].join('|');
+    (st.categorias||[]).map(function(c){return c.nombre+(c.oculta?'-':'+')+c.bases.join(',')}).join(';'),pl.monto,pl.ahorro,pl.modo,pl.pct,pl.inicio,pl.cobro,fx,(st.fijos||[]).length,(st.grupos||[]).length].join('|');
   if(cache.k===k)return cache.v;
   var r=leerMovimientos(ex.texto,today(),{formato:ex.formato,columnas:ex.columnas}),A=analizarMovimientos(r,ex,mapa);
   var H=A?detectar(r,A,{planDia:planDia()}):[];

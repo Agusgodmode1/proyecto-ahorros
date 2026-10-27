@@ -7,7 +7,7 @@ import {sonar,sonidoOn,setSonido,volumen,setVolumen} from './ui/sonido.js';
 import {renderCountdown,renderResumen,syncPlan,initPlan} from './ui/plan.js';
 import {renderWeek,initSemanas} from './ui/semanas.js';
 import {renderSueldo,syncSueldo,initSueldo} from './ui/sueldo.js';
-import {renderGastos,syncGastos,initTarjeta,renderAvisoTarjeta} from './ui/tarjeta.js';
+import {renderGastos,syncGastos,initTarjeta,renderAvisoTarjeta,precargarTarjeta} from './ui/tarjeta.js';
 import {renderFijos,initFijos} from './ui/fijos.js';
 import {renderLogros,evalLogros,initLogros} from './ui/logros.js';
 import {renderAjustes,renderAvisoRespaldo,initAjustes,renderCopias,exportar} from './ui/respaldo.js';
@@ -89,7 +89,8 @@ function renderPie(pc){
 function showPanels(){
   var tab=ctx.tab;marcarCapitulos();
   /* la vista va en la hoja (y no en <html>): así la copia que gira al pasar de página conserva la suya */
-  var vista=tab==='resumen'?'plan':'otra';document.documentElement.setAttribute('data-vista',vista);hojaEl().setAttribute('data-vista',vista);
+  /* (2.15) solo en la hoja: cambiarlo en <html> obligaba a recalcular los estilos de todo el documento */
+  var vista=tab==='resumen'?'plan':'otra';hojaEl().setAttribute('data-vista',vista);
   $('#p-resumen').hidden=tab!=='resumen';
   $('#p-semana').hidden=!/^w\d+$/.test(tab);
   $('#p-sueldo').hidden=tab!=='sueldo';
@@ -110,8 +111,11 @@ function renderAll(){
   /* Con el perfil hecho, la explicación del encabezado ya no hace falta y deja lugar a lo importante */
   var hs=document.querySelector('.hero-sub');if(hs)hs.hidden=!!ctx.state.perfil.hecho;
   var st=ctx.state;document.documentElement.classList.toggle('en-uso',!st.ejemplo&&!!st.perfil.hecho&&(st.gastos.length+st.horas.length+st.hist.length)>3);
-  renderCountdown();renderTabs(pc);showPanels();renderAvisoRespaldo();renderResumen(pc);renderAvisoTarjeta();agruparNotas();renderWeek(pc);renderSueldo();
-  if(ctx.tab==='sueldo')renderRecibos();
+  renderCountdown();renderTabs(pc);showPanels();renderAvisoRespaldo();renderResumen(pc);
+  /* (2.15) cada capítulo se dibuja solo cuando se ve (pasar de página no rehace los que están ocultos) */
+  if(ctx.tab==='resumen'){renderAvisoTarjeta();agruparNotas()}
+  if(/^w\d+$/.test(ctx.tab))renderWeek(pc);
+  if(ctx.tab==='sueldo'){renderSueldo();renderRecibos()}
   if(ctx.tab==='gastos'){renderGastos();renderCategorias()}
   if(ctx.tab==='fijos')renderFijos(pc);
   if(ctx.tab==='logros')renderLogros(pc);
@@ -269,7 +273,7 @@ async function reemplazar(st,motivo){
   if(ctx.state)await guardarCopia(JSON.parse(JSON.stringify(ctx.state)),motivo||'antes de reemplazar tus datos');
   if(!st.meta.creado)st.meta.creado=today();
   ctx.state=st;ctx.tab='resumen';aplicarFeriados();fijarUltimo();
-  syncInputs();renderAll();flush();
+  syncInputs();renderAll();precargarTarjeta();flush();
   window.scrollTo(0,0);
 }
 
@@ -366,7 +370,7 @@ function arrancar(st){
   marcarDiscreto();
   ctx.booted=true;
   $('#app').hidden=false;
-  syncInputs();renderAll();
+  syncInputs();renderAll();precargarTarjeta();
   /* Al abrir: una transición corta (< 600 ms) hasta la página del día */
   /* (en #app solo opacidad: la barra y el micrófono son fijos y no pueden moverse con la hoja) */
   entrada();

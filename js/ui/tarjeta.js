@@ -31,6 +31,13 @@ export function renderAvisoTarjeta(){
   var ir=function(){cargar().then(function(m){m.avisoHoy()}).catch(function(){})};
   if('requestIdleCallback' in window)requestIdleCallback(ir,{timeout:4000});else setTimeout(ir,1500);
 }
+/* (2.15) con el teléfono libre se deja lista la Tarjeta (el módulo y la cuenta del extracto): así la primera vez
+   que pasás a ese capítulo no hay pausa */
+export function precargarTarjeta(){
+  if(!hayTexto()||V)return;
+  var ir=function(){cargar().then(function(m){m.analisis()}).catch(function(){})};
+  if('requestIdleCallback' in window)requestIdleCallback(ir,{timeout:5000});else setTimeout(ir,2500);
+}
 export function syncGastos(){
   var ex=ctx.state.extracto;
   if($('#gas-txt').value!==ex.texto)$('#gas-txt').value=ex.texto;

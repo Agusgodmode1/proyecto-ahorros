@@ -124,3 +124,15 @@ test('v11 → v12: el plan suma mínimo y "lo que sobra" sin cambiar nada de lo 
   assert.equal(m.plan.minimo,null);assert.equal(m.plan.sobrante,'siguiente');assert.deepEqual(m.plan.sobranteSemana,{});
   assert.equal(m.plan.ahorro,9000);
 });
+
+test('v14 → v15: suma los grupos para compartir fijos; los fijos y sus pagos quedan igual («Solo míos»)',function(){
+  var d={v:14,plan:{monto:30000,modo:'monto',ahorro:5000,inicio:'2026-10-20',cobro:'2026-11-06'},
+    fijos:[{id:'f1',nombre:'Alquiler',monto:18000,dia:1,cat:'Vivienda'}],fijosPagos:{'2026-11-06':{f1:{monto:18000,fecha:'2026-11-01'}}},
+    pacto:{sellado:'2026-10-20',numero:3,usd:0}};
+  var st=migrar(d);
+  assert.equal(st.v,VERSION_ESTADO);
+  assert.deepEqual(st.grupos,[]);
+  assert.deepEqual(st.fijos,d.fijos);
+  assert.deepEqual(st.fijosPagos,d.fijosPagos);
+  assert.equal(st.pacto.numero,3);
+});

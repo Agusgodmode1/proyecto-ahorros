@@ -7,14 +7,36 @@
    - topes: nunca un saldo negativo, y un gasto nuevo no puede ser mayor que lo disponible. */
 import {num,uid} from './util.js';
 import {addDays,parse,iso} from './fechas.js';
-import {fijosPeriodo,cuentaEnPresupuesto,isPagado,montoDelPeriodo,planCalc} from './plan.js';
+import {fijosPeriodo,cuentaEnPresupuesto,isPagado,pagoDe,montoDelPeriodo,parteDelPeriodo,planCalc} from './plan.js';
+import {grupoDe,quienPaga} from './reparto.js';
 
 function r2(n){return Math.round(n*100)/100}
 
+/* Lo que salió de tu bolsillo por un fijo pagado (2.11):
+   - solo tuyo: lo que pagaste;
+   - compartido y lo pagaste vos todo: el total, menos lo que ya te devolvieron;
+   - cada uno paga su parte, o lo paga otro y le diste la tuya: tu parte. */
+export function salidaDelPago(state,f){
+  var p=pagoDe(state,f.id);if(!p)return 0;
+  if(!grupoDe(state,f))return montoDelPeriodo(state,f);
+  if(quienPaga(state,f)==='yo'){
+    var dev=0,d=p.devuelto||{};Object.keys(d).forEach(function(k){dev+=num(d[k]&&d[k].monto)});
+    return Math.max(0,montoDelPeriodo(state,f)-dev);
+  }
+  return parteDelPeriodo(state,f);
+}
 export function fijosPagados(state){
   var t=0;
   fijosPeriodo(state.fijos,state.plan.inicio,state.plan.cobro).forEach(function(o){
-    if(cuentaEnPresupuesto(o.f)&&isPagado(state,o.f.id))t+=montoDelPeriodo(state,o.f);
+    if(cuentaEnPresupuesto(o.f)&&isPagado(state,o.f.id))t+=salidaDelPago(state,o.f);
+  });
+  return t;
+}
+/* Tu parte de los fijos que ya pagaste (para saber cuánto falta de lo que te toca) */
+export function fijosPagadosParte(state){
+  var t=0;
+  fijosPeriodo(state.fijos,state.plan.inicio,state.plan.cobro).forEach(function(o){
+    if(cuentaEnPresupuesto(o.f)&&isPagado(state,o.f.id))t+=parteDelPeriodo(state,o.f);
   });
   return t;
 }
@@ -64,7 +86,7 @@ export function deshacerAjuste(state,r){
 /* Lo máximo que se puede guardar ahora: la plata que tenés menos los fijos que todavía faltan pagar */
 export function fijosPendientes(state,pc){
   pc=pc||planCalc(state);
-  return Math.max(0,pc.fijos-Math.min(pc.fijos,fijosPagados(state)));
+  return Math.max(0,pc.fijos-Math.min(pc.fijos,fijosPagadosParte(state)));
 }
 export function maxAhorro(state,pc){
   pc=pc||planCalc(state);

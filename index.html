@@ -115,14 +115,29 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
     <section id="p-fijos" role="tabpanel" class="tone-teal stack" hidden>
       <div class="panel-head"><h2 class="ph-t">Gastos fijos</h2><p class="ph-s">Lo que pagás sí o sí todos los meses: alquiler, celular, internet, suscripciones. Los descuento antes de calcular cuánto podés gastar, así no te agarran de sorpresa.</p></div>
       <div id="fijos-sum"></div>
-      <div class="card stack">
+      <div id="fijos-balance"></div>
+      <div id="fijos-out" class="stack"></div>
+      <div class="card stack" id="fijo-form-card">
         <h2 id="fijo-form-t">Agregá un gasto fijo</h2>
         <div class="field"><span class="lab">Ideas para empezar</span><div class="sugs" id="fijo-sug"></div></div>
         <form class="fijoform" id="fijo-form" autocomplete="off">
           <div class="field"><label for="f-nombre" class="sub-l">¿Qué es?</label><input id="f-nombre" type="text" maxlength="40" placeholder="Alquiler, celular, internet"></div>
-          <div class="field"><label for="f-monto" class="sub-l">¿Cuánto por mes?</label><div class="money"><button type="button" class="mon-btn" id="f-mon" data-moneda="UYU" aria-label="Cambiar moneda: ahora en pesos">$</button><input id="f-monto" type="number" inputmode="decimal" min="0" step="any"></div><small id="f-usd-nota"></small></div>
+          <div class="field"><label for="f-monto" class="sub-l">¿Cuánto por mes? (el total)</label><div class="money"><button type="button" class="mon-btn" id="f-mon" data-moneda="UYU" aria-label="Cambiar moneda: ahora en pesos">$</button><input id="f-monto" type="number" inputmode="decimal" min="0" step="any"></div><small id="f-usd-nota"></small></div>
           <div class="field"><label for="f-dia" class="sub-l">¿Qué día se paga?</label><input id="f-dia" type="number" inputmode="numeric" min="1" max="31" step="1" placeholder="10"></div>
           <div class="field"><label for="f-cat" class="sub-l">Tipo</label><select id="f-cat"></select></div>
+          <div class="field f-grupo"><label for="f-grupo" class="sub-l">¿De quién es?</label><select id="f-grupo"></select></div>
+          <div class="f-comp" id="f-comp" hidden>
+            <div class="field"><span class="sub-l">¿Quién lo paga?</span>
+              <div class="opciones" role="radiogroup" aria-label="¿Quién lo paga?">
+                <button type="button" role="radio" data-fpaga="yo">Yo pago todo y me devuelven</button>
+                <button type="button" role="radio" data-fpaga="cada">Cada uno paga su parte</button>
+                <button type="button" role="radio" data-fpaga="otro">Lo paga otro y yo le doy mi parte</button>
+              </div>
+              <label class="f-pagador" id="f-pagador-box" hidden><span class="sub-l">¿Quién?</span><select id="f-pagador"></select></label>
+            </div>
+            <details class="f-rep" id="f-rep"><summary>Repartirlo distinto que el grupo</summary><div class="stack" id="f-rep-in"></div></details>
+            <p class="note f-parte" id="f-parte" aria-live="polite"></p>
+          </div>
           <div class="f-opc">
             <label class="check"><input id="f-var" type="checkbox"> El monto cambia cada mes (UTE, OSE…): uso el promedio de lo que pagaste</label>
             <label class="check"><input id="f-tar" type="checkbox"> Es el pago de la tarjeta de crédito: no lo resto, porque lo que comprás con la tarjeta ya lo anotás como gasto</label>
@@ -130,7 +145,8 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
           <div class="row-btns"><button class="btn primary" type="submit" id="f-save">Agregar</button><button class="btn quiet" type="button" id="f-cancel" hidden>Cancelar</button></div>
         </form>
       </div>
-      <div id="fijos-out" class="stack"></div>
+      <div class="card stack" id="grupos-card"></div>
+      <details class="card fold calc-casa" id="calc-casa"><summary><span class="fold-t">Calculadora de la casa</span><span class="fold-s">Dividí cualquier monto entre varios, sin guardar nada</span></summary><div class="stack fold-b" id="calc-in"></div></details>
     </section>
 
     <!-- LOGROS -->

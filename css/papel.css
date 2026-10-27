@@ -698,3 +698,53 @@ html{font-variation-settings:'SOFT' 100,'WONK' 0}
 /* las estrellitas se achican si hace falta, para entrar siempre en la tarjeta */
 .v2 .cd .cd-seg{min-width:0;gap:1px}
 .v2 .cd .cd-seg i{flex:1 1 0;min-width:0;max-width:14px;width:auto;height:auto;aspect-ratio:1}
+
+/* =====================================================================
+   Fijos compartidos (2.11)
+   ===================================================================== */
+.v2 .toca{gap:var(--e1)}
+.v2 .toca-n{font:600 clamp(40px,12vw,56px)/1 var(--f-libro);color:var(--ink);font-variant-numeric:lining-nums tabular-nums}
+.v2 .toca-d{display:flex;flex-wrap:wrap;gap:var(--e1) var(--e4);margin:0;color:var(--muted);font-size:15px}
+.v2 .toca-d b,.v2 .toca .note b{color:var(--ink)}
+/* quién debe a quién */
+.v2 .deuda{display:flex;align-items:center;justify-content:space-between;gap:var(--e3);padding:var(--e2) 0}
+.v2 .balance .deuda+.deuda,.v2 .banner.deudas .deuda+.deuda{border-top:1px solid var(--line)}
+.v2 .deuda p{margin:0;font-size:16px;color:var(--ink)}
+.v2 .deuda small{display:block;font-size:13.5px;color:var(--muted)}
+.v2 .deuda .plata{color:var(--azul)}
+.v2 .deuda .btn{flex:none}
+.v2 .banner.deudas{display:block}
+.v2 .banner.deudas .deuda{padding:var(--e1) 0}
+/* cada grupo: cuánto pone cada uno */
+.v2 .pone{display:flex;flex-wrap:wrap;gap:var(--e1) var(--e4);margin:0;color:var(--muted);font-size:15px}
+.v2 .pone b{color:var(--ink)}
+.v2 .flist .amt-l{display:block;font:600 12.5px var(--f-body);color:var(--muted)}
+.v2 .flist .amt-de{display:block;font:500 13px var(--f-body);color:var(--muted)}
+/* elegir entre opciones (quién paga, cómo se reparte) */
+.v2 .opciones{display:grid;gap:6px}
+.v2 .opciones button{min-height:44px;text-align:left;padding:10px 14px;border-radius:var(--r-m);border:1.5px solid var(--line-2);background:transparent;color:var(--ink);font:600 15px var(--f-body);cursor:pointer}
+.v2 .opciones button[aria-checked="true"]{background:var(--sel);color:var(--on-sel);border-color:var(--sel);box-shadow:inset 0 -2px 0 var(--oro)}
+.v2 .fijoform .f-grupo,.v2 .fijoform .f-comp,.v2 .fijoform .f-opc,.v2 .fijoform .row-btns{grid-column:1 / -1}
+.v2 .f-comp{display:grid;gap:var(--e3);padding:var(--e3);border-radius:var(--r-m);background:color-mix(in srgb,var(--surface-2) 70%,transparent)}
+.v2 .f-comp[hidden]{display:none}
+.v2 .f-pagador{display:grid;gap:4px;margin-top:6px}
+.v2 .f-pagador[hidden]{display:none}
+.v2 .f-rep>summary{list-style:none;display:inline-flex;align-items:center;gap:6px;min-height:44px;cursor:pointer;font:600 15px var(--f-body);color:var(--azul)}
+.v2 .f-rep>summary::-webkit-details-marker{display:none}
+.v2 .f-rep>summary::before{content:none;display:none}
+.v2 .f-rep>summary::after{content:"▸";display:inline-block;transition:transform .15s ease}
+.v2 .f-rep[open]>summary::after{transform:rotate(90deg)}
+.v2 .f-parte{margin:0}
+.v2 .f-parte b{color:var(--ink)}
+/* armar un grupo */
+.v2 .ge-pers{display:grid;gap:8px}
+.v2 .ge-p{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:8px;align-items:center}
+.v2 .ge-yo,.v2 .ge-p>span{font:600 16px var(--f-body);color:var(--ink);padding-left:4px}
+.v2 .ge-prev b{color:var(--ink)}
+.v2 .glist-g li{display:flex;align-items:center;justify-content:space-between;gap:var(--e2);flex-wrap:wrap}
+/* calculadora de la casa */
+.v2 .cc-n{display:flex;align-items:center;gap:var(--e3)}
+.v2 .cc-n b{font:600 26px var(--f-libro);min-width:2ch;text-align:center;color:var(--ink)}
+.v2 .cc-n .btn{min-width:48px;font-size:22px}
+.v2 .cc-res .list li{display:flex;justify-content:space-between;align-items:center}
+.v2 .pagado-txt .linklike{display:inline-flex;align-items:center;min-height:44px;padding:0 6px}

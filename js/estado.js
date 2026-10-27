@@ -17,8 +17,10 @@ import {pactoBase,pactoDesdePlan} from './logica/pacto.js';
    v11: categorías de gasto editables (state.categorias)
    v12: plan.minimo (mínimo aceptable), plan.sobrante y plan.sobranteSemana (a dónde va lo que sobra)
    v13: recibos de sueldo guardados mes a mes (state.recibos) y plantillas por empleador para leer PDFs
-   v14: el pacto del Libro del Ahorro (state.pacto: cuándo se selló); quien ya usaba la app lo tiene sellado */
-export var VERSION_ESTADO=14;
+   v14: el pacto del Libro del Ahorro (state.pacto: cuándo se selló); quien ya usaba la app lo tiene sellado
+   v15: fijos compartidos: state.grupos (con quién compartís y cómo se reparte); cada fijo puede tener grupo, reparto,
+        paga y pagador; los pagos guardan el total, tu parte y lo que te devolvieron. Los fijos de antes quedan como «Solo míos». */
+export var VERSION_ESTADO=15;
 
 function hoyISO(){return iso(new Date())}
 /* Feriados: por defecto solo cuentan los 5 no laborables (1/1, 1/5, 18/7, 25/8, 25/12).
@@ -51,7 +53,8 @@ export function defaults(hoy){
     categorias:categoriasBase(),         /* categorías de gasto, editables en Ajustes (logica/categorias.js) */
     recibos:[],                          /* recibos de sueldo confirmados, mes a mes (logica/recibos.js) */
     plantillasRecibo:{},                 /* por empleador: qué renglón del PDF es cada campo */
-    pacto:pactoBase()                    /* {sellado:fecha|null, numero, usd}: los datos del pacto viven en plan */
+    pacto:pactoBase(),                   /* {sellado:fecha|null, numero, usd}: los datos del pacto viven en plan */
+    grupos:[]                            /* con quién compartís fijos (logica/reparto.js y compartidos.js) */
   };
 }
 
@@ -86,6 +89,19 @@ export function ejemplo(hoy){
   s.sueldo.nominal=L.sueldo.nominal;
   s.horas=L.horas.map(function(h){return Object.assign(h,{ej:true})});
   s.pacto=pactoDesdePlan(s,hoy||hoyISO());
+  /* Fijos de ejemplo (2.11): solo tuyos, compartidos en pareja y entre 3 (nombres y números inventados) */
+  s.grupos=[
+    {id:'g-casa',nombre:'Casa',personas:[{id:'yo',nombre:'Vos',ingreso:45000},{id:'p-sofi',nombre:'Sofi',ingreso:36000}],reparto:{tipo:'iguales',pct:{},montos:{}}},
+    {id:'g-amigos',nombre:'Plataformas',personas:[{id:'yo',nombre:'Vos',ingreso:0},{id:'p-leo',nombre:'Leo',ingreso:0},{id:'p-juli',nombre:'Juli',ingreso:0}],reparto:{tipo:'iguales',pct:{},montos:{}}}
+  ];
+  s.fijos=[
+    {id:'ej-alq',nombre:'Alquiler',monto:22000,dia:15,cat:'Vivienda',grupo:'g-casa',paga:'yo'},
+    {id:'ej-ute',nombre:'UTE',monto:2600,dia:20,cat:'Servicios',variable:true,grupo:'g-casa',paga:'otro',pagador:'p-sofi',reparto:{tipo:'ingresos',pct:{},montos:{}}},
+    {id:'ej-int',nombre:'Internet',monto:1900,dia:18,cat:'Celular e internet',grupo:'g-casa',paga:'cada'},
+    {id:'ej-net',nombre:'Netflix',monto:690,dia:16,cat:'Suscripciones',grupo:'g-amigos',paga:'otro',pagador:'p-leo'},
+    {id:'ej-cel',nombre:'Celular',monto:1100,dia:25,cat:'Celular e internet'}
+  ];
+  var k=s.plan.cobro;s.fijosPagos={};s.fijosPagos[k]={'ej-alq':{monto:22000,parte:11000,fecha:'2026-10-15',nombre:'Alquiler',paga:'yo'}};
   return s;
 }
 function obj(o){return (o&&typeof o==='object'&&!Array.isArray(o))?o:{}}
@@ -117,7 +133,9 @@ export function migrar(d){
     categorias:Array.isArray(x.categorias)&&x.categorias.length?x.categorias:null,
     recibos:Array.isArray(x.recibos)?x.recibos:[],
     plantillasRecibo:obj(x.plantillasRecibo),
-    pacto:Object.assign(pactoBase(),obj(x.pacto))};
+    pacto:Object.assign(pactoBase(),obj(x.pacto)),
+    /* v15: sin grupos, todos los fijos son solo tuyos (nada cambia en las cuentas) */
+    grupos:Array.isArray(x.grupos)?x.grupos:[]};
   /* v14: a quien ya usaba la app no se le muestra el prólogo: su plan pasa a ser su pacto */
   if(vx<14&&!state.pacto.sellado)state.pacto=pactoDesdePlan(state,hoyISO());
   /* v11: las categorías de siempre pasan a ser tu lista, más las que ya usaban tus gastos. Ningún gasto cambia. */

@@ -2,7 +2,8 @@
 import {parse,diffDays,bizRank,MESL,addDays,iso} from '../logica/fechas.js';
 import {num} from '../logica/util.js';
 import {fijosPeriodo,totalFijos,proximo,hoyPodes,planCalc} from '../logica/plan.js';
-import {disponible,fijosPagados,maxAhorro,previaSaldo,ajustarSaldo,deshacerAjuste} from '../logica/saldo.js';
+import {disponible,fijosPagadosParte,maxAhorro,previaSaldo,ajustarSaldo,deshacerAjuste} from '../logica/saldo.js';
+import {balanceHTML} from './fijos.js';
 import {mesTrabajo,mins,reglasHoras} from '../logica/sueldo.js';
 import {histStats,logrosLista} from '../logica/logros.js';
 import {ctx,$,today,liqNow,planNow,exAnalisis,money,esc,fCorta,fLarga,rango,fMin,cap,tile,hchip,row,toast,toastAccion} from './comun.js';
@@ -163,10 +164,12 @@ export function renderResumen(pc){
   var sum=$('#plan-aj-sum');if(sum)sum.textContent=num(state.plan.monto)>0?money(Math.max(0,disponible(state,pc)))+' disponibles · guardás '+money(pc.ahorro)+' · hasta el '+fCorta(state.plan.cobro):'Completá los tres pasos';
   var p=state.plan,t=today(),L=liqNow(true),fp=fijosPeriodo(state.fijos,p.inicio,p.cobro);
   /* Todo en base a la plata que tenés AHORA (la misma del botón de la portada) */
-  var disp=Math.max(0,disponible(state,pc)),pagF=Math.min(pc.fijos,fijosPagados(state)),pend=Math.max(0,pc.fijos-pagF),resto=pc.gastar-pc.spentInPlan;
+  var disp=Math.max(0,disponible(state,pc)),pagF=Math.min(pc.fijos,fijosPagadosParte(state)),pend=Math.max(0,pc.fijos-pagF),resto=pc.gastar-pc.spentInPlan;
   var m=Math.max(1,disp),pf=Math.max(0,Math.min(100,pend/m*100)),pa=Math.max(0,Math.min(100-pf,pc.ahorro/m*100)),pg=Math.max(0,100-pf-pa);
   var dq=t>=p.cobro?pc.total:Math.max(1,diffDays(t<p.inicio?p.inicio:t,p.cobro)),pDia=t>=p.cobro?pc.daily:resto/dq;
   var h=state.ejemplo?'<div class="banner"><p><b>Estás viendo datos de ejemplo.</b> Son de muestra: no son tuyos.</p><button class="btn" type="button" data-cero>Borrar el ejemplo y crear mi perfil</button></div>':'';
+  /* fijos compartidos: quién te debe plata (nota al margen, con «Me pagaron») */
+  var deudas=balanceHTML(true);if(deudas)h+='<div class="banner deudas">'+deudas+'</div>';
   h+=foldIni('cobrar','tone-mint','Hasta que cobres',resto<0?'Te faltan '+money(-resto)+' para llegar a tu meta':'Te queda para gastar '+money(resto)+' · '+esc(rango(p.inicio,p.cobro)));
   var fsub=fp.length?fp.map(function(o){return esc(o.f.nombre)+' ('+esc(fCorta(o.fecha))+')'}).join(', '):(state.fijos.length?'ninguno vence antes de cobrar':'<button class="linklike" type="button" data-goto="fijos">cargá tus gastos fijos</button>');
   h+='<div class="receipt">'

@@ -1,6 +1,7 @@
 /* Plan hasta cobrar, semanas, fijos del período y próximo cobro (puro, sin DOM). */
 import {iso,parse,addDays,diffDays,bizRank} from './fechas.js';
 import {num} from './util.js';
+import {miParte} from './reparto.js';
 
 /* Para gastar = plata − fijos que vencen antes de cobrar − ahorro. Semanas de 7 días desde el inicio;
    presupuesto de cada una = para gastar × días ÷ días totales, y lo que sobra o falta pasa a la siguiente. */
@@ -64,9 +65,13 @@ export function montoEsperado(state,f){
 /* Cuánto cuenta en este período: lo que pagaste de verdad, o lo esperado si todavía no */
 export function montoDelPeriodo(state,f){var p=pagoDe(state,f.id);return p&&num(p.monto)>0?num(p.monto):montoEsperado(state,f)}
 export function cuentaEnPresupuesto(f){return !f.tarjeta}
-export function fijosPeriodoTotal(state){var t=0;fijosPeriodo(state.fijos,state.plan.inicio,state.plan.cobro).forEach(function(o){if(cuentaEnPresupuesto(o.f))t+=montoDelPeriodo(state,o.f)});return t}
-/* Total de los fijos de un mes (sin el pago de la tarjeta). Con state, los variables usan su promedio. */
-export function totalFijos(fijos,state){var t=0;fijos.forEach(function(f){if(cuentaEnPresupuesto(f))t+=state?montoEsperado(state,f):num(f.monto)});return t}
+/* Tu parte de este período (2.11): en un fijo compartido, lo que te toca a vos; en uno solo tuyo, todo.
+   Si ya lo pagaste, la parte que anotaste al pagar. */
+export function parteDelPeriodo(state,f){var p=pagoDe(state,f.id);if(p&&num(p.parte)>0)return num(p.parte);return miParte(state,f,montoDelPeriodo(state,f))}
+export function fijosPeriodoTotal(state){var t=0;fijosPeriodo(state.fijos,state.plan.inicio,state.plan.cobro).forEach(function(o){if(cuentaEnPresupuesto(o.f))t+=parteDelPeriodo(state,o.f)});return t}
+/* Lo que te toca de los fijos de un mes (sin el pago de la tarjeta). Con state, los variables usan su promedio
+   y los compartidos cuentan solo tu parte. */
+export function totalFijos(fijos,state){var t=0;fijos.forEach(function(f){if(cuentaEnPresupuesto(f))t+=state?miParte(state,f,montoEsperado(state,f)):num(f.monto)});return t}
 
 export function planCalc(state){return planear(state.plan,state.gastos,fijosPeriodoTotal(state))}
 /* Cuánto podés gastar hoy: lo que le queda a la semana (sumando lo que ya gastaste hoy), repartido parejo

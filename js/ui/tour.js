@@ -17,7 +17,7 @@ var PASOS=[
   {tab:'semanas',sel:'.tab[data-tab^="w"]',t:'Capítulo II · Semanas',x:'Cada semana es una página, con su presupuesto. Lo que sobra o falta pasa a la siguiente.'},
   {tab:'fijos',sel:'.tab[data-tab="fijos"]',t:'Capítulo III · Fijos',x:'Tus gastos de todos los meses. Se descuentan antes de calcular cuánto podés gastar.'},
   {tab:'sueldo',sel:'.tab[data-tab="sueldo"]',t:'Capítulo IV · Sueldo',x:'Cuánto te queda en mano, con tus horas extra, la planilla y tus recibos.'},
-  {tab:'gastos',sel:'.tab[data-tab="gastos"]',t:'Capítulo V · Tarjeta',x:'Pegá el extracto y lo comparo con lo que anotaste. Acá están tus categorías.'},
+  {tab:'gastos',sel:'.tab[data-tab="gastos"]',t:'Capítulo V · Tarjeta',x:'Traé el extracto de tu banco, tarjeta o billetera: te muestro por dónde se te va la plata y lo comparo con lo que anotaste. Acá están tus categorías.'},
   {tab:'logros',sel:'.tab[data-tab="logros"]',t:'Capítulo VI · Logros',x:'Tus sellos y tus rachas.'},
   {tab:'guardado',sel:'.tab[data-tab="guardado"]',t:'Capítulo VII · Lo guardado',x:'Todo lo que juntaste pacto a pacto, tu fondo de emergencia y tus metas, con un consejo de qué hacer con lo guardado.'},
   {tab:'resumen',sel:'.mic',t:'Anotar con la voz',x:'Tocá el micrófono y decí, por ejemplo, «gasté 350 en un café». Siempre te pido confirmar antes de guardar.'}

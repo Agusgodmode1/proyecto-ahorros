@@ -1,0 +1,31 @@
+/* Extracto de ejemplo (2.13): INVENTADO. Comercios conocidos, montos y fechas de mentira, sin números de cuenta.
+   Tiene de todo para ver el detector: suscripciones (una sube de precio), compras que se repiten, una compra en
+   cuotas, comisiones del banco, un cobro repetido, retiros de efectivo, gastos hormiga y un día que se dispara. */
+var MOVS=[
+  ['2026-09-01','COMPRA POS 4521 TATA SUC 12 MVD',-1430],['2026-09-02','POS PEDIDOSYA*MVD',-890],['2026-09-03','COMPRA POS AM PM 18 DE JULIO',-260],
+  ['2026-09-05','TRANSFERENCIA RECIBIDA SUELDO',38400],['2026-09-05','POS PEDIDOSYA*MVD',-1240],['2026-09-06','COMPRA POS TIENDA INGLESA',-3120],
+  ['2026-09-06','STARBUCKS PUNTA CARRETAS',-210],['2026-09-07','COMPRA POS ANCAP 8',-1800],['2026-09-08','RETIRO REDBROU 0042',-2000],
+  ['2026-09-09','COMPRA POS AM PM 18 DE JULIO',-180],['2026-09-10','DLO*SPOTIFY',-169],['2026-09-11','POS PEDIDOSYA*MVD',-760],
+  ['2026-09-12','COMPRA MERCADOLIBRE CUOTA 02/06',-1500],['2026-09-13','COMPRA POS 4521 TATA SUC 12 MVD',-2210],['2026-09-14','UBER *TRIP',-320],
+  ['2026-09-15','MERPAGO*KIOSCO EL PEPE',-140],['2026-09-16','DEB AUT NETFLIX.COM',-590],['2026-09-18','POS PEDIDOSYA*MVD',-1120],
+  ['2026-09-19','STARBUCKS PUNTA CARRETAS',-210],['2026-09-20','APPLE.COM/BILL',-59],['2026-09-20','COMPRA POS 4521 TATA SUC 12 MVD',-1680],
+  ['2026-09-22','COMPRA POS AM PM 18 DE JULIO',-310],['2026-09-24','COMPRA FARMASHOP 23',-640],['2026-09-26','POS PEDIDOSYA*MVD',-980],
+  ['2026-09-27','COMPRA POS TIENDA INGLESA',-2450],['2026-09-28','MERPAGO*KIOSCO EL PEPE',-120],['2026-09-30','COMISION MANTENIMIENTO CUENTA',-150],
+  ['2026-09-30','IVA S/COMISION',-33],['2026-10-01','COMPRA POS 4521 TATA SUC 12 MVD',-1890],['2026-10-02','POS PEDIDOSYA*MVD',-1340],
+  ['2026-10-03','COMPRA POS TIENDA INGLESA',-6800],['2026-10-03','COMPRA POS ZARA MONTEVIDEO SHOPPING',-3900],['2026-10-03','STARBUCKS PUNTA CARRETAS',-230],
+  ['2026-10-04','COMPRA POS AM PM 18 DE JULIO',-290],['2026-10-06','UBER *TRIP',-410],['2026-10-07','TRANSFERENCIA RECIBIDA SUELDO',38441.25],
+  ['2026-10-08','POS PEDIDOSYA*MVD',-1180],['2026-10-09','RETIRO REDBROU 0042',-2000],['2026-10-10','DLO*SPOTIFY',-169],
+  ['2026-10-11','COMPRA POS ANCAP 8',-1950],['2026-10-12','COMPRA MERCADOLIBRE CUOTA 03/06',-1500],['2026-10-13','MERPAGO*KIOSCO EL PEPE',-160],
+  ['2026-10-14','COMPRA POS 4521 TATA SUC 12 MVD',-2040],['2026-10-15','POS PEDIDOSYA*MVD',-870],['2026-10-16','DEB AUT NETFLIX.COM',-690],
+  ['2026-10-17','COMPRA POS AM PM 18 DE JULIO',-240],['2026-10-18','COMPRA POS TIENDA INGLESA',-1234],['2026-10-18','COMPRA POS TIENDA INGLESA',-1234],
+  ['2026-10-19','UBER *TRIP',-290],['2026-10-20','APPLE.COM/BILL',-59],['2026-10-21','POS PEDIDOSYA*MVD',-1060],
+  ['2026-10-22','STARBUCKS PUNTA CARRETAS',-230],['2026-10-23','COMPRA POS 4521 TATA SUC 12 MVD',-1570],['2026-10-24','MERPAGO*KIOSCO EL PEPE',-150],
+  ['2026-10-25','COMISION MANTENIMIENTO CUENTA',-150],['2026-10-25','IVA S/COMISION',-33],['2026-10-26','COMPRA POS AM PM 18 DE JULIO',-330]
+];
+function fmt(n){var p=n.toFixed(2).split('.');return p[0].replace(/\B(?=(\d{3})+(?!\d))/g,'.')+','+p[1]}
+function fecha(iso){return iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4)}
+export function extractoEjemplo(){
+  var saldo=12000,l=['Banco de la República Oriental del Uruguay (ejemplo inventado)','Caja de ahorro en pesos · cuenta •••000','Fecha\tDescripción\tDébito\tCrédito\tSaldo'];
+  MOVS.forEach(function(m){saldo+=m[2];l.push(fecha(m[0])+'\t'+m[1]+'\t'+(m[2]<0?fmt(-m[2]):'')+'\t'+(m[2]>0?fmt(m[2]):'')+'\t'+fmt(saldo))});
+  return l.join('\n');
+}

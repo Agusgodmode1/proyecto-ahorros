@@ -14,7 +14,13 @@ export function today(){return iso(new Date())}
 export function planNow(){return ajustarPlan(ctx.state,planCalc(ctx.state),today())}
 /* Con extras: lo que vas a cobrar (el recibo real del mes si lo cargaste; si no, la estimación) */
 export function liqNow(conExtras){return conExtras?liqReal(ctx.state):liq(ctx.state,false)}
-export function exAnalisis(){return analisisGuardado(ctx.state.extracto,today())}
+/* El análisis del extracto. Cuando se carga la Tarjeta (ui/tarjeta-ver.js) pone acá el suyo, con el lector de
+   bancos y los nombres limpios; antes, el de siempre. */
+export var exHook={f:null};
+/* El color de una categoría en pantalla (2.13): el que elegiste, en la paleta de categorías (--cat-*),
+   que se distingue mejor entre sí y con daltonismo que los tonos del libro */
+export function colorCat(c){return String(c||'').replace(/var\(--(coral|mint|sun|sky|grape|pink|teal|slate|bad|muted)\)/,'var(--cat-$1)')}
+export function exAnalisis(){return exHook.f?exHook.f():analisisGuardado(ctx.state.extracto,today())}
 
 var fmtN;
 try{fmtN=new Intl.NumberFormat('es-UY',{maximumFractionDigits:0,useGrouping:'always'})}catch(e){fmtN=new Intl.NumberFormat('es-UY',{maximumFractionDigits:0})}

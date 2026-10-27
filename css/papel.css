@@ -30,6 +30,8 @@
   --coral:#35567F; --coral-soft:#E3DCCB; --coral-ink:#223C5C;
   --sun:#765616; --sun-soft:#EED8A6; --sun-ink:#553D0D;
   --slate:#4A5170; --slate-soft:#E6D8BB; --slate-ink:#2E3450;
+  /* categorías en dibujos y puntos (2.13): paleta validada para daltonismo; los nombres son los colores que elegís */
+  --cat-sky:#2a78d6; --cat-coral:#eb6834; --cat-teal:#1baf7a; --cat-sun:#eda100; --cat-pink:#e87ba4; --cat-mint:#008300; --cat-grape:#6250d6; --cat-bad:#e34948; --cat-slate:#68708C; --cat-muted:#9A968A;
   --bad:#9E3C2C; --bad-soft:#F0D3BF;
   --hero:#F3E6C8; --on-accent:#F3E6C8; --on-sun:#F3E6C8; --on-color:#1C2440;
   --cobro:#A87A1F; --cuero:#0E1640;
@@ -53,6 +55,7 @@
   --coral:#B9C3E8; --coral-soft:#2A2F4D; --coral-ink:#DCE2F6;
   --sun:#E2B65A; --sun-soft:#353248; --sun-ink:#F3D488;
   --slate:#B9B6C8; --slate-soft:#252943; --slate-ink:#E2DFEC;
+  --cat-sky:#3987e5; --cat-coral:#d95926; --cat-teal:#199e70; --cat-sun:#c98500; --cat-pink:#d55181; --cat-mint:#008300; --cat-grape:#9085e9; --cat-bad:#e66767; --cat-slate:#9AA3C2; --cat-muted:#8C8A99;
   --bad:#EE8A7A; --bad-soft:#3D2738;
   --hero:#191C30; --on-accent:#191C30; --on-sun:#191C30; --on-color:#F1E7D0;
   --cobro:#E2B65A; --cuero:#070B24;
@@ -76,6 +79,7 @@
     --coral:#B9C3E8; --coral-soft:#2A2F4D; --coral-ink:#DCE2F6;
     --sun:#E2B65A; --sun-soft:#353248; --sun-ink:#F3D488;
     --slate:#B9B6C8; --slate-soft:#252943; --slate-ink:#E2DFEC;
+    --cat-sky:#3987e5; --cat-coral:#d95926; --cat-teal:#199e70; --cat-sun:#c98500; --cat-pink:#d55181; --cat-mint:#008300; --cat-grape:#9085e9; --cat-bad:#e66767; --cat-slate:#9AA3C2; --cat-muted:#8C8A99;
     --bad:#EE8A7A; --bad-soft:#3D2738;
     --hero:#191C30; --on-accent:#191C30; --on-sun:#191C30; --on-color:#F1E7D0;
     --cobro:#E2B65A; --cuero:#070B24;
@@ -815,3 +819,154 @@ html{font-variation-settings:'SOFT' 100,'WONK' 0}
 .v2 .rec-fila .what b{white-space:nowrap}
 /* dentro de los desplegables, sin tarjeta dentro de tarjeta */
 .v2 .sdes-in>.out>.card,.v2 .sdes-in .receipt.card{box-shadow:none;background:transparent;border:0;padding:0}
+
+/* =====================================================================
+   Tarjeta: lector de bancos y detector de gastos (2.13)
+   Lo gastado va en tinta, lo que da tu plan en azul, bien / cerca / te pasaste con su texto.
+   ===================================================================== */
+.v2 .gas-stat{margin:0 var(--e1)}
+.v2 .gas-stat:empty{display:none}
+.v2 .mono-l{font:13px/1.45 ui-monospace,Menlo,monospace;overflow-wrap:anywhere}
+.v2 .tj-in .steps{margin:0}
+/* por dónde se te va: los 3 que más pesan */
+.v2 .pdv{list-style:none;margin:0;padding:0;display:grid}
+.v2 .pdv-c{display:grid;grid-template-columns:34px minmax(0,1fr);gap:var(--e3);padding:var(--e3) 0;border-top:1px solid var(--line)}
+.v2 .pdv-c:first-child{border-top:0;padding-top:var(--e1)}
+.v2 .pdv-i{font:600 30px/1 var(--f-libro);color:var(--oro);text-align:center;padding-top:2px;font-variant-numeric:lining-nums}
+.v2 .pdv-b>p{margin:0}
+.v2 .pdv-t{font:700 16px/1.3 var(--f-body);color:var(--ink)}
+.v2 .pdv-m{font:600 var(--t5)/1.15 var(--f-libro);color:var(--ink);margin-top:2px!important;font-variant-numeric:lining-nums tabular-nums}
+.v2 .pdv-x{font-size:15px;line-height:1.4;color:var(--muted);margin-top:4px!important}
+/* el anillo de categorías */
+.v2 .anillo-fig{display:grid;gap:var(--e4);align-items:center}
+.v2 .tj-an{container-type:inline-size}
+@container (min-width:540px){.v2 .anillo-fig{grid-template-columns:200px minmax(0,1fr)}}
+.v2 .an-ring{position:relative;width:min(200px,62vw);aspect-ratio:1;margin:0 auto}
+.v2 .an-ring svg{display:block;width:100%;height:100%}
+.v2 .an-ring circle{fill:none;stroke-width:14}
+.v2 .an-fondo{stroke:var(--line)}
+.v2 .an-seg{transition:opacity .18s ease}
+.v2 .an-seg.dim{opacity:.22}
+.v2 .an-c{position:absolute;inset:22%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2px}
+.v2 .an-l{font:600 13px/1.2 var(--f-body);color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v2 .an-v{font:600 22px/1.1 var(--f-libro);color:var(--ink);font-variant-numeric:lining-nums tabular-nums;white-space:nowrap}
+.v2 .an-s{font:600 13px/1.2 var(--f-body);color:var(--muted)}
+.v2 .an-ley{list-style:none;margin:0;padding:0}
+.v2 .an-ley button{all:unset;box-sizing:border-box;width:100%;display:grid;grid-template-columns:12px minmax(0,1fr) auto 44px;align-items:center;gap:var(--e2);min-height:44px;padding:4px var(--e2);border-bottom:1px solid var(--line);cursor:pointer;color:var(--ink);font:500 15px var(--f-body);border-radius:var(--r-s)}
+.v2 .an-ley li:last-child button{border-bottom:0}
+.v2 .an-ley button:focus-visible{outline:2px solid var(--azul);outline-offset:1px}
+.v2 .an-ley button[aria-pressed="true"]{background:color-mix(in srgb,var(--surface-2) 80%,transparent);font-weight:700}
+.v2 .an-ley .dot{width:12px;height:12px;border-radius:3px}
+.v2 .an-n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v2 .an-ley b{font-weight:600;font-variant-numeric:tabular-nums}
+.v2 .an-p{color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+/* el mes en un calendario */
+.v2 .cal{display:grid;gap:var(--e2)}
+.v2 .cal-h{display:flex;align-items:center;justify-content:space-between;gap:var(--e2)}
+.v2 .cal-h b{font:700 var(--t4)/1.2 var(--f-libro);color:var(--ink);text-transform:none}
+.v2 .cal-nav{min-width:44px;min-height:44px;border-radius:var(--r-m);border:1px solid var(--line-2);background:transparent;color:var(--ink);font:600 22px/1 var(--f-body);cursor:pointer}
+.v2 .cal-nav[disabled]{opacity:.3;cursor:default}
+.v2 .cal-sem,.v2 .cal-g{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.v2 .cal-sem span{text-align:center;font:600 13px var(--f-body);color:var(--muted)}
+.v2 .cal-d{position:relative;min-height:44px;padding:4px 0 8px;border-radius:var(--r-s);border:1px solid var(--line);background:transparent;color:var(--ink);font:600 15px/1 var(--f-body);font-variant-numeric:lining-nums tabular-nums;cursor:pointer;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.v2 .cal-d i{position:absolute;left:0;bottom:0;height:4px;border-radius:0 2px 2px 0;background:transparent}
+.v2 .cal-d.n1{background:color-mix(in srgb,var(--bien) 14%,transparent)}
+.v2 .cal-d.n2{background:color-mix(in srgb,var(--ojo) 20%,transparent)}
+.v2 .cal-d.n3{background:color-mix(in srgb,var(--mal) 20%,transparent);border-color:color-mix(in srgb,var(--mal) 45%,transparent)}
+.v2 .cal-d.n1 i{background:var(--bien)}
+.v2 .cal-d.n2 i{background:var(--ojo)}
+.v2 .cal-d.n3 i{background:var(--mal)}
+.v2 .cal-d.fuera{opacity:.35;cursor:default}
+.v2 .cal-d.hoy span{text-decoration:underline 2px var(--oro);text-underline-offset:3px}
+.v2 .cal-d[aria-pressed="true"]{background:var(--sel);color:var(--on-sel);border-color:var(--oro);box-shadow:inset 0 -2px 0 var(--oro)}
+.v2 .cal-d:focus-visible{outline:2px solid var(--azul);outline-offset:1px}
+.v2 .cal-v{min-height:44px}
+.v2 .cal-ley{display:flex;flex-wrap:wrap;gap:4px var(--e3);margin:0;font:600 13px var(--f-body);color:var(--muted)}
+.v2 .cal-ley span{display:inline-flex;align-items:center;gap:6px}
+.v2 .cal-ley i{width:12px;height:12px;border-radius:3px}
+.v2 .cal-ley i.n1{background:var(--bien)}
+.v2 .cal-ley i.n2{background:var(--ojo)}
+.v2 .cal-ley i.n3{background:var(--mal)}
+.v2 .cal-ref{margin-left:auto}
+.v2 .cal-dia-t{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 4px;font-size:16px}
+.v2 .cal-dia-t span{font:600 18px var(--f-libro);font-variant-numeric:lining-nums tabular-nums}
+.v2 .cal-hint{margin:0}
+/* las suscripciones, como un ticket (borde de abajo cortado en zigzag) */
+.v2 .ticket{max-width:360px;width:100%;margin:0 auto;padding:var(--e4) var(--e4) calc(var(--e4) + 8px);background:var(--page-2);color:var(--ink);font-variant-numeric:lining-nums tabular-nums;border-radius:var(--r-s) var(--r-s) 0 0;
+  -webkit-mask:conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) 50%/16px 100%;mask:conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) 50%/16px 100%}
+.v2 .ticket p{margin:0}
+.v2 .tk-h{text-align:center;font:600 13px var(--f-body);letter-spacing:.04em;color:var(--muted);padding-bottom:var(--e2);border-bottom:1.5px dashed var(--line-2)}
+.v2 .tk-l{list-style:none;margin:var(--e2) 0;padding:0;display:grid;gap:6px}
+.v2 .tk-l li{display:flex;align-items:baseline;gap:6px;font-size:16px}
+.v2 .tk-l i{flex:1;min-width:12px;border-bottom:2px dotted var(--line-2);transform:translateY(-4px)}
+.v2 .tk-l b{font-weight:600}
+.v2 .tk-n{min-width:0}
+.v2 .tk-sub{display:inline-block;margin-left:4px;font:700 12px var(--f-body);color:var(--mal);white-space:nowrap}
+.v2 .tk-t,.v2 .tk-a{display:flex;justify-content:space-between;align-items:baseline}
+.v2 .tk-t{padding-top:var(--e2);border-top:1.5px dashed var(--line-2);font-size:16px;color:var(--muted)}
+.v2 .tk-t b{color:var(--ink);font-weight:700}
+.v2 .tk-a{margin-top:4px!important;font-size:16px;color:var(--muted)}
+.v2 .tk-a b{font:600 var(--t5)/1.1 var(--f-libro);color:var(--ink)}
+/* todo lo que encontré */
+.v2 .hall{list-style:none;margin:0;padding:0}
+.v2 .hall-i{padding:var(--e3) 0;border-top:1px solid var(--line)}
+.v2 .hall-i:first-child{border-top:0;padding-top:0}
+.v2 .hall-i p{margin:0}
+.v2 .hall-t{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:0 var(--e3);font-size:16px}
+.v2 .hall-t b{flex:1 1 12em}
+.v2 .hall-t span{margin-left:auto}
+.v2 .tj-todo .sub-d .hall{margin-top:var(--e2)}
+.v2 .hall-t b{color:var(--ink)}
+.v2 .hall-t span{font:600 17px var(--f-libro);color:var(--ink);white-space:nowrap;font-variant-numeric:lining-nums tabular-nums}
+.v2 .hall-i.urg .hall-t b::before{content:"ojo · ";color:var(--mal);font-weight:700}
+.v2 .hall-d{font-size:15px;line-height:1.4;color:var(--ink);margin-top:2px!important}
+.v2 .hall-c{font-size:15px;line-height:1.4;color:var(--muted);margin-top:2px!important}
+/* mes a mes y el ritmo contra el plan */
+.v2 .mm,.v2 .rit-g{display:block;width:100%;height:auto;overflow:visible}
+.v2 .mm path{fill:color-mix(in srgb,var(--ink) 38%,transparent)}
+.v2 .mm .ult path{fill:var(--ink)}
+.v2 .mm text,.v2 .rit-g text{font-family:var(--f-body);font-variant-numeric:lining-nums tabular-nums}
+.v2 .mm-v{font-size:13px;font-weight:700;fill:var(--ink)}
+.v2 .mm-m{font-size:13px;font-weight:600;fill:var(--muted)}
+.v2 .g-base,.v2 .g-grid{stroke:var(--line);stroke-width:1;vector-effect:non-scaling-stroke}
+.v2 .g-grid{opacity:.7}
+.v2 .rit{touch-action:pan-y;display:grid;gap:var(--e2)}
+.v2 .rit-area{fill:color-mix(in srgb,var(--ink) 7%,transparent)}
+.v2 .rit-real,.v2 .rit-plan{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.v2 .rit-real{stroke:var(--ink)}
+.v2 .rit-plan{stroke:var(--azul);stroke-dasharray:6 5}
+.v2 .rit-x{stroke:var(--muted);stroke-width:1;vector-effect:non-scaling-stroke}
+.v2 .rit-fin{stroke:var(--surface);stroke-width:2}
+.v2 .rit-fin.mal{fill:var(--mal)}
+.v2 .rit-fin.bien{fill:var(--bien)}
+.v2 .rit-ley{display:flex;flex-wrap:wrap;gap:4px var(--e4);margin:0;font:600 13px var(--f-body);color:var(--muted)}
+.v2 .rit-ley span{display:inline-flex;align-items:center;gap:6px}
+.v2 .rit-ley i{display:inline-block;width:18px;height:0;border-top:2px solid var(--ink)}
+.v2 .rit-ley i.k-plan{border-top:2px dashed var(--azul)}
+.v2 .rit-lee{margin:0;font-size:15px;line-height:1.4;color:var(--ink)}
+.v2 .mal-t{color:var(--mal);font-weight:700}
+.v2 .bien-t{color:var(--bien);font-weight:700}
+.v2 .tj-rit .sec+.rit,.v2 .tj-rit .rit+.sec{margin-top:0}
+/* comercios: nombre y total arriba, la categoría abajo */
+.v2 .com-l li.com-i{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"what amt" "cat cat";gap:6px var(--e2);align-items:center}
+.v2 .com-i .what{grid-area:what;min-width:0}
+.v2 .com-i .amt{grid-area:amt}
+.v2 .com-i .cat-cell{grid-area:cat;display:flex;align-items:center;gap:var(--e2)}
+.v2 .com-i .cat-sel{flex:1;min-height:44px;font-size:16px}
+/* el aviso de Hoy */
+.v2 .tj-aviso .row-btns{margin-top:var(--e2)}
+/* lo que falta anotar: el nombre entero (antes se partía letra por letra), la fecha abajo */
+.v2 #control-card .list li{display:grid;grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:"what amt btn" "when amt btn";align-items:center;gap:0 var(--e2)}
+.v2 #control-card .list li .what{grid-area:what;min-width:0}
+.v2 #control-card .list li .when{grid-area:when;width:auto;font-size:13px}
+.v2 #control-card .list li .amt{grid-area:amt}
+.v2 #control-card .list li>button{grid-area:btn}
+/* libro abierto (≥ 1100 px): lo de la Tarjeta corre en dos páginas, como columnas de un libro */
+@media (min-width:1100px){
+  .v2 #p-gastos>#gas-out{grid-column:1 / -1;display:block;columns:2;column-gap:92px}
+  .v2 #p-gastos>#gas-out>*{break-inside:avoid;margin:0 0 var(--e5)}
+  .v2 #p-gastos>#cats-d{grid-column:1}
+}
+/* el calendario usa el ancho del recuadro (cada día ≥ 44 px a 390 de ancho) */
+.v2 .tj-cal .cal-sem,.v2 .tj-cal .cal-g{gap:2px;margin:0 -16px}
+@media (max-width:360px){.v2 .tj-cal .cal-sem,.v2 .tj-cal .cal-g{gap:2px;margin:0 -18px}}

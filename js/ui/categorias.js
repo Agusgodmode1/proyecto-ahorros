@@ -1,13 +1,13 @@
 /* Ajustes → Categorías: crear, renombrar, color e ícono, ordenar, ocultar y borrar (pasando los gastos a otra). */
 import * as C from '../logica/categorias.js';
-import {ctx,$,esc,toast} from './comun.js';
+import {ctx,$,esc,toast,colorCat} from './comun.js';
 
 var abierta=null,borrando=null,error='';
 
 function editor(c){
   var n=C.cuantosGastos(ctx.state,c.nombre),esOtros=c===C.otros(ctx.state);
   var h='<div class="cat-ed stack"><div class="field"><label class="sub-l" for="cat-n">Nombre</label><input id="cat-n" type="text" maxlength="30" value="'+esc(c.nombre)+'"></div>'
-    +'<div class="field"><span class="sub-l">Color</span><div class="cat-col" role="group" aria-label="Color">'+C.COLORES.map(function(x){return '<button type="button" class="sw" data-catcol="'+x+'" style="background:'+x+'" aria-pressed="'+(x===c.color)+'" aria-label="Color"></button>'}).join('')+'</div></div>'
+    +'<div class="field"><span class="sub-l">Color</span><div class="cat-col" role="group" aria-label="Color">'+C.COLORES.map(function(x){return '<button type="button" class="sw" data-catcol="'+x+'" style="background:'+colorCat(x)+'" aria-pressed="'+(x===c.color)+'" aria-label="Color"></button>'}).join('')+'</div></div>'
     +'<div class="field"><span class="sub-l">Ícono</span><div class="cat-ic" role="group" aria-label="Ícono">'+C.ICONOS.map(function(x){return '<button type="button" data-catic="'+esc(x)+'" aria-pressed="'+(x===c.icono)+'">'+esc(x)+'</button>'}).join('')+'</div></div>'
     +'<div class="row-btns"><button class="btn primary" type="button" data-cata="guardar">Guardar</button>'
     +(esOtros?'':'<button class="btn" type="button" data-cata="ocultar">'+(c.oculta?'Mostrar al anotar':'Ocultar al anotar')+'</button>')
@@ -28,7 +28,7 @@ export function renderCategorias(){
   var l=C.lista(ctx.state);
   el.innerHTML='<ul class="list cat-list">'+l.map(function(c,i){
     var n=C.cuantosGastos(ctx.state,c.nombre);
-    return '<li class="'+(c.oculta?'cat-oculta':'')+'"><div class="cat-fila"><span class="cat-ico" style="background:'+c.color+'">'+esc(c.icono&&c.icono!=='•'?c.icono:'')+'</span>'
+    return '<li class="'+(c.oculta?'cat-oculta':'')+'"><div class="cat-fila"><span class="cat-ico" style="background:'+colorCat(c.color)+'">'+esc(c.icono&&c.icono!=='•'?c.icono:'')+'</span>'
       +'<span class="what"><b>'+esc(c.nombre)+'</b><span class="src">'+(c.oculta?'oculta · ':'')+n+(n===1?' gasto':' gastos')+'</span></span>'
       +'<span class="cat-btns"><button class="btn quiet sm" type="button" data-catm="'+esc(c.id)+'" data-dir="-1"'+(i===0?' disabled':'')+' aria-label="Subir">↑</button><button class="btn quiet sm" type="button" data-catm="'+esc(c.id)+'" data-dir="1"'+(i===l.length-1?' disabled':'')+' aria-label="Bajar">↓</button>'
       +'<button class="btn quiet sm" type="button" data-cate="'+esc(c.id)+'">'+(abierta===c.id?'Cerrar':'Editar')+'</button></span></div>'

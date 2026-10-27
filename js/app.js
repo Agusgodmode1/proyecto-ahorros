@@ -7,7 +7,7 @@ import {sonar,sonidoOn,setSonido,volumen,setVolumen} from './ui/sonido.js';
 import {renderCountdown,renderResumen,syncPlan,initPlan} from './ui/plan.js';
 import {renderWeek,initSemanas} from './ui/semanas.js';
 import {renderSueldo,syncSueldo,initSueldo} from './ui/sueldo.js';
-import {renderGastos,syncGastos,initTarjeta} from './ui/tarjeta.js';
+import {renderGastos,syncGastos,initTarjeta,renderAvisoTarjeta} from './ui/tarjeta.js';
 import {renderFijos,initFijos} from './ui/fijos.js';
 import {renderLogros,evalLogros,initLogros} from './ui/logros.js';
 import {renderAjustes,renderAvisoRespaldo,initAjustes,renderCopias} from './ui/respaldo.js';
@@ -107,7 +107,7 @@ function renderAll(){
   /* Con el perfil hecho, la explicación del encabezado ya no hace falta y deja lugar a lo importante */
   var hs=document.querySelector('.hero-sub');if(hs)hs.hidden=!!ctx.state.perfil.hecho;
   var st=ctx.state;document.documentElement.classList.toggle('en-uso',!st.ejemplo&&!!st.perfil.hecho&&(st.gastos.length+st.horas.length+st.hist.length)>3);
-  renderCountdown();renderTabs(pc);showPanels();renderAvisoRespaldo();renderResumen(pc);renderWeek(pc);renderSueldo();
+  renderCountdown();renderTabs(pc);showPanels();renderAvisoRespaldo();renderResumen(pc);renderAvisoTarjeta();renderWeek(pc);renderSueldo();
   if(ctx.tab==='sueldo')renderRecibos();
   if(ctx.tab==='gastos'){renderGastos();renderCategorias()}
   if(ctx.tab==='fijos')renderFijos(pc);

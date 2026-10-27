@@ -58,6 +58,8 @@ test('resumen antes de importar',function(){
   var st=ejemplo();
   st.gastos=new Array(12).fill(0).map(function(_,i){return {id:'g'+i,fecha:'2026-10-13',monto:1}});
   st.fijos=[{id:'a'},{id:'b'},{id:'c'}];
+  assert.equal(resumenDatos(st),'12 gastos, 10 registros de horas, 3 fijos, 0 meses cerrados, 0 logros, un extracto pegado');
+  st.extracto.texto='';
   assert.equal(resumenDatos(st),'12 gastos, 10 registros de horas, 3 fijos, 0 meses cerrados, 0 logros');
 });
 
@@ -144,4 +146,17 @@ test('v15 → v16: «¿hay horas extra?» queda contestado para quien ya tenía 
   assert.equal(sin.perfil.horas.preguntado,false);
   assert.equal(sin.perfil.horas.divisor,240,'las reglas de siempre no cambian');
   assert.equal(defaults().perfil.horas.preguntado,false);
+});
+test('v16 → v17: el extracto queda igual y suma dónde recordar columnas y avisos vistos',function(){
+  var txt='09/10/2026  COMPRA POS TATA  -1.250,00';
+  var m=migrar({v:16,extracto:{texto:txt,formato:'pos',hormiga:300,cat:{TATA:'Supermercado'}},plan:{monto:1,inicio:'2026-10-01',cobro:'2026-11-06'},pacto:{sellado:'2026-10-01',numero:1}});
+  assert.equal(m.v,VERSION_ESTADO);
+  assert.equal(m.extracto.texto,txt);
+  assert.equal(m.extracto.formato,'pos');assert.equal(m.extracto.hormiga,300);
+  assert.deepEqual(m.extracto.cat,{TATA:'Supermercado'});
+  assert.deepEqual(m.extracto.columnas,{});assert.deepEqual(m.extracto.descartadas,{});
+  var g=migrar({v:16,extracto:{texto:'',columnas:'roto',descartadas:null}});
+  assert.deepEqual(g.extracto.columnas,{});assert.deepEqual(g.extracto.descartadas,{});
+  assert.deepEqual(defaults().extracto.columnas,{});
+  assert.ok(ejemplo('2026-10-27').extracto.texto.indexOf('ejemplo inventado')>0,'«Solo mirar» trae un extracto de ejemplo');
 });

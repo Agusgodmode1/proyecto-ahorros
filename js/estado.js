@@ -1,5 +1,6 @@
 /* Estado de la app: valores por defecto, migraciones, guardado en IndexedDB y respaldo.
    Todo queda en el teléfono: no hay servidor ni cuentas. */
+import {extractoEjemplo} from './logica/extracto-ejemplo.js';
 import {num} from './logica/util.js';
 import {iso,parse,usarFeriados} from './logica/fechas.js';
 import {cobroDesde,fechaCobro} from './logica/plan.js';
@@ -22,7 +23,7 @@ import {pactoBase,pactoDesdePlan} from './logica/pacto.js';
         paga y pagador; los pagos guardan el total, tu parte y lo que te devolvieron. Los fijos de antes quedan como «Solo míos».
    v16: Sueldo ordenado: perfil.horas.preguntado («¿hay horas extra?» se pregunta una sola vez; quien ya armó su perfil no la ve),
         perfil.horas.multFeriado (opcional, p. ej. ×2,5), perfil.ingreso.factura y sueldo.factura (cobro con factura). */
-export var VERSION_ESTADO=16;
+export var VERSION_ESTADO=17;
 
 function hoyISO(){return iso(new Date())}
 /* Feriados: por defecto solo cuentan los 5 no laborables (1/1, 1/5, 18/7, 25/8, 25/12).
@@ -42,7 +43,7 @@ export function defaults(hoy){
     plan:{monto:0,modo:'monto',ahorro:0,pct:30,inicio:hoy,cobro:cobroDesde(hoy,{tipo:'habil5'}),minimo:null,sobrante:'siguiente',sobranteSemana:{}},
     gastos:[],
     sueldo:sueldoBase(),
-    extracto:{texto:'',formato:'auto',hormiga:400,cat:{}},
+    extracto:{texto:'',formato:'auto',hormiga:400,cat:{},columnas:{},descartadas:{}}, /* columnas: por banco, qué columna es cada cosa (planillas); descartadas: avisos de Hoy que ya viste */
     recibo:{},
     fijos:[],fijosPagos:{},hist:[],logros:{},
     horas:[],
@@ -106,6 +107,8 @@ export function ejemplo(hoy){
   s.perfil.horas.preguntado=true;
   /* un recibo de ejemplo del mes anterior (inventado), para ver «¿Te pagaron bien?» */
   s.recibos=[{id:'ej-rec',mes:'2026-09',moneda:'UYU',nominal:45000,haberes:47812.5,aportes:7171.88,fonasa:2151.56,irpf:0,otros:47.81,liquido:38441.25,horasCant:7.5,horasMonto:2812.5,fuente:'ejemplo'}];
+  /* un extracto de ejemplo (inventado) para ver el detector de la Tarjeta */
+  s.extracto.texto=extractoEjemplo();
   var k=s.plan.cobro;s.fijosPagos={};s.fijosPagos[k]={'ej-alq':{monto:22000,parte:11000,fecha:'2026-10-15',nombre:'Alquiler',paga:'yo'}};
   return s;
 }
@@ -155,6 +158,8 @@ export function migrar(d){
   if(!(x.plan&&x.plan.modo)){state.plan.modo='monto';state.plan.ahorro=Math.round(num(state.plan.monto)*num(state.plan.pct)/100)}
   if(vx<3&&!viejo&&num(state.sueldo.bonoFijo)===2000)state.sueldo.bonoFijo=0;
   if(!state.extracto.cat||typeof state.extracto.cat!=='object')state.extracto.cat={};
+  /* v17: el lector de bancos recuerda las columnas de cada planilla y los avisos de Hoy que ya viste (el texto no cambia) */
+  state.extracto.columnas=obj(state.extracto.columnas);state.extracto.descartadas=obj(state.extracto.descartadas);
   /* Horas del Excel: el archivo las sumaba si faltaban. Acá se hace una sola vez, al migrar desde el archivo,
      para que si borrás una no vuelva a aparecer. */
   if(vx<4){

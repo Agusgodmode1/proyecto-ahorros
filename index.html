@@ -77,6 +77,7 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
       <div id="resp-aviso"></div>
       <div id="ritmo-aviso"></div>
       <div id="fer-aviso"></div>
+      <div id="tarjeta-aviso"></div>
       <div id="hoy-out"></div>
 
       <div id="resumen-out" class="stack"></div>
@@ -87,28 +88,35 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
 
     <!-- GASTOS -->
     <section id="p-gastos" role="tabpanel" class="tone-coral stack" hidden>
-      <div class="panel-head"><h2 class="ph-t">En qué se te va la plata</h2><p class="ph-s">Pegá los movimientos de tu cuenta y te muestro en qué gastás, qué días gastás más y qué gastos chicos se van sumando.</p></div>
-      <div class="card stack">
-        <ol class="steps">
-          <li class="step"><span class="badge" aria-hidden="true">1</span><div><p class="step-t">Entrá a e-BROU</p><p class="note">Abrí los movimientos de tu caja de ahorro. La tarjeta de débito gasta de ahí.</p></div></li>
-          <li class="step"><span class="badge" aria-hidden="true">2</span><div><p class="step-t">Copiá y pegá</p><p class="note">Seleccioná la lista, copiala y pegala abajo. También sirve copiar desde el PDF o el Excel.</p></div></li>
-          <li class="step"><span class="badge" aria-hidden="true">3</span><div><p class="step-t">Mirá los resultados</p><p class="note">Aparecen solos debajo del cuadro, sin tocar ningún botón.</p></div></li>
-        </ol>
-        <div class="field"><label for="gas-txt">Tus movimientos</label><textarea id="gas-txt" spellcheck="false" placeholder="09/10/2026  COMPRA POS TIENDA INGLESA  1.890,50  12.800,00"></textarea><small>Los números largos (cuentas, tarjetas) se tapan solos. Solo vos ves esto.</small></div>
-        <div class="grid2">
-          <div class="field"><label for="gas-fmt">Cómo vienen los montos</label>
-            <select id="gas-fmt"><option value="auto">Automático</option><option value="neg">Gastos con signo menos</option><option value="pos">Gastos en positivo</option></select>
-            <small>Dejalo en automático. Si los números no cierran, probá las otras opciones.</small></div>
-          <div class="field"><label for="gas-hor">Cuento como gasto chico si es menor a</label><div class="money"><span>$</span><input type="number" id="gas-hor" min="0" step="50" inputmode="numeric"></div><small>Sirve para ver los gastos hormiga.</small></div>
+      <div class="panel-head"><h2 class="ph-t">Por dónde se te va la plata</h2><p class="ph-s">Traé el extracto de tu banco, tarjeta o billetera y te muestro suscripciones, compras que se repiten, cobros dos veces, comisiones y tu mes día por día.</p></div>
+      <details class="card sdes tj-in" id="gas-in" open>
+        <summary><span class="sdes-t">Tu extracto</span><span class="sdes-d" id="gas-in-d">Pegalo o elegí el archivo</span></summary>
+        <div class="sdes-in stack">
+          <ol class="steps">
+            <li class="step"><span class="badge" aria-hidden="true">1</span><div><p class="step-t">Bajá tus movimientos</p><p class="note">Desde la web o la app de tu banco, tarjeta o billetera: BROU, Itaú, Santander, Scotiabank, BBVA, HSBC, OCA, Cabal, Creditel, Anda, Prex, Midinero, Mercado Pago u otro. Sirve el PDF, el Excel o el CSV.</p></div></li>
+            <li class="step"><span class="badge" aria-hidden="true">2</span><div><p class="step-t">Elegí el archivo o pegalo</p><p class="note">Tocá «Elegir archivo», o copiá la lista de movimientos y pegala abajo. El banco lo reconozco solo.</p></div></li>
+            <li class="step"><span class="badge" aria-hidden="true">3</span><div><p class="step-t">Mirá por dónde se te va</p><p class="note">Aparece debajo, sin tocar nada más.</p></div></li>
+          </ol>
+          <div class="row-btns"><label class="btn primary filebtn">Elegir archivo<input type="file" id="gas-file" class="sr-only" accept=".pdf,.csv,.txt,.tsv,.xlsx,.xls,application/pdf,text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"></label></div>
+          <div class="field"><label for="gas-txt">O pegá tus movimientos</label><textarea id="gas-txt" spellcheck="false" placeholder="09/10/2026  COMPRA POS TIENDA INGLESA  1.890,50  12.800,00"></textarea><small>Todo se lee en tu teléfono: el archivo no se guarda ni sale de acá. Los números largos (cuentas, tarjetas) se tapan solos.</small></div>
+          <div class="grid2">
+            <div class="field"><label for="gas-fmt">Cómo vienen los montos</label>
+              <select id="gas-fmt"><option value="auto">Automático</option><option value="neg">Gastos con signo menos</option><option value="pos">Gastos en positivo</option></select>
+              <small>Dejalo en automático: en una tarjeta de crédito los gastos vienen en positivo y lo sé solo. Si los números no cierran, probá las otras.</small></div>
+            <div class="field"><label for="gas-hor">Cuento como gasto chico si es menor a</label><div class="money"><span>$</span><input type="number" id="gas-hor" min="0" step="50" inputmode="numeric"></div><small>Sirve para ver los gastos hormiga.</small></div>
+          </div>
+          <div class="row-btns"><button class="btn danger" type="button" id="gas-clear">Borrar extracto</button></div>
         </div>
-        <div class="row-btns"><button class="btn danger" type="button" id="gas-clear">Borrar extracto</button></div>
-        <p id="gas-stat" class="note"></p>
-      </div>
+      </details>
+      <p id="gas-stat" class="note gas-stat" aria-live="polite"></p>
       <div id="gas-out" class="stack"></div>
-      <div class="card stack">
-        <div class="sec"><h2>Tus categorías</h2><p class="note">Este es el único lugar del libro con categorías: al anotar un gasto se eligen solas por lo que escribís, y acá las corregís. Renombralas, cambiales el color, ordenalas u ocultá las que no usás. Si borrás una, sus gastos pasan a la que elijas.</p></div>
-        <div id="aj-cats"></div>
-      </div>
+      <details class="card sdes" id="cats-d">
+        <summary><span class="sdes-t">Tus categorías</span><span class="sdes-d">Renombralas, cambiales el color u ocultalas</span></summary>
+        <div class="sdes-in stack">
+          <p class="note">Este es el único lugar del libro con categorías: al anotar un gasto se eligen solas por lo que escribís, y acá las corregís. Renombralas, cambiales el color, ordenalas u ocultá las que no usás. Si borrás una, sus gastos pasan a la que elijas.</p>
+          <div id="aj-cats"></div>
+        </div>
+      </details>
     </section>
 
     <!-- FIJOS -->

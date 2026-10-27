@@ -22,9 +22,9 @@ async function pdfjs(){
   }
   return lib;
 }
-export async function textoPdf(file){
+export async function textoPdf(file,max){
   var L=await pdfjs(),doc=await L.getDocument({data:new Uint8Array(await file.arrayBuffer()),isEvalSupported:false}).promise,items=[];
-  for(var p=1;p<=Math.min(doc.numPages,3);p++){
+  for(var p=1;p<=Math.min(doc.numPages,max||3);p++){
     var pg=await doc.getPage(p),tc=await pg.getTextContent();
     /* Las páginas se apilan hacia abajo para que el orden de los renglones siga siendo de arriba a abajo */
     tc.items.forEach(function(it){items.push({str:it.str,x:it.transform[4],y:it.transform[5]-p*100000})});

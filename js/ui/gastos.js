@@ -4,7 +4,7 @@ import {categoriaGasto,aprender} from '../logica/voz.js';
 import {num,uid} from '../logica/util.js';
 import {cotizacion,gastoUSD,aPesos} from '../logica/monedas.js';
 import {frecuentes} from '../logica/frecuentes.js';
-import {ctx,$,esc,money,usd,toastAccion,toast,fCorta,today,cap,fLarga} from './comun.js';
+import {ctx,$,esc,money,usd,toastAccion,toast,fCorta,today,cap,fLarga,colorCat} from './comun.js';
 import {parse,addDays,iso,DIA} from '../logica/fechas.js';
 import {nombresVisibles,nombreDe,colorDe} from '../logica/categorias.js';
 import {disponible} from '../logica/saldo.js';
@@ -13,7 +13,7 @@ import {disponible} from '../logica/saldo.js';
 export function sugerir(nota){var st=ctx.state;return nombreDe(st,categoriaGasto(nota||'',st&&st.voz.cats))}
 /* Categoría de un gasto: la guardada o, en gastos viejos sin categoría, la que sale de la nota. */
 export function catDe(g){return g.cat||sugerir(g.nota)}
-export function catColor(c){return colorDe(ctx.state,c)}
+export function catColor(c){return colorCat(colorDe(ctx.state,c))}
 /* Opciones del selector: tus categorías visibles (y la del gasto, si la ocultaste después) */
 function opcionesCat(actual){var l=nombresVisibles(ctx.state);if(actual&&l.indexOf(actual)<0)l=l.concat([actual]);return l}
 

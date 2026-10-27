@@ -19,6 +19,7 @@ import {copiaVisible,girar,empezar,terminar as terminarPase} from './ui/pase.js'
 import {introCapitulo,olvidarIntros} from './ui/intro.js';
 import {initIndice} from './ui/indice.js';
 import {initFlechas,actualizarFlechas} from './ui/flechas.js';
+import {initNotas,agruparNotas} from './ui/notas.js';
 import {renderGuardado,initGuardado} from './ui/guardado.js';
 import {CAPITULOS,capituloDe,vecina,numeroDePagina,nombreDePagina} from './logica/capitulos.js';
 import {DIAL,MESL,parse} from './logica/fechas.js';
@@ -109,7 +110,7 @@ function renderAll(){
   /* Con el perfil hecho, la explicación del encabezado ya no hace falta y deja lugar a lo importante */
   var hs=document.querySelector('.hero-sub');if(hs)hs.hidden=!!ctx.state.perfil.hecho;
   var st=ctx.state;document.documentElement.classList.toggle('en-uso',!st.ejemplo&&!!st.perfil.hecho&&(st.gastos.length+st.horas.length+st.hist.length)>3);
-  renderCountdown();renderTabs(pc);showPanels();renderAvisoRespaldo();renderResumen(pc);renderAvisoTarjeta();renderWeek(pc);renderSueldo();
+  renderCountdown();renderTabs(pc);showPanels();renderAvisoRespaldo();renderResumen(pc);renderAvisoTarjeta();agruparNotas();renderWeek(pc);renderSueldo();
   if(ctx.tab==='sueldo')renderRecibos();
   if(ctx.tab==='gastos'){renderGastos();renderCategorias()}
   if(ctx.tab==='fijos')renderFijos(pc);
@@ -357,6 +358,7 @@ function arrancar(st){
   ctx.state=st;aplicarFeriados();fijarUltimo();
   if(!st.meta.creado){st.meta.creado=today();persist()}
   try{var t=localStorage.getItem(TK);if(t)ctx.tab=t}catch(e){}
+  initNotas();
   guiaInit();initGlobal();initPlan();initSemanas();initSueldo();initTarjeta();initFijos();initLogros();initAjustes(reemplazar,juntarDatos);initGuardado();initVoz();initFeriados();initCategorias();initRecibos();initAjustesPin();
   marcarDiscreto();
   ctx.booted=true;

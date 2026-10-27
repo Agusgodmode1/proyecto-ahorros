@@ -1087,3 +1087,11 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 .v2 .cd-const .hilo{fill:none;stroke:var(--cobro-c);stroke-width:1.1;stroke-opacity:.55;stroke-linejoin:round;vector-effect:non-scaling-stroke}
 .v2 .cd-const .st.nueva{transform-box:fill-box;transform-origin:center;animation:cd-estrella .34s cubic-bezier(.3,1.6,.5,1) backwards;animation-delay:calc(var(--i,0)*45ms)}
 @media (prefers-reduced-motion:reduce){.v2 .cd-const .st.nueva{animation:none}}
+
+/* =====================================================================
+   Una sola nota al margen por vez en Hoy (2.15): «nota 1 de 3» con ‹ ›
+   ===================================================================== */
+.v2 .banner[hidden]{display:none}
+.v2 .nota-pag{flex-basis:100%;display:flex;align-items:center;justify-content:flex-end;gap:2px;margin:var(--e1) -8px -8px 0;font:600 13px var(--f-body);color:var(--muted)}
+.v2 .nota-pag button{min-width:44px;min-height:44px;border:0;background:transparent;color:var(--oro-t);font:600 22px/1 var(--f-libro);cursor:pointer;border-radius:var(--r-m)}
+.v2 .nota-pag button:active{background:color-mix(in srgb,var(--ink) 8%,transparent)}

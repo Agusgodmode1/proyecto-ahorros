@@ -1,6 +1,6 @@
 /* Arranque, pestañas y render general. */
 import {curWeek} from './logica/plan.js';
-import {migrar,cargar,guardar,pedirPersistencia,defaults,ejemplo,necesitaMigrar,guardarCopia,resumenDatos} from './estado.js';
+import {migrar,cargar,guardar,pedirPersistencia,defaults,ejemplo,necesitaMigrar,guardarCopia,resumenDatos,borrarTodo} from './estado.js';
 import {ctx,$,today,planNow,ICON,discreto,setDiscreto,toast,toastAccion,money} from './ui/comun.js';
 import {deshacerAjustePacto} from './logica/pacto.js';
 import {sonar,sonidoOn,setSonido,volumen,setVolumen} from './ui/sonido.js';
@@ -10,7 +10,7 @@ import {renderSueldo,syncSueldo,initSueldo} from './ui/sueldo.js';
 import {renderGastos,syncGastos,initTarjeta,renderAvisoTarjeta} from './ui/tarjeta.js';
 import {renderFijos,initFijos} from './ui/fijos.js';
 import {renderLogros,evalLogros,initLogros} from './ui/logros.js';
-import {renderAjustes,renderAvisoRespaldo,initAjustes,renderCopias} from './ui/respaldo.js';
+import {renderAjustes,renderAvisoRespaldo,initAjustes,renderCopias,exportar} from './ui/respaldo.js';
 import {registrarSW} from './pwa.js';
 import {initVoz} from './ui/voz.js';
 import {abrirPerfil,initPerfil,resumenPerfil} from './ui/perfil.js';
@@ -30,14 +30,15 @@ import {renderRecibos,initRecibos} from './ui/recibos.js';
 import {pinActivo,pedirPin,initPin,renderAjustesPin,initAjustesPin} from './ui/pin.js';
 
 /* ---------- Guardado en IndexedDB ---------- */
-var timer=null,saving=false,pending=false,guardado={donde:null,persistente:null};
+var timer=null,saving=false,pending=false,borrando=false,guardado={donde:null,persistente:null};
 /* Lo último guardado: contra eso se anota qué cambió y cuándo (para juntar datos de dos aparatos). */
 var ultimo=null;
 function fijarUltimo(){ultimo=JSON.parse(JSON.stringify(ctx.state))}
 function setStatus(m){var el=$('#save-status');if(el)el.textContent=m}
-function persist(){setStatus('Guardando…');clearTimeout(timer);timer=setTimeout(flush,450)}
+function persist(){if(borrando)return;setStatus('Guardando…');clearTimeout(timer);timer=setTimeout(flush,450)}
 async function flush(){
   clearTimeout(timer);timer=null;
+  if(borrando)return;
   if(saving){pending=true;return}
   saving=true;
   try{
@@ -309,6 +310,16 @@ function initGlobal(){
     if(e.target.closest('#aj-tour')){olvidarIntros();iniciarTour()}
     if(e.target.closest('#aj-prologo'))abrirPrologo('p1');
     var pie=e.target.closest('[data-pie]');if(pie)go(pie.getAttribute('data-pie'));
+    /* Empezar de cero (Ajustes): primero pregunta y ofrece bajar un respaldo; después borra todo y vuelve a la tapa */
+    if(e.target.closest('#cero-1')){$('#cero-conf').hidden=false;$('#cero-1-box').hidden=true;try{$('#cero-resp').focus()}catch(x){}return}
+    if(e.target.closest('#cero-no')){$('#cero-conf').hidden=true;$('#cero-1-box').hidden=false;return}
+    if(e.target.closest('#cero-resp')){exportar();return}
+    if(e.target.closest('#cero-si')){
+      borrando=true;clearTimeout(timer);timer=null;
+      var bs=e.target.closest('#cero-si');bs.disabled=true;bs.textContent='Borrando…';
+      borrarTodo(['pa-tema','pa-sonido','pa-volumen']).then(function(){location.reload()});
+      return;
+    }
     /* Borrar los datos de ejemplo y crear el perfil (dos toques) */
     var c=e.target.closest('[data-cero]');
     if(c){

@@ -250,6 +250,14 @@ function abrir(){
     r.onblocked=function(){mal(new Error('IndexedDB bloqueada'))};
   });
 }
+/* Empezar de cero (2.14): borra la base del teléfono (con las copias) y lo de la app en localStorage,
+   menos las preferencias del aparato que se pasen en «conservar» (tema, sonido…). */
+export async function borrarTodo(conservar){
+  conservar=conservar||[];
+  if(dbP){try{(await dbP).close()}catch(e){}dbP=null}
+  try{await new Promise(function(ok){var q=indexedDB.deleteDatabase(DB);q.onsuccess=q.onerror=q.onblocked=function(){ok()}})}catch(e){}
+  try{Object.keys(localStorage).forEach(function(k){if(/^pa-|^proyecto-ahorros/.test(k)&&conservar.indexOf(k)<0)localStorage.removeItem(k)})}catch(e){}
+}
 /* iOS a veces cierra la conexión con la app en segundo plano: si falla, se reabre una vez. */
 async function conDB(fn){
   for(var i=0;i<2;i++){

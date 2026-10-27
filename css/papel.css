@@ -1065,3 +1065,13 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 }
 /* un solo naranja por pantalla («+ Gasto»): el micrófono va en la tinta de la barra, con su aro dorado */
 .v2 .mic{background:radial-gradient(120% 120% at 30% 25%,#24357E,#0E1640 70%);color:#F3D488;box-shadow:0 8px 24px rgba(3,6,20,.5),inset 0 0 0 1.5px rgba(226,182,90,.6)}
+
+/* =====================================================================
+   Enlaces en tinta subrayada (2.15): el azul queda solo para la plata disponible
+   ===================================================================== */
+.v2 a,.v2 .linklike,.v2 .btn.quiet,
+.v2 .ph-intro>summary,.v2 .wk-de>summary,.v2 .f-rep>summary,.v2 .sub-d>summary,.v2 .lec-ren>summary{
+  color:var(--ink);text-decoration:underline;text-decoration-color:var(--oro-t);text-decoration-thickness:1.5px;text-underline-offset:4px}
+.v2 .ph-intro>summary::after,.v2 .wk-de>summary::after,.v2 .f-rep>summary::after,.v2 .sub-d>summary::after,.v2 .lec-ren>summary::after{color:var(--oro-t)}
+.v2 .btn.quiet:hover,.v2 .linklike:hover,.v2 a:hover{text-decoration-color:var(--ink)}
+.v2 button.hchip small{color:var(--ink);text-decoration:underline;text-decoration-color:var(--oro-t);text-decoration-thickness:1.5px;text-underline-offset:4px}

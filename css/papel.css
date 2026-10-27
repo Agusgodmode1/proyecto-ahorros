@@ -1185,3 +1185,16 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 .v2 .rep-l .cat-btns{gap:var(--e1);margin-left:-10px}
 .v2 .rep-l .cat-btns .btn{padding:0 10px;font-size:14px}
 .v2 .gl-rep{font-size:13px;color:var(--muted);font-weight:600}
+
+/* =====================================================================
+   La postal del capítulo cerrado (2.16)
+   ===================================================================== */
+.v2 .ps-fig{margin:0;display:grid;place-items:center}
+.v2 .ps-fig img{display:block;width:auto;max-width:100%;height:auto;max-height:52dvh;aspect-ratio:1080/1350;border-radius:12px;box-shadow:0 8px 24px rgba(3,6,20,.35),0 0 0 1px var(--line);background:#0E1640;-webkit-touch-callout:default}
+.v2 .ps-nota{text-align:center;margin:0}
+.v2 #postal-sheet .row-btns{display:flex;flex-direction:column;gap:var(--e2)}
+.v2 #postal-sheet .row-btns .btn{width:100%;min-height:52px;display:flex;align-items:center;justify-content:center;text-decoration:none}
+.v2 .pactos li{display:block;padding:0}
+.v2 .pac-b{all:unset;box-sizing:border-box;width:100%;display:grid;grid-template-columns:40px minmax(0,1fr) auto 20px;gap:var(--e2);align-items:center;padding:var(--e3) 0;min-height:56px;cursor:pointer;color:var(--ink)}
+.v2 .pac-b:focus-visible{outline:2px solid var(--azul);outline-offset:2px;border-radius:8px}
+.v2 .pac-sh{width:20px;height:20px;color:var(--muted)}

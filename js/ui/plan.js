@@ -14,6 +14,7 @@ import {sensibilidadDolar} from '../logica/recibos.js';
 import {formGasto,initFormsGasto,leerForm,avisoAnotado,guardarGasto,borrarGasto,itemGasto,chipsFrecuentes,anotarFrecuente,abrirHojaGasto,initHojaGasto} from './gastos.js';
 import {editarGasto,resetWeekSel} from './semanas.js';
 import {cicloTerminado,resumenCiclo,cerrarCiclo} from '../logica/ciclo.js';
+import {abrirPostal} from './postal.js';
 import {abrirLibro,polvo} from './libro.js';
 import {irAlPacto} from './indice.js';
 
@@ -94,10 +95,13 @@ function renderCierre(pc){
     +'<div class="row-btns"><button class="btn primary" type="button" id="ciclo-nuevo">Empezar un pacto nuevo</button><button class="btn quiet" type="button" id="cierre-ir">Cerrarlo a mano en Logros</button></div></section>';
 }
 function pactoNuevo(){
-  var st=ctx.state,r=resumenCiclo(st,today());
+  var st=ctx.state,r=resumenCiclo(st,today()),kc=String(st.plan.inicio||'').slice(0,7);
   abrirLibro({modo:'ciclo',estado:st,total:r.total,sobra:r.ahorrado,cobro:r.cobro,real:r.real,
     antes:function(s){cerrarCiclo(s,today())},
-    listo:function(){resetWeekSel();ctx.syncInputs();ctx.persist();ctx.tab='resumen';ctx.renderAll();toast('Empieza un capítulo nuevo. Tu racha va en '+r.racha+(r.racha===1?' mes.':' meses.'))},
+    listo:function(){resetWeekSel();ctx.syncInputs();ctx.persist();ctx.tab='resumen';ctx.renderAll();
+      var msg='Empieza un capítulo nuevo. Tu racha va en '+r.racha+(r.racha===1?' mes.':' meses.');
+      /* (2.16) el capítulo que se cerró, como imagen para compartir */
+      if((ctx.state.hist||[]).some(function(x){return x.k===kc}))toastAccion(msg,'Compartir el cerrado',function(){abrirPostal(kc)});else toast(msg)},
     alCerrar:function(){}});
 }
 /* Debajo de la portada: lo que gastaste hoy (o, en vista simple, tus últimos 3 gastos). Anotar se hace desde la hoja. */

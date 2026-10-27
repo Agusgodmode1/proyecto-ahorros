@@ -21,6 +21,7 @@ import {initIndice} from './ui/indice.js';
 import {initFlechas,actualizarFlechas} from './ui/flechas.js';
 import {initNotas,agruparNotas} from './ui/notas.js';
 import {renderGuardado,initGuardado} from './ui/guardado.js';
+import {initPostal} from './ui/postal.js';
 import {CAPITULOS,capituloDe,vecina,numeroDePagina,nombreDePagina} from './logica/capitulos.js';
 import {DIAL,MESL,parse} from './logica/fechas.js';
 import {initTour,iniciarTour,tourSiPendiente} from './ui/tour.js';
@@ -375,7 +376,7 @@ function arrancar(st){
   var rs=aplicarRepetidos(st,today());if(rs.length)persist();
   try{var t=localStorage.getItem(TK);if(t)ctx.tab=t}catch(e){}
   initNotas();
-  guiaInit();initGlobal();initPlan();initSemanas();initSueldo();initTarjeta();initFijos();initLogros();initAjustes(reemplazar,juntarDatos);initGuardado();initVoz();initFeriados();initCategorias();initRecibos();initAjustesPin();
+  guiaInit();initGlobal();initPlan();initSemanas();initSueldo();initTarjeta();initFijos();initLogros();initAjustes(reemplazar,juntarDatos);initGuardado();initVoz();initFeriados();initCategorias();initRecibos();initAjustesPin();initPostal();
   marcarDiscreto();
   ctx.booted=true;
   $('#app').hidden=false;

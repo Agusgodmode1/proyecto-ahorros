@@ -5,7 +5,8 @@ import {pad,diffDays,MESL} from '../logica/fechas.js';
 import {num} from '../logica/util.js';
 import {nextCobro,cfgCobro} from '../logica/plan.js';
 import {histStats,histOk,histExtra,logrosLista,nuevosLogros,cerrarMes,mesKey} from '../logica/logros.js';
-import {ctx,$,today,planNow,liqNow,exAnalisis,money,esc,fCorta,fLarga,cap,tile,armar,toast,ICON} from './comun.js';
+import {ctx,$,today,planNow,liqNow,exAnalisis,money,esc,fCorta,fLarga,cap,tile,armar,toast,toastAccion,ICON} from './comun.js';
+import {abrirPostal} from './postal.js';
 import {resetWeekSel} from './semanas.js';
 import {renderMetas,aportarAlCerrar,initMetas} from './metas.js';
 import {minimoDe,nivelDe,rachaSemanas} from '../logica/mes.js';
@@ -90,7 +91,8 @@ function doCierre(){
   resetWeekSel();cDirtyA=false;cDirtyM=false;
   $('#c-confirm').hidden=true;$('#c-cerrar').hidden=false;
   ctx.syncInputs();ctx.persist();ctx.renderAll();
-  toast(res+'Tu plan nuevo va hasta el '+fCorta(nc)+'.'+(na?' Sumé tu ahorro a '+na+(na===1?' meta.':' metas.'):''));
+  var msg=res+'Tu plan nuevo va hasta el '+fCorta(nc)+'.'+(na?' Sumé tu ahorro a '+na+(na===1?' meta.':' metas.'):'');
+  if(rec)toastAccion(msg,'Compartir',function(){abrirPostal(rec.k)});else toast(msg);
 }
 export function initLogros(){
   initMetas();

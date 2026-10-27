@@ -19,6 +19,7 @@ import {montarImportador} from './respaldo.js';
 import {marcarTour} from './tour.js';
 import {$,today,money,usd,esc} from './comun.js';
 import {sonar} from './sonido.js';
+import {costuraHTML,bordadoHTML,tituloHTML,guardasHTML,montarTapa,soltarTapa,tapaQuieta,fueArrastre,avivar} from './tapa.js';
 
 export var TITULO='El Libro del Ahorro';
 var T=22; /* grosor del libro en px (igual que --lb-t) */
@@ -28,9 +29,6 @@ function fLarga(s){var d=parse(s);return DIAL[d.getDay()]+' '+d.getDate()+' de '
 /* El texto aparece como tinta: palabra por palabra */
 function tinta(t){var i=0;return t.split(' ').map(function(w){return '<span class="w" style="--i:'+(i++)+'">'+w+'</span>'}).join(' ')}
 
-var ORN='<svg class="lb-orn" viewBox="0 0 120 64" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
-  +'<path d="M60 52V24"/><path d="M60 34c-10 0-17-6-19-15 10 0 17 5 19 15Z"/><path d="M60 28c9 0 15-5 17-13-9 0-15 5-17 13Z"/>'
-  +'<circle cx="60" cy="54" r="7"/><path d="M57.5 54h5M60 51.5v5" stroke-width="1.2"/><path d="M6 54h40M74 54h40"/><path d="M10 50l4 4-4 4-4-4ZM110 50l4 4-4 4-4-4Z" stroke-width="1.1"/></svg>';
 var ORLA='<svg class="lb-orla" viewBox="0 0 120 14" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><path d="M2 7h46M72 7h46"/><path d="M60 1l6 6-6 6-6-6Z"/><circle cx="60" cy="7" r="1.6" fill="currentColor"/></svg>';
 /* Sello de lacre (naranja ladrillo, con el brote del ahorro grabado) */
 var SELLO='<svg class="lb-sello" viewBox="0 0 160 160" aria-hidden="true"><defs>'
@@ -41,19 +39,43 @@ var SELLO='<svg class="lb-sello" viewBox="0 0 160 160" aria-hidden="true"><defs>
   +'<g fill="none" stroke="#5A1E0B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity=".75"><path d="M80 106V70"/><path d="M80 84c-13 0-22-8-24-19 13 0 22 7 24 19Z"/><path d="M80 76c11 0 19-6 21-16-11 0-19 6-21 16Z"/><path d="M64 108h32"/></g>'
   +'</svg>';
 
+/* El sellito del ex libris: el mismo lacre, en chico */
+var SELLITO=SELLO.split('lb-lacre').join('lb-lacre-c').replace('class="lb-sello"','class="lb-sellito"');
+/* El brote que crece con cada respuesta: 0 tierra · 1 tallo · 2 primera hoja · 3 segunda hoja y yema · 4 flor · 5 la estrella que le cayó */
+var PETALOS=[0,60,120,180,240,300].map(function(a){return '<ellipse cx="32" cy="16.4" rx="3.1" ry="5.2" transform="rotate('+a+' 32 22)"/>'}).join('');
+function broteHTML(e){
+  return '<svg class="lb-brote" viewBox="0 0 64 72" data-e="'+e+'" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round">'
+    +'<path class="b0" d="M12 66h40M22 66c3-4 17-4 20 0"/>'
+    +'<g class="b1"><path d="M32 65V48"/><path class="hoja" d="M32 52c-4 0-7-2-8-6 4 0 7 2 8 6Z"/><path class="hoja" d="M32 50c4 0 7-2 8-6-4 0-7 2-8 6Z"/></g>'
+    +'<g class="b2"><path d="M32 51V38"/><path class="hoja" d="M32 50c-9 0-15-4-17-12 9 0 15 4 17 12Z"/></g>'
+    +'<g class="b3"><path d="M32 39V27"/><path class="hoja" d="M32 42c8 0 13-4 15-11-8 0-13 4-15 11Z"/><circle class="yema" cx="32" cy="24.5" r="3.2"/></g>'
+    +'<g class="b4"><g class="petalos">'+PETALOS+'</g><circle class="centro" cx="32" cy="22" r="3.4"/></g>'
+    +'<g class="b5"><path class="lucero" d="M32 0l1.5 3.5L37 5l-3.5 1.5L32 10l-1.5-3.5L27 5l3.5-1.5Z"/></g>'
+    +'</svg>';
+}
+var ESTRELLA='<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 0l2.6 7.4L20 10l-7.4 2.6L10 20l-2.6-7.4L0 10l7.4-2.6Z" fill="#FFD27A"/><circle cx="10" cy="10" r="2.4" fill="#FFF7E0"/></svg>';
+
 /* ---------- Tapa ---------- */
 function htmlPortada(opciones){
   var hojas='';for(var i=0;i<3;i++)hojas+='<div class="lb-hoja"><i></i><i></i></div>';
   return '<button class="lb-link lb-saltar" type="button" data-lb="saltar" hidden>Saltar</button>'
-    +'<div class="lb-escena"><div class="lb-cam"><div class="lb-libro" role="button" tabindex="0" aria-label="Abrir el libro" data-lb="abrir">'
+    +'<div class="lb-escena"><div class="lb-cam"><div class="lb-gira"><div class="lb-libro" role="button" tabindex="0" aria-label="Abrir el libro" data-lb="abrir">'
     +'<div class="lb-sombra"></div><div class="lb-contra"></div><div class="lb-bloque"></div>'
     +'<div class="lb-canto lb-canto-d"></div><div class="lb-canto lb-canto-a"></div>'+hojas
     +'<div class="lb-lomo"></div>'
-    +'<div class="lb-tapa"><div class="lb-tapa-f"><i class="lb-neb"></i><i class="lb-astros a"></i><i class="lb-astros b"></i><i class="lb-fugaz"></i><i class="lb-esq a"></i><i class="lb-esq b"></i><i class="lb-esq c"></i><i class="lb-esq d"></i>'
-    +ORN+'<h1 class="lb-tit"><small>el libro del</small><span class="lb-tit-g" data-t="Ahorro">Ahorro</span></h1><p class="lb-lema">Para que guardes algo, por más mínimo que sea</p></div>'
-    +'<div class="lb-tapa-d"></div></div>'
+    /* la tela, de atrás para adelante: nebulosas, galaxia, estrellas lejanas y cercanas, la estrella fugaz, la trama,
+       la costura, las estrellas bordadas y el título (cada capa se mueve apenas distinto al arrastrar: data-k) */
+    +'<div class="lb-tapa"><div class="lb-tapa-f">'
+    +'<i class="lb-capa" data-k="3"><i class="lb-neb"></i><i class="lb-neb b"></i></i>'
+    +'<i class="lb-capa" data-k="4"><i class="lb-gal"><i class="lb-gal-gira"></i><i class="lb-gal-luz"></i></i></i>'
+    +'<i class="lb-capa" data-k="2"><i class="lb-astros b"></i></i>'
+    +'<i class="lb-capa" data-k="6"><i class="lb-astros a"></i><i class="lb-fugaz"></i></i>'
+    +'<i class="lb-trama"></i><i class="lb-velo"></i>'+costuraHTML()
+    +'<div class="lb-tapa-in"><div class="lb-bordado-w" data-k="8">'+bordadoHTML()+'</div>'
+    +'<div class="lb-tit-w" data-k="11"><h1 class="lb-tit"><small>el libro del</small>'+tituloHTML()+'<span class="sr-only">Ahorro</span></h1><p class="lb-lema">Para que guardes algo, por más mínimo que sea</p></div></div></div>'
+    +'<div class="lb-tapa-d">'+guardasHTML()+'</div></div>'
     +'<div class="lb-broche"><b></b></div>'
-    +'</div></div></div>'
+    +'</div></div></div></div>'
     +'<p class="lb-toca">Tocá el libro para abrirlo</p>'
     +(opciones?'<div class="lb-otros"><button class="lb-link" type="button" data-lb="importar">Ya tenía datos: importarlos</button><button class="lb-link" type="button" data-lb="ejemplo">Solo mirar, con datos de ejemplo</button></div>'
       +'<p class="lb-nota">Lo que escribas queda solo en este teléfono: no hay cuentas ni servidores.</p>'
@@ -77,10 +99,11 @@ function moverLibro(mesa,listo,rev){
   function fin(){
     if(hecho)return;hecho=true;
     anims.forEach(function(a){try{a.finish()}catch(e){}});
-    if(rev){anims.forEach(function(a){a.cancel()});saltar.hidden=true;mesa.querySelectorAll('.lb-toca,.lb-otros,.lb-nota').forEach(function(x){x.style.animation='';x.style.visibility=''})}
+    if(rev){anims.forEach(function(a){a.cancel()});saltar.hidden=true;tapaQuieta(mesa);mesa.querySelectorAll('.lb-toca,.lb-otros,.lb-nota').forEach(function(x){x.style.animation='';x.style.visibility=''})}
     anims=[];listo();
   }
-  if(!rev)setTimeout(function(){sonar('broche')},300);
+  soltarTapa(mesa);
+  if(!rev){setTimeout(function(){sonar('broche')},300);avivar(mesa)}
   var T0='rotateX(24deg) rotateY(-14deg) rotateZ(3deg)';
   animar(L,[
     {transform:T0+' translateZ(0)',offset:0},
@@ -113,21 +136,41 @@ function moverLibro(mesa,listo,rev){
 }
 
 /* ---------- Páginas ---------- */
-var o=null,st=null,D=null,idx=0,PAGS=[],vista=null,E=null;
+var o=null,st=null,D=null,idx=0,PAGS=[],vista=null,E=null,broteVisto=0;
 function hojear(){return o&&o.modo==='hojear'}
+/* Hasta dónde creció el brote en cada página (en hojear ya está todo contestado y el pacto, sellado) */
+function etapa(id){
+  if(id==='q1')return hojear()||total()>0?1:0;
+  return id==='q2'?2:id==='q3'?3:id==='pacto'?(hojear()?5:4):0;
+}
+function crecer(){
+  var b=q('.lb-brote');if(!b)return;
+  var t=etapa(PAGS[idx]);broteVisto=t;
+  if(String(t)===b.getAttribute('data-e'))return;
+  requestAnimationFrame(function(){requestAnimationFrame(function(){b.setAttribute('data-e',t)})});
+}
+/* Ex libris: «Este libro pertenece a…», con una línea para escribir el nombre si todavía no está */
+function exLibrisHTML(){
+  var n=st.perfil&&st.perfil.nombre||'';
+  var nombre=hojear()&&n?'<b>'+esc(n)+'</b>'
+    :'<input id="lb-nombre" type="text" autocomplete="given-name" autocapitalize="words" enterkeyhint="done" maxlength="30" placeholder="tu nombre" aria-label="Tu nombre" value="'+esc(D.nombre!=null?D.nombre:n)+'">';
+  return '<div class="lb-exlibris">'+SELLITO+'<p><small>ex libris</small><span>Este libro pertenece a</span>'+nombre+'</p></div>';
+}
 /* Lo que el libro sabe hoy (modo hojear): la plata que tenés, lo que guardás y el cobro */
 function actuales(){var pc=planCalc(st);return {tenes:Math.round(Math.max(0,disponible(st,pc))),ahorro:Math.round(pc.ahorro),cobro:st.plan.cobro,max:Math.floor(maxAhorro(st,pc))}}
 
 function pagHTML(id){
   var ciclo=o.modo==='ciclo',n=PROLOGO.indexOf(id)+1;
   var folio='<p class="lb-folio">— '+n+' —</p>';
-  var cab='<div class="lb-cab"><span class="lb-cap">'+(ciclo?'pacto nuevo':id==='pacto'?'el pacto':'prólogo')+'</span>'
-    +(hojear()||ciclo?'<button class="lb-link" type="button" data-lb="cerrar-libro">'+(ciclo?'Ahora no':'Ir a Hoy')+'</button>':'')+'</div>';
+  var conBrote=id==='q1'||id==='q2'||id==='q3';
+  var cab='<div class="lb-cab'+(conBrote?' con-brote':'')+'"><span class="lb-cap">'+(ciclo?'pacto nuevo':id==='pacto'?'el pacto':'prólogo')+'</span>'
+    +(conBrote?broteHTML(Math.min(broteVisto,3)):'')
+    +(hojear()||ciclo?'<button class="lb-link" type="button" data-lb="cerrar-libro">'+(ciclo?'Ahora no':'Ir a Hoy')+'</button>':conBrote?'<span></span>':'')+'</div>';
   var atras=idx>0?'<button class="lb-btn chico" type="button" data-lb="atras" aria-label="Página anterior">‹ Atrás</button>':'';
   var sig='<button class="lb-btn si" type="button" data-lb="sig">'+(id==='p1'?(hojear()?'Pasar la página':'Empezar'):'Seguir')+'</button>';
   var acc='<div class="lb-acc">'+atras+sig+'</div>',h='';
   if(id==='p1'){
-    h='<h1 class="lb-h lb-tinta" id="lb-h">'+tinta('Este libro tiene un solo propósito')+'</h1>'
+    h=exLibrisHTML()+'<h1 class="lb-h lb-tinta" id="lb-h">'+tinta('Este libro tiene un solo propósito')+'</h1>'
       +'<p class="lb-cita">que generes un ahorro, por más mínimo que sea.</p>'+ORLA
       +'<p class="lb-p lb-cap-ini">No es un libro para leer: es un libro para usar. Cada día te dice cuánto podés gastar sin tocar lo que guardás, y cuántos días faltan para volver a cobrar. Para armar tu plan necesito saber <b>tres cosas</b>:</p>'
       +'<ol class="lb-tres"><li><span>1</span>Con cuánta plata empezás</li><li><span>2</span>Cuánto de eso querés ahorrar</li><li><span>3</span>Qué día volvés a cobrar</li></ol>'
@@ -195,7 +238,7 @@ function pactoNuevoHTML(){
     +(c.fijos>0?'<li><span>Gastos fijos</span><b>− '+money(c.fijos)+'</b></li>':'')
     +'<li class="tot"><span>Para gastar</span><b>'+money(c.gastar)+'<small>≈ '+money(c.porDia)+' por día</small></b></li></ul>'
     +avisosHTML(v)
-    +'<div class="lb-firma" id="lb-firma">'+SELLO+'<p class="lb-sellado" id="lb-sellado"></p></div>'
+    +'<div class="lb-firma" id="lb-firma"><div class="lb-flor">'+broteHTML(Math.min(broteVisto,3))+'</div>'+SELLO+'<p class="lb-sellado" id="lb-sellado"></p></div>'
     +'<div class="lb-acc" id="lb-acc-pacto">'+atras+'<button class="lb-btn si" type="button" data-lb="sellar">Sellar el pacto</button></div>';
 }
 /* El pacto de hoy, ya sellado, con la letra chica (porcentaje, mínimo, fechas y lo que sobra de cada semana) */
@@ -209,7 +252,7 @@ function pactoActualHTML(){
     +'<li class="ah"><span>Guardo</span><b>'+money(A.ahorro)+'</b></li>'
     +'<li><span>Cobro el</span><b>'+esc(fLarga(p.cobro))+'</b></li>'
     +'<li class="tot"><span>Para gastar</span><b>'+money(Math.max(0,resto))+'<small>≈ '+money(Math.max(0,resto)/dd)+' por día</small></b></li></ul>'
-    +'<div class="lb-firma">'+SELLO.replace('class="lb-sello"','class="lb-sello puesto"')+'</div>'
+    +'<div class="lb-firma"><div class="lb-flor">'+broteHTML(Math.min(broteVisto,4))+'</div>'+SELLO.replace('class="lb-sello"','class="lb-sello puesto"')+'</div>'
     +'<details class="lb-letra"><summary>La letra chica del pacto</summary>'
     +'<div class="lb-letra-in"><div class="lb-campo"><span class="lb-l">Lo que sobra de cada semana</span><div class="lb-chips" role="group" aria-label="Qué hacer con lo que sobra">'
     +'<button class="lb-chip" type="button" data-sobrante="siguiente" aria-pressed="'+(sob!=='ahorro')+'">Pasa a la semana siguiente</button><button class="lb-chip" type="button" data-sobrante="ahorro" aria-pressed="'+(sob==='ahorro')+'">Va al ahorro</button></div></div>'
@@ -239,6 +282,7 @@ function error(m){var e=q('#lb-err');if(e){e.textContent=m||'';e.hidden=!m}}
 function vivoQ1(){
   var t=q('#lb-total');if(!t)return;
   t.innerHTML=D.conUsd&&num(D.usd)>0&&num(D.cotiz)>0?'En total '+(hojear()?'tenés':'empezás con')+' <b>'+money(total())+'</b>':'';
+  var b=q('.lb-brote');if(b&&!hojear()){b.setAttribute('data-e',String(etapa('q1')));broteVisto=etapa('q1')}
   if(hojear())vivoAjuste();
 }
 function vivoAjuste(){
@@ -280,6 +324,7 @@ function pintarCal(){
 }
 function leer(){
   var g=function(id){var e=q('#'+id);return e?e.value:null};
+  if(g('lb-nombre')!==null)D.nombre=g('lb-nombre');
   if(g('lb-pesos')!==null)D.pesos=g('lb-pesos');
   if(g('lb-usd')!==null)D.usd=g('lb-usd');
   if(g('lb-cotiz')!==null)D.cotiz=g('lb-cotiz');
@@ -341,6 +386,7 @@ function irA(i,dir){
 }
 function montarPagina(){
   var id=PAGS[idx];
+  crecer();
   if(id==='pacto'&&hojear()){prestarLetra();return}
   if(hojear()&&E.edit!==id)return;
   if(id==='q1')vivoQ1();
@@ -365,6 +411,15 @@ function estampar(){
   pag.animate([{transform:'none'},{transform:'translate(1.5px,1px)'},{transform:'translate(-1.5px,-.5px)'},{transform:'translate(1px,0)'},{transform:'none'}],{duration:220,delay:320});
   polvo(firma,14,330);
   return 600;
+}
+/* Al sellar, a la flor le cae una estrella */
+function caeEstrella(){
+  var flor=q('.lb-flor'),b=q('.lb-brote');if(!flor||!b)return;
+  if(quieto()){b.setAttribute('data-e','5');return}
+  var e=document.createElement('i');e.className='lb-cae';e.innerHTML=ESTRELLA;flor.appendChild(e);
+  e.animate([{transform:'translate(70px,-260px) rotate(-200deg) scale(.5)',opacity:0},{opacity:1,offset:.12},{transform:'translate(0,0) rotate(0deg) scale(1)',opacity:1}],{duration:950,easing:'cubic-bezier(.45,0,.8,.45)'}).onfinish=function(){
+    e.remove();b.setAttribute('data-e','5');sonar('estrella');polvo(flor,10,0);
+  };
 }
 /* Polvo de estrellas dorado (también lo usan los logros) */
 export function polvo(donde,n,demora){
@@ -404,13 +459,15 @@ export function abrirLibro(opt){
   o=opt;st=opt.estado;vista='portada';E={edit:null};
   aplicarFeriados(st);
   var sg=sugerirCobro(st,today()),c=parse(sg.fecha);
-  D={pesos:'',usd:'',cotiz:cotizacion(st)?String(cotizacion(st)):'',conUsd:false,ahorro:null,cobro:sg.fecha,mes:[c.getFullYear(),c.getMonth()]};
+  D={nombre:null,pesos:'',usd:'',cotiz:cotizacion(st)?String(cotizacion(st)):'',conUsd:false,ahorro:null,cobro:sg.fecha,mes:[c.getFullYear(),c.getMonth()]};
+  broteVisto=0;
   PAGS=o.modo==='ciclo'?PROLOGO.slice(1):PROLOGO.slice();
   var m=$('#libro');
   document.documentElement.classList.add('voz-abierta','lb-abierto');
   if(o.modo==='ciclo'){D.pesos=String(Math.round(num(o.total))||'');D.ahorro=String(Math.round(num(st.plan.ahorro))||'');vista='hojas';abrirHojas();return}
-  if(o.modo==='hojear'){vista='hojas';abrirHojas(o.editar||o.pagina||'p1',o.dir||1);if(o.editar)empezarEdicion(o.editar);return}
+  if(o.modo==='hojear'){vista='hojas';var pg=o.editar||o.pagina||'p1';broteVisto=Math.max(0,etapa(pg)-1);abrirHojas(pg,o.dir||1);if(o.editar)empezarEdicion(o.editar);return}
   m.innerHTML=htmlPortada(!!o.alEjemplo);m.hidden=false;m.style.opacity='';
+  tapaQuieta(m);montarTapa(m);
   if(o.alEjemplo)montarImportador($('#lb-import'),function(e){cerrarTodo();o.alImportar(e)},'Usar estos datos');
   /* «Cerrar el libro»: la tapa se cierra (la apertura al revés) y queda esperando un toque */
   if(o.modo==='tapa'){
@@ -424,7 +481,9 @@ export function libroAbierto(){var h=$('#lb-hojas'),m=$('#libro');return (h&&!h.
 export function initLibro(){
   var m=$('#libro'),h=$('#lb-hojas');
   function abrir(){
-    if(vista!=='portada')return;vista='abriendo';
+    if(vista!=='portada')return;
+    if(fueArrastre())return; /* arrastrar el dedo sobre la tapa mueve la luz, no abre */
+    vista='abriendo';
     var luego=function(){vista='hojas';if(o.modo==='tapa'){cerrarTodo();if(o.listo)o.listo();return}abrirHojas()};
     if(quieto()){m.animate([{opacity:1},{opacity:0}],{duration:250,fill:'forwards'}).onfinish=luego;return}
     moverLibro(m,luego);
@@ -445,6 +504,7 @@ export function initLibro(){
     if(id==='lb-ahorro')vivoQ2(false);
   });
   h.addEventListener('change',function(e){
+    if(e.target.id==='lb-nombre'&&hojear()){var nm=e.target.value.trim().slice(0,30);if(nm){st.perfil.nombre=nm;if(o.alNombre)o.alNombre();irA(idx,0)}return}
     if(e.target.id==='lb-conusd'){D.conUsd=e.target.checked;q('#lb-usd-box').hidden=!D.conUsd;vivoQ1();if(D.conUsd)try{q('#lb-usd').focus()}catch(x){}}
   });
   h.addEventListener('click',function(e){
@@ -463,11 +523,13 @@ export function initLibro(){
       var v=validarPacto(st,datos(),today());
       if(v.ok&&o.antes)o.antes(st);
       if(v.ok)v=sellarPacto(st,datos(),today());
+      var nm=String(D.nombre||'').trim();if(v.ok&&nm&&st.perfil)st.perfil.nombre=nm.slice(0,30);
       if(!v.ok){var k=Object.keys(v.errores)[0];irA(PAGS.indexOf(k==='total'?'q1':k==='ahorro'?'q2':'q3'),-1);return}
       var t=estampar();
       $('#lb-acc-pacto').innerHTML='';
       setTimeout(function(){
         var s=$('#lb-sellado');s.textContent='Pacto sellado el '+fLarga(st.pacto.sellado)+'.';s.classList.add('ver');
+        caeEstrella();
         $('#lb-acc-pacto').innerHTML='<button class="lb-btn si" type="button" data-lb="empezar">Ir a la página de hoy</button>';
         try{$('#lb-acc-pacto button').focus({preventScroll:true})}catch(x){}
       },t);

@@ -51,11 +51,12 @@ La app es un libro: tapa cósmica, prólogo (el pacto), índice, siete capítulo
 - `css/app.css`: las capas viejas (estructura, formularios, listas). No le agregues diseño nuevo.
 - `css/libro.css`: los `@font-face` de Fraunces y Nunito, la tapa en 3D, el prólogo, el pacto, el índice y el pie con flechas.
 - `css/papel.css`: el sistema visual (tokens, papel, tinta, piezas, capítulos, doble página, pulido). Va último.
-- `js/ui/libro.js` (tapa y prólogo), `js/ui/indice.js` (índice), `js/ui/sonido.js` (sonido), `js/logica/pacto.js`, `js/logica/ciclo.js` y `js/logica/capitulos.js` (puros, con pruebas).
+- `js/ui/libro.js` (tapa y prólogo), `js/ui/tapa.js` (la tela de la tapa: galaxia, costura, bordado, guardas y lo que sigue al dedo), `js/ui/indice.js` (índice), `js/ui/sonido.js` (sonido), `js/logica/pacto.js`, `js/logica/ciclo.js` y `js/logica/capitulos.js` (puros, con pruebas).
 
 **Paleta y letra** (`css/papel.css`)
 - Bloques de tokens `@papel` (claro) y `@noche` (papel de noche); el de `@media` tiene que ser igual al de `[data-theme="dark"]` (una prueba lo controla).
 - Cosmos (tapa y lo que rodea la página): #070B24 → #0E1640 → #1B2A6B, nebulosa #4B3FA8, estrellas #F4F1FF, estrella fugaz #FFD27A.
+- Tapa de tela (2.8, tokens en `@papel`): tela `--tela-1` #0A1440 → `--tela-2` #1238A6, galaxia `--galaxia` #38B6FF y `--violeta` #7C5CFF, hilo `--hilo` #E9CF8F, texto `--tapa-tx` / `--tapa-oro` / `--tapa-nota`, dorado del título `--foil`. La prueba de contraste los mide sobre la tela más clara.
 - Papel claro (2.7): página #F6ECD6, sombra #ECDFC3, superficie #FBF5E7 / #EFE2C6, canto #D2B98A, tinta #1C2440.
 - Papel de noche (2.7, azul tinta, conecta con el cosmos): página #191C30, superficie #20243C / #282D4A, canto #3A4066, tinta #F1E7D0 (secundaria #B9B6C8), dorado #E2B65A (claro #F3D488), naranja #F08A4B, azul #9DB4FF, bien #79C28A, cuidado #E2A84A, te pasaste #EE8A7A.
 - **Jerarquía de colores (fija):** dorado = el tiempo y los títulos (Cobrás en, títulos de capítulo, capitulares, folios); azul = la plata disponible (Hoy podés gastar, Tenés, te quedan de la semana, para gastar); verde = lo guardado y «vas bien» (Guardás, ahorraste); naranja = solo acciones (+ Gasto, Sellar, Guardar, micrófono), nunca texto que informa; rojo = te pasaste. Lo elegido (la semana, el día de cobro) va con relleno `--sel` (azul tinta) y letra `--on-sel`, con una línea dorada; las cintas de lo elegido son doradas.
@@ -72,11 +73,20 @@ La app es un libro: tapa cósmica, prólogo (el pacto), índice, siete capítulo
 - Pasar de página: flechas del pie (`#pie`: anterior, folio, siguiente; en pantallas ≥ 1000 px a los costados), deslizar (`initDeslizar`: sigue al dedo, eje inclinado `rotate3d(-.16,1,0,…)`, sombra del pliegue `--pl`; si la soltás antes de ~28 % vuelve; si tocás otro capítulo mientras gira, manda lo que tocaste) e índice (`ui/indice.js`; si el salto es lejos, abanico de 3 hojas ≤ 700 ms). `vecina`: desde Hoy hacia atrás va a `'prologo'` (abre el pacto); después de Logros viene Lo guardado y después Ajustes.
 - La cinta del índice (`#indice-abrir`) cuelga del borde de arriba. Desde el índice: «Ir al prólogo» y «Cerrar el libro».
 
+**La tapa de tela** (2.8, `ui/tapa.js`; estilos al final de `css/papel.css`)
+- Tela tejida (`--tela-trama`, `--tela-hebra`) con costura a la vista dibujada en un SVG de 100 × 138 (la proporción fija de la tapa): lomo cosido a la japonesa (5 agujeros), puntada corrida alrededor y esquineros de tela; el lomo 3D lleva el hilo que lo abraza y las cabezadas.
+- Galaxia espiral dibujada UNA vez en un canvas (`dibujarGalaxia`, azar con semilla); gira con CSS (`lb-gira`, una vuelta cada 2 min). Su núcleo es la base del brote: la constelación bordada (`bordadoHTML`) crece desde ahí.
+- Capas con `data-k` (nebulosas, galaxia, estrellas lejanas y cercanas, bordado, título): al arrastrar se mueven apenas distinto y el libro se inclina (`.lb-gira`). El brillo del título (`.lb-brillo`, recortado con la forma de las letras) pasa solo cada 7 s y sigue al dedo al arrastrar. Arrastrar no abre el libro (`fueArrastre`).
+- Al abrir, la galaxia se aviva (`avivar`: más luz y giro más rápido 1,3 s). Las guardas son un mapa de estrellas (`guardasHTML`).
+- Un velo oscuro (`.lb-velo`) va detrás del título y la frase para que el texto siempre se lea sobre la galaxia. Con «reducir movimiento», todo quieto.
+
 **Tapa y prólogo** (`ui/libro.js`, modos)
 - `nuevo`: la primera vez (o al borrar el ejemplo). Tapa (con importar o ver el ejemplo) → apertura (~2,5 s, saltable) → las 5 páginas → «Sellar el pacto» (sello de lacre, polvo de estrellas).
 - `hojear`: ya hay datos. Cada pregunta muestra tu valor de hoy con «Cambiar»; «Guardar» pasa por `aplicarAjuste` (con «Deshacer») y reescribe el número. Se llega deslizando hacia atrás desde Hoy, desde el índice, desde Ajustes → «Ir al prólogo» o tocando «Tenés» / «Guardás» (abren la pregunta ya en «Cambiar»).
 - `ciclo`: el día de cobro, Hoy muestra «fin del capítulo» arriba (lo ahorrado = lo que no gastaste, la racha como quedaría) y «Empezar un pacto nuevo»: solo las 3 preguntas, total = lo que quedó + cobro estimado; `cerrarCiclo` cierra el mes justo antes de sellar.
 - `tapa`: «Cerrar el libro» (la apertura al revés, 1,7× más rápida); al tocar la tapa se abre en Hoy.
+- Ex libris (página 1): «Este libro pertenece a…» con un sellito; si no hay `perfil.nombre`, una línea para escribirlo (se guarda al sellar, o al terminar de escribir en hojear con `alNombre`).
+- El brote (`broteHTML`, `data-e` 0–5): en el encabezado de las tres preguntas crece con cada respuesta; en «El pacto» florece al lado del sello y al sellar le cae una estrella (`caeEstrella`, sonido «estrella»).
 - `ctx.abrirPrologo(pagina, editar, dir)` y `ctx.cerrarLibro()` los pone app.js.
 - Pacto puro en `logica/pacto.js`: `validarPacto` (total > 0, ahorro ≤ total y ≤ total − fijos, cobro futuro; avisos sin bloquear si queda < `DIA_BAJO` por día o si el ahorro es 0), `sellarPacto`, `previaAjuste`/`aplicarAjuste`/`deshacerAjustePacto` (nunca negativo, ahorro ≤ `maxAhorro`, mueve los pagos de fijos si cambia el cobro), `sugerirCobro`, `mesCalendario` (solo feriados no laborables).
 - Estado v14: `state.pacto = {sellado, numero, usd}`. Los tres datos del pacto viven en `state.plan` (monto, ahorro, cobro): no se guardan dos veces. Quien venía de antes migra con el pacto sellado el día de inicio de su plan y no ve el prólogo.

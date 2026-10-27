@@ -47,6 +47,16 @@ test('la tapa: estrellas y dorado se leen sobre el azul cósmico',function(){
   assert.ok(contraste(claro.fugaz,claro['cosmos-2'])>=4.5);
 });
 
+test('la tapa de tela (2.8): el texto se lee aun sobre la parte más clara de la tela y de la mesa',function(){
+  ['tapa-tx','tapa-oro','hilo'].forEach(function(k){
+    var c=contraste(claro[k],claro['tela-2']);assert.ok(c>=4.5,'--'+k+' sobre la tela da '+c.toFixed(2));
+  });
+  assert.ok(contraste(claro.foil,claro['tela-2'])>=3,'el título dorado sobre la tela: '+contraste(claro.foil,claro['tela-2']).toFixed(2));
+  ['tapa-tx','tapa-nota'].forEach(function(k){
+    var c=contraste(claro[k],claro['cosmos-3']);assert.ok(c>=4.5,'--'+k+' sobre la mesa da '+c.toFixed(2));
+  });
+});
+
 test('el papel de noche es igual por el modo del teléfono que forzado en Ajustes',function(){
   var i=css.indexOf('@media (prefers-color-scheme: dark)'),med=vars(bloque(':root.v2:not([data-theme="light"])'));
   assert.ok(i>=0);

@@ -11,6 +11,8 @@
 /* @papel (tema claro, el de siempre si el teléfono está en claro) */
 :root.v2{
   --cosmos-1:#070B24; --cosmos-2:#0E1640; --cosmos-3:#1B2A6B; --nebulosa:#4B3FA8; --estrella:#F4F1FF; --fugaz:#FFD27A;
+  /* la tapa de tela (2.8): tela azul, galaxia, hilo dorado y el texto de la tapa (igual en los dos papeles) */
+  --tela-1:#0A1440; --tela-2:#1238A6; --galaxia:#38B6FF; --violeta:#7C5CFF; --hilo:#E9CF8F; --tapa-tx:#D8DBF0; --tapa-oro:#EED596; --tapa-nota:#B4B8D8; --foil:#E9BC5C;
   --bg:#0E1640;
   --page:#F6ECD6; --page-2:#ECDFC3; --canto:#D2B98A; --surface:#FBF5E7; --surface-2:#EFE2C6;
   --ink:#1C2440; --muted:#4A5170; --line:rgba(28,36,64,.16); --line-2:rgba(28,36,64,.28);
@@ -438,3 +440,110 @@ html{font-variation-settings:'SOFT' 100,'WONK' 0}
 }
 @media (max-width:767px){.v2 .tablist{gap:0}:root.v2 .tabs{padding:2px}}
 @media (max-width:767px){.v2 .tab.lomo .lomo-t{font-size:10px;letter-spacing:-.01em}}
+
+/* =====================================================================
+   Tapa de tela (2.8): tela tejida azul con una galaxia espiral, costura a la vista (lomo cosido a la japonesa,
+   puntada corrida alrededor, cabezadas y esquineros de tela), estrellas bordadas con la forma del brote,
+   el título en dorado estampado con un brillo que sigue al dedo y guardas con un mapa de estrellas.
+   La galaxia se dibuja una sola vez (ui/tapa.js); solo se animan transform y opacity.
+   ===================================================================== */
+.lb-mesa{--tela-trama:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Cpath d='M0 0h2v1.4H0zM2 2h2v1.4H2z' fill='%23fff' fill-opacity='.05'/%3E%3Cpath d='M0 1.4h2V2H0zM2 3.4h2V4H2z' fill='%23000' fill-opacity='.13'/%3E%3Cpath d='M2 0h1.4v2H2zM0 2h1.4v2H0z' fill='%23fff' fill-opacity='.025'/%3E%3Cpath d='M3.4 0H4v2h-.6zM1.4 2H2v2h-.6z' fill='%23000' fill-opacity='.11'/%3E%3C/svg%3E");
+  --tela-hebra:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='h'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012 .55' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 .75 0 0 0 0 .82 0 0 0 0 1 0 0 0 .16 -.03'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23h)'/%3E%3C/svg%3E")}
+.lb-escena{touch-action:none}
+.lb-gira{position:absolute;inset:0;transform-style:preserve-3d}
+.lb-tapa-f{padding:0;display:block;
+  background:var(--tela-trama),var(--tela-hebra),radial-gradient(70% 45% at 72% 22%,rgba(40,96,220,.5),transparent 70%),radial-gradient(60% 40% at 16% 90%,rgba(18,56,166,.75),transparent 70%),linear-gradient(165deg,var(--tela-2) 0%,#0F2580 44%,var(--tela-1) 100%);
+  box-shadow:inset 0 0 0 1px rgba(150,175,255,.12),inset -2px -3px 8px rgba(0,0,0,.45),inset 1px 1px 0 rgba(255,255,255,.08)}
+.lb-tapa-f::before,.lb-tapa-f::after,.lb-esq{content:none;display:none}
+.lb-tapa-f>i{position:absolute;inset:0;pointer-events:none}
+.lb-capa{will-change:transform}
+:where(.lb-capa)>i{position:absolute;inset:0}
+/* nebulosas que respiran */
+.lb-neb{inset:-12%;background:radial-gradient(38% 26% at 68% 30%,color-mix(in srgb,var(--violeta) 34%,transparent),transparent 70%),radial-gradient(34% 26% at 26% 74%,color-mix(in srgb,var(--violeta) 22%,transparent),transparent 70%);animation:lb-respira-n 9s ease-in-out infinite alternate}
+.lb-neb.b{background:radial-gradient(30% 22% at 34% 26%,color-mix(in srgb,var(--galaxia) 22%,transparent),transparent 70%),radial-gradient(28% 20% at 76% 70%,color-mix(in srgb,var(--galaxia) 16%,transparent),transparent 70%);animation-duration:11s;animation-delay:-5s}
+@keyframes lb-respira-n{from{opacity:.45}to{opacity:1}}
+/* la galaxia: inclinada como un disco visto de costado; adentro gira una vuelta cada 2 minutos */
+.lb-gal{position:absolute;inset:auto;left:53.5%;top:37%;width:132%;aspect-ratio:1;transform:translate(-50%,-50%) rotate(-22deg) scaleY(.5)}
+.lb-gal-gira{position:absolute;inset:0;animation:lb-gira 120s linear infinite;will-change:transform}
+.lb-gal-gira canvas{display:block;width:100%;height:100%}
+.lb-gal-luz{position:absolute;inset:18%;border-radius:50%;background:radial-gradient(closest-side,rgba(255,246,226,.9),rgba(56,182,255,.35) 45%,transparent);opacity:0}
+@keyframes lb-gira{to{transform:rotate(360deg)}}
+.lb-astros{opacity:.7}
+.lb-trama{background:var(--tela-trama),var(--tela-hebra);opacity:.55}
+/* un velo oscuro detrás del título y la frase: el texto siempre se lee */
+.lb-velo{background:radial-gradient(88% 31% at 53% 72%,rgba(4,8,32,.8),rgba(4,8,32,.62) 45%,rgba(4,8,32,.25) 75%,transparent 100%)}
+.lb-costura{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.lb-costura .h,.lb-bordado .h{stroke:var(--hilo)}
+.lb-costura .t1{fill:var(--tela-1)}
+/* lo que va adelante: la constelación bordada, el título y la frase */
+.lb-tapa-in{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;padding:12% 10% 0 17%;text-align:center}
+.lb-bordado-w{width:90%;margin-top:4%;will-change:transform}
+.lb-bordado{display:block;width:100%;height:auto;overflow:visible}
+.lb-tit-w{margin-top:auto;margin-bottom:21%;will-change:transform}
+.lb-tit{margin:0;font:inherit;color:var(--tapa-oro)}
+.lb-tit small{display:block;margin:0 0 2px;font:600 14px/1.2 var(--f-body);letter-spacing:.04em;color:var(--tapa-oro);opacity:1;-webkit-text-fill-color:var(--tapa-oro)}
+.lb-foil{display:block;width:min(200px,100%);height:auto;margin:0 auto;overflow:visible}
+.lb-foil-t{font:700 52px var(--f-libro);font-variation-settings:'SOFT' 100,'WONK' 0;letter-spacing:.005em}
+.lb-brillo{animation:lb-brillo 7s ease-in-out 1.4s infinite}
+@keyframes lb-brillo{0%{transform:translateX(0)}24%,100%{transform:translateX(290px)}}
+.lb-mesa.sigue .lb-brillo{animation:none}
+.lb-lema{margin:6px auto 0;max-width:15em;font:italic 500 14.5px/1.3 var(--f-libro);color:var(--tapa-tx)}
+/* el lomo: la misma tela, el hilo que lo abraza y las cabezadas arriba y abajo */
+.lb-lomo{background:
+  linear-gradient(transparent calc(7.97% - 1px),var(--hilo) calc(7.97% - 1px) calc(7.97% + 1px),transparent 0),
+  linear-gradient(transparent calc(28.99% - 1px),var(--hilo) calc(28.99% - 1px) calc(28.99% + 1px),transparent 0),
+  linear-gradient(transparent calc(50% - 1px),var(--hilo) calc(50% - 1px) calc(50% + 1px),transparent 0),
+  linear-gradient(transparent calc(71.01% - 1px),var(--hilo) calc(71.01% - 1px) calc(71.01% + 1px),transparent 0),
+  linear-gradient(transparent calc(92.03% - 1px),var(--hilo) calc(92.03% - 1px) calc(92.03% + 1px),transparent 0),
+  var(--tela-trama),linear-gradient(90deg,#060e33,#1236a0 50%,#060e33)}
+.lb-lomo::before,.lb-lomo::after{content:"";position:absolute;left:2px;right:2px;height:5px;border-radius:2px;opacity:1;
+  background:repeating-linear-gradient(90deg,var(--hilo) 0 2px,#1238A6 2px 4px);box-shadow:inset 0 -1px 0 rgba(0,0,0,.35)}
+.lb-lomo::before{top:1px}
+.lb-lomo::after{top:auto;bottom:1px}
+.lb-contra{background:var(--tela-trama),linear-gradient(165deg,#0F2580,var(--tela-1))}
+/* las guardas: el mapa de estrellas de la cara interna */
+.lb-tapa-d{background:#0F2470;overflow:hidden}
+.lb-tapa-d::before{content:none}
+.lb-guardas{position:absolute;inset:0;width:100%;height:100%}
+.lb-toca,.lb-mesa .lb-link{color:var(--tapa-tx)}
+.lb-nota{color:var(--tapa-nota)}
+@media (prefers-reduced-motion:reduce){.lb-gal-gira,.lb-neb,.lb-brillo{animation:none}}
+
+/* ---------- Prólogo con detalle (2.8): ex libris y el brote que crece ---------- */
+.lb-exlibris{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;padding:10px 14px 10px 10px;border:1px solid var(--line-2);border-radius:6px;
+  background:color-mix(in srgb,var(--surface) 70%,transparent);box-shadow:inset 0 0 0 3px color-mix(in srgb,var(--page) 85%,transparent),inset 0 0 0 4px var(--line)}
+.lb-exlibris p{margin:0;display:grid;gap:1px;min-width:0}
+.lb-exlibris small{font:600 13.5px/1.2 var(--f-body);letter-spacing:.04em;color:var(--oro-t)}
+.lb-exlibris span{font-size:15px;color:var(--muted)}
+.lb-exlibris b{font:italic 500 22px/1.2 var(--f-libro);color:var(--ink);overflow-wrap:anywhere}
+.lb-hojas .lb-exlibris input{box-shadow:none!important;border:0!important;border-bottom:1.5px dashed var(--line-2)!important;border-radius:0!important;background:transparent!important;width:100%;min-height:44px;padding:4px 0;border:0;border-bottom:1.5px dashed var(--line-2);border-radius:0;background:transparent;
+  font:italic 500 20px/1.2 var(--f-libro);color:var(--ink);caret-color:var(--azul)}
+.lb-exlibris input::placeholder{color:color-mix(in srgb,var(--ink) 35%,transparent)}
+.lb-hojas .lb-exlibris input:focus{outline:none;border-bottom-color:var(--azul)!important}
+.lb-sellito{width:46px;height:46px;transform:rotate(-8deg)}
+.lb-cab.con-brote{display:grid;grid-template-columns:1fr auto 1fr}
+.lb-cab.con-brote>:last-child{justify-self:end}
+.lb-cab .lb-brote{width:54px;height:60px;margin:-8px 0 -6px}
+.lb-brote{display:block;overflow:visible}
+.lb-brote .b0{stroke:var(--oro-t);stroke-width:1.6;opacity:.7}
+.lb-brote path{stroke:var(--bien);stroke-width:2.2}
+.lb-brote .hoja{fill:color-mix(in srgb,var(--bien) 30%,transparent)}
+.lb-brote .yema{fill:var(--bien);stroke:none}
+.lb-brote .petalos{fill:color-mix(in srgb,var(--oro) 55%,var(--page));stroke:var(--oro);stroke-width:1.1}
+.lb-brote .centro{fill:var(--oro);stroke:none}
+.lb-brote .lucero{fill:#FFD27A;stroke:none;filter:drop-shadow(0 0 3px rgba(255,210,122,.8))}
+.lb-brote g{transform-box:fill-box;transform-origin:50% 100%;transition:transform .55s cubic-bezier(.3,1.5,.5,1),opacity .3s ease}
+.lb-brote .b4,.lb-brote .b5{transform-origin:50% 50%}
+.lb-brote .b1,.lb-brote .b2,.lb-brote .b3,.lb-brote .b4,.lb-brote .b5{opacity:0;transform:scale(.15)}
+.lb-brote[data-e="1"] .b1,
+.lb-brote[data-e="2"] :is(.b1,.b2),
+.lb-brote[data-e="3"] :is(.b1,.b2,.b3),
+.lb-brote[data-e="4"] :is(.b1,.b2,.b3,.b4),
+.lb-brote[data-e="5"] :is(.b1,.b2,.b3,.b4,.b5){opacity:1;transform:none}
+.lb-brote[data-e="4"] .yema,.lb-brote[data-e="5"] .yema{opacity:0}
+.lb-brote .yema{transition:opacity .3s}
+.lb-flor{position:absolute;left:2%;top:34px;width:70px;height:78px}
+.lb-flor .lb-brote{width:100%;height:100%}
+.lb-cae{position:absolute;left:50%;top:-6px;width:18px;height:18px;margin-left:-9px;pointer-events:none;filter:drop-shadow(0 0 6px rgba(255,210,122,.9))}
+.lb-cae svg{display:block;width:100%;height:100%}
+@media (prefers-reduced-motion:reduce){.lb-brote g{transition:opacity .3s ease;transform:none!important}}

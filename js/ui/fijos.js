@@ -59,9 +59,11 @@ export function renderFijos(pc){
   var A=exAnalisis();
   if(A){
     var names=state.fijos.map(function(f){return f.nombre.toLowerCase()});
-    var sug=A.com.filter(function(c){var k=c.k.toLowerCase();return c.fijo&&!names.some(function(n){return n.indexOf(k)>=0||k.indexOf(n)>=0})});
+    /* los retiros, las transferencias y las cuotas se repiten, pero no son gastos fijos */
+    var noFijo={};(A.gas||[]).forEach(function(m){if(m.tipo==='retiro'||m.tipo==='transferencia'||m.cuota)noFijo[m.k]=1});
+    var sug=A.com.filter(function(c){var k=c.k.toLowerCase();return c.fijo&&!noFijo[c.k]&&!names.some(function(n){return n.indexOf(k)>=0||k.indexOf(n)>=0})});
     if(sug.length)o+='<div class="callout tone-coral"><h2>Cobros que se repiten en tu extracto</h2><p class="note">Parecen gastos fijos. Agregalos con un toque y después ajustá el día si hace falta.</p><div class="sugs">'
-      +sug.slice(0,6).map(function(c){var f=c.f.slice().sort(),dia=Number(f[f.length-1].slice(8,10));var cat=c.c==='Suscripciones'?'Suscripciones':c.c==='Servicios y cuentas'?'Servicios':'Otros';return '<button class="btn" type="button" data-sugf="'+esc(titulo(c.k))+'" data-sugm="'+Math.round(c.prom)+'" data-sugd="'+dia+'" data-sugc="'+esc(cat)+'">+ '+esc(titulo(c.k))+' · '+money(c.prom)+'</button>'}).join('')
+      +sug.slice(0,6).map(function(c){var f=c.f.slice().sort(),dia=Number(f[f.length-1].slice(8,10)),nom=A.nombres&&A.nombres[c.k]||titulo(c.k);var cat=c.c==='Suscripciones'?'Suscripciones':c.c==='Servicios y cuentas'?'Servicios':'Otros';return '<button class="btn" type="button" data-sugf="'+esc(nom)+'" data-sugm="'+Math.round(c.prom)+'" data-sugd="'+dia+'" data-sugc="'+esc(cat)+'">+ '+esc(nom)+' · '+money(c.prom)+'</button>'}).join('')
       +'</div></div>';
   }
   $('#fijos-out').innerHTML=o;

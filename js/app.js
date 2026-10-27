@@ -363,7 +363,8 @@ ctx.persist=persist;ctx.renderAll=renderAll;ctx.go=go;ctx.syncInputs=syncInputs;
   if(necesitaMigrar(d))await guardarCopia(d,'antes de actualizar la app');
   /* Con PIN, primero el PIN: los datos no se muestran hasta ponerlo bien */
   if(d&&pinActivo())await pedirPin();
-  if(d){arrancar(migrar(d));setStatus('Se guarda en este dispositivo.');return}
+  /* Ya migrados, se guardan enseguida: así la copia «antes de actualizar» se hace una sola vez */
+  if(d){var mig=necesitaMigrar(d);arrancar(migrar(d));if(mig)flush();setStatus('Se guarda en este dispositivo.');return}
   /* Primera vez: el libro cerrado. Al abrirlo, el prólogo y las tres preguntas del pacto. */
   function listo(st){arrancar(st);flush()}
   abrirLibro({modo:'nuevo',estado:defaults(),listo:listo,alImportar:listo,alEjemplo:function(){listo(ejemplo())}});

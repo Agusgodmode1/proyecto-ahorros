@@ -322,5 +322,7 @@ export function leerMovimientos(texto,hoy,opt){
    Lo que corregiste a mano (ex.cat) manda sobre el diccionario. */
 export function analizarMovimientos(r,ex,mapa){
   var over=Object.assign({},r.cats,ex&&ex.cat||{});
-  return EX.analizar(r.movs,{cat:over,hormiga:Number(ex&&ex.hormiga)||400,mapa:mapa});
+  var A=EX.analizar(r.movs,{cat:over,hormiga:Number(ex&&ex.hormiga)||400,mapa:mapa});
+  if(A)A.nombres=r.nombres;
+  return A;
 }

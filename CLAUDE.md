@@ -11,7 +11,7 @@ PWA para iPhone de finanzas personales de Agus (Uruguay). La publica GitHub Page
 ## Reglas al hacer cualquier cambio
 1. **Subí la versión** en `sw.js` (`VERSION`) y en `js/version.js`, con el mismo valor. Si no, el teléfono nunca recibe el cambio. Hay una prueba que controla que coincidan.
 2. **Archivo nuevo** en `css/`, `js/` o `icons/`: agregalo a `ARCHIVOS` en `sw.js` (una prueba lo controla).
-3. **Cambia la forma del estado**: subí `VERSION_ESTADO` en `js/estado.js`, agregá el paso en `migrar()` y una prueba en `tests/estado.test.js`. Nunca pierdas datos del usuario. Antes de migrar, la app guarda sola una copia (`guardarCopia`); se puede volver desde Ajustes → Copias automáticas.
+3. **Cambia la forma del estado**: subí `VERSION_ESTADO` en `js/estado.js`, agregá el paso en `migrar()` y una prueba en `tests/estado.test.js`. Nunca pierdas datos del usuario. Antes de migrar, la app guarda sola una copia (`guardarCopia`) y, ya migrado, guarda enseguida el estado nuevo (así la copia se hace una sola vez); se puede volver desde Ajustes → Copias automáticas.
 4. Corré `node --test` y dejá todo en verde antes de hacer commit.
 5. Un commit por cambio, con mensaje en español.
 

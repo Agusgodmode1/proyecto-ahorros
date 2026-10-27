@@ -183,7 +183,9 @@ function renderAlcanza(el){
 }
 export function renderCountdown(){
   var state=ctx.state,el=$('#countdown');if(!el)return;
-  if(frecDe(state.perfil&&state.perfil.cobro)==='ventas'&&num(state.plan.monto)>0&&today()<state.plan.cobro){renderAlcanza(el);return}
+  /* (2.23) por jornal tampoco hay un cobro que esperar */
+  var fqc=frecDe(state.perfil&&state.perfil.cobro);
+  if((fqc==='ventas'||fqc==='jornal')&&num(state.plan.monto)>0&&today()<state.plan.cobro){renderAlcanza(el);return}
   el.classList.remove('cd-alcanza');
   var t=today(),d=diffDays(t,state.plan.cobro),big,small,lab;
   if(d>0){big=String(d);small=(d===1?'día':'días');lab='Cobrás en'}

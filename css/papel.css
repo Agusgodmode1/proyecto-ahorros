@@ -1148,3 +1148,12 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
   .v2 #p-ajustes>.aj-ind{grid-column:1 / -1;position:static;background:none;flex-wrap:wrap}
   .v2 #p-ajustes>.aj-grupo{grid-column:1 / -1}
 }
+
+/* =====================================================================
+   Íconos de las categorías dibujados en línea, en tinta (2.15)
+   ===================================================================== */
+.v2 .cat-ico{width:34px;height:34px;border-radius:50%;background:color-mix(in srgb,var(--cc,var(--muted)) 16%,transparent);box-shadow:inset 0 0 0 1.5px var(--cc,var(--muted));color:var(--ink)}
+.v2 .cat-ico .ic{width:19px;height:19px}
+.v2 .cat-ic button{display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:transparent;box-shadow:inset 0 0 0 1px var(--line-2);color:var(--ink)}
+.v2 .cat-ic button .ic{width:22px;height:22px}
+.v2 .cat-ic button[aria-pressed="true"]{background:var(--sel);color:var(--on-sel);box-shadow:inset 0 0 0 1.5px var(--oro)}

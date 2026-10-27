@@ -29,6 +29,7 @@ PWA para iPhone de finanzas personales de Agus (Uruguay). La publica GitHub Page
 - Campos con letra de 16 px o más (si no, iOS hace zoom). Teclados numéricos con `inputmode`.
 - Todo lo que se toca mide 44 px o más (lo revisa la recorrida final página por página). Respetar `env(safe-area-inset-*)`. Nada fijo puede quedar tapado por la barra de pestañas, el micrófono o el indicador de inicio.
 - Categorías de gasto: editables (`state.categorias`, `logica/categorias.js`). Nunca una lista fija en la pantalla: usá `nombresVisibles()`, `nombreDe()` (lo que reconoce la nota, la voz o el extracto → tu categoría) y `colorDe()`. Borrar siempre pasa los gastos a otra; "Otros" no se borra.
+- Íconos de categoría (2.15, `ui/iconos.js`): cada emoji guardado (`ICONOS`) se dibuja como un ícono de línea en tinta (SVG, `icono()`), dentro de un círculo con el color de la categoría; un emoji desconocido se muestra tal cual. No se migra nada.
 - Gastos: el formulario es uno solo (`js/ui/gastos.js`) y la hoja también (`abrirHojaGasto`: la misma desde Hoy, desde «+ Gasto en esta semana» y para corregir un gasto). Al anotar se ve solo monto, nota y día: la categoría se elige sola por la nota (sigue en el formulario, oculta) y se corrige en Tarjeta. Borrar siempre ofrece "Deshacer".
 - Montos: siempre con `money()`/`money2()`/`usd()` de `ui/comun.js` (respetan el modo discreto).
 - Dólares: un gasto en US$ guarda `monto` (pesos), `usd` y `cotiz` (la del día); todas las cuentas usan `monto`. Los fijos en US$ se recalculan al cambiar la cotización (`logica/monedas.js`).

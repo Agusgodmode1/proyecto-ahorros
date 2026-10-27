@@ -138,6 +138,22 @@ export function propuesta(lectura,horas,money){
   return out;
 }
 
+/* Cómo te pagan, renglón por renglón (2.14): lo que ganás, lo que te descuentan (con su % de lo que ganás) y lo que te queda.
+   horas: {mult, hora} (lo que dedujo deducirHoras o lo que contestaste) para explicar las horas extra.
+   Devuelve {gana:[{id,nombre,monto,cantidad,porHora}], descuentos:[{id,nombre,monto,pct}], haberes, totDescuentos, liquido, cuadra, hora} */
+export function desglose(lectura,horas){
+  var t=lectura.totales,gana=[],desc=[];
+  lectura.renglones.forEach(function(r){
+    if(r.clase==='haber'){
+      var g={id:r.id,nombre:r.nombre,monto:r.importe,cantidad:r.cantidad||null,porHora:null};
+      if(r.id==='horasExtra'&&r.cantidad>0)g.porHora=Math.round(r.importe/r.cantidad*100)/100;
+      gana.push(g);
+    }else if(r.clase==='descuento')desc.push({id:r.id,nombre:r.nombre,monto:r.importe,pct:t.haberes?Math.round(r.importe/t.haberes*1000)/10:null});
+  });
+  return {gana:gana,descuentos:desc,haberes:t.haberes,totDescuentos:t.descuentos,liquido:lectura.campos.liquido,cuadra:lectura.cuadra,
+    hora:horas&&horas.hora?Math.round(horas.hora*100)/100:null,mult:horas&&horas.mult||null};
+}
+
 /* Cuánto confiar en la lectura: 'alta' si cierra la cuenta y encontró sueldo y líquido; 'media' si falta algo; 'baja' si no cierra */
 export function confianza(lectura){
   var c=lectura.campos;

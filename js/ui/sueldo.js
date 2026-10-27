@@ -19,7 +19,7 @@ import {initLector} from './lector.js';
 function fechaCorta(s){var d=parse(s);return DIA[d.getDay()]+' '+d.getDate()+' '+MES[d.getMonth()]}
 function heroHTML(Lr,lineas){
   var state=ctx.state,P=precision(state,Lr),dots='';for(var i=0;i<4;i++)dots+='<i'+(i<=P.nivel?' class="on"':'')+'></i>';
-  var a=P.falta?(/recibo|horas extra/.test(P.falta)?'control':/factura|costos/.test(P.falta)?'factura':/cobraste/.test(P.falta)?'recibo':'ajustes'):null;
+  var a=P.falta?(/recibo/.test(P.falta)?'subir':/horas extra/.test(P.falta)?'control':/factura|costos/.test(P.falta)?'factura':/cobraste/.test(P.falta)?'recibo':'ajustes'):null;
   return '<div class="card cobro-hero"><span class="cd-l">Vas a cobrar</span><div class="ch-n"><b class="pay-big">'+(P.nivel<3?'≈ ':'')+money(Lr.liquido)+'</b><span>el '+esc(fechaCorta(state.plan.cobro))+'</span></div>'
     +'<div class="mini-rec">'+lineas.map(function(l){return '<p class="'+(l[2]||'')+'"><span>'+esc(l[0])+'</span><b>'+l[1]+'</b></p>'}).join('')+'</div>'
     +'<div class="precision"><span class="pr-l">Precisión del cálculo</span><span class="pr-dots n'+P.nivel+'" aria-hidden="true">'+dots+'</span><b>'+esc(P.nombre)+'</b>'+(P.margen?'<small>± '+money(P.margen)+'</small>':'')+'</div>'
@@ -290,7 +290,7 @@ export function initSueldo(){
   $('#p-sueldo').addEventListener('toggle',function(e){var d=e.target;if(!d.matches||!d.matches('[data-sdes]'))return;var a=abiertos();a[d.getAttribute('data-sdes')]=d.open?1:0;try{localStorage.setItem(KA,JSON.stringify(a))}catch(x){}},true);
   $('#p-sueldo').addEventListener('click',function(e){
     /* «Para afinarla»: abre el desplegable que hace falta */
-    var dir=e.target.closest('[data-sdir]');if(dir){var d=$('#sd-'+dir.getAttribute('data-sdir'));if(d){d.open=true;try{d.scrollIntoView({block:'start',behavior:'smooth'})}catch(x){}}return}
+    var dir=e.target.closest('[data-sdir]');if(dir){var d=$('#sd-'+dir.getAttribute('data-sdir'));if(d&&d.hidden&&dir.getAttribute('data-sdir')==='subir')d=$('#sd-control');if(d){d.open=true;try{d.scrollIntoView({block:'start',behavior:'smooth'})}catch(x){}}return}
     var hx=e.target.closest('[data-hx]');
     if(hx){var p=ctx.state.perfil;p.horas=Object.assign({},p.horas,{preguntado:true,activo:hx.getAttribute('data-hx')==='si'});ctx.persist();ctx.renderAll();toast(p.horas.activo?'Listo: sumá tus horas extra en «Horas extra»':'Listo: sin horas extra');return}
   });

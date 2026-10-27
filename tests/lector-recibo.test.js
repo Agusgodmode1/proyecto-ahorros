@@ -1,7 +1,7 @@
 /* Lector de recibos, facturas, liquidación completa y precisión (2.12). Todos los documentos son INVENTADOS. */
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {leer,clasificar,tipoDocumento,deducirHoras,propuesta,confianza,aprenderConcepto,renglonesDeTexto} from '../js/logica/lector-recibo.js';
+import {leer,clasificar,tipoDocumento,deducirHoras,propuesta,confianza,aprenderConcepto,renglonesDeTexto,desglose} from '../js/logica/lector-recibo.js';
 import {leerFactura,liqFactura,sinIva,nuevaFactura,revisarCostos,esFactura} from '../js/logica/factura.js';
 import {liqCompleta,minutosFeriado} from '../js/logica/liquidacion.js';
 import {liq} from '../js/logica/sueldo.js';
@@ -183,4 +183,17 @@ test('la precisión sube con lo que cargás y dice qué falta',function(){
   var p3=precision(st,{liquido:31000});assert.equal(p3.nombre,'exacto');assert.equal(p3.falta,null);
   st.recibos=[{id:'r',mes:'2026-09',liquido:liq(st,true).liquido,moneda:'UYU'}];
   var p2=precision(st,{liquido:30000});assert.equal(p2.nombre,'muy bueno');assert.match(p2.falta,/octubre/);
+});
+
+test('el desglose de cómo te pagan: lo que ganás, lo que te descuentan (con su %) y lo que te queda',function(){
+  var L=leer(COLUMNAS,{}),d=desglose(L,{mult:2,hora:187.5});
+  assert.deepEqual(d.gana.map(function(g){return g.id}),['basico','horasExtra','feriado']);
+  var hx=d.gana[1];assert.equal(hx.cantidad,10);assert.equal(hx.porHora,375);
+  var bps=d.descuentos.filter(function(x){return x.id==='bps'})[0];assert.equal(bps.pct,15);
+  assert.equal(d.descuentos.filter(function(x){return x.id==='fonasa'})[0].pct,4.5);
+  assert.ok(d.descuentos.some(function(x){return x.id==='sindicato'}));
+  assert.equal(d.haberes,52500);assert.equal(d.liquido,40525.44);assert.equal(d.cuadra,true);
+  assert.equal(d.hora,187.5);assert.equal(d.mult,2);
+  var s=gananSuman(d);assert.equal(s,52500,'lo que ganás suma el total de haberes');
+  function gananSuman(x){return Math.round(x.gana.reduce(function(t,g){return t+g.monto},0)*100)/100}
 });

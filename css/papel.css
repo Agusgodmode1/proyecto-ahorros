@@ -1016,3 +1016,24 @@ html.fl-mueve .flechas .fl{opacity:.3}
 html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .flechas{display:none}
 /* en la compu, en los capítulos ya están las flechas grandes del pie */
 @media (min-width:1100px){html:not(.lb-abierto) .flechas{display:none}}
+
+/* =====================================================================
+   Sueldo: «Subí tu recibo de sueldo» arriba de todo y el desglose de cómo te pagan (2.14)
+   ===================================================================== */
+.v2 .sd-subir h2{margin:0}
+.v2 .desglose{display:grid;gap:2px;padding:var(--e3) var(--e4);border-radius:var(--r-m);background:color-mix(in srgb,var(--surface-2) 60%,transparent);font-variant-numeric:lining-nums tabular-nums}
+.v2 .dg-h{margin:var(--e3) 0 2px;font:600 14px var(--f-body);color:var(--oro-t);letter-spacing:.02em}
+.v2 .desglose .dg-h:first-child{margin-top:0}
+.v2 .dg-l{list-style:none;margin:0;padding:0}
+.v2 .dg-l li{display:flex;justify-content:space-between;align-items:baseline;gap:var(--e3);padding:6px 0;border-bottom:1px dashed var(--line)}
+.v2 .dg-n{display:flex;flex-direction:column;min-width:0;font-size:16px;color:var(--ink)}
+.v2 .dg-n small{font-size:13.5px;color:var(--muted);margin-top:1px}
+.v2 .dg-l b{font-weight:600;color:var(--ink);white-space:nowrap}
+.v2 .dg-t{display:flex;justify-content:space-between;margin:4px 0 0;font-size:15px;color:var(--muted)}
+.v2 .dg-t b{color:var(--ink);font-weight:700}
+.v2 .dg-fin{display:flex;justify-content:space-between;align-items:baseline;margin:var(--e2) 0 0;padding-top:var(--e2);border-top:1.5px solid var(--line-2);font-size:16px;color:var(--ink)}
+.v2 .dg-fin b{font:600 var(--t5)/1.1 var(--f-libro);color:var(--azul)}
+.v2 .lec-prop>.dg-h{margin-bottom:0}
+.v2 .sd-subir .lec-prop{border:0;padding:0;background:transparent}
+.v2 .dg-t b,.v2 .dg-fin b{white-space:nowrap}
+.v2 .dg-t span,.v2 .dg-fin span{min-width:0}

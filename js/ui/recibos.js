@@ -6,7 +6,7 @@ import {CAMPOS,leerRecibo,renglones,aprenderPlantilla,compararRecibo,enPesosReci
 import {mesTrabajo,ingresoDe} from '../logica/sueldo.js';
 import {cotizacion} from '../logica/monedas.js';
 import {ctx,$,money,usd,esc,cap,toast,armar} from './comun.js';
-import {lectorHTML,lectorAbierto} from './lector.js';
+import {lectorHTML,lectorAbierto,subirHTML} from './lector.js';
 
 var PDFJS='../../vendor/pdfjs-6.3.289/';
 var edit=null,abierto=null; /* edit = {datos, fuente, lineas, detectado, empleador} */
@@ -73,8 +73,12 @@ function comparacion(r){
 export function renderRecibos(){
   var el=$('#recibos-out');if(!el)return;
   var st=ctx.state,l=(st.recibos||[]).slice().sort(function(a,b){return a.mes<b.mes?1:-1}),mt=mesTrabajo(st);
+  /* (2.14) con sueldo en Uruguay (o personalizado), el lector va arriba de todo: «Subí tu recibo de sueldo» */
+  var ing=st.perfil&&st.perfil.ingreso||{},arriba=!ing.factura&&ing.tipo!=='variable',sub=$('#sd-subir');
+  if(sub){sub.hidden=!arriba;if(arriba)sub.innerHTML=subirHTML(l.some(function(r){return r.mes===mt}))}
   var h='';
   if(edit)h+=formRecibo();
+  else if(arriba)h+='<p class="note">Para sumar un recibo, usá <b>«Subí tu recibo de sueldo»</b>, arriba de todo, o <button class="linklike" type="button" data-reca="manual">cargalo a mano</button>.</p>';
   else h+=lectorHTML();
   if(l.length)h+='<ul class="list rec-lista">'+l.map(function(r){
     var abiertoEste=abierto===r.id;
@@ -86,7 +90,15 @@ export function renderRecibos(){
   el.innerHTML=h;
 }
 
+/* «Cargar a mano» desde arriba: se abre «¿Te pagaron bien?» con el formulario */
+function aMano(){
+  edit={datos:{mes:mesTrabajo(ctx.state),moneda:ingresoDe(ctx.state).moneda},fuente:'manual'};
+  var d=$('#sd-control');if(d)d.open=true;
+  renderRecibos();var f=$('#rec-form');if(f)try{f.scrollIntoView({block:'start',behavior:'smooth'})}catch(e){}
+  var m=$('#rec-nominal');if(m)try{m.focus({preventScroll:true})}catch(e){}
+}
 export function initRecibos(){
+  var sub=$('#sd-subir');if(sub)sub.addEventListener('click',function(e){if(e.target.closest('[data-reca="manual"]'))aMano()});
   var el=$('#recibos-out');
   el.addEventListener('click',function(e){
     var b;

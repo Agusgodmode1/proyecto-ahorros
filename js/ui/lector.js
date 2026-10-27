@@ -5,7 +5,7 @@
    Las cuentas son puras (logica/lector-recibo.js). El PDF nunca se guarda. */
 import {num,uid} from '../logica/util.js';
 import {MESL} from '../logica/fechas.js';
-import {leer,deducirHoras,propuesta,aprenderConcepto,renglonesDeTexto,tipoDocumento,CONCEPTOS} from '../logica/lector-recibo.js';
+import {leer,deducirHoras,propuesta,desglose,aprenderConcepto,renglonesDeTexto,tipoDocumento,CONCEPTOS} from '../logica/lector-recibo.js';
 import {mesTrabajo,reglasHoras,ingresoDe} from '../logica/sueldo.js';
 import {precision} from '../logica/precision.js';
 import {liqReal} from '../logica/recibos.js';
@@ -25,6 +25,15 @@ function multTxt(m){return m===2?'Al doble (×2)':m===1.5?'Una vez y media (×1,
 /* ---------- La entrada: PDF, texto o ejemplo ---------- */
 export function lectorHTML(){
   if(S)return propuestaHTML();
+  return entradaHTML();
+}
+/* (2.14) «Subí tu recibo de sueldo», arriba de todo en Sueldo: lo lee, muestra cómo te pagan y pregunta lo que no está claro */
+export function subirHTML(hayEsteMes){
+  if(S)return '<div class="sec"><h2>Así te pagan</h2><p class="note">Lo leí en tu teléfono. Revisá que esté bien; si un renglón no es lo que dice, corregilo y lo recuerdo para la próxima.</p></div>'+propuestaHTML();
+  return '<div class="sec"><h2>'+(hayEsteMes?'¿Te llegó otro recibo?':'Subí tu recibo de sueldo')+'</h2><p class="note">'
+    +(hayEsteMes?'Subilo y lo sumo a tus recibos: cada uno manda sobre la estimación de ese mes.':'Lo leo, te muestro cómo te pagan cada cosa (tu hora, las extras y cada descuento) y, si tengo dudas, te pregunto. Con eso hago todas las cuentas.')+'</p></div>'+entradaHTML();
+}
+function entradaHTML(){
   return '<div class="lector stack"><div class="row-btns"><label class="btn primary filebtn">Leer un PDF<input type="file" class="sr-only" accept="application/pdf,.pdf" id="lec-pdf"></label>'
     +'<button class="btn" type="button" data-lec="pegar" aria-expanded="'+pegar+'">Pegar el texto</button><button class="btn" type="button" data-reca="manual">Cargar a mano</button></div>'
     +(pegar?'<div class="field"><label for="lec-texto" class="sub-l">El texto del recibo</label><textarea id="lec-texto" rows="7" placeholder="En el iPhone: abrí la foto del recibo, mantené apretado el texto, tocá Copiar y pegalo acá."></textarea></div>'
@@ -69,14 +78,34 @@ function pregunta(clave,titulo,ops,actual){
 function propuestaHTML(){
   var L=S.L,H=S.H,R=reglasHoras(ctx.state),moneyR=function(n){return money(n)};
   var hx=H&&S.resp.mult?{mult:S.resp.mult,hora:H.valorHora/S.resp.mult,seguro:true,feriado:S.resp.feriado?{mult:S.resp.feriado}:null}:H;
-  var enc=propuesta(L,hx,moneyR).map(function(x){return esc(x.texto)}).join(', ');
-  var h='<div class="lec-prop stack" id="lec-prop"><p class="lec-enc"><b>Encontré:</b> '+(enc||'no reconocí los valores principales')+'.</p>'
-    +'<p class="note">'+(L.cuadra?'<span class="ok-t">✓ La cuenta cierra:</span> haberes − descuentos = líquido.':'<span class="ojo-t">Ojo:</span> haberes ('+money(L.totales.haberes)+') − descuentos ('+money(L.totales.descuentos)+') no da el líquido ('+money(L.totales.liquido)+'). Revisá los renglones.')+'</p>'
+  /* (2.14) el desglose de cómo te pagan, renglón por renglón */
+  var D=desglose(L,hx),nf=function(x){return String(Math.round(num(x)*100)/100).replace('.',',')};
+  var fila=function(n,sub,m,neg){return '<li><span class="dg-n">'+esc(n)+(sub?'<small>'+sub+'</small>':'')+'</span><b>'+(neg?'− ':'')+money2(m)+'</b></li>'};
+  var h='<div class="lec-prop stack" id="lec-prop">';
+  if(D.gana.length||D.descuentos.length){
+    h+='<div class="desglose"><p class="dg-h">lo que ganás</p><ul class="dg-l">'
+      +D.gana.map(function(g){
+        var sub='';
+        if(g.id==='basico')sub='por mes'+(D.hora?' · tu hora vale '+money2(D.hora):'');
+        else if(g.id==='horasExtra'&&g.cantidad)sub=nf(g.cantidad)+' h × '+money2(g.porHora)+(D.mult?' · '+multTxt(D.mult).toLowerCase()+' de tu hora':'');
+        else if(g.cantidad)sub='cantidad '+nf(g.cantidad);
+        return fila(g.nombre,sub,g.monto);
+      }).join('')+'</ul>'
+      +(D.haberes?'<p class="dg-t"><span>Ganás en total</span><b>'+money2(D.haberes)+'</b></p>':'')
+      +(D.descuentos.length?'<p class="dg-h">lo que te descuentan</p><ul class="dg-l">'+D.descuentos.map(function(d){return fila(d.nombre,d.pct!=null?nf(d.pct)+' % de lo que ganás':'',d.monto,true)}).join('')+'</ul>':'')
+      +(D.totDescuentos?'<p class="dg-t"><span>Te descuentan en total</span><b>− '+money2(D.totDescuentos)+'</b></p>':'')
+      +(D.liquido?'<p class="dg-fin"><span>Te queda en mano</span><b>'+money2(D.liquido)+'</b></p>':'')+'</div>';
+  }else{
+    var enc=propuesta(L,hx,moneyR).map(function(x){return esc(x.texto)}).join(', ');
+    h+='<p class="lec-enc"><b>Encontré:</b> '+(enc||'no reconocí los valores principales')+'.</p>';
+  }
+  h+='<p class="note">'+(L.cuadra?'<span class="ok-t">✓ La cuenta cierra:</span> lo que ganás − lo que te descuentan = lo que te queda.':'<span class="ojo-t">Ojo:</span> lo que ganás ('+money(L.totales.haberes)+') − los descuentos ('+money(L.totales.descuentos)+') no da lo que cobrás ('+money(L.totales.liquido)+'). Revisá los renglones.')+'</p>'
     +'<div class="field"><label for="lec-mes" class="sub-l">Es el recibo de</label><input id="lec-mes" type="month" value="'+esc(S.mes)+'"></div>'
     +'<details class="lec-ren"><summary>Ver los '+L.renglones.length+' renglones y corregir</summary><ul class="list">'
     +L.renglones.map(function(r){return '<li><div class="lec-r"><select data-lecr="'+r.i+'" aria-label="Qué es: '+esc(r.linea.slice(0,40))+'">'+opcionesConcepto(r.id)+'</select><b>'+money(r.importe)+'</b></div><small>'+esc(r.linea.replace(/\s+/g,' ').slice(0,70))+(r.cantidad?' · cantidad '+String(r.cantidad).replace('.',','):'')+(r.aprendido?' · aprendido':'')+'</small></li>'}).join('')
     +'</ul></details>';
   /* lo que no está claro, con opciones simples */
+  if(H)h+='<p class="dg-h">antes de hacer las cuentas, contame</p>';
   if(H&&H.opciones&&H.opciones.length>1)h+=pregunta('mult','¿Te pagan las horas extra '+(H.opciones.indexOf(2)>=0?'al doble':'así')+'? (cada hora extra vale '+money2(H.valorHora)+')',H.opciones.map(function(m){return [m,multTxt(m)]}),S.resp.mult);
   else if(H&&H.sinCoincidencia)h+='<p class="note">La hora extra vale '+money2(H.valorHora)+', pero no coincide con ninguna regla común. Revisá el sueldo básico o cargá las reglas en Mi perfil.</p>';
   if(H){
@@ -87,7 +116,7 @@ function propuestaHTML(){
   }
   var P=precision(Object.assign({},ctx.state,{recibos:[{mes:S.mes,liquido:L.campos.liquido,moneda:'UYU'}]}),{liquido:num(L.campos.liquido)});
   h+='<p class="note">Es una estimación: guardado este recibo, el cálculo de '+esc(mesTxt(S.mes).toLowerCase())+' queda <b>'+P.nombre+'</b>'+(P.margen?' (± '+money(P.margen)+')':'')+'. Los demás meses se calculan con las reglas que confirmes.</p>'
-    +'<div class="row-btns"><button class="btn primary" type="button" data-lec="guardar-todo">Guardar en mi perfil y como recibo de '+esc(MESL[Number(S.mes.slice(5,7))-1])+'</button><button class="btn" type="button" data-lec="guardar-recibo">Solo guardar el recibo</button><button class="btn quiet" type="button" data-lec="cancelar">Cancelar</button></div></div>';
+    +'<div class="row-btns"><button class="btn primary" type="button" data-lec="guardar-todo">Listo: usar este recibo para mis cálculos</button><button class="btn" type="button" data-lec="guardar-recibo">Solo guardar el recibo de '+esc(MESL[Number(S.mes.slice(5,7))-1])+'</button><button class="btn quiet" type="button" data-lec="cancelar">Cancelar</button></div></div>';
   return h;
 }
 

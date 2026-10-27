@@ -3,6 +3,7 @@
 import {num,uid} from '../logica/util.js';
 import {horasPorDefecto,tarifas,TIPOS_INGRESO} from '../logica/sueldo.js';
 import {cobroDesde} from '../logica/plan.js';
+import {FRECUENCIAS,frecDe} from '../logica/frecuencia.js';
 import {ctx,$,today,esc,money2,fLarga,fMin} from './comun.js';
 import {aplicarFeriados} from './feriados.js';
 import {PUESTOS,puesto} from '../logica/puestos.js';
@@ -62,9 +63,14 @@ function pintar(){
       +'<div class="field"><span class="lab">¿Qué tipo de ingreso tenés?</span>'+seg('tipo',ti,TIPOS)+'<small>'+AYUDA_TIPO[ti]+'</small></div>'
       +(ti!=='uy'?'<div class="field"><span class="lab">¿En qué moneda cobrás?</span>'+seg('moneda',d.ingreso.moneda,[['UYU','Pesos'],['USD','Dólares']])+(usd?'<small>Lo paso a pesos con la cotización del dólar que cargás en Ajustes.</small>':'')+'</div>':'')
       +campo('w-nominal',NOMINAL_TXT[ti][0],moneyIn('w-nominal',d.nominal,usd),NOMINAL_TXT[ti][1])
-      +'<div class="field"><span class="lab">¿Qué día cobrás?</span>'+seg('cobro',d.cobro.tipo,[['habil5','5.º día hábil'],['ultimoHabil','Último día hábil'],['fijo','Un día fijo']])+'</div>'
+      +'<div class="field"><span class="lab">¿Cada cuánto cobrás?</span>'+seg('frec',frecDe(d.cobro),FRECUENCIAS)+'<small>Si cobrás cada 15 días o cada semana, igual poné arriba lo de un mes: lo reparto solo.</small></div>'
+      +(frecDe(d.cobro)==='mensual'?''
+        +'<div class="field"><span class="lab">¿Qué día cobrás?</span>'+seg('cobro',d.cobro.tipo,[['habil5','5.º día hábil'],['ultimoHabil','Último día hábil'],['fijo','Un día fijo']])+'</div>'
       +(d.cobro.tipo==='fijo'?campo('w-dia','¿Qué día del mes?','<input id="w-dia" type="number" inputmode="numeric" min="1" max="31" step="1" value="'+(d.cobro.dia||1)+'">','Si el mes es más corto, uso el último día.'):'')
       +(d.cobro.tipo!=='fijo'?'<div class="field"><span class="lab">Los feriados laborables (Carnaval, Turismo, 12 de octubre…), ¿cuentan como día hábil para tu cobro?</span>'+seg('labhabil',d.cobro.laborableHabil!==false,[[true,'Sí, son días comunes'],[false,'No']])+'<small>En Uruguay solo 5 feriados son no laborables: 1/1, 1/5, 18/7, 25/8 y 25/12. Los demás son días comunes.</small></div>':'')
+        :frecDe(d.cobro)==='quincenal'?'<div class="grid2 wiz-grid">'+campo('w-q1','Primer día','<input id="w-q1" type="number" inputmode="numeric" min="1" max="31" step="1" value="'+((d.cobro.dias||[1,15])[0])+'">')+campo('w-q2','Segundo día','<input id="w-q2" type="number" inputmode="numeric" min="1" max="31" step="1" value="'+((d.cobro.dias||[1,15])[1])+'">','31 = el último día del mes.')+'</div>'
+        :frecDe(d.cobro)==='semanal'?'<div class="field"><span class="lab">¿Qué día de la semana?</span>'+seg('dow',d.cobro.dow===undefined?5:d.cobro.dow,[[1,'lu'],[2,'ma'],[3,'mi'],[4,'ju'],[5,'vi'],[6,'sá'],[0,'do']])+'</div>'
+        :'<div class="field"><span class="lab">¿Para cuántos días armo cada plan?</span>'+seg('horiz',d.cobro.horizonte||7,[[7,'Una semana'],[14,'Dos semanas']])+'<small>Lo que cobres en el medio lo sumás en Hoy con «Cobré».</small></div>')
       +'<p class="note" id="w-prox"></p>';
   }else if(paso===3){
     var H=d.horas,on=H.activo!==false,variable=sinHoras(d.ingreso.tipo);
@@ -124,7 +130,7 @@ function leerHM(id){return Math.max(0,Math.round(num(v(id+'-h'))))*60+Math.max(0
 /* Lee lo que hay en la pantalla del paso actual */
 function leer(){
   if(paso===1)d.nombre=v('w-nombre').trim().slice(0,30);
-  if(paso===2){d.nominal=num(v('w-nominal'));if(d.cobro.tipo==='fijo'&&$('#w-dia'))d.cobro.dia=Math.min(31,Math.max(1,Math.round(num(v('w-dia')))||1))}
+  if(paso===2){d.nominal=num(v('w-nominal'));if($('#w-q1'))d.cobro.dias=[v('w-q1'),v('w-q2')].map(function(x){return Math.min(31,Math.max(1,Math.round(num(x))||1))}).sort(function(a,b){return a-b});if(d.cobro.tipo==='fijo'&&$('#w-dia'))d.cobro.dia=Math.min(31,Math.max(1,Math.round(num(v('w-dia')))||1))}
   if(paso===3&&d.horas.activo!==false&&$('#w-div')){
     var H=d.horas;
     H.divisor=num(v('w-div'))||240;H.multSem=num(v('w-msem'));H.multFin=num(v('w-mfin'));
@@ -183,6 +189,9 @@ export function initPerfil(){
       leer();
       var k=b.getAttribute('data-w'),val=b.getAttribute('data-val');
       if(k==='cobro')d.cobro.tipo=val;
+      if(k==='frec')d.cobro.frecuencia=val;
+      if(k==='dow')d.cobro.dow=Number(val);
+      if(k==='horiz')d.cobro.horizonte=Number(val);
       if(k==='tipo')d.ingreso.tipo=val;
       if(k==='moneda')d.ingreso.moneda=val;
       if(k==='dividido')d.horas.finDividido=val==='true';
@@ -219,7 +228,9 @@ export function initPerfil(){
 /* Resumen para Ajustes */
 export function resumenPerfil(st){
   var p=st.perfil,H=p.horas,c=p.cobro;
-  var cobro=c.tipo==='ultimoHabil'?'el último día hábil':c.tipo==='fijo'?'el día '+c.dia:'el 5.º día hábil';
+  var DS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],fq=frecDe(c),qd=c.dias||[1,15];
+  var cobro=fq==='semanal'?'cada '+DS[c.dow===undefined?5:c.dow]:fq==='quincenal'?'el '+qd[0]+' y el '+(qd[1]>=31?'último día':qd[1])+' de cada mes':fq==='jornal'?'por día (planes de '+(c.horizonte||7)+' días)'
+    :c.tipo==='ultimoHabil'?'el último día hábil':c.tipo==='fijo'?'el día '+c.dia:'el 5.º día hábil';
   var ti=p.ingreso&&p.ingreso.factura?'factura':(p.ingreso&&p.ingreso.tipo)||'uy',tipoTxt=TIPOS.filter(function(t){return t[0]===ti})[0][1].toLowerCase()+(ti!=='uy'&&p.ingreso.moneda==='USD'?', en dólares':'');
   return (p.nombre?'<b>'+esc(p.nombre)+'</b> · ':'')+tipoTxt+' · cobrás '+cobro+' · '
     +(sinHoras(ti)||H.activo===false?'sin horas extra':'hora normal = sueldo ÷ '+num(H.divisor)+', extra ×'+String(H.multSem).replace('.',',')+', finde ×'+String(H.multFin).replace('.',',')+', cuenta si pasás '+fMin(num(H.umbral)));

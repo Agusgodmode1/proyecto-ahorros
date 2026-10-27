@@ -1,5 +1,6 @@
 /* El Libro del Ahorro: la tapa en 3D (se abre y se cierra), el prólogo y el pacto.
-   El prólogo son las primeras 5 páginas del libro: propósito, ¿con cuánta plata?, ¿cuánto ahorrar?, ¿qué día cobrás? y el pacto.
+   El prólogo son las primeras 6 páginas del libro: propósito, ¿con cuánta plata?, ¿toda se puede gastar? (2.17, la plata apartada),
+   ¿cuánto ahorrar?, ¿qué día cobrás? y el pacto.
    Modos:
    - 'nuevo': la primera vez. Tapa (con importar o ver el ejemplo) → apertura → las 5 páginas → «Sellar el pacto».
    - 'ciclo': al cobrar. Solo las 3 preguntas y el pacto nuevo; o.antes(estado) cierra el ciclo justo antes de sellar.
@@ -12,12 +13,14 @@ import {parse,diffDays,MESL,DIAL} from '../logica/fechas.js';
 import {cotizacion} from '../logica/monedas.js';
 import {planCalc} from '../logica/plan.js';
 import {disponible,maxAhorro} from '../logica/saldo.js';
-import {totalPacto,validarPacto,cuentaPacto,sellarPacto,sugerirCobro,atajosPacto,pasoAhorro,mesCalendario,previaAjuste,aplicarAjuste} from '../logica/pacto.js';
+import {totalPacto,validarPacto,cuentaPacto,sellarPacto,sugerirCobro,atajosPacto,pasoAhorro,mesCalendario,previaAjuste,aplicarAjuste,TIPOS_APARTADO,normApartado,totalApartado,totalLibre,previaApartado,aplicarApartado,deshacerApartado} from '../logica/pacto.js';
 import {PROLOGO} from '../logica/capitulos.js';
+import {atajosSupervivencia} from '../logica/supervivencia.js';
+import {FRECUENCIAS,frecDe} from '../logica/frecuencia.js';
 import {aplicarFeriados} from './feriados.js';
 import {montarImportador} from './respaldo.js';
 import {marcarTour} from './tour.js';
-import {$,today,money,usd,esc} from './comun.js';
+import {$,today,money,usd,esc,toastAccion} from './comun.js';
 import {sonar} from './sonido.js';
 import {girar,terminar as terminarPase} from './pase.js';
 import {costuraHTML,bordadoHTML,tituloHTML,guardasHTML,montarTapa,soltarTapa,tapaQuieta,fueArrastre,avivar} from './tapa.js';
@@ -142,7 +145,7 @@ function hojear(){return o&&o.modo==='hojear'}
 /* Hasta dónde creció el brote en cada página (en hojear ya está todo contestado y el pacto, sellado) */
 function etapa(id){
   if(id==='q1')return hojear()||total()>0?1:0;
-  return id==='q2'?2:id==='q3'?3:id==='pacto'?(hojear()?5:4):0;
+  return id==='qa'?1:id==='q2'?2:id==='q3'?3:id==='pacto'?(hojear()?5:4):0;
 }
 function crecer(){
   var b=q('.lb-brote');if(!b)return;
@@ -163,7 +166,7 @@ function actuales(){var pc=planCalc(st);return {tenes:Math.round(Math.max(0,disp
 function pagHTML(id){
   var ciclo=o.modo==='ciclo',n=PROLOGO.indexOf(id)+1;
   var folio='<p class="lb-folio">— '+n+' —</p>';
-  var conBrote=id==='q1'||id==='q2'||id==='q3';
+  var conBrote=id==='q1'||id==='qa'||id==='q2'||id==='q3';
   var cab='<div class="lb-cab'+(conBrote?' con-brote':'')+'"><span class="lb-cap">'+(ciclo?'pacto nuevo':id==='pacto'?'el pacto':'prólogo')+'</span>'
     +(conBrote?broteHTML(Math.min(broteVisto,3)):'')
     +(hojear()||ciclo?'<button class="lb-link" type="button" data-lb="cerrar-libro">'+(ciclo?'Ahora no':'Ir a Hoy')+'</button>':conBrote?'<span></span>':'')+'</div>';
@@ -181,9 +184,11 @@ function pagHTML(id){
     h=vistaHTML(id)+acc;
   }else if(id==='q1'){
     var ed=hojear();
+    var apH=totalApartado(st);
     h='<h1 class="lb-h lb-tinta" id="lb-h">'+tinta(ed?'¿Cuánta plata tenés hoy?':'¿Con cuánta plata empezás el desafío?')+'</h1>'
-      +'<p class="lb-p">'+(ciclo?'Te puse lo que te quedó del pacto anterior ('+money(o.sobra)+') más tu cobro '+(o.real?'':'estimado ')+'('+money(o.cobro)+'). Cambialo por lo que tengas de verdad.'
-        :ed?'Si gastaste algo sin anotarlo, poné lo que tenés de verdad: anoto la diferencia y se recalcula todo.':'Todo lo que tenés hoy, en la cuenta y en efectivo.')+'</p>'
+      +'<p class="lb-p">'+(ciclo?'Te puse lo que te quedó del pacto anterior ('+money(o.sobra)+') más tu cobro '+(o.real?'':'estimado ')+'('+money(o.cobro)+')'+(apH>0?' y lo que tenías apartado ('+money(apH)+')':'')+'. Cambialo por lo que tengas de verdad.'
+        :ed?'Si gastaste algo sin anotarlo, poné lo que tenés de verdad: anoto la diferencia y se recalcula todo.'+(apH>0?' Contá también lo apartado ('+money(apH)+'): lo descuento solo.':'')
+        :'Todo lo que tenés hoy, en la cuenta y en efectivo, aunque una parte no sea para gastar.')+'</p>'
       +'<div class="lb-campo"><label for="lb-pesos">Tengo hoy</label><div class="lb-monto"><span>$</span><input id="lb-pesos" type="number" inputmode="decimal" min="0" step="any" placeholder="0" value="'+esc(D.pesos)+'"></div></div>'
       +'<label class="lb-check"><input type="checkbox" id="lb-conusd"'+(D.conUsd?' checked':'')+'> También tengo dólares</label>'
       +'<div class="lb-dos" id="lb-usd-box"'+(D.conUsd?'':' hidden')+'>'
@@ -192,21 +197,30 @@ function pagHTML(id){
       +'<p class="lb-total" id="lb-total" aria-live="polite"></p>'
       +(ed?'<p class="lb-queda" id="lb-queda" aria-live="polite"></p>':'')
       +'<p class="lb-err" id="lb-err" role="alert" hidden></p>'+(ed?accEdit():acc);
+  }else if(id==='qa'){
+    h=hojear()&&E.edit!=='qa'?'':apartadoHTML();
   }else if(id==='q2'){
-    var ed2=hojear(),tot=ed2?actuales().tenes:total(),mx=ed2?actuales().max:Math.round(tot),paso=pasoAhorro(tot),at=atajosPacto(tot).filter(function(a){return a.monto<=mx});
+    var ed2=hojear(),apQ=ed2?0:apartadoD(),tot=ed2?actuales().tenes:libre(),mx=ed2?actuales().max:Math.round(tot),paso=pasoAhorro(tot),sv=!ed2&&superD();
+    var at=(sv?atajosSupervivencia(tot,cuentaPacto(st,datos(),today()).fijos).map(function(a){return {monto:a.monto,pct:null,t:a.t}}):atajosPacto(tot)).filter(function(a){return a.monto<=mx});
     h='<h1 class="lb-h lb-tinta" id="lb-h">'+tinta('¿Cuánto de eso querés ahorrar?')+'</h1>'
-      +'<p class="lb-p">Por más mínimo que sea. '+(ed2?'Hoy tenés':'Empezás con')+' <b>'+money(tot)+'</b>.</p>'
+      +(sv?superHTML():'')
+      +'<p class="lb-p">'+(sv?'Si querés, guardá algo simbólico. ':'Por más mínimo que sea. ')+(ed2?'Hoy tenés':apQ>0?'Para usar tenés':'Empezás con')+' <b>'+money(tot)+'</b>'+(apQ>0?' (sin contar los '+money(apQ)+' apartados)':'')+'.</p>'
       +'<div class="lb-campo"><div class="lb-pct"><label for="lb-ahorro" class="lb-l">Quiero guardar</label><b id="lb-pct-n"></b></div>'
       +'<div class="lb-monto chico"><span>$</span><input id="lb-ahorro" type="number" inputmode="numeric" min="0" step="1" value="'+esc(D.ahorro)+'"></div></div>'
       +'<input class="lb-rango" id="lb-rango" type="range" min="0" max="'+Math.max(0,mx)+'" step="'+paso+'" value="'+Math.min(Math.round(num(D.ahorro)),Math.max(0,mx))+'" aria-label="Cuánto querés ahorrar">'
-      +(at.length?'<div class="lb-chips" role="group" aria-label="Atajos">'+at.map(function(a){return '<button class="lb-chip" type="button" data-lb="atajo" data-val="'+a.monto+'">'+a.pct+' %</button>'}).join('')+'</div>':'')
+      +(at.length?'<div class="lb-chips" role="group" aria-label="Atajos">'+at.map(function(a){return '<button class="lb-chip" type="button" data-lb="atajo" data-val="'+a.monto+'">'+(a.t?esc(a.t)+(a.monto?' · '+money(a.monto):''):a.pct+' %')+'</button>'}).join('')+'</div>':'')
       +'<p class="lb-queda" id="lb-queda" aria-live="polite"></p>'
       +'<div id="lb-avisos"></div>'
       +'<p class="lb-err" id="lb-err" role="alert" hidden></p>'+(ed2?accEdit():acc);
   }else if(id==='q3'){
-    var sg=sugerirCobro(st,today());
-    h='<h1 class="lb-h lb-tinta" id="lb-h">'+tinta('¿Qué día volvés a cobrar?')+'</h1>'
-      +'<p class="lb-p">'+(sg.perfil?'Según tu perfil, cobrás el <b>'+esc(fLarga(sg.fecha))+'</b>. Si esta vez es otro día, tocalo.'
+    var sg=sugerirCobro(st,today(),D.frec),fq=D.frec,edQ3=hojear();
+    h='<h1 class="lb-h lb-tinta" id="lb-h">'+tinta(fq==='jornal'?'¿Hasta cuándo armamos el plan?':'¿Qué día volvés a cobrar?')+'</h1>'
+      +(edQ3?'':'<div class="lb-campo"><span class="lb-l">¿Cada cuánto cobrás?</span><div class="lb-chips" role="group" aria-label="¿Cada cuánto cobrás?">'
+        +FRECUENCIAS.map(function(f){return '<button class="lb-chip" type="button" data-lb="frec" data-f="'+f[0]+'" aria-pressed="'+(fq===f[0])+'">'+esc(f[1])+'</button>'}).join('')+'</div></div>')
+      +'<p class="lb-p">'+(fq==='jornal'?'Cobrás por día o cuando sale: armemos el plan por una semana (o tocá otro día). Lo que cobres en el medio lo sumás en Hoy con «Cobré», y guardo solo el mismo porcentaje.'
+        :fq==='semanal'?'Tocá el día en que cobrás esta vez. Después, cada semana el mismo día.'
+        :fq==='quincenal'?'Tocá el día de tu próximo cobro. El otro de la quincena lo calculo solo (el 1 va con el 15, y el último día del mes con el 15).'
+        :sg.perfil?'Según tu perfil, cobrás el <b>'+esc(fLarga(sg.fecha))+'</b>. Si esta vez es otro día, tocalo.'
         :'Te marqué el <b>5.º día hábil</b> del mes (contando solo los feriados no laborables). Si cobrás otro día, tocalo.')+'</p>'
       +'<div class="lb-cal" id="lb-cal"></div>'
       +'<p class="lb-queda" id="lb-cobro-txt" aria-live="polite"></p>'
@@ -220,7 +234,8 @@ function accEdit(){return '<div class="lb-acc"><button class="lb-btn chico" type
 /* Modo hojear: la pregunta con tu respuesta de hoy y «Cambiar» */
 function vistaHTML(id){
   var A=actuales(),p=st.plan,h,val,nota;
-  if(id==='q1'){h='¿Cuánta plata tenés hoy?';val=money(A.tenes);nota='Empezaste este pacto con '+money(num(p.monto))+' el '+fLarga(p.inicio)+'. Esto es lo que te queda según lo que anotaste.'}
+  if(id==='qa')return vistaApartado();
+  if(id==='q1'){var apV=totalApartado(st);h='¿Cuánta plata tenés hoy?';val=money(A.tenes);nota='Empezaste este pacto con '+money(num(p.monto))+' el '+fLarga(p.inicio)+'. Esto es lo que te queda según lo que anotaste.'+(apV>0?' Además tenés '+money(apV)+' apartados, que no se tocan.':'')}
   else if(id==='q2'){h='¿Cuánto querés ahorrar?';val=money(A.ahorro);nota=num(p.monto)>0?'Es el '+pctTxt(A.ahorro/Math.max(1,num(p.monto)))+' de lo que tenías al empezar.':''}
   else{var dd=diffDays(today(),p.cobro);h='¿Qué día volvés a cobrar?';val=esc(fLarga(p.cobro));nota=dd>0?'Faltan '+dd+(dd===1?' día.':' días.'):'Ya llegó el día de cobro.'}
   return '<h1 class="lb-h lb-tinta" id="lb-h">'+tinta(h)+'</h1>'
@@ -234,10 +249,13 @@ function pactoNuevoHTML(){
   return '<h1 class="lb-h lb-tinta" id="lb-h">'+tinta('El pacto')+'</h1>'
     +'<p class="lb-p">Estas son las reglas de tu desafío. Con esto armo tu plan, día por día, hasta que cobres.</p>'
     +'<ul class="lb-pacto">'
-    +'<li><span>Empiezo con</span><b>'+money(c.total)+(D.conUsd&&num(D.usd)>0?'<small>incluye '+usd(num(D.usd))+' a '+money(num(D.cotiz))+'</small>':'')+'</b></li>'
-    +'<li class="ah"><span>Guardo</span><b>'+money(c.ahorro)+'<small>el '+pctTxt(c.pct)+' del total</small></b></li>'
-    +'<li><span>Cobro el</span><b>'+esc(fLarga(D.cobro))+'<small>dentro de '+dias+' '+(dias===1?'día':'días')+'</small></b></li>'
+    +'<li><span>Empiezo con</span><b>'+money(c.bruto)+(D.conUsd&&num(D.usd)>0?'<small>incluye '+usd(num(D.usd))+' a '+money(num(D.cotiz))+'</small>':'')+'</b></li>'
+    +(c.apartado>0?'<li><span>Apartado</span><b>− '+money(c.apartado)+'<small>no se toca</small></b></li>':'')
+    +'<li class="ah"><span>Guardo</span><b>'+money(c.ahorro)+'<small>el '+pctTxt(c.pct)+(c.apartado>0?' de lo que podés usar':' del total')+'</small></b></li>'
+    +'<li><span>'+(D.frec==='jornal'?'El plan llega hasta el':'Cobro el')+'</span><b>'+esc(fLarga(D.cobro))+'<small>dentro de '+dias+' '+(dias===1?'día':'días')+'</small></b></li>'
+    +(c.reserva&&c.reserva.usa>0?'<li><span>Sale de tu reserva para los fijos</span><b>+ '+money(c.reserva.usa)+'</b></li>':'')
     +(c.fijos>0?'<li><span>Gastos fijos</span><b>− '+money(c.fijos)+'</b></li>':'')
+    +(c.reserva&&c.reserva.parte>0?'<li><span>Para los fijos del mes</span><b>− '+money(c.reserva.parte)+'<small>tu parte de '+(D.frec==='semanal'?'esta semana':D.frec==='quincenal'?'esta quincena':'estos días')+', queda apartada</small></b></li>':'')
     +'<li class="tot"><span>Para gastar</span><b>'+money(c.gastar)+'<small>≈ '+money(c.porDia)+' por día</small></b></li></ul>'
     +avisosHTML(v)
     +'<div class="lb-firma" id="lb-firma"><div class="lb-flor">'+broteHTML(Math.min(broteVisto,3))+'</div>'+SELLO+'<p class="lb-sellado" id="lb-sellado"></p></div>'
@@ -268,17 +286,96 @@ function devolverLetra(){var c=$('#plan-aj-casa'),f=$('#plan-aj');if(c&&f&&f.par
 function pctTxt(r){return (Math.round(r*1000)/10).toLocaleString('es-UY')+' %'}
 function avisosHTML(v){
   var h='';
+  if(v.cuenta&&v.cuenta.supervivencia)return '<p class="lb-aviso suave lb-superv"><b>Modo supervivencia.</b> Te quedarían '+money(v.cuenta.porDia)+' por día. Este pacto no se trata de guardar: se trata de llegar al cobro. En Hoy te voy a mostrar cuánto tenés por semana, qué pagar primero y dónde anotar la plata que te va a entrar.</p>';
   if(v.avisos.indexOf('bajo')>=0)h+='<p class="lb-aviso">Te quedarían '+money(v.cuenta.porDia)+' por día. Es poco: si querés, bajá un poco el ahorro. Igual podés seguir.</p>';
   if(v.avisos.indexOf('cero')>=0)h+='<p class="lb-aviso suave">Con cero también se puede empezar, pero este libro existe para que guardes algo. ¿Y si probás con un poquito?</p>';
   return h;
 }
 function total(){return totalPacto(D.pesos,D.conUsd?D.usd:0,D.conUsd?D.cotiz:0)}
-function datos(){return {total:total(),usd:D.conUsd?D.usd:0,cotiz:D.conUsd?D.cotiz:0,ahorro:D.ahorro,cobro:D.cobro}}
+function datos(){return {total:total(),usd:D.conUsd?D.usd:0,cotiz:D.conUsd?D.cotiz:0,ahorro:D.ahorro,cobro:D.cobro,apartado:D.hayAp?D.ap:[],frecuencia:D.frec}}
+/* La plata apartada que estás escribiendo (2.17) y lo que queda para el plan */
+function apartadoD(){return D.hayAp?totalApartado(normApartado(D.ap)):0}
+function libre(){return totalLibre(total(),D.hayAp?D.ap:[])}
 /* Modo hojear: los tres datos de hoy, con lo que estás cambiando */
-function datosAjuste(){var A=actuales(),id=E.edit;return {tenes:id==='q1'?total():A.tenes,ahorro:id==='q2'?num(D.ahorro):A.ahorro,cobro:id==='q3'?D.cobro:A.cobro}}
+function datosAjuste(){var A=actuales(),id=E.edit;return {tenes:id==='q1'?Math.max(0,total()-totalApartado(st)):A.tenes,ahorro:id==='q2'?num(D.ahorro):A.ahorro,cobro:id==='q3'?D.cobro:A.cobro}}
 function errAjuste(v){var k=Object.keys(v.errores)[0];if(!k)return '';var m=v.errores[k];return m==='max'?'Con esa plata, lo máximo que podés guardar es '+money(Math.floor(v.maxAhorro))+'.':m}
 function q(sel){return document.querySelector('#lb-pila .lb-pag:last-child '+sel)}
 function error(m){var e=q('#lb-err');if(e){e.textContent=m||'';e.hidden=!m}}
+
+/* ---------- Modo supervivencia (2.18): aunque no guardes nada, da menos de lo mínimo por día ---------- */
+function superD(){return cuentaPacto(st,Object.assign({},datos(),{ahorro:0}),today()).supervivencia}
+function superHTML(){
+  var c=cuentaPacto(st,Object.assign({},datos(),{ahorro:0}),today());
+  return '<p class="lb-aviso suave lb-superv"><b>Modo supervivencia.</b> Con '+money(c.gastar)+' para '+c.dias+' días son unos '+money(c.porDia)+' por día. Esta vez la meta es llegar al cobro, no guardar: está bien si ponés cero.</p>';
+}
+
+/* ---------- La plata apartada (2.17): «¿Toda esta plata la podés gastar?» ---------- */
+var nAp=0;
+function filaAp(){return {id:'ap'+Date.now().toString(36)+(nAp++),tipo:'ahorro',monto:'',nota:''}}
+function errApartado(k){return k==='mas'?'Lo apartado ('+money(apartadoD()||totalApartado(normApartado(D.ap)))+') es más que lo que tenés ('+money(total())+'). Revisá los montos.'
+  :k==='todo'?'Si todo está apartado, no queda plata para el plan. Revisá los montos.':k==='max'?'':String(k)}
+function filaApHTML(a,i){
+  return '<div class="lb-ap" data-i="'+i+'">'
+    +'<div class="lb-chips" role="group" aria-label="Qué es esta plata">'+TIPOS_APARTADO.map(function(t){return '<button class="lb-chip" type="button" data-lb="ap-tipo" data-i="'+i+'" data-t="'+t.id+'" aria-pressed="'+(a.tipo===t.id)+'">'+esc(t.c)+'</button>'}).join('')+'</div>'
+    +'<div class="lb-ap-fila"><div class="lb-monto chico"><span>$</span><input class="lb-ap-monto" type="number" inputmode="decimal" min="0" step="any" placeholder="0" aria-label="Monto apartado" data-i="'+i+'" value="'+esc(a.monto)+'"></div>'
+    +'<button class="lb-link" type="button" data-lb="ap-quitar" data-i="'+i+'">Quitar</button></div>'
+    +'<input class="lb-ap-nota" type="text" maxlength="40" enterkeyhint="done" placeholder="'+(a.tipo==='ajena'?'¿de quién? (opcional)':a.tipo==='reserva'?'¿para qué? (opcional)':'una nota (opcional)')+'" aria-label="Nota" data-i="'+i+'" value="'+esc(a.nota)+'">'
+    +'</div>';
+}
+function apartadoHTML(){
+  var ed=hojear(),tot=ed?Math.round(actuales().tenes+totalApartado(st)):total();
+  var h='<h1 class="lb-h lb-tinta" id="lb-h">'+tinta(ed?'Lo que tenés apartado':'¿Toda esta plata la podés gastar?')+'</h1>'
+    +'<p class="lb-p">'+(ed?'Es plata que tenés pero no es para gastar: no entra en el plan. Si apartás más, sale de lo que podés usar; si liberás algo, se suma.'
+      :'De los <b>'+money(tot)+'</b> que tenés, ¿hay algo que no es para gastar? Por ejemplo, ahorro que ya tenías, plata para pagar algo puntual o plata que es de otra persona.')+'</p>';
+  if(!ed)h+='<div class="lb-chips" role="group" aria-label="¿Toda esta plata la podés gastar?">'
+    +'<button class="lb-chip" type="button" data-lb="ap-si" aria-pressed="'+(D.hayAp===false)+'">Sí, toda</button>'
+    +'<button class="lb-chip" type="button" data-lb="ap-no" aria-pressed="'+(D.hayAp===true)+'">No, una parte está apartada</button></div>';
+  h+='<div id="lb-ap-lista" class="lb-ap-lista"'+(D.hayAp?'':' hidden')+'>'+D.ap.map(filaApHTML).join('')
+    +'<button class="lb-btn chico lb-ap-mas" type="button" data-lb="ap-mas">+ Otra parte apartada</button></div>'
+    +'<p class="lb-queda" id="lb-ap-queda" aria-live="polite"></p>'
+    +'<p class="lb-err" id="lb-err" role="alert" hidden></p>';
+  var atras=idx>0?'<button class="lb-btn chico" type="button" data-lb="atras" aria-label="Página anterior">‹ Atrás</button>':'';
+  return h+(ed?accEdit():'<div class="lb-acc">'+atras+'<button class="lb-btn si" type="button" data-lb="sig">Seguir</button></div>');
+}
+function vistaApartado(){
+  var l=normApartado(st.pacto&&st.pacto.apartado),t=totalApartado(l),nom={};TIPOS_APARTADO.forEach(function(x){nom[x.id]=x.t});
+  return '<h1 class="lb-h lb-tinta" id="lb-h">'+tinta('¿Toda esta plata la podés gastar?')+'</h1>'
+    +'<p class="lb-valor apartado" id="lb-valor">'+(t>0?money(t)+' apartados':'Sí, toda')+'</p>'
+    +(t>0?'<ul class="lb-ap-ver">'+l.map(function(a){return '<li><span>'+esc(nom[a.tipo])+(a.nota?' · '+esc(a.nota):'')+'</span><b>'+money(a.monto)+'</b></li>'}).join('')+'</ul>'
+      :'<p class="lb-p">No tenés nada apartado: toda tu plata entra en el plan.</p>')
+    +'<div class="lb-acc"><button class="lb-btn" type="button" data-lb="cambiar">'+(t>0?'Cambiar':'Apartar algo')+'</button></div>'+ORLA;
+}
+function leerAp(el){
+  var i=Number(el.getAttribute('data-i'));if(!D.ap[i])return;
+  if(el.classList.contains('lb-ap-monto'))D.ap[i].monto=el.value;
+  if(el.classList.contains('lb-ap-nota'))D.ap[i].nota=el.value;
+}
+function redibujarAp(foco){
+  var l=q('#lb-ap-lista');if(!l)return;
+  irA(idx,0);
+  if(foco){var f=q(foco);if(f)try{f.focus({preventScroll:false})}catch(e){}}
+}
+function vivoAp(){
+  var el=q('#lb-ap-queda');if(!el)return;
+  if(hojear()){
+    var v=previaApartado(st,D.ap),d=Math.max(0,disponible(st,planCalc(st))-v.diff);
+    el.innerHTML=v.ok?(v.diff>0?'Apartás <b>'+money(v.diff)+'</b> más: para usar te quedan <b>'+money(d)+'</b>.':v.diff<0?'Liberás <b>'+money(-v.diff)+'</b>: para usar vas a tener <b>'+money(d)+'</b>.':'No cambia lo que podés usar.'):'';
+    error(v.ok?'':'Hoy podés apartar como mucho '+money(v.max)+' más: es lo que tenés disponible.');
+    return;
+  }
+  var ap=apartadoD();
+  el.innerHTML=D.hayAp===false?'Toda tu plata entra en el plan: <b>'+money(total())+'</b>.'
+    :D.hayAp&&ap>0?(ap<total()?'Apartás <b>'+money(ap)+'</b>. Para tu plan quedan <span class="n">'+money(libre())+'</span>.':''):'';
+  var v2=validarPacto(st,datos(),today());error(D.hayAp&&v2.errores.apartado?errApartado(v2.errores.apartado):'');
+}
+function guardarApartado(){
+  var v=aplicarApartado(st,D.ap);
+  if(!v.ok){error('Hoy podés apartar como mucho '+money(v.max)+' más: es lo que tenés disponible.');return}
+  E.edit=null;
+  if(o.alApartado)o.alApartado();
+  irA(idx,0);
+  if(v.diff)toastAccion(v.diff>0?'Apartaste '+money(v.diff)+' más':'Liberaste '+money(-v.diff),'Deshacer',function(){deshacerApartado(st,v.deshacer);if(o.alApartado)o.alApartado();if(libroAbierto())irA(idx,0)});
+}
 
 /* Lo que se recalcula mientras escribís */
 function vivoQ1(){
@@ -294,7 +391,7 @@ function vivoAjuste(){
 }
 function vivoQ2(desdeRango){
   var r=q('#lb-rango'),a=q('#lb-ahorro');if(!r)return;
-  var tot=hojear()?actuales().tenes:total(),mx=num(r.max);
+  var tot=hojear()?actuales().tenes:libre(),mx=num(r.max);
   if(desdeRango){D.ahorro=r.value;a.value=r.value}else{r.value=String(Math.min(num(D.ahorro),mx))}
   r.style.setProperty('--v',(mx>0?Math.min(100,num(r.value)/mx*100):0)+'%');
   q('#lb-pct-n').textContent=pctTxt(tot>0?num(D.ahorro)/tot:0);
@@ -307,7 +404,7 @@ function vivoQ2(desdeRango){
 }
 function pintarCal(){
   var box=q('#lb-cal');if(!box)return;
-  var c=mesCalendario(D.mes[0],D.mes[1],today()),hoy=parse(today()),sg=sugerirCobro(st,today()).fecha;
+  var c=mesCalendario(D.mes[0],D.mes[1],today()),hoy=parse(today()),sg=sugerirCobro(st,today(),D.frec).fecha;
   var antes=c.y*12+c.m<=hoy.getFullYear()*12+hoy.getMonth();
   var h='<div class="lb-cal-h"><button type="button" data-lb="mes" data-d="-1" aria-label="Mes anterior"'+(antes?' disabled':'')+'>‹</button><b>'+MESL[c.m]+' '+c.y+'</b><button type="button" data-lb="mes" data-d="1" aria-label="Mes siguiente">›</button></div>'
     +'<table role="grid" aria-label="'+MESL[c.m]+' '+c.y+'"><thead><tr>'+['lu','ma','mi','ju','vi','sá','do'].map(function(d){return '<th scope="col">'+d+'</th>'}).join('')+'</tr></thead><tbody>';
@@ -321,7 +418,7 @@ function pintarCal(){
   h+='</tbody></table><div class="lb-cal-ley"><span><i class="s"></i>sugerido</span><span><i class="f"></i>feriado no laborable</span></div>';
   box.innerHTML=h;
   var t=q('#lb-cobro-txt'),n=D.cobro?diffDays(today(),D.cobro):0;
-  if(t)t.innerHTML=D.cobro&&n>0?'Cobrás el <b>'+esc(fLarga(D.cobro))+'</b>: <span class="n">faltan '+n+' '+(n===1?'día':'días')+'</span>.':'Tocá el día en que cobrás.';
+  if(t)t.innerHTML=D.cobro&&n>0?(D.frec==='jornal'?'El plan llega hasta el <b>':'Cobrás el <b>')+esc(fLarga(D.cobro))+'</b>: <span class="n">'+(D.frec==='jornal'?'son ':'faltan ')+n+' '+(n===1?'día':'días')+'</span>.':'Tocá el día en que cobrás.';
   if(hojear())error(errAjuste(previaAjuste(st,datosAjuste(),today())));
 }
 function leer(){
@@ -339,8 +436,15 @@ function valida(id){
   if(id==='q1'){
     if(D.conUsd&&num(D.usd)>0&&!(num(D.cotiz)>0)){error('Escribí a cuánto está el dólar.');return false}
     if(v.errores.total){error(v.errores.total);return false}
-    if(D.ahorro===null||D.ahorro===''){var at=atajosPacto(total());D.ahorro=at.length?String(at[0].monto):'0'}
+    if(D.ahorro===null||D.ahorro===''){var at=atajosPacto(total());D.ahorro=superD()?'0':at.length?String(at[0].monto):'0'}
     if(num(D.ahorro)>total())D.ahorro=String(Math.floor(total()));
+  }
+  if(id==='qa'){
+    if(D.hayAp===null){error('Elegí una de las dos opciones.');return false}
+    if(D.hayAp&&!totalApartado(normApartado(D.ap))){error('Poné cuánto está apartado, o elegí «Sí, toda».');return false}
+    if(v.errores.apartado){error(errApartado(v.errores.apartado));return false}
+    /* el ahorro propuesto se calcula sobre lo que queda para usar */
+    var lb=libre();if(superD())D.ahorro='0';else if(num(D.ahorro)>lb){var at2=atajosPacto(lb);D.ahorro=at2.length?String(at2[0].monto):'0'}
   }
   if(id==='q2'&&v.errores.ahorro){error(v.errores.ahorro==='fijos'?'Con tus gastos fijos, lo máximo que podés ahorrar es '+money(Math.floor(v.cuenta.maxAhorro))+'.':v.errores.ahorro);return false}
   if(id==='q3'&&v.errores.cobro){error(v.errores.cobro);return false}
@@ -349,11 +453,13 @@ function valida(id){
 /* Modo hojear: «Cambiar» abre la pregunta con tus datos; «Guardar» recalcula todo y reescribe los números */
 function empezarEdicion(id){
   var A=actuales(),c=parse(st.plan.cobro);
-  E.edit=id;D.pesos=String(A.tenes);D.conUsd=false;D.usd='';D.ahorro=String(A.ahorro);D.cobro=A.cobro;D.mes=[c.getFullYear(),c.getMonth()];
+  E.edit=id;D.pesos=String(Math.round(A.tenes+totalApartado(st)));D.ap=JSON.parse(JSON.stringify((st.pacto&&st.pacto.apartado)||[]));D.hayAp=D.ap.length?true:null;
+  if(id==='qa'&&!D.ap.length){D.hayAp=true;D.ap=[filaAp()]}D.conUsd=false;D.usd='';D.ahorro=String(A.ahorro);D.cobro=A.cobro;D.mes=[c.getFullYear(),c.getMonth()];
   irA(PAGS.indexOf(id),0);
-  var f=q(id==='q1'?'#lb-pesos':id==='q2'?'#lb-ahorro':'.lb-dia[aria-pressed="true"]');if(f)try{f.focus({preventScroll:true});if(f.select)f.select()}catch(e){}
+  var f=q(id==='q1'?'#lb-pesos':id==='q2'?'#lb-ahorro':id==='qa'?'.lb-ap-monto':'.lb-dia[aria-pressed="true"]');if(f)try{f.focus({preventScroll:true});if(f.select)f.select()}catch(e){}
 }
 function guardarEdicion(){
+  if(E.edit==='qa'){guardarApartado();return}
   var v=aplicarAjuste(st,datosAjuste(),today());
   if(!v.ok){error(errAjuste(v));return}
   E.edit=null;
@@ -402,6 +508,7 @@ function montarPagina(){
   if(hojear()&&E.edit!==id)return;
   if(id==='q1')vivoQ1();
   if(id==='q2')vivoQ2(false);
+  if(id==='qa')vivoAp();
   if(id==='q3')pintarCal();
   /* El teclado se abre en el monto (en iOS solo si viene de un toque) */
   var f=q('#lb-pesos');
@@ -482,17 +589,17 @@ function abrirHojas(pagina,dir){
 }
 
 /* opt: {modo:'nuevo'|'hojear'|'ciclo'|'tapa', estado, pagina, editar, dir,
-         listo(estado), alImportar(estado), alEjemplo(), alCerrar(dir), alGuardar(v), antes(estado)} */
+         listo(estado), alImportar(estado), alEjemplo(), alCerrar(dir), alGuardar(v), alApartado(), antes(estado)} */
 export function abrirLibro(opt){
   o=opt;st=opt.estado;vista='portada';E={edit:null};
   aplicarFeriados(st);
   var sg=sugerirCobro(st,today()),c=parse(sg.fecha);
-  D={nombre:null,pesos:'',usd:'',cotiz:cotizacion(st)?String(cotizacion(st)):'',conUsd:false,ahorro:null,cobro:sg.fecha,mes:[c.getFullYear(),c.getMonth()]};
+  D={nombre:null,pesos:'',usd:'',cotiz:cotizacion(st)?String(cotizacion(st)):'',conUsd:false,ahorro:null,cobro:sg.fecha,mes:[c.getFullYear(),c.getMonth()],hayAp:null,ap:[],frec:frecDe(st.perfil&&st.perfil.cobro)};
   broteVisto=0;
   PAGS=o.modo==='ciclo'?PROLOGO.slice(1):PROLOGO.slice();
   var m=$('#libro');
   document.documentElement.classList.add('voz-abierta','lb-abierto');
-  if(o.modo==='ciclo'){D.pesos=String(Math.round(num(o.total))||'');D.ahorro=String(Math.round(num(st.plan.ahorro))||'');vista='hojas';abrirHojas();return}
+  if(o.modo==='ciclo'){D.ap=JSON.parse(JSON.stringify((st.pacto&&st.pacto.apartado)||[]));D.hayAp=D.ap.length?true:null;D.pesos=String(Math.round(num(o.total)+totalApartado(D.ap))||'');D.ahorro=String(Math.round(num(st.plan.ahorro))||'');vista='hojas';abrirHojas();return}
   if(o.modo==='hojear'){vista='hojas';var pg=o.editar||o.pagina||'p1';broteVisto=Math.max(0,etapa(pg)-1);abrirHojas(pg,o.dir||1);if(o.editar)empezarEdicion(o.editar);return}
   m.innerHTML=htmlPortada(!!o.alEjemplo);m.hidden=false;m.style.opacity='';
   tapaQuieta(m);montarTapa(m);
@@ -529,6 +636,7 @@ export function initLibro(){
     var id=e.target.id;leer();
     if(id==='lb-pesos'||id==='lb-usd'||id==='lb-cotiz'){error('');vivoQ1()}
     if(id==='lb-rango')vivoQ2(true);
+    if(e.target.closest('.lb-ap')){leerAp(e.target);error('');vivoAp()}
     if(id==='lb-ahorro')vivoQ2(false);
   });
   h.addEventListener('change',function(e){
@@ -541,18 +649,23 @@ export function initLibro(){
     if(a==='sig'){if(!valida(PAGS[idx]))return;if(idx<PAGS.length-1)irA(idx+1,1);return}
     if(a==='atras'){if(idx>0){E.edit=null;irA(idx-1,-1)}else if(hojear()&&o.alTapa)aLaTapa();return}
     if(a==='cambiar'){empezarEdicion(PAGS[idx]);return}
+    if(a==='ap-si'||a==='ap-no'){D.hayAp=a==='ap-no';if(D.hayAp&&!D.ap.length)D.ap=[filaAp()];error('');redibujarAp(D.hayAp?'.lb-ap-monto':null);return}
+    if(a==='ap-tipo'){var ft=Number(b.getAttribute('data-i'));if(D.ap[ft])D.ap[ft].tipo=b.getAttribute('data-t');redibujarAp();return}
+    if(a==='ap-mas'){D.ap.push(filaAp());redibujarAp('.lb-ap:last-of-type .lb-ap-monto');return}
+    if(a==='ap-quitar'){D.ap.splice(Number(b.getAttribute('data-i')),1);if(!D.ap.length&&!hojear())D.hayAp=false;redibujarAp();return}
     if(a==='cancelar'){E.edit=null;irA(idx,0);return}
     if(a==='guardar'){guardarEdicion();return}
     if(a==='atajo'){D.ahorro=b.getAttribute('data-val');q('#lb-ahorro').value=D.ahorro;vivoQ2(false);return}
     if(a==='mes'){var d=new Date(D.mes[0],D.mes[1]+Number(b.getAttribute('data-d')),1,12);D.mes=[d.getFullYear(),d.getMonth()];pintarCal();return}
     if(a==='dia'){D.cobro=b.getAttribute('data-f');error('');pintarCal();return}
+    if(a==='frec'){D.frec=b.getAttribute('data-f');var sf=sugerirCobro(st,today(),D.frec),pf=parse(sf.fecha);D.cobro=sf.fecha;D.mes=[pf.getFullYear(),pf.getMonth()];error('');irA(idx,0);return}
     if(a==='cerrar-libro'){cerrarTodo(1);if(o.alCerrar)o.alCerrar(1);return}
     if(a==='sellar'){
       var v=validarPacto(st,datos(),today());
       if(v.ok&&o.antes)o.antes(st);
       if(v.ok)v=sellarPacto(st,datos(),today());
       var nm=String(D.nombre||'').trim();if(v.ok&&nm&&st.perfil)st.perfil.nombre=nm.slice(0,30);
-      if(!v.ok){var k=Object.keys(v.errores)[0];irA(PAGS.indexOf(k==='total'?'q1':k==='ahorro'?'q2':'q3'),-1);return}
+      if(!v.ok){var k=Object.keys(v.errores)[0];irA(PAGS.indexOf(k==='total'?'q1':k==='apartado'?'qa':k==='ahorro'?'q2':'q3'),-1);return}
       var t=estampar();
       $('#lb-acc-pacto').innerHTML='';
       setTimeout(function(){

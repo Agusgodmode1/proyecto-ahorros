@@ -34,10 +34,10 @@ export function vecina(tab,dir,nSemanas,semanaActual){
   return j>=0&&j<l.length?l[j]:null;
 }
 
-/* Números de página (el folio): el prólogo ocupa las páginas 1 a 5 (propósito, plata, ahorro, cobro y pacto),
-   el índice la 6 y desde ahí los capítulos, una página por semana; Ajustes es la última. */
-export var PROLOGO=['p1','q1','q2','q3','pacto'];
-export var PAG_INDICE=6;
+/* Números de página (el folio): el prólogo ocupa las páginas 1 a 6 (propósito, plata, lo apartado, ahorro, cobro y pacto),
+   el índice la 7 y desde ahí los capítulos, una página por semana; Ajustes es la última. */
+export var PROLOGO=['p1','q1','qa','q2','q3','pacto'];
+export var PAG_INDICE=7;
 export function numeroDePagina(tab,nSemanas){
   var i=PROLOGO.indexOf(tab);if(i>=0)return i+1;
   if(tab==='indice')return PAG_INDICE;

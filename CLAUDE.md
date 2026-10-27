@@ -45,7 +45,7 @@ PWA para iPhone de finanzas personales de Agus (Uruguay). La publica GitHub Page
 - Topes: el ahorro del plan no pasa de monto − fijos (`planear`); la meta de "Cuando cobres" no pasa de sueldo − fijos (`proximo`). Los gastos del extracto de la tarjeta no se limitan: son hechos.
 
 ## El Libro del Ahorro (diseño actual, 2.6)
-La app es un libro: tapa cósmica, prólogo (el pacto), índice, seis capítulos y Ajustes al final. Cambios de diseño nuevos van en `css/papel.css`.
+La app es un libro: tapa cósmica, prólogo (el pacto), índice, siete capítulos y Ajustes al final. Cambios de diseño nuevos van en `css/papel.css`.
 
 **Archivos**
 - `css/app.css`: las capas viejas (estructura, formularios, listas). No le agregues diseño nuevo.
@@ -66,10 +66,10 @@ La app es un libro: tapa cósmica, prólogo (el pacto), índice, seis capítulos
 - Tema: sigue al teléfono; se fuerza en Ajustes → Apariencia (pa-tema).
 
 **Páginas y navegación**
-- Folios (`numeroDePagina`): prólogo 1–5 (`PROLOGO`: p1 propósito, q1 plata, q2 ahorro, q3 cobro, pacto), índice 6, Hoy 7, una por semana, Fijos, Sueldo, Tarjeta, Logros y Ajustes (la última).
-- Capítulos (`CAPITULOS`): I Hoy (`resumen`), II Semanas (`wN`), III Fijos, IV Sueldo, V Tarjeta (`gastos`), VI Logros. La barra de abajo son lomos con número romano y una cinta en el abierto. Cada panel lleva `data-cap` («capítulo II · semanas»).
+- Folios (`numeroDePagina`): prólogo 1–5 (`PROLOGO`: p1 propósito, q1 plata, q2 ahorro, q3 cobro, pacto), índice 6, Hoy 7, una por semana, Fijos, Sueldo, Tarjeta, Logros, Lo guardado y Ajustes (la última).
+- Capítulos (`CAPITULOS`): I Hoy (`resumen`), II Semanas (`wN`), III Fijos, IV Sueldo, V Tarjeta (`gastos`), VI Logros, VII Lo guardado (`guardado`, en la barra «Guardado» con `corto`). La barra de abajo son 7 lomos con número romano (grilla de 7 columnas, ≥ 44 px a 390 de ancho: por eso la barra va casi de borde a borde y el micrófono mide 50 px) y una cinta en el abierto. Cada panel lleva `data-cap` («capítulo II · semanas»).
 - `#app` es la página; `#hoja` (encabezado + capítulo + `#pie`) es lo único que gira. La barra (`nav.tabs`) y el micrófono quedan fuera porque son fijos (un transform en un padre los movería).
-- Pasar de página: flechas del pie (`#pie`: anterior, folio, siguiente; en pantallas ≥ 1000 px a los costados), deslizar (`initDeslizar`: sigue al dedo, eje inclinado `rotate3d(-.16,1,0,…)`, sombra del pliegue `--pl`; si la soltás antes de ~28 % vuelve; si tocás otro capítulo mientras gira, manda lo que tocaste) e índice (`ui/indice.js`; si el salto es lejos, abanico de 3 hojas ≤ 700 ms). `vecina`: desde Hoy hacia atrás va a `'prologo'` (abre el pacto); después de Logros viene Ajustes.
+- Pasar de página: flechas del pie (`#pie`: anterior, folio, siguiente; en pantallas ≥ 1000 px a los costados), deslizar (`initDeslizar`: sigue al dedo, eje inclinado `rotate3d(-.16,1,0,…)`, sombra del pliegue `--pl`; si la soltás antes de ~28 % vuelve; si tocás otro capítulo mientras gira, manda lo que tocaste) e índice (`ui/indice.js`; si el salto es lejos, abanico de 3 hojas ≤ 700 ms). `vecina`: desde Hoy hacia atrás va a `'prologo'` (abre el pacto); después de Logros viene Lo guardado y después Ajustes.
 - La cinta del índice (`#indice-abrir`) cuelga del borde de arriba. Desde el índice: «Ir al prólogo» y «Cerrar el libro».
 
 **Tapa y prólogo** (`ui/libro.js`, modos)
@@ -85,12 +85,12 @@ La app es un libro: tapa cósmica, prólogo (el pacto), índice, seis capítulos
 **Capítulos**
 - Hoy: «Cobrás en» es lo más grande (dorado, con barra de 12 tramos; Agus pidió que no se achique); «Hoy podés gastar» mediano, con «+ Gasto» (hoja `#gasto-sheet`, formulario `q`, día Hoy/Ayer/Anteayer, el foco va al monto en el mismo toque); «Tenés» y «Guardás»; frecuentes de un toque; gastaste hoy; Hasta que cobres / Semana por semana / Cuando cobres plegables (`plegados`). Los avisos son «notas al margen» (`.banner::before`; la de alerta dice «ojo»). «Hoy en versión corta» (Ajustes, `[data-simple]`, pa-simple): clase `.simple` en `#app`. «Hoy podés gastar» cuenta hasta el valor nuevo al anotar (≤ 400 ms) y el gasto nuevo aparece como tinta.
 - En los otros capítulos, arriba va el encabezado corrido (`#hero-mini`: hoy podés gastar + cobrás en).
-- Logros: sellos de lacre (logrados) y estampas punteadas (los que faltan); la racha es un sello dorado. Al desbloquear: sonido de sello y polvo de estrellas (`polvo()` de `ui/libro.js`).
+- Logros: sellos de lacre (logrados) y estampas punteadas (los que faltan); la racha es un sello dorado. Las metas se mudaron a Lo guardado. Al desbloquear: sonido de sello y polvo de estrellas (`polvo()` de `ui/libro.js`).
 - Tarjeta: el único lugar con categorías (`#aj-cats`, `renderCategorias()` con la pestaña `gastos`).
 - Pantallas ≥ 1100 px: libro abierto a doble página (pliegue al medio). Hoy: cobro y «hoy podés gastar» a la izquierda, tu día y el plan a la derecha; los demás capítulos en dos columnas; cada semana es una doble página.
 - Tour (`ui/tour.js`, `PASOS`): arranca solo después del primer pacto (pa-tour) y se repite desde Ajustes. Si agregás un capítulo o un botón principal, sumalo.
 - El asistente viejo «Mis datos» se sacó en 2.6.1 (el pacto se cambia en el prólogo). `logica/inicio.js` queda con sus pruebas (`fondoEmergencia` se usa en Metas).
-- Pendiente a propósito: «Qué hacer con tus ahorros»: se hace después de probar el libro con uso real.
+- VII · Lo guardado (2.7.1, `ui/guardado.js`; puro en `logica/guardado.js`, `resumenGuardado`, con pruebas): guardaste en total (suma de `hist`), nota al margen con qué hacer (`paso`: primero el fondo de emergencia, después las metas, nunca la plata del mes), el fondo de emergencia como anillo de avance (si hay una meta que se llama «…emergencia…», sus aportes; si no, el objetivo sugerido de `fondoEmergencia` y «Crear mi fondo de emergencia»), la tarjeta de metas de siempre (`#metas-card`, `ui/metas.js`) y «Pacto por pacto» con un sello por ciclo cumplido.
 
 **Movimiento, sonido y rendimiento**
 - Solo se animan `transform` y `opacity` (Web Animations). Con `prefers-reduced-motion`, solo fundidos (comprobado: ninguna animación con transform). En segundo plano todo se pausa (`lb-pausa`). Sin Three.js ni dependencias.

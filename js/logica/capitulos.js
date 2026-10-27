@@ -6,7 +6,8 @@ export var CAPITULOS=[
   {id:'fijos',n:'III',t:'Fijos',tono:'tone-teal'},
   {id:'sueldo',n:'IV',t:'Sueldo',tono:'tone-grape'},
   {id:'gastos',n:'V',t:'Tarjeta',tono:'tone-coral'},
-  {id:'logros',n:'VI',t:'Logros',tono:'tone-sun'}
+  {id:'logros',n:'VI',t:'Logros',tono:'tone-sun'},
+  {id:'guardado',n:'VII',t:'Lo guardado',corto:'Guardado',tono:'tone-mint'}
 ];
 /* El capítulo de una pestaña: 'w2' es Semanas; 'ajustes' es Ajustes del pacto (fuera de los capítulos) */
 export function capituloDe(tab){
@@ -14,17 +15,17 @@ export function capituloDe(tab){
   for(var i=0;i<CAPITULOS.length;i++)if(CAPITULOS[i].id===tab)return CAPITULOS[i];
   return null;
 }
-/* Todas las páginas en orden: Hoy, cada semana, Fijos, Sueldo, Tarjeta, Logros */
+/* Todas las páginas en orden: Hoy, cada semana, Fijos, Sueldo, Tarjeta, Logros y Lo guardado */
 export function paginas(nSemanas){
   var l=['resumen'];for(var i=0;i<nSemanas;i++)l.push('w'+i);
-  return l.concat(['fijos','sueldo','gastos','logros']);
+  return l.concat(['fijos','sueldo','gastos','logros','guardado']);
 }
 /* La página vecina al deslizar (dir 1 = siguiente, -1 = anterior), o null en los bordes.
    Desde Hoy, la siguiente es la semana actual (no la primera) y la anterior es el prólogo (el pacto).
-   Ajustes es la última página: viene después de Logros. */
+   Ajustes es la última página: viene después de Lo guardado. */
 export function vecina(tab,dir,nSemanas,semanaActual){
-  if(tab==='ajustes')return dir<0?'logros':null;
-  if(tab==='logros'&&dir>0)return 'ajustes';
+  if(tab==='ajustes')return dir<0?'guardado':null;
+  if(tab==='guardado'&&dir>0)return 'ajustes';
   if(tab==='resumen'&&dir<0)return 'prologo';
   if(tab==='resumen'&&dir>0)return nSemanas>0?'w'+Math.min(nSemanas-1,Math.max(0,semanaActual||0)):'fijos';
   var l=paginas(nSemanas),i=l.indexOf(tab);

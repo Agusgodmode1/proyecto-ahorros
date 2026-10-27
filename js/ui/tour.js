@@ -18,7 +18,8 @@ var PASOS=[
   {tab:'fijos',sel:'.tab[data-tab="fijos"]',t:'Capítulo III · Fijos',x:'Tus gastos de todos los meses. Se descuentan antes de calcular cuánto podés gastar.'},
   {tab:'sueldo',sel:'.tab[data-tab="sueldo"]',t:'Capítulo IV · Sueldo',x:'Cuánto te queda en mano, con tus horas extra, la planilla y tus recibos.'},
   {tab:'gastos',sel:'.tab[data-tab="gastos"]',t:'Capítulo V · Tarjeta',x:'Pegá el extracto y lo comparo con lo que anotaste. Acá están tus categorías.'},
-  {tab:'logros',sel:'.tab[data-tab="logros"]',t:'Capítulo VI · Logros',x:'Tus sellos, tus rachas y tus metas.'},
+  {tab:'logros',sel:'.tab[data-tab="logros"]',t:'Capítulo VI · Logros',x:'Tus sellos y tus rachas.'},
+  {tab:'guardado',sel:'.tab[data-tab="guardado"]',t:'Capítulo VII · Lo guardado',x:'Todo lo que juntaste pacto a pacto, tu fondo de emergencia y tus metas, con un consejo de qué hacer con lo guardado.'},
   {tab:'resumen',sel:'.mic',t:'Anotar con la voz',x:'Tocá el micrófono y decí, por ejemplo, «gasté 350 en un café». Siempre te pido confirmar antes de guardar.'}
 ];
 var i=0,corre=false;

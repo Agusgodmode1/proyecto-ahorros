@@ -99,7 +99,8 @@ test('fin del ciclo: cerrar guarda el mes y el pacto nuevo arranca',function(){
 test('capítulos: números romanos y semanas como páginas',function(){
   assert.equal(capituloDe('w3').n,'II');assert.equal(capituloDe('logros').t,'Logros');
   assert.equal(capituloDe('ajustes'),null);
-  assert.deepEqual(paginas(2),['resumen','w0','w1','fijos','sueldo','gastos','logros']);
+  assert.deepEqual(paginas(2),['resumen','w0','w1','fijos','sueldo','gastos','logros','guardado']);
+  assert.equal(capituloDe('guardado').n,'VII');
 });
 
 test('capítulos: deslizar pasa de página y frena en los bordes',function(){
@@ -109,9 +110,10 @@ test('capítulos: deslizar pasa de página y frena en los bordes',function(){
   assert.equal(vecina('w0',-1,5,2),'resumen');
   assert.equal(vecina('fijos',-1,5,2),'w4');
   assert.equal(vecina('resumen',-1,5,2),'prologo','hacia atrás desde Hoy, el pacto');
-  assert.equal(vecina('logros',1,5,2),'ajustes','Ajustes es la última página');
+  assert.equal(vecina('logros',1,5,2),'guardado');
+  assert.equal(vecina('guardado',1,5,2),'ajustes','Ajustes es la última página');
   assert.equal(vecina('ajustes',1,5,2),null);
-  assert.equal(vecina('ajustes',-1,5,2),'logros');
+  assert.equal(vecina('ajustes',-1,5,2),'guardado');
   assert.equal(vecina('resumen',1,0,0),'fijos');
 });
 
@@ -120,7 +122,7 @@ test('capítulos: el folio de cada página',function(){
   assert.equal(numeroDePagina('indice',3),6);assert.equal(numeroDePagina('resumen',3),7);
   assert.equal(numeroDePagina('w0',3),8);assert.equal(numeroDePagina('w2',3),10);
   assert.equal(numeroDePagina('fijos',3),11);assert.equal(numeroDePagina('logros',3),14);
-  assert.equal(numeroDePagina('ajustes',3),15);assert.equal(numeroDePagina('semanas',3),8);
+  assert.equal(numeroDePagina('guardado',3),15);assert.equal(numeroDePagina('ajustes',3),16);assert.equal(numeroDePagina('semanas',3),8);
   assert.equal(numeroDePagina('nada',3),null);
-  assert.equal(nombreDePagina('w1'),'Semana 2');assert.equal(nombreDePagina('sueldo'),'Sueldo');assert.equal(nombreDePagina('prologo'),'El pacto');
+  assert.equal(nombreDePagina('w1'),'Semana 2');assert.equal(nombreDePagina('sueldo'),'Sueldo');assert.equal(nombreDePagina('guardado'),'Lo guardado');assert.equal(nombreDePagina('prologo'),'El pacto');
 });

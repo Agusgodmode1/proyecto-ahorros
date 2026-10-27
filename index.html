@@ -137,16 +137,6 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
     <section id="p-logros" role="tabpanel" class="tone-sun stack" hidden>
       <div class="panel-head"><h2 class="ph-t">Logros</h2><p class="ph-s">Cada mes que cumplís tu meta de ahorro suma a tu racha. Si guardás de más, ganás logros extra.</p></div>
       <div id="logros-top"></div>
-      <div class="card stack tone-sun" id="metas-card">
-        <div class="sec-h"><h2>Tus metas</h2><button class="btn quiet" type="button" id="meta-nueva">Nueva meta</button></div>
-        <div id="metas-out" class="stack"></div>
-        <form class="meta-form" id="meta-form" autocomplete="off" hidden>
-          <div class="field mf-n"><label for="m-nombre" class="sub-l">¿Para qué?</label><input id="m-nombre" type="text" maxlength="40" placeholder="Viaje a Brasil, auto, fondo de emergencia"></div>
-          <div class="field"><label for="m-obj" class="sub-l">¿Cuánto necesitás?</label><div class="money"><span>$</span><input id="m-obj" type="number" inputmode="numeric" min="0" step="any"></div></div>
-          <div class="field"><label for="m-para" class="sub-l">¿Para cuándo? (opcional)</label><input id="m-para" type="month"></div>
-          <div class="row-btns mf-b"><button class="btn primary" type="submit">Crear meta</button><button class="btn quiet" type="button" id="meta-cancel">Cancelar</button></div>
-        </form>
-      </div>
       <div class="card stack" id="cierre-card">
         <div class="sec"><h2>Cerrar el mes</h2><p class="note" id="cierre-note"></p></div>
         <div class="grid2">
@@ -173,6 +163,23 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
           <p class="err" id="h-err" role="alert" hidden></p>
         </div>
       </details>
+    </section>
+
+    <!-- LO GUARDADO -->
+    <section id="p-guardado" role="tabpanel" class="tone-mint stack" hidden>
+      <div class="panel-head"><h2 class="ph-t">Lo guardado</h2><p class="ph-s">Todo lo que fuiste juntando pacto a pacto, y qué hacer con eso para que te cuide.</p></div>
+      <div id="guardado-top" class="stack"></div>
+      <div class="card stack tone-mint" id="metas-card">
+        <div class="sec-h"><h2>Tus metas</h2><button class="btn quiet" type="button" id="meta-nueva">Nueva meta</button></div>
+        <div id="metas-out" class="stack"></div>
+        <form class="meta-form" id="meta-form" autocomplete="off" hidden>
+          <div class="field mf-n"><label for="m-nombre" class="sub-l">¿Para qué?</label><input id="m-nombre" type="text" maxlength="40" placeholder="Viaje a Brasil, auto, fondo de emergencia"></div>
+          <div class="field"><label for="m-obj" class="sub-l">¿Cuánto necesitás?</label><div class="money"><span>$</span><input id="m-obj" type="number" inputmode="numeric" min="0" step="any"></div></div>
+          <div class="field"><label for="m-para" class="sub-l">¿Para cuándo? (opcional)</label><input id="m-para" type="month"></div>
+          <div class="row-btns mf-b"><button class="btn primary" type="submit">Crear meta</button><button class="btn quiet" type="button" id="meta-cancel">Cancelar</button></div>
+        </form>
+      </div>
+      <div id="guardado-pactos"></div>
     </section>
 
     <!-- SUELDO -->

@@ -400,3 +400,41 @@ html{font-variation-settings:'SOFT' 100,'WONK' 0}
 .v2 .tab.lomo[aria-selected="true"] .lomo-n{color:#F3D488}
 /* Fraunces en números grandes: 600 (a 700 queda pesada) */
 .v2 .tile-v,.v2 .hchip b,.v2 .wk-bv,.v2 .wk-v,.v2 .mini b,.v2 .rate b,.v2 .hh-n,.v2 .cd-n,.v2 .fin-n b,.lb-valor,.lb-pacto li>b,.lb-monto input{font-weight:600!important}
+
+/* =====================================================================
+   Capítulo VII · Lo guardado (2.7)
+   ===================================================================== */
+.v2 .guard-tot{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.v2 .guard-n{font:600 clamp(48px,14vw,64px)/1 var(--f-libro);color:var(--bien)}
+.v2 .fondo{display:grid;grid-template-columns:112px minmax(0,1fr);gap:var(--e4);align-items:center}
+/* el avance del fondo, como un sello: anillo verde sobre el papel */
+.v2 .anillo{width:104px;height:104px;border-radius:50%;display:grid;place-items:center;
+  background:conic-gradient(var(--bien) 0 var(--p,0%),color-mix(in srgb,var(--ink) 12%,transparent) var(--p,0%) 100%)}
+.v2 .anillo span{width:82px;height:82px;border-radius:50%;background:var(--page);display:grid;place-items:center;font:600 24px var(--f-libro);color:var(--bien)}
+.v2 .anillo.lleno{background:radial-gradient(circle at 35% 30%,#FFE7A6,#E2B65C 45%,#A87A1F 85%);box-shadow:inset 0 0 0 5px rgba(80,55,10,.3),0 3px 0 rgba(80,55,10,.25);transform:rotate(-6deg)}
+.v2 .anillo.lleno span{background:transparent;color:#FFF6DC;font-size:40px}
+.v2 .pactos{list-style:none;margin:0;padding:0}
+.v2 .pactos li{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:var(--e3);align-items:center;padding:var(--e3) 0;border-bottom:1px solid var(--line)}
+.v2 .pactos li:last-child{border-bottom:0}
+.v2 .pactos b{font:600 var(--t4) var(--f-libro);color:var(--bien)}
+.v2 .pactos small{display:block;color:var(--muted);font-size:var(--t1)}
+.v2 .mini-sello{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font:700 15px var(--f-body);color:#FFE9D6;transform:rotate(-8deg);
+  background:radial-gradient(circle at 35% 30%,#F6A770,#D9682A 45%,#9E3C1C 85%);box-shadow:inset 0 0 0 3px rgba(90,30,11,.3)}
+.v2 .mini-sello.no{background:transparent;color:var(--muted);box-shadow:none;outline:1.5px dashed var(--line-2);outline-offset:2px;transform:none}
+/* siete lomos en la barra: un poco más de lugar para cada uno */
+@media (max-width:767px){.v2 .tab.lomo .lomo-t{font-size:10.5px;letter-spacing:0}.v2 .tablist{gap:0}}
+/* siete lomos siempre en una sola fila */
+.v2 .tablist{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px}
+.v2 .tab.lomo{min-width:0;padding-left:0;padding-right:0}
+.v2 .tab.lomo .lomo-t{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* sumar a una meta: el monto ocupa lo que sobra */
+.v2 .meta-sumar{display:flex;flex-wrap:wrap;gap:var(--e2);align-items:center}
+.v2 .meta-sumar .money{flex:1 1 140px;min-width:0}
+@media (max-width:767px){
+  /* siete lomos de 44 px o más: la barra va casi de borde a borde y el micrófono, al lado, un poco más chico */
+  :root.v2 .tabs{left:max(6px,env(safe-area-inset-left,0px));right:calc(max(6px,env(safe-area-inset-right,0px)) + 56px);padding:3px;border-radius:14px}
+  .v2 .mic{width:50px;height:50px;right:max(6px,env(safe-area-inset-right,0px));bottom:calc(11px + env(safe-area-inset-bottom,0px))}
+  .v2 .mic svg{width:24px;height:24px}
+}
+@media (max-width:767px){.v2 .tablist{gap:0}:root.v2 .tabs{padding:2px}}
+@media (max-width:767px){.v2 .tab.lomo .lomo-t{font-size:10px;letter-spacing:-.01em}}

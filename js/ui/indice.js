@@ -3,6 +3,7 @@
    ctx.abrirPrologo(pagina, editar) y ctx.cerrarLibro() los pone app.js. */
 import {hoyPodes,curWeek} from '../logica/plan.js';
 import {histStats} from '../logica/logros.js';
+import {resumenGuardado} from '../logica/guardado.js';
 import {CAPITULOS,capituloDe,numeroDePagina} from '../logica/capitulos.js';
 import {ctx,$,today,planNow,liqNow,money,esc,fCorta} from './comun.js';
 
@@ -17,6 +18,7 @@ function pista(id,pc){
     if(id==='fijos')return st.fijos.length?st.fijos.length+(st.fijos.length===1?' fijo':' fijos'):'sin cargar';
     if(id==='sueldo'){var L=liqNow(true);return L.liquido>0?'cobrás ≈ '+money(L.liquido):'cargá tu sueldo'}
     if(id==='gastos')return st.extracto.texto&&st.extracto.texto.trim()?'extracto cargado':'sin extracto';
+    if(id==='guardado'){var G=resumenGuardado(st,t);return G.total>0?'guardaste '+money(G.total):'tu fondo y tus metas'}
     if(id==='logros'){var S=histStats(st.hist);return S.cur>0?'racha de '+S.cur+(S.cur===1?' mes':' meses'):S.hs.length+(S.hs.length===1?' mes cerrado':' meses cerrados')}
   }catch(e){}
   return '';

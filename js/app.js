@@ -16,6 +16,7 @@ import {initVoz} from './ui/voz.js';
 import {abrirPerfil,initPerfil,resumenPerfil} from './ui/perfil.js';
 import {abrirLibro,initLibro} from './ui/libro.js';
 import {initIndice} from './ui/indice.js';
+import {renderGuardado,initGuardado} from './ui/guardado.js';
 import {CAPITULOS,capituloDe,vecina,numeroDePagina,nombreDePagina} from './logica/capitulos.js';
 import {DIAL,MESL,parse} from './logica/fechas.js';
 import {initTour,iniciarTour,tourSiPendiente} from './ui/tour.js';
@@ -58,12 +59,12 @@ function renderTabs(pc){
   CAPITULOS.forEach(function(c){
     var id=c.id==='semanas'?(isW?tab:cw):c.id;
     var sel=c.id==='semanas'?isW:tab===c.id;
-    h+='<button class="tab lomo '+c.tono+'" role="tab" type="button" data-tab="'+id+'" aria-selected="'+sel+'" aria-label="Capítulo '+c.n+': '+c.t+'"><span class="lomo-n" aria-hidden="true">'+c.n+'</span><span class="lomo-t">'+c.t+'</span></button>';
+    h+='<button class="tab lomo '+c.tono+'" role="tab" type="button" data-tab="'+id+'" aria-selected="'+sel+'" aria-label="Capítulo '+c.n+': '+c.t+'"><span class="lomo-n" aria-hidden="true">'+c.n+'</span><span class="lomo-t">'+(c.corto||c.t)+'</span></button>';
   });
   $('#tablist').innerHTML=h;
 }
 /* El encabezado de cada capítulo («capítulo II · semanas») */
-var PANELES={resumen:'#p-resumen',fijos:'#p-fijos',sueldo:'#p-sueldo',gastos:'#p-gastos',logros:'#p-logros',ajustes:'#p-ajustes'};
+var PANELES={resumen:'#p-resumen',fijos:'#p-fijos',sueldo:'#p-sueldo',gastos:'#p-gastos',logros:'#p-logros',guardado:'#p-guardado',ajustes:'#p-ajustes'};
 function marcarCapitulos(){
   Object.keys(PANELES).concat(['semanas']).forEach(function(k){
     var el=$(k==='semanas'?'#p-semana':PANELES[k]),c=capituloDe(k);
@@ -89,6 +90,7 @@ function showPanels(){
   $('#p-gastos').hidden=tab!=='gastos';
   $('#p-fijos').hidden=tab!=='fijos';
   $('#p-logros').hidden=tab!=='logros';
+  $('#p-guardado').hidden=tab!=='guardado';
   $('#p-ajustes').hidden=tab!=='ajustes';
 }
 
@@ -107,6 +109,7 @@ function renderAll(){
   if(ctx.tab==='gastos'){renderGastos();renderCategorias()}
   if(ctx.tab==='fijos')renderFijos(pc);
   if(ctx.tab==='logros')renderLogros(pc);
+  if(ctx.tab==='guardado')renderGuardado();
   renderPie(pc);
   if(ctx.tab==='ajustes'){renderAjustes(guardado);renderFeriados();renderAjustesPin();marcarSonido();
     document.querySelectorAll('[data-sobrante]').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-sobrante')===(ctx.state.plan.sobrante||'siguiente')))});renderCopias();$('#aj-perfil').innerHTML=resumenPerfil(ctx.state)}
@@ -115,7 +118,7 @@ function renderAll(){
 /* Orden de las páginas, para saber si pasar la hoja hacia adelante o hacia atrás */
 function orden(t){
   if(/^w\d+$/.test(t))return 1+Number(t.slice(1))/100;
-  var i=['resumen','semanas','fijos','sueldo','gastos','logros','ajustes'].indexOf(t);return i<0?9:i;
+  var i=['resumen','semanas','fijos','sueldo','gastos','logros','guardado','ajustes'].indexOf(t);return i<0?9:i;
 }
 function quieto(){try{return matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){return false}}
 /* Pasar la hoja (≤ 450 ms, solo transform y opacity). La hoja nueva aparece:
@@ -308,7 +311,7 @@ function arrancar(st){
   ctx.state=st;aplicarFeriados();fijarUltimo();
   if(!st.meta.creado){st.meta.creado=today();persist()}
   try{var t=localStorage.getItem(TK);if(t)ctx.tab=t}catch(e){}
-  guiaInit();initGlobal();initPlan();initSemanas();initSueldo();initTarjeta();initFijos();initLogros();initAjustes(reemplazar,juntarDatos);initVoz();initFeriados();initCategorias();initRecibos();initAjustesPin();
+  guiaInit();initGlobal();initPlan();initSemanas();initSueldo();initTarjeta();initFijos();initLogros();initAjustes(reemplazar,juntarDatos);initGuardado();initVoz();initFeriados();initCategorias();initRecibos();initAjustesPin();
   marcarDiscreto();
   ctx.booted=true;
   $('#app').hidden=false;

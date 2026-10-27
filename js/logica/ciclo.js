@@ -20,7 +20,7 @@ export function resumenCiclo(st,hoy){
   var c=JSON.parse(JSON.stringify(st));cerrarMes(c,pc,ahorrado,0);
   var S=histStats(c.hist),L=liqReal(st),cfg=cfgCobro(st),f=frecDe(cfg);
   /* (2.19) el cobro que viene: por quincena o por semana, la parte del sueldo del mes; por jornal, lo que cobres (cero) */
-  var cobro=f==='jornal'?0:Math.max(0,Math.round(num(L&&L.liquido)*fraccionMes(cfg,st.plan.cobro,nextCobro(st.plan.cobro,cfg))));
+  var cobro=f==='jornal'||f==='ventas'?0:Math.max(0,Math.round(num(L&&L.liquido)*fraccionMes(cfg,st.plan.cobro,nextCobro(st.plan.cobro,cfg))));
   return {ahorrado:ahorrado,meta:meta,minimo:minimo,cumplido:ahorrado>=meta,minimoOk:ahorrado>=minimo,racha:S.cur,
     gastado:Math.round(pc.spentInPlan),cobro:cobro,real:!!(L&&L.real),total:ahorrado+cobro};
 }

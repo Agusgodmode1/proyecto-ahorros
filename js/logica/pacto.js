@@ -7,7 +7,7 @@
 import {num} from './util.js';
 import {iso,parse,addDays,diffDays,esFeriado,esLaborable,bizRank} from './fechas.js';
 import {planCalc,cobroDesde,cfgCobro,totalFijos} from './plan.js';
-import {frecDe,fraccionMes,reglaDesdeFecha} from './frecuencia.js';
+import {frecDe,fraccionMes,reglaDesdeFecha,porMes} from './frecuencia.js';
 import {disponible,maxAhorro,ajustarSaldo,deshacerAjuste} from './saldo.js';
 
 /* Por debajo de esto por día se avisa (sin bloquear): es poco para el día a día */
@@ -59,7 +59,10 @@ export function sugerirCobro(st,hoy,frec){
   /* (2.19) otra frecuencia: la regla guardada si es la misma; si no, la de por defecto (viernes, 1 y 15, una semana) */
   var cfg=frec!=='mensual'?(guardada===frec?cfgCobro(st):{frecuencia:frec}):conPerfil?Object.assign({},cfgCobro(st),{frecuencia:'mensual'}):{tipo:'habil5'};
   if(frec==='semanal'&&guardada!=='semanal')cfg.dow=parse(hoy).getDay(); /* sin saber el día: dentro de una semana */
-  return {fecha:cobroDesde(hoy,cfg),perfil:conPerfil||guardada===frec&&frec!=='mensual',tipo:cfg.tipo||'habil5',frecuencia:frec};
+  var fecha=cobroDesde(hoy,cfg);
+  /* (2.21) cuando vendo: hasta el 1 del mes que viene; si faltan menos de 7 días, hasta el 1 del otro (un pacto de pocos días no sirve) */
+  if(frec==='ventas'&&diffDays(hoy,fecha)<7)fecha=cobroDesde(fecha,cfg);
+  return {fecha:fecha,perfil:conPerfil||guardada===frec&&frec!=='mensual',tipo:cfg.tipo||'habil5',frecuencia:frec};
 }
 
 /* ---------- Los fijos cuando no cobrás por mes (2.19) ----------
@@ -70,7 +73,7 @@ export var RESERVA_FIJOS='res-fijos';
 export function reservaFijos(st,frec,apartado,desde,hasta,vencen){
   var f=frecDe({frecuencia:frec}),r=0;
   (Array.isArray(apartado)?apartado:[]).forEach(function(a){if(a&&a.id===RESERVA_FIJOS)r+=Math.max(0,num(a.monto))});
-  if(f==='mensual'||!(st.fijos||[]).length)return {parte:0,usa:0,reserva:r,queda:r};
+  if(porMes({frecuencia:f})||!(st.fijos||[]).length)return {parte:0,usa:0,reserva:r,queda:r};
   var parte=Math.round(totalFijos(st.fijos,st)*fraccionMes({frecuencia:f},desde,hasta)),usa=Math.min(r,Math.max(0,num(vencen)));
   return {parte:parte,usa:usa,reserva:r,queda:r-usa+parte};
 }
@@ -143,6 +146,8 @@ export function sellarPacto(st,d,hoy){
   st.pacto.apartado=ap;
   /* (2.19) cada cuánto cobrás: la regla sale del día que tocaste */
   if(d.frecuencia&&st.perfil){var fr=frecDe({frecuencia:d.frecuencia});st.perfil.cobro=fr==='mensual'?Object.assign({},st.perfil.cobro,{frecuencia:'mensual'}):reglaDesdeFecha(fr,d.cobro,hoy,st.perfil.cobro)}
+  /* (2.21) lo vendido y la ganancia guardada son de cada pacto */
+  p.entradas=[];p.ganancia={};
   st.pacto.pct=v.cuenta.total>0?Math.round(v.cuenta.ahorro/v.cuenta.total*1000)/1000:0;
   st.pacto.sellado=hoy;st.pacto.numero=(Math.round(num(st.pacto.numero))||0)+1;
   st.pacto.usd=num(d.usd)>0&&num(d.cotiz)>0?Math.round(num(d.usd)*100)/100:0;
@@ -238,14 +243,19 @@ export function aplicarApartado(st,lista){
 }
 export function deshacerApartado(st,u){if(!st.pacto)st.pacto=pactoBase();st.pacto.apartado=u.lista;st.plan.monto=u.monto;st.plan.ahorro=u.ahorro}
 
-/* ---------- «Cobré» (2.19, cobro por jornal) ----------
-   Lo que cobrás se suma a tu plata y se guarda solo el mismo porcentaje del pacto (state.pacto.pct). */
-export function cobreJornal(st,monto){
+/* ---------- «Cobré» (2.19, cobro por jornal) y «Entró plata» (2.21, cuando vendo) ----------
+   Lo que cobrás se suma a tu plata. Por jornal se guarda solo el mismo porcentaje del pacto (state.pacto.pct);
+   cuando vendo no: la ganancia se guarda semana a semana (logica/ventas.js).
+   Cada entrada queda anotada en state.plan.entradas [{id, fecha, monto, nota}] para sumar lo vendido por semana. */
+export function cobreJornal(st,monto,hoy,nota){
   var x=Math.round(num(monto));if(!(x>0))return null;
-  var p=st.plan,pct=Math.max(0,Math.min(1,num(st.pacto&&st.pacto.pct))),g=Math.round(x*pct);
-  var u={monto:p.monto,ahorro:p.ahorro,modo:p.modo,cobro:x,guarda:g};
+  var p=st.plan,ventas=frecDe(st.perfil&&st.perfil.cobro)==='ventas';
+  var pct=ventas?0:Math.max(0,Math.min(1,num(st.pacto&&st.pacto.pct))),g=Math.round(x*pct);
+  var e={id:'en'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),fecha:hoy||p.inicio,monto:x,nota:String(nota||'').trim().slice(0,40)};
+  var u={monto:p.monto,ahorro:p.ahorro,modo:p.modo,cobro:x,guarda:g,entrada:e.id};
   p.monto=Math.round((num(p.monto)+x)*100)/100;
   if(p.modo==='monto')p.ahorro=Math.round(num(p.ahorro))+g;
+  p.entradas=(Array.isArray(p.entradas)?p.entradas:[]).concat([e]);
   return u;
 }
-export function deshacerCobre(st,u){var p=st.plan;p.monto=u.monto;p.ahorro=u.ahorro;p.modo=u.modo}
+export function deshacerCobre(st,u){var p=st.plan;p.monto=u.monto;p.ahorro=u.ahorro;p.modo=u.modo;p.entradas=(p.entradas||[]).filter(function(e){return e.id!==u.entrada})}

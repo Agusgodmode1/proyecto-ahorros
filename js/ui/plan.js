@@ -119,9 +119,9 @@ function renderHoy(pc){
 var VS='pa-simple';
 function vistaSimple(){try{return localStorage.getItem(VS)==='1'}catch(e){return false}}
 function aplicarVista(){
-  var s=vistaSimple(),a=$('#app'),b=$('#modo-simple');
+  var s=vistaSimple(),a=$('#app');
   if(a)a.classList.toggle('simple',s);
-  if(b){b.setAttribute('aria-pressed',String(s));b.textContent=s?'Vista completa':'Vista simple'}
+  document.querySelectorAll('[data-simple]').forEach(function(b){b.setAttribute('aria-pressed',String((b.getAttribute('data-simple')==='1')===s))});
 }
 /* Hoja para anotar un gasto: se abre desde el botón grande de la portada */
 function abrirGasto(){
@@ -151,8 +151,8 @@ function initGasto(){
   });
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!s.hidden)cerrarGasto()});
   $('#hoy-hero').addEventListener('click',function(e){if(e.target.closest('#gasto-abrir'))abrirGasto()});
-  var vb=$('#modo-simple');
-  if(vb)vb.addEventListener('click',function(){try{localStorage.setItem(VS,vistaSimple()?'0':'1')}catch(er){}aplicarVista();ctx.renderAll()});
+  /* Hoy en versión corta (Ajustes) */
+  document.addEventListener('click',function(e){var b=e.target.closest('[data-simple]');if(!b)return;try{localStorage.setItem(VS,b.getAttribute('data-simple'))}catch(er){}aplicarVista();ctx.renderAll()});
   aplicarVista();
 }
 var plegados={};/* tarjetas plegables abiertas, por id */

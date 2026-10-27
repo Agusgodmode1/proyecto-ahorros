@@ -11,13 +11,14 @@ var PASOS=[
   {tab:'resumen',sel:'#countdown',t:'Cobrás en',x:'Los días que faltan para volver a cobrar. Es lo primero que ves al abrir el libro.'},
   {tab:'resumen',sel:'#hoy-hero .hh-n',t:'Hoy podés gastar',x:'Lo que podés gastar hoy sin tocar tu ahorro. Cada gasto que anotás lo baja, y lo que no gastás pasa a mañana.'},
   {tab:'resumen',sel:'#gasto-abrir',t:'Anotar un gasto',x:'Tocá «+ Gasto» y poné cuánto fue y en qué. Nada más. Si te olvidaste de uno, podés anotarlo con la fecha de ayer.'},
-  {tab:'resumen',sel:'#hero-chips',t:'Tenés y Guardás',x:'«Tenés» es tu plata de hoy y «Guardás», tu meta. Tocá cualquiera para cambiar tu pacto: se recalcula todo.'},
-  {tab:'resumen',sel:'#indice-abrir',t:'El índice',x:'Todos los capítulos del libro, con una cinta en el que tenés abierto. También podés deslizar a los costados para pasar de capítulo.'},
+  {tab:'resumen',sel:'#hero-chips',t:'Tenés y Guardás',x:'Tocá cualquiera y te llevo a esa página del prólogo, con «Cambiar». Al guardar se recalcula todo.'},
+  {tab:'resumen',sel:'#indice-abrir',t:'La cinta del índice',x:'Todos los capítulos con su número de página. Desde ahí también vas al prólogo o cerrás el libro.'},
+  {tab:'resumen',sel:'#pie',t:'Pasar de página',x:'Con las flechas del pie o deslizando el dedo a los costados. Hacia atrás desde Hoy está tu pacto.'},
   {tab:'semanas',sel:'.tab[data-tab^="w"]',t:'Capítulo II · Semanas',x:'Cada semana es una página, con su presupuesto. Lo que sobra o falta pasa a la siguiente.'},
-  {tab:'fijos',sel:'.tab[data-tab="fijos"]',t:'Capítulo III · Fijos',x:'Tus gastos de todos los meses (alquiler, celular, internet). Se descuentan antes de calcular cuánto podés gastar.'},
-  {tab:'sueldo',sel:'.tab[data-tab="sueldo"]',t:'Capítulo IV · Sueldo',x:'Cuánto te queda en mano, con tus horas extra. Podés cargar tu recibo y la app lo controla.'},
-  {tab:'gastos',sel:'.tab[data-tab="gastos"]',t:'Capítulo V · Tarjeta',x:'Pegá el extracto de tu tarjeta y lo comparo con lo que anotaste. Acá están las categorías.'},
-  {tab:'logros',sel:'.tab[data-tab="logros"]',t:'Capítulo VI · Logros',x:'Tus metas, tus rachas y tus meses ahorrados.'},
+  {tab:'fijos',sel:'.tab[data-tab="fijos"]',t:'Capítulo III · Fijos',x:'Tus gastos de todos los meses. Se descuentan antes de calcular cuánto podés gastar.'},
+  {tab:'sueldo',sel:'.tab[data-tab="sueldo"]',t:'Capítulo IV · Sueldo',x:'Cuánto te queda en mano, con tus horas extra, la planilla y tus recibos.'},
+  {tab:'gastos',sel:'.tab[data-tab="gastos"]',t:'Capítulo V · Tarjeta',x:'Pegá el extracto y lo comparo con lo que anotaste. Acá están tus categorías.'},
+  {tab:'logros',sel:'.tab[data-tab="logros"]',t:'Capítulo VI · Logros',x:'Tus sellos, tus rachas y tus metas.'},
   {tab:'resumen',sel:'.mic',t:'Anotar con la voz',x:'Tocá el micrófono y decí, por ejemplo, «gasté 350 en un café». Siempre te pido confirmar antes de guardar.'}
 ];
 var i=0,corre=false;

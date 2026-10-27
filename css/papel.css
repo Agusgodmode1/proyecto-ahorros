@@ -250,3 +250,71 @@
 @keyframes tinta-in{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
 .lb-pausa *{animation-play-state:paused!important}
 @media (prefers-reduced-motion:reduce){.v2 .tinta-nueva{animation:none}.v2 .btn,.v2 .indice-btn{transition:none}}
+
+/* =====================================================================
+   Capítulos (2.5): cada pantalla con su forma de libro.
+   ===================================================================== */
+/* Notas al margen: los avisos de Hoy (respaldo, feriados, BPC, meta, ritmo, ejemplo) */
+.v2 .banner::before{content:"nota al margen";flex-basis:100%;font:italic 600 var(--t1)/1 var(--f-libro);letter-spacing:.1em;color:var(--oro-t)}
+.v2 .banner.alerta::before{content:"ojo";color:var(--mal)}
+.v2 #resumen-out>.banner,.v2 #p-resumen>div>.banner{margin-left:var(--e3)}
+.v2 .fin-cap::before{content:none}
+
+/* Logros como sellos y estampas: los logrados son sellos de lacre; los que faltan, la estampa marcada a lápiz */
+.v2 .logros{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:var(--e4) var(--e3)}
+.v2 .logro{background:transparent;border:0;box-shadow:none;align-items:center;text-align:center;padding:var(--e2) var(--e1)}
+.v2 .lg-ic{width:78px;height:78px;border-radius:50%;margin:0 auto var(--e2);background:transparent;color:color-mix(in srgb,var(--ink) 40%,transparent);
+  box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--ink) 18%,transparent);outline:1.5px dashed color-mix(in srgb,var(--ink) 25%,transparent);outline-offset:4px}
+.v2 .lg-ic svg{width:32px;height:32px}
+.v2 .logro.on .lg-ic{color:#FFE9D6;outline:0;transform:rotate(-8deg);
+  background:radial-gradient(circle at 35% 30%,#F6A770,#D9682A 45%,#9E3C1C 85%,#6E2510);
+  box-shadow:inset 0 0 0 5px rgba(90,30,11,.32),inset 0 0 0 7px rgba(255,217,184,.32),0 3px 0 rgba(90,30,11,.28),0 6px 14px rgba(90,30,11,.22)}
+.v2 .logro b{font:700 var(--t4)/1.15 var(--f-libro);color:var(--ink)}
+.v2 .logro.on b{color:var(--ink)}
+.v2 .lg-d{color:var(--muted)}
+.v2 .lg-st{color:var(--oro-t);font-weight:600}
+.v2 .logro .bar>i{background:var(--oro)}
+.v2 .streak{background:color-mix(in srgb,var(--surface) 55%,transparent)}
+.v2 .st-ic{border-radius:50%;width:72px;height:72px;color:#FFE9D6;transform:rotate(-6deg);
+  background:radial-gradient(circle at 35% 30%,#FFE7A6,#E2B65C 45%,#A87A1F 85%,#6E5310);box-shadow:inset 0 0 0 5px rgba(80,55,10,.3),inset 0 0 0 7px rgba(255,240,200,.35),0 3px 0 rgba(80,55,10,.25)}
+.v2 .st-n{font-family:var(--f-libro)!important}
+/* El polvo de estrellas también sale del aviso de un logro */
+.v2 .toast{overflow:visible}
+.v2 .toast .lb-chispa{position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:#FFD27A;box-shadow:0 0 8px #FFB13D;pointer-events:none}
+
+/* Tarjeta: las categorías viven acá */
+.v2 #aj-cats .cat-list li{border-bottom-color:var(--line)}
+
+/* ---------- Pantallas anchas: el libro abierto, a doble página ---------- */
+@media (min-width:1100px){
+  .v2 #app{max-width:1180px;padding:var(--e6) 48px var(--e5) 56px;
+    background:var(--fibra),linear-gradient(90deg,transparent calc(50% - 46px),rgba(60,40,10,.16) calc(50% - 4px),rgba(60,40,10,.26) 50%,rgba(60,40,10,.16) calc(50% + 4px),transparent calc(50% + 46px)),
+      radial-gradient(130% 100% at 60% 40%,transparent 62%,color-mix(in srgb,var(--page-2) 75%,transparent) 100%),linear-gradient(90deg,var(--page-2) 0,var(--page) 3%,var(--page) 97%,var(--page-2) 100%)}
+  /* Hoy: a la izquierda el cobro y lo que podés gastar; a la derecha tu día y el plan hasta cobrar */
+  .v2[data-vista="plan"] .hoja{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:92px;align-items:start}
+  .v2[data-vista="plan"] .hoja>.hero{grid-column:1;grid-row:1 / span 3}
+  .v2[data-vista="plan"] .hoja>#meta-alerta{grid-column:2;grid-row:1}
+  .v2[data-vista="plan"] .hoja>main{grid-column:2;grid-row:2}
+  .v2 .hoja>.pie{grid-column:1 / -1}
+  /* los demás capítulos: dos columnas, como dos páginas */
+  .v2 main>section:not([hidden]):not(#p-resumen){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--e5) 92px;align-items:start}
+  .v2 main>section:not(#p-resumen)>.panel-head,.v2 main>section:not(#p-resumen)>.banner,.v2 main>section:not(#p-resumen)>.pay,.v2 main>section[data-cap]:not(#p-resumen)::before,
+  .v2 main>section:not(#p-resumen)>#ej-banner,.v2 main>section:not(#p-resumen)>#bpc-aviso{grid-column:1 / -1}
+  /* Semanas: cada semana es una doble página (el resumen a la izquierda; anotar y la lista a la derecha) */
+  .v2 #p-semana>.wkpick{grid-column:1 / -1}
+  .v2 #p-semana>.card:not(#g-card){grid-column:1}
+  .v2 #p-semana>#g-card{grid-column:2;grid-row:span 2}
+  .v2 .pay{column-gap:92px}
+}
+/* Categorías: el nombre entero, los botones compactos (≥ 44 px igual) */
+.v2 .cat-fila{flex-wrap:wrap;row-gap:2px}
+.v2 .cat-fila .what{flex:1 1 150px;min-width:0;overflow-wrap:normal}
+.v2 .cat-btns{margin-left:auto}
+.v2 .cat-fila .what b{overflow-wrap:normal;word-break:normal;font-size:16px}
+.v2 .cat-btns .btn{min-width:44px;min-height:44px;padding:0 8px;box-shadow:none}
+@media (min-width:1100px){
+  /* lugar para las flechas a los costados del libro abierto */
+  .v2 #app{max-width:min(1180px,calc(100vw - 180px))}
+  .v2 .pie .flecha.ant{left:max(12px,calc(50% - 590px - 78px))}
+  .v2 .pie .flecha.sig{right:max(12px,calc(50% - 590px - 78px))}
+}

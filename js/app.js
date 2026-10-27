@@ -3,6 +3,7 @@ import {curWeek} from './logica/plan.js';
 import {migrar,cargar,guardar,pedirPersistencia,defaults,ejemplo,necesitaMigrar,guardarCopia,resumenDatos} from './estado.js';
 import {ctx,$,today,planNow,ICON,discreto,setDiscreto,toast,toastAccion,money} from './ui/comun.js';
 import {deshacerAjustePacto} from './logica/pacto.js';
+import {sonar,sonidoOn,setSonido} from './ui/sonido.js';
 import {renderCountdown,renderResumen,syncPlan,initPlan} from './ui/plan.js';
 import {renderWeek,initSemanas} from './ui/semanas.js';
 import {renderSueldo,syncSueldo,initSueldo} from './ui/sueldo.js';
@@ -104,11 +105,11 @@ function renderAll(){
   var st=ctx.state;document.documentElement.classList.toggle('en-uso',!st.ejemplo&&!!st.perfil.hecho&&(st.gastos.length+st.horas.length+st.hist.length)>3);
   renderCountdown();renderTabs(pc);showPanels();renderAvisoRespaldo();renderResumen(pc);renderWeek(pc);renderSueldo();
   if(ctx.tab==='sueldo')renderRecibos();
-  if(ctx.tab==='gastos')renderGastos();
+  if(ctx.tab==='gastos'){renderGastos();renderCategorias()}
   if(ctx.tab==='fijos')renderFijos(pc);
   if(ctx.tab==='logros')renderLogros(pc);
   renderPie(pc);
-  if(ctx.tab==='ajustes'){renderAjustes(guardado);renderFeriados();renderCategorias();renderAjustesPin();
+  if(ctx.tab==='ajustes'){renderAjustes(guardado);renderFeriados();renderAjustesPin();marcarSonido();
     document.querySelectorAll('[data-sobrante]').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-sobrante')===(ctx.state.plan.sobrante||'siguiente')))});renderCopias();$('#aj-perfil').innerHTML=resumenPerfil(ctx.state)}
   tourSiPendiente();
 }
@@ -124,6 +125,7 @@ function quieto(){try{return matchMedia('(prefers-reduced-motion: reduce)').matc
 function hojaEl(){return document.getElementById('hoja')}
 function pasarHoja(dir,demora){
   var h=hojaEl();if(!h||!h.animate)return;
+  sonar('hoja');
   if(quieto()){h.animate([{opacity:.3},{opacity:1}],{duration:200});return}
   h.animate(dir>0?[{transform:'scale(.975) translateX(10px)',opacity:.35},{transform:'scale(1.004)',opacity:1,offset:.8},{transform:'none',opacity:1}]
     :[{transform:'perspective(1600px) rotate3d(-.16,1,0,-26deg) translateX(-12px)',opacity:.2},{transform:'perspective(1600px) rotate3d(-.16,1,0,1.5deg)',opacity:1,offset:.8},{transform:'none',opacity:1}],
@@ -250,15 +252,9 @@ async function juntarDatos(delArchivo){
 
 /* ---------- Guía ---------- */
 var GK='pa-guia-oculta';
+/* (La guía «Cómo usar esta página» se reemplazó por el índice del libro; quedan los íconos con data-icon) */
 function guiaInit(){
-  /* La guía arranca oculta si ya venís usando la app (salvo que la hayas vuelto a abrir).
-     A alguien nuevo se le muestra hasta que toque "Entendido". */
-  var st=ctx.state,usada=!!st&&!st.ejemplo&&(st.gastos.length>3||st.hist.length>0||st.horas.length>3);
-  var hide=false;try{var g=localStorage.getItem(GK);hide=g==='1'||(g===null&&usada)}catch(e){}
-  $('#guia').hidden=hide;$('#guia-show').hidden=!hide;
   document.querySelectorAll('[data-icon]').forEach(function(el){el.innerHTML=ICON[el.getAttribute('data-icon')]||''});
-  $('#guia-ok').addEventListener('click',function(){$('#guia').hidden=true;$('#guia-show').hidden=false;try{localStorage.setItem(GK,'1')}catch(e){}});
-  $('#guia-show').addEventListener('click',function(){$('#guia').hidden=false;$('#guia-show').hidden=true;try{localStorage.setItem(GK,'0')}catch(e){}go('resumen')});
 }
 
 /* ---------- Eventos globales ---------- */
@@ -292,6 +288,7 @@ function initGlobal(){
       abrirLibro({modo:'nuevo',estado:nuevo,listo:function(st){reemplazar(st,'antes de borrar los datos de ejemplo')},alCerrar:function(){renderAll()}});
     }
   });
+  document.addEventListener('click',function(e){var so=e.target.closest('[data-sonido]');if(so){setSonido(so.getAttribute('data-sonido')==='1');marcarSonido();sonar('hoja');toast(sonidoOn()?'Sonido prendido':'Sin sonido')}});
   document.addEventListener('click',function(e){var d=e.target.closest('[data-discreto]');if(d){setDiscreto(d.getAttribute('data-discreto')==='1');marcarDiscreto();renderAll()}});
   /* Modo discreto: un toque tapa o muestra todos los montos */
   $('#discreto').addEventListener('click',function(){setDiscreto(!discreto.on);marcarDiscreto();renderAll();toast(discreto.on?'Montos ocultos':'Montos visibles')});
@@ -302,6 +299,7 @@ function initGlobal(){
   window.addEventListener('pagehide',flushPendiente);
 }
 
+function marcarSonido(){document.querySelectorAll('[data-sonido]').forEach(function(b){b.setAttribute('aria-pressed',String((b.getAttribute('data-sonido')==='1')===sonidoOn()))})}
 function marcarDiscreto(){
   var b=$('#discreto');b.setAttribute('aria-pressed',String(discreto.on));b.setAttribute('aria-label',discreto.on?'Mostrar los montos':'Ocultar los montos');
   document.documentElement.classList.toggle('discreto',discreto.on);

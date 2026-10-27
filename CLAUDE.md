@@ -54,7 +54,7 @@ PWA para iPhone de finanzas personales de Agus (Uruguay). La publica GitHub Page
 ## Inicio simple (1.15)
 - Portada (1.17): "Hoy podés gastar" con un botón chico «+ Gasto» al lado (abre la hoja `#gasto-sheet`, formulario con prefijo `q`, con «¿Qué día?»: Hoy/Ayer/Anteayer; el foco va al monto en el mismo toque para que iOS abra el teclado) + tarjeta "Cobrás en N días" con barra de 12 tramos (`renderCountdown`, también en vista simple) + fila de 2 datos (Tenés / Guardás). Agus pidió que la cuenta regresiva tenga su tarjeta: no la saques ni la achiques.
 - "Hasta que cobres", "Semana por semana" y "Cuando cobres" son `<details class="fold">` cerrados; el estado abierto se guarda en `plegados` (plan.js).
-- Vista simple: botón `#modo-simple` (localStorage `pa-simple`), clase `.simple` en `#app` oculta plan y tarjetas, muestra los últimos 3 gastos.
+- Vista simple («Hoy en versión corta», desde 2.5 en Ajustes, botones `[data-simple]`; localStorage `pa-simple`): clase `.simple` en `#app` oculta plan y tarjetas, muestra los últimos 3 gastos.
 - Tamaños táctiles: bloque "Inicio 1.15" al final de app.css (botones/campos ≥ 48 px).
 
 ## Primer uso, tour y cierre (1.19)
@@ -105,3 +105,10 @@ PWA para iPhone de finanzas personales de Agus (Uruguay). La publica GitHub Page
 - Pie de cada página (`#pie`, dentro de `#hoja`): flecha anterior, folio y flecha siguiente (48 px, en las esquinas; en pantallas ≥ 1000 px, a los costados).
 - Pase de hoja: eje inclinado `rotate3d(-.16,1,0,…)` (la esquina de abajo se adelanta), sombra del pliegue, rebote leve al asentar (400–450 ms). Con «reducir movimiento», solo fundidos (comprobado: ninguna animación con transform).
 - `--cielo` tiene 8 capas: todo `background-size` que lo use tiene que repetir el tamaño 8 veces (si no, aparecen bandas).
+
+## El Libro del Ahorro (2.5: capítulos)
+- Avisos de Hoy = «notas al margen» (`.banner::before`, la de alerta dice «ojo»). Logros = sellos de lacre (logrados) y estampas punteadas (los que faltan); la racha es un sello dorado. Al desbloquear un logro: sonido de sello y polvo de estrellas (`polvo()` de `ui/libro.js`) desde el aviso.
+- Categorías: su tarjeta (`#aj-cats`) vive en el capítulo V · Tarjeta (único lugar con categorías); `renderCategorias()` se llama con la pestaña `gastos`.
+- La guía «Cómo usar esta página» se sacó (la reemplaza el índice); el tour (`PASOS`) habla de la cinta, el pie y el prólogo.
+- Sonido (`ui/sonido.js`): opcional, apagado por defecto (localStorage `pa-sonido`, Ajustes → Sonido). Sin archivos: Web Audio arma «hoja», «sello» y «broche». Se usa en `pasarHoja`, el prólogo, el sello y la tapa.
+- Pantallas ≥ 1100 px: el libro abierto a doble página (pliegue al medio). Hoy: cobro y «hoy podés gastar» a la izquierda, tu día y el plan a la derecha; los demás capítulos en dos columnas; cada semana es una doble página (resumen | anotar y lista). Las flechas quedan fuera del libro.

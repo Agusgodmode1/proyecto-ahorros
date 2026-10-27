@@ -18,6 +18,7 @@ import {aplicarFeriados} from './feriados.js';
 import {montarImportador} from './respaldo.js';
 import {marcarTour} from './tour.js';
 import {$,today,money,usd,esc} from './comun.js';
+import {sonar} from './sonido.js';
 
 export var TITULO='El Libro del Ahorro';
 var T=22; /* grosor del libro en px (igual que --lb-t) */
@@ -79,6 +80,7 @@ function moverLibro(mesa,listo,rev){
     if(rev){anims.forEach(function(a){a.cancel()});saltar.hidden=true;mesa.querySelectorAll('.lb-toca,.lb-otros,.lb-nota').forEach(function(x){x.style.animation='';x.style.visibility=''})}
     anims=[];listo();
   }
+  if(!rev)setTimeout(function(){sonar('broche')},300);
   var T0='rotateX(24deg) rotateY(-14deg) rotateZ(3deg)';
   animar(L,[
     {transform:T0+' translateZ(0)',offset:0},
@@ -327,6 +329,7 @@ function irA(i,dir){
   montarPagina();
   if(!vieja)return;
   if(dir===0){vieja.remove();return}
+  sonar('hoja');
   vieja.style.zIndex='2';vieja.setAttribute('aria-hidden','true');
   var dur=quieto()?180:440;
   var sale=quieto()?[{opacity:1},{opacity:0}]:dir>0?[{transform:'rotate3d(-.16,1,0,0deg)',opacity:1},{transform:'translateX(-3%) rotate3d(-.16,1,0,-70deg)',opacity:0}]:[{transform:'translateX(0)',opacity:1},{transform:'translateX(8%)',opacity:0}];
@@ -351,7 +354,7 @@ function montarPagina(){
 /* El sello: se estampa con un leve temblor y una lluvia corta de polvo de estrellas dorado */
 function estampar(){
   var s=$('#lb-firma .lb-sello'),pag=$('#lb-pila .lb-pag:last-child'),firma=$('#lb-firma');
-  s.classList.add('puesto');
+  s.classList.add('puesto');setTimeout(function(){sonar('sello')},300);
   if(quieto()){s.animate([{opacity:0},{opacity:1}],{duration:250});return 250}
   s.animate([
     {opacity:0,transform:'scale(1.9) rotate(-20deg)',easing:'cubic-bezier(.55,0,.8,.3)'},

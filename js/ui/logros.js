@@ -1,4 +1,6 @@
 /* Pestaña Logros: racha, cerrar el mes, logros, historial y meses anteriores. */
+import {polvo} from './libro.js';
+import {sonar} from './sonido.js';
 import {pad,diffDays,MESL} from '../logica/fechas.js';
 import {num} from '../logica/util.js';
 import {nextCobro,cfgCobro} from '../logica/plan.js';
@@ -27,7 +29,11 @@ function mesNombre(k){return cap(MESL[Number(k.slice(5,7))-1])+' '+k.slice(0,4)}
 export function evalLogros(pc){
   if(!ctx.booted)return;
   var nuevos=nuevosLogros(ctx.state,pc,today(),exAnalisis());
-  if(nuevos.length){ctx.persist();toast(nuevos.length===1?'Nuevo logro: '+nuevos[0].t:'Desbloqueaste '+nuevos.length+' logros nuevos')}
+  if(nuevos.length){
+    ctx.persist();toast(nuevos.length===1?'Nuevo logro: '+nuevos[0].t:'Desbloqueaste '+nuevos.length+' logros nuevos');
+    /* el logro se estampa: un sello y una lluvia corta de polvo de estrellas que sale del aviso */
+    sonar('sello');setTimeout(function(){polvo($('#toast'),16,0)},60);
+  }
 }
 export function renderLogros(pc){
   var state=ctx.state;

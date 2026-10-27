@@ -40,6 +40,13 @@ export function renderLogros(pc){
   pc=pc||planNow();
   var S=histStats(state.hist),list=logrosLista(state,pc,today(),exAnalisis()),L=liqNow(true);
   var un=list.filter(function(l){return state.logros[l.id]||l.val>=l.need}).length;
+  var rs=rachaSemanas(state.hist,pc,today());
+  /* (2.14) sin meses cerrados no hay ceros gigantes: una invitación y, si ya hay semanas dentro del tope, ese dato */
+  if(!S.hs.length){
+    $('#logros-top').innerHTML='<div class="card streak vacio"><div class="st-main"><span class="st-ic">'+ICONL.flame+'</span><div class="st-txt"><span class="tile-l">Tu racha empieza con este pacto</span><b class="st-inv">Cerralo cumpliendo tu meta</b>'
+      +'<span class="tile-h">El día que cobrás, lo que no gastaste se guarda: es tu primer mes y ahí arranca la racha. Abajo están los logros que te esperan'+(un?' (ya tenés '+un+')':'')+'.</span></div></div>'
+      +(rs.actual>0?'<p class="st-sem"><b>'+rs.actual+(rs.actual===1?' semana':' semanas')+'</b> seguidas dentro de lo que podías gastar.</p>':'')+'</div>';
+  }else
   $('#logros-top').innerHTML='<div class="card streak">'
     +'<div class="st-main"><span class="st-ic">'+ICONL.flame+'</span><div class="st-txt"><span class="tile-l" style="color:var(--sun-ink)">Racha actual</span><b class="st-n">'+S.cur+' '+(S.cur===1?'mes':'meses')+'</b><span class="tile-h">'+(S.cur>0?'Cerrá el próximo mes cumpliendo la meta y llegás a '+(S.cur+1)+'.':'Cumplí la meta de este mes y arrancás tu racha.')+'</span></div></div>'
     +'<div class="tiles">'+tile('tone-mint','Semanas seguidas',(function(r){return r.actual+(r.actual===1?' semana':' semanas')})(rachaSemanas(state.hist,pc,today())),'dentro del tope · mejor: '+rachaSemanas(state.hist,pc,today()).mejor)

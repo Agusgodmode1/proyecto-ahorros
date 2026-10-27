@@ -16,7 +16,7 @@ var CONSEJO={
 export function renderGuardado(){
   var top=$('#guardado-top'),pac=$('#guardado-pactos');if(!top)return;
   var r=resumenGuardado(ctx.state,today()),h='';
-  h+='<div class="card guard-tot"><span class="cd-l">Guardaste en total</span><b class="guard-n">'+money(r.total)+'</b>'
+  h+='<div class="card guard-tot"><span class="cd-l">Guardaste en total</span>'+(r.total>0||r.pactos.length?'<b class="guard-n">'+money(r.total)+'</b>':'<b class="guard-n vacio">Todavía nada</b>')
     +'<span class="note">'+(r.pactos.length?'en '+plural(r.pactos.length,'pacto cerrado','pactos cerrados')+' · el último, '+money(r.ultimo.ahorrado):'Todavía no cerraste ningún pacto: cuando cobres, lo que no gastaste se suma acá.')+'</span></div>';
   h+='<div class="banner"><p>'+CONSEJO[r.paso]+'</p></div>';
   if(r.fondo){

@@ -1037,3 +1037,31 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 .v2 .sd-subir .lec-prop{border:0;padding:0;background:transparent}
 .v2 .dg-t b,.v2 .dg-fin b{white-space:nowrap}
 .v2 .dg-t span,.v2 .dg-fin span{min-width:0}
+
+/* =====================================================================
+   Pulido de la revisión (2.14)
+   ===================================================================== */
+/* menos encabezado antes del contenido: título del capítulo más chico y «Hoy podés gastar» en un renglón */
+@media (max-width:767px){
+  .v2 .ph-t{font-size:clamp(32px,9vw,38px)}
+  .v2 .panel-head::after{margin-top:var(--e1)}
+  .v2 .hoja[data-vista="otra"] .mini:not([hidden]){padding-bottom:var(--e2);min-height:44px}
+  .v2 .mini .mn-a{flex-direction:row;align-items:baseline;gap:var(--e2)}
+  .v2 .mini .mn-a b{font-size:var(--t4)}
+}
+/* vacíos sin ceros gigantes */
+.v2 .streak.vacio .st-ic{opacity:.45;filter:grayscale(.6)}
+.v2 .st-inv{display:block;font:600 var(--t5)/1.15 var(--f-libro);color:var(--ink);margin:2px 0 4px}
+.v2 .st-sem{margin:var(--e3) 0 0;font-size:15px;color:var(--muted)}
+.v2 .st-sem b{color:var(--bien)}
+.v2 .guard-n.vacio{font-size:var(--t6);color:var(--ink)}
+/* la barra de abajo: en el teléfono, el número romano más grande y el nombre solo en el capítulo abierto
+   (los demás nombres siguen para los lectores de pantalla) */
+@media (max-width:767px){
+  .v2 .tab.lomo{overflow:visible}
+  .v2 .tab.lomo .lomo-n{font-size:21px}
+  .v2 .tab.lomo:not([aria-selected="true"]) .lomo-t{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+  .v2 .tab.lomo[aria-selected="true"] .lomo-t{font-size:12px;font-weight:700;letter-spacing:0;max-width:none;overflow:visible;text-overflow:clip;position:relative;z-index:1}
+}
+/* un solo naranja por pantalla («+ Gasto»): el micrófono va en la tinta de la barra, con su aro dorado */
+.v2 .mic{background:radial-gradient(120% 120% at 30% 25%,#24357E,#0E1640 70%);color:#F3D488;box-shadow:0 8px 24px rgba(3,6,20,.5),inset 0 0 0 1.5px rgba(226,182,90,.6)}

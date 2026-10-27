@@ -41,6 +41,9 @@ var TEXTO=['ink','muted','azul','bien','ojo','mal','oro-t','naranja-t','sky','mi
       ['page','surface'].forEach(function(f){var c=contraste(P[k],P[f]);assert.ok(c>=3,nom+': --'+k+' '+P[k]+' sobre --'+f+' da '+c.toFixed(2))});
     });
   });
+  test(nom+': «Cobrás en» a mano, en tinta violeta, se lee sobre el papel y el recuadro (4,5:1)',function(){
+    ['page','surface','surface-2'].forEach(function(f){var c=contraste(P['cobro-tinta'],P[f]);assert.ok(c>=4.5,nom+': --cobro-tinta sobre --'+f+' da '+c.toFixed(2))});
+  });
   test(nom+': los botones de acción se leen (4,5:1) y los títulos dorados grandes (3:1)',function(){
     assert.ok(contraste(P['on-cta'],P.cta)>=4.5,'texto del botón: '+contraste(P['on-cta'],P.cta).toFixed(2));
     assert.ok(contraste(P.oro,P.page)>=3,'títulos dorados: '+contraste(P.oro,P.page).toFixed(2));

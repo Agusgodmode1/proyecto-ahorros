@@ -6,6 +6,7 @@
    ===================================================================== */
 /* Letras del libro (2.7): Fraunces (variable, con SOFT alto y WONK en 0) para títulos y números grandes; Nunito para todo lo demás */
 @font-face{font-family:'Fraunces';font-style:normal;font-weight:100 900;font-display:swap;src:url(../vendor/fraunces-5.3.0/fraunces-latin-full-normal.woff2) format('woff2-variations'),url(../vendor/fraunces-5.3.0/fraunces-latin-full-normal.woff2) format('woff2')}
+@font-face{font-family:'Caveat';font-style:normal;font-weight:400 700;font-display:swap;src:url(../vendor/caveat-5.3.0/caveat-latin-wght-normal.woff2) format('woff2-variations'),url(../vendor/caveat-5.3.0/caveat-latin-wght-normal.woff2) format('woff2')}
 @font-face{font-family:'Nunito';font-style:normal;font-weight:200 1000;font-display:swap;src:url(../vendor/nunito-5.3.0/nunito-latin-wght-normal.woff2) format('woff2-variations'),url(../vendor/nunito-5.3.0/nunito-latin-wght-normal.woff2) format('woff2')}
 
 :root{

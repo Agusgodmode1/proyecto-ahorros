@@ -42,9 +42,8 @@ function heroMini(pc,H){
   var st=ctx.state,el=$('#hero-mini');if(!el)return;
   if(!(num(st.plan.monto)>0)){el.innerHTML='';el.hidden=true;return}
   el.hidden=false;
-  var d=diffDays(today(),st.plan.cobro),cv=d>0?d+(d===1?' día':' días'):(d===0?'hoy':'ya cobraste');
-  el.innerHTML='<span class="mn-a"><small>'+(H.queda<0?'Hoy te pasaste':'Hoy podés gastar')+'</small><b'+(H.queda<0?' class="neg"':'')+'>'+money(Math.abs(H.queda))+'</b></span>'
-    +'<span class="mn-b"><small>Cobrás en</small><b>'+esc(cv)+'</b></span>';
+  /* (2.14) «Cobrás en» va solo en Hoy: acá, lo que podés gastar */
+  el.innerHTML='<span class="mn-a"><small>'+(H.queda<0?'Hoy te pasaste':'Hoy podés gastar')+'</small><b'+(H.queda<0?' class="neg"':'')+'>'+money(Math.abs(H.queda))+'</b></span>';
 }
 /* Portada: lo único grande es cuánto podés gastar hoy */
 function heroChips(pc){

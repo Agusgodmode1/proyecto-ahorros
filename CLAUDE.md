@@ -86,7 +86,7 @@ La app es un libro: tapa cósmica, prólogo (el pacto), índice, seis capítulos
 - Tarjeta: el único lugar con categorías (`#aj-cats`, `renderCategorias()` con la pestaña `gastos`).
 - Pantallas ≥ 1100 px: libro abierto a doble página (pliegue al medio). Hoy: cobro y «hoy podés gastar» a la izquierda, tu día y el plan a la derecha; los demás capítulos en dos columnas; cada semana es una doble página.
 - Tour (`ui/tour.js`, `PASOS`): arranca solo después del primer pacto (pa-tour) y se repite desde Ajustes. Si agregás un capítulo o un botón principal, sumalo.
-- Sin uso (pendiente de sacar): el asistente «Mis datos» (`ui/inicio.js`, `#cfg`): desde 2.4 el pacto se cambia en el prólogo. `logica/inicio.js` sigue con sus pruebas (`fondoEmergencia` se usa en Metas).
+- El asistente viejo «Mis datos» se sacó en 2.6.1 (el pacto se cambia en el prólogo). `logica/inicio.js` queda con sus pruebas (`fondoEmergencia` se usa en Metas).
 - Pendiente a propósito: «Qué hacer con tus ahorros»: se hace después de probar el libro con uso real.
 
 **Movimiento, sonido y rendimiento**

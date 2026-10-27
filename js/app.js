@@ -14,7 +14,6 @@ import {renderAjustes,renderAvisoRespaldo,initAjustes,renderCopias} from './ui/r
 import {registrarSW} from './pwa.js';
 import {initVoz} from './ui/voz.js';
 import {abrirPerfil,initPerfil,resumenPerfil} from './ui/perfil.js';
-import {abrirInicio,initInicio} from './ui/inicio.js';
 import {abrirLibro,initLibro} from './ui/libro.js';
 import {initIndice} from './ui/indice.js';
 import {CAPITULOS,capituloDe,vecina,numeroDePagina,nombreDePagina} from './logica/capitulos.js';
@@ -275,7 +274,6 @@ function initGlobal(){
     var pf=e.target.closest('[data-perfil]');
     if(pf)abrirPerfil(Number(pf.getAttribute('data-perfil'))||1,{nuevo:false,estado:ctx.state,alTerminar:function(){syncInputs();persist();renderAll()}});
     /* Mis datos (plata de hoy, meta y fijos) y el tour, desde Ajustes */
-    if(e.target.closest('#aj-datos'))abrirInicio({nuevo:false,estado:ctx.state,alTerminar:function(){syncInputs();persist();renderAll();toast('Listo: se recalculó todo')}});
     if(e.target.closest('#aj-tour'))iniciarTour();
     if(e.target.closest('#aj-prologo'))abrirPrologo('p1');
     var pie=e.target.closest('[data-pie]');if(pie)go(pie.getAttribute('data-pie'));
@@ -322,7 +320,7 @@ function arrancar(st){
 ctx.persist=persist;ctx.renderAll=renderAll;ctx.go=go;ctx.syncInputs=syncInputs;ctx.abrirPrologo=abrirPrologo;ctx.cerrarLibro=cerrarLibro;
 
 (async function boot(){
-  initPerfil();initInicio();initTour();initPin();initLibro();initIndice();initDeslizar();
+  initPerfil();initTour();initPin();initLibro();initIndice();initDeslizar();
   registrarSW(function(){return ctx.state?flush():null});
   pedirPersistencia().then(function(p){guardado.persistente=p});
   var d=await cargar();

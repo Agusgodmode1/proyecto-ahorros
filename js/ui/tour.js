@@ -76,7 +76,7 @@ export function initTour(){
 /* La primera vez: cuando no hay otra pantalla encima, arranca solo */
 export function tourSiPendiente(){
   if(corre||!tourPendiente()||!ctx.booted)return;
-  var tapa=['#bienvenida','#wiz','#cfg','#pin'].some(function(s){var x=$(s);return x&&!x.hidden});
+  var tapa=['#wiz','#pin','#libro','#lb-hojas','#indice'].some(function(s){var x=$(s);return x&&!x.hidden});
   if(tapa)return;
   setTimeout(function(){if(!corre&&tourPendiente())iniciarTour()},700);
 }

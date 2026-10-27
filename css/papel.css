@@ -138,7 +138,7 @@
 .v2 main>section[data-cap]::before,.v2 .cap-kick{font:600 var(--t2)/1.2 var(--f-libro);letter-spacing:.16em;color:var(--oro-t)}
 /* números: siempre a la misma altura y del mismo ancho */
 .v2,.v2 *{font-variant-numeric:lining-nums tabular-nums!important}
-.v2 .tile-v,.v2 .hchip b,.v2 .wk-bv,.v2 .wk-v,.v2 .mini b,.v2 .cfg-n,.v2 .rate b,.v2 .hh-n,.v2 .cd-n,.v2 .fin-n b{font-family:var(--f-libro)!important;font-weight:700!important;letter-spacing:0!important}
+.v2 .tile-v,.v2 .hchip b,.v2 .wk-bv,.v2 .wk-v,.v2 .mini b,.v2 .rate b,.v2 .hh-n,.v2 .cd-n,.v2 .fin-n b{font-family:var(--f-libro)!important;font-weight:700!important;letter-spacing:0!important}
 .v2 .tile-v{font-size:clamp(26px,7.6vw,var(--t6))}
 .v2 .hchip b{font-size:clamp(26px,7.4vw,var(--t6))}
 .v2 .wk-bv{font-size:clamp(46px,14vw,var(--t8))}

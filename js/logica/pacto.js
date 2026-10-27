@@ -54,6 +54,12 @@ export function totalPacto(pesos,usd,cotiz){
 /* El cobro que te propone el libro: con el perfil de sueldo, su regla (5.º día hábil, último hábil o día fijo);
    sin perfil, el 5.º día hábil. Solo cuentan los feriados no laborables (fechas.js). */
 export function sugerirCobro(st,hoy,frec){
+  /* (2.23) con la regla que elegiste en «¿Cómo te entra la plata?» */
+  if(frec&&typeof frec==='object'){
+    var c=frec,fq=frecDe(c),f=cobroDesde(hoy,fq==='mensual'?Object.assign({tipo:'habil5'},c):c);
+    if(fq==='ventas'&&diffDays(hoy,f)<7)f=cobroDesde(f,c);
+    return {fecha:f,perfil:true,tipo:c.tipo||'habil5',frecuencia:fq};
+  }
   var conPerfil=!!(st&&st.perfil&&st.perfil.hecho),guardada=frecDe(st&&st.perfil&&st.perfil.cobro);
   frec=frec?frecDe({frecuencia:frec}):guardada;
   /* (2.19) otra frecuencia: la regla guardada si es la misma; si no, la de por defecto (viernes, 1 y 15, una semana) */
@@ -79,6 +85,18 @@ export function reservaFijos(st,frec,apartado,desde,hasta,vencen){
 }
 
 /* Copia del estado con el pacto puesto, para hacer las cuentas sin tocar el original */
+/* ---------- Lo que se carga en el prólogo (2.23): pagos fijos e ingresos fijos nuevos ---------- */
+export function normFijosNuevos(l){
+  if(!Array.isArray(l))return [];
+  return l.filter(function(x){return x&&num(x.monto)>0}).map(function(x,i){return {id:String(x.id||('fn'+i)),nombre:String(x.nombre||'Gasto fijo').trim().slice(0,40)||'Gasto fijo',monto:Math.round(num(x.monto)),dia:Math.min(31,Math.max(1,Math.round(num(x.dia))||1)),cat:String(x.cat||'Otros')}});
+}
+export function normIngresosNuevos(l){
+  if(!Array.isArray(l))return [];
+  return l.filter(function(x){return x&&num(x.monto)>0}).map(function(x,i){return {id:String(x.id||('in'+i)),nombre:String(x.nombre||'Ingreso').trim().slice(0,40)||'Ingreso',monto:Math.round(num(x.monto)),dia:Math.min(31,Math.max(1,Math.round(num(x.dia))||1))}});
+}
+/* El estado con los fijos que estás cargando en el prólogo, para hacer las cuentas */
+function conFijos(st,d){var n=normFijosNuevos(d&&d.fijos);return n.length?Object.assign({},st,{fijos:(st.fijos||[]).concat(n)}):st}
+function frecPacto(st,d){return d&&d.cobroCfg?frecDe(d.cobroCfg):d&&d.frecuencia?d.frecuencia:frecDe(st.perfil&&st.perfil.cobro)}
 function conPacto(st,d,hoy){
   var plan=Object.assign({},st.plan,{monto:Math.max(0,num(d.total)),modo:'monto',ahorro:Math.max(0,Math.round(num(d.ahorro))),inicio:hoy,cobro:d.cobro});
   return Object.assign({},st,{plan:plan,gastos:[]});
@@ -88,9 +106,10 @@ function fechaOk(s){return typeof s==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(s)&&i
 /* Lo que se ve al instante: cuánto queda para gastar, por día y por cuántos días.
    Los fijos que vencen antes de cobrar se descuentan primero (con un pacto nuevo y fijos ya cargados). */
 export function cuentaPacto(st,d,hoy){
-  var bruto=Math.max(0,num(d.total)),apartado=totalApartado(normApartado(d.apartado)),total=Math.max(0,bruto-apartado),cobro=fechaOk(d.cobro)&&d.cobro>hoy?d.cobro:sugerirCobro(st,hoy).fecha;
+  st=conFijos(st,d);
+  var bruto=Math.max(0,num(d.total)),apartado=totalApartado(normApartado(d.apartado)),total=Math.max(0,bruto-apartado),cobro=fechaOk(d.cobro)&&d.cobro>hoy?d.cobro:sugerirCobro(st,hoy,d.cobroCfg).fecha;
   var pc=planCalc(conPacto(st,{total:total,ahorro:d.ahorro,cobro:cobro},hoy));
-  var rf=reservaFijos(st,d.frecuencia||frecDe(st.perfil&&st.perfil.cobro),normApartado(d.apartado),hoy,cobro,pc.fijos);
+  var rf=reservaFijos(st,frecPacto(st,d),normApartado(d.apartado),hoy,cobro,pc.fijos);
   total=Math.max(0,total+rf.usa-rf.parte);
   var maxAhorro=Math.max(0,total-pc.fijos),ahorro=Math.min(Math.max(0,Math.round(num(d.ahorro))),maxAhorro);
   var gastar=Math.max(0,total-pc.fijos-ahorro);
@@ -144,13 +163,23 @@ export function sellarPacto(st,d,hoy){
   var rf=v.cuenta.reserva,ap=normApartado(d.apartado).filter(function(a){return a.id!==RESERVA_FIJOS});
   if(rf.queda>0)ap.push({id:RESERVA_FIJOS,tipo:'reserva',monto:Math.round(rf.queda),nota:'para los fijos'});
   st.pacto.apartado=ap;
+  /* (2.23) los pagos fijos y los ingresos fijos que cargaste en el prólogo */
+  normFijosNuevos(d.fijos).forEach(function(f,i){f.id='f'+Date.now().toString(36)+i;st.fijos.push(f)});
+  normIngresosNuevos(d.ingresos).forEach(function(x,i){x.id='i'+Date.now().toString(36)+i;st.ingresosFijos=(st.ingresosFijos||[]).concat([x])});
+  /* (2.23) cómo te entra la plata: la regla que elegiste; por jornal, el plan dura hasta el día que tocaste */
+  if(d.cobroCfg&&st.perfil){
+    var cc=Object.assign({},st.perfil.cobro,d.cobroCfg),fc=frecDe(cc);cc.frecuencia=fc;
+    if(fc==='jornal')cc.horizonte=Math.max(1,Math.min(31,diffDays(hoy,d.cobro)));
+    st.perfil.cobro=cc;
+  }
   /* (2.19) cada cuánto cobrás: la regla sale del día que tocaste */
-  if(d.frecuencia&&st.perfil){var fr=frecDe({frecuencia:d.frecuencia});st.perfil.cobro=fr==='mensual'?Object.assign({},st.perfil.cobro,{frecuencia:'mensual'}):reglaDesdeFecha(fr,d.cobro,hoy,st.perfil.cobro)}
+  else if(d.frecuencia&&st.perfil){var fr=frecDe({frecuencia:d.frecuencia});st.perfil.cobro=fr==='mensual'?Object.assign({},st.perfil.cobro,{frecuencia:'mensual'}):reglaDesdeFecha(fr,d.cobro,hoy,st.perfil.cobro)}
   /* (2.21) lo vendido y la ganancia guardada son de cada pacto */
   p.entradas=[];p.ganancia={};
   /* (2.22) el gasto por día con el que arrancó el pacto: la vara de «Tu plata alcanza» hasta que haya gastos */
   p.porDiaBase=Math.round(v.cuenta.porDia*100)/100;
-  st.pacto.pct=v.cuenta.total>0?Math.round(v.cuenta.ahorro/v.cuenta.total*1000)/1000:0;
+  /* (2.23) por jornal, la parte de cada cobro que guardás la elegís en el prólogo */
+  st.pacto.pct=d.pctCobro!==undefined&&d.pctCobro!==null&&d.pctCobro!==''?Math.max(0,Math.min(1,num(d.pctCobro)/100)):v.cuenta.total>0?Math.round(v.cuenta.ahorro/v.cuenta.total*1000)/1000:0;
   st.pacto.sellado=hoy;st.pacto.numero=(Math.round(num(st.pacto.numero))||0)+1;
   st.pacto.usd=num(d.usd)>0&&num(d.cotiz)>0?Math.round(num(d.usd)*100)/100:0;
   if(st.pacto.usd&&st.monedas){st.monedas.cotizacion=num(d.cotiz);st.monedas.fecha=hoy}

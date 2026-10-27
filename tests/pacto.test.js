@@ -147,3 +147,23 @@ test('migración: un estado ya en v14 sin sellar sigue sin sellar',function(){
   var e=ejemplo(HOY);assert.ok(e.pacto.sellado,'el ejemplo ya viene sellado');
   assert.equal(pactoDesdePlan({plan:{}},HOY).sellado,HOY);
 });
+
+import {normFijosNuevos} from '../js/logica/pacto.js';
+test('(2.23) el prólogo carga pagos fijos, ingresos fijos y la regla de cobro',function(){
+  var st=nuevo();
+  var d={total:30000,ahorro:0,cobro:'2026-11-02',cobroCfg:{frecuencia:'semanal',dow:1},
+    fijos:[{nombre:'Alquiler',monto:12000,dia:5,cat:'Vivienda'},{nombre:'',monto:0}],ingresos:[{nombre:'Ayuda',monto:5000,dia:10}],pctCobro:''};
+  assert.equal(normFijosNuevos(d.fijos).length,1);
+  var c=cuentaPacto(st,d,HOY);
+  assert.equal(c.reserva.parte,2760,'semanal: aparta 7/30,4 del alquiler que todavía no está cargado');
+  var v=sellarPacto(st,d,HOY);assert.equal(v.ok,true);
+  assert.equal(st.fijos.length,1);assert.equal(st.fijos[0].nombre,'Alquiler');
+  assert.equal(st.ingresosFijos.length,1);
+  assert.equal(st.perfil.cobro.frecuencia,'semanal');assert.equal(st.perfil.cobro.dow,1);
+  assert.equal(sugerirCobro(st,HOY,{frecuencia:'semanal',dow:5}).fecha,'2026-10-30');
+});
+test('(2.23) por jornal: la parte de cada cobro y cuánto dura el plan',function(){
+  var st=nuevo();
+  sellarPacto(st,{total:3000,ahorro:0,cobro:'2026-11-09',cobroCfg:{frecuencia:'jornal',horizonte:7},pctCobro:10},HOY);
+  assert.equal(st.pacto.pct,0.1);assert.equal(st.perfil.cobro.horizonte,14);
+});

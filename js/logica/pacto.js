@@ -72,7 +72,9 @@ export function cuentaPacto(st,d,hoy){
   var pc=planCalc(conPacto(st,{total:total,ahorro:d.ahorro,cobro:cobro},hoy));
   var maxAhorro=Math.max(0,total-pc.fijos),ahorro=Math.min(Math.max(0,Math.round(num(d.ahorro))),maxAhorro);
   var gastar=Math.max(0,total-pc.fijos-ahorro);
-  return {total:total,bruto:bruto,apartado:apartado,ahorro:ahorro,pct:total>0?ahorro/total:0,fijos:pc.fijos,maxAhorro:maxAhorro,gastar:gastar,dias:pc.total,porDia:gastar/pc.total,cobro:cobro};
+  return {total:total,bruto:bruto,apartado:apartado,ahorro:ahorro,pct:total>0?ahorro/total:0,fijos:pc.fijos,maxAhorro:maxAhorro,gastar:gastar,dias:pc.total,porDia:gastar/pc.total,cobro:cobro,
+    /* (2.18) aunque no guardes nada, da menos de DIA_BAJO por día: modo supervivencia */
+    supervivencia:total>0&&(total-pc.fijos)/Math.max(1,pc.total)<DIA_BAJO};
 }
 
 /* Valida los tres datos. Devuelve {ok, errores:{total?,ahorro?,cobro?}, avisos:[texto], cuenta}.
@@ -111,6 +113,8 @@ export function sellarPacto(st,d,hoy){
   var v=validarPacto(st,d,hoy);if(!v.ok)return v;
   var p=st.plan;
   p.monto=v.cuenta.total;p.modo='monto';p.ahorro=Math.round(v.cuenta.ahorro);p.inicio=hoy;p.cobro=d.cobro;
+  /* (2.18) de la plata que esperabas, sigue la que todavía no llegó y entra antes de este cobro */
+  p.esperado=(Array.isArray(p.esperado)?p.esperado:[]).filter(function(x){return x&&x.fecha>=hoy&&x.fecha<d.cobro});
   if(!st.pacto)st.pacto=pactoBase();
   st.pacto.apartado=normApartado(d.apartado);
   st.pacto.sellado=hoy;st.pacto.numero=(Math.round(num(st.pacto.numero))||0)+1;

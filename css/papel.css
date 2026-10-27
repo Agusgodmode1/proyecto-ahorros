@@ -1230,3 +1230,28 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 .v2 .ap-lista li b{font-variant-numeric:lining-nums;white-space:nowrap}
 .v2 .ap-lista li.tot{border-bottom:0;font-weight:700}
 .lb-valor.apartado{background:none;color:var(--ink);-webkit-text-fill-color:var(--ink)}
+
+/* ---------- Modo supervivencia (2.18) ---------- */
+.v2 .superv{box-shadow:inset 3px 0 0 var(--oro),inset 0 0 0 1px var(--line)}
+.v2 .sv-kick{margin:0;font:600 13.5px/1.25 var(--f-body);letter-spacing:.03em;color:var(--oro-t)}
+.v2 .superv h2{margin:0}
+.v2 .sv-datos{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.v2 .sv-datos li{display:grid;gap:2px;padding:10px 12px;border-radius:14px;background:color-mix(in srgb,var(--azul) 7%,transparent)}
+.v2 .sv-datos span{font:600 13.5px/1.2 var(--f-body);color:var(--muted)}
+.v2 .sv-datos b{font:700 24px/1.15 var(--f-display);color:var(--azul);font-variant-numeric:lining-nums}
+.v2 .sv-orden{margin:0;padding-left:22px;display:grid;gap:6px}
+.v2 .sv-orden li{line-height:1.4}
+.v2 .sv-h3{margin:0;font:700 17px/1.3 var(--f-body)}
+.v2 .sv-lista{list-style:none;margin:0;padding:0}
+.v2 .sv-lista>li{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.v2 .sv-lista>li>span{flex:1;min-width:0}
+.v2 .sv-lista>li small{display:block;color:var(--muted);font-size:14px}
+.v2 .sv-lista>li>b{font-variant-numeric:lining-nums;white-space:nowrap}
+.v2 .sv-lista>li.sv-llego{display:grid;gap:8px;border-bottom:0;padding:12px;border-radius:14px;background:color-mix(in srgb,var(--oro) 9%,transparent)}
+.v2 .sv-llego p{margin:0}
+.v2 .sv-recibir{display:flex;gap:10px;align-items:center}
+.v2 .sv-recibir .money{flex:1;min-width:0}
+.v2 .sv-llego .btn.quiet{justify-self:start}
+.v2 .sv-form[hidden]{display:none}
+.lb-superv b{color:var(--ink)}
+.v2 .sv-llego small{display:block;color:var(--muted);font-size:14px;margin-top:2px}

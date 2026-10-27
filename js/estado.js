@@ -9,6 +9,7 @@ import {monedasBase} from './logica/monedas.js';
 import {horasPorDefecto} from './logica/sueldo.js';
 import {categoriasBase,categoriasDesde} from './logica/categorias.js';
 import {pactoBase,pactoDesdePlan,normApartado} from './logica/pacto.js';
+import {normEsperado} from './logica/supervivencia.js';
 
 /* Subí este número cuando cambie la forma del estado y agregá el paso en migrar().
    v1–v3: archivo HTML · v4: voz y meta · v5: perfil propio y feriados editables · v6: sincronización
@@ -24,8 +25,10 @@ import {pactoBase,pactoDesdePlan,normApartado} from './logica/pacto.js';
    v16: Sueldo ordenado: perfil.horas.preguntado («¿hay horas extra?» se pregunta una sola vez; quien ya armó su perfil no la ve),
         perfil.horas.multFeriado (opcional, p. ej. ×2,5), perfil.ingreso.factura y sueldo.factura (cobro con factura).
    v19: la plata apartada (state.pacto.apartado [{id, tipo, monto, nota}]): lo que tenés pero no es para gastar.
-        Quien ya usaba la app arranca sin nada apartado (nada cambia en las cuentas). */
-export var VERSION_ESTADO=19;
+        Quien ya usaba la app arranca sin nada apartado (nada cambia en las cuentas).
+   v20: modo supervivencia: la plata que te va a entrar antes de cobrar (state.plan.esperado [{id, fecha, monto, nota}]).
+        No cuenta hasta que llega. Quien ya usaba la app arranca sin nada esperado. */
+export var VERSION_ESTADO=20;
 
 function hoyISO(){return iso(new Date())}
 /* Feriados: por defecto solo cuentan los 5 no laborables (1/1, 1/5, 18/7, 25/8, 25/12).
@@ -42,7 +45,7 @@ export function defaults(hoy){
   return {
     v:VERSION_ESTADO,ejemplo:false,
     perfil:perfilBase(),
-    plan:{monto:0,modo:'monto',ahorro:0,pct:30,inicio:hoy,cobro:cobroDesde(hoy,{tipo:'habil5'}),minimo:null,sobrante:'siguiente',sobranteSemana:{}},
+    plan:{monto:0,modo:'monto',ahorro:0,pct:30,inicio:hoy,cobro:cobroDesde(hoy,{tipo:'habil5'}),minimo:null,sobrante:'siguiente',sobranteSemana:{},esperado:[]},
     gastos:[],
     sueldo:sueldoBase(),
     extracto:{texto:'',formato:'auto',hormiga:400,cat:{},columnas:{},descartadas:{}}, /* columnas: por banco, qué columna es cada cosa (planillas); descartadas: avisos de Hoy que ya viste */
@@ -156,6 +159,8 @@ export function migrar(d){
   if(vx<14&&!state.pacto.sellado)state.pacto=pactoDesdePlan(state,hoyISO());
   /* v19: la plata apartada, siempre como lista prolija (sin nada apartado, nada cambia) */
   state.pacto.apartado=normApartado(state.pacto.apartado);
+  /* v20: la plata que te va a entrar, siempre como lista prolija */
+  state.plan.esperado=normEsperado(state.plan.esperado);
   /* v11: las categorías de siempre pasan a ser tu lista, más las que ya usaban tus gastos. Ningún gasto cambia. */
   if(!state.categorias)state.categorias=categoriasDesde(state);
   /* v12: sin mínimo (vale lo mismo que el objetivo) y lo que sobra pasa a la semana siguiente, como siempre */

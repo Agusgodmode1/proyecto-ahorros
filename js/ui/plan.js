@@ -17,6 +17,7 @@ import {cicloTerminado,resumenCiclo,cerrarCiclo} from '../logica/ciclo.js';
 import {abrirPostal} from './postal.js';
 import {abrirLibro,polvo} from './libro.js';
 import {totalApartado} from '../logica/pacto.js';
+import {renderSuperv,initSuperv} from './supervivencia.js';
 import {irAlPacto} from './indice.js';
 
 function rankTxt(s){
@@ -184,7 +185,7 @@ export function renderResumen(pc){
   var sum=$('#plan-aj-sum');if(sum)sum.textContent=num(state.plan.monto)>0?money(Math.max(0,disponible(state,pc)))+' disponibles · guardás '+money(pc.ahorro)+' · hasta el '+fCorta(state.plan.cobro):'Completá los tres pasos';
   /* (2.15) la página de Hoy se dibuja solo cuando se ve: así pasar a otro capítulo no la rehace cada vez */
   if(ctx.tab!=='resumen')return;
-  renderCierre(pc);renderHoy(pc);renderRitmo(pc);
+  renderCierre(pc);renderHoy(pc);renderSuperv(pc);renderRitmo(pc);
   var sf=aniosSinFeriados(state,today()),fa=$('#fer-aviso');
   if(fa)fa.innerHTML=sf.length?'<div class="banner"><p><b>No tengo los feriados de '+sf.join(' y ')+'.</b> Sin ellos, el día de cobro puede salir mal. Actualizá la app o agregalos en Ajustes → Feriados.</p><button class="btn" type="button" data-goto="ajustes">Ir a Feriados</button></div>':'';
   var p=state.plan,t=today(),L=liqNow(true),fp=fijosPeriodo(state.fijos,p.inicio,p.cobro);
@@ -372,7 +373,7 @@ function confirmarSaldo(real){
 }
 export function initPlan(){
   var pr=$('#p-resumen');
-  initSaldo();
+  initSaldo();initSuperv();
   $('#meta-alerta').addEventListener('click',function(e){
     var b=e.target.closest('#meta-bajar');
     if(b){ctx.state.plan.ahorro=Number(b.getAttribute('data-mx'))||0;ctx.persist();ctx.syncInputs();ctx.renderAll();toast('Meta bajada a '+money(ctx.state.plan.ahorro));return}

@@ -15,6 +15,7 @@ import {planCalc} from '../logica/plan.js';
 import {disponible,maxAhorro} from '../logica/saldo.js';
 import {totalPacto,validarPacto,cuentaPacto,sellarPacto,sugerirCobro,atajosPacto,pasoAhorro,mesCalendario,previaAjuste,aplicarAjuste,TIPOS_APARTADO,normApartado,totalApartado,totalLibre,previaApartado,aplicarApartado,deshacerApartado} from '../logica/pacto.js';
 import {PROLOGO} from '../logica/capitulos.js';
+import {atajosSupervivencia} from '../logica/supervivencia.js';
 import {aplicarFeriados} from './feriados.js';
 import {montarImportador} from './respaldo.js';
 import {marcarTour} from './tour.js';
@@ -198,13 +199,15 @@ function pagHTML(id){
   }else if(id==='qa'){
     h=hojear()&&E.edit!=='qa'?'':apartadoHTML();
   }else if(id==='q2'){
-    var ed2=hojear(),apQ=ed2?0:apartadoD(),tot=ed2?actuales().tenes:libre(),mx=ed2?actuales().max:Math.round(tot),paso=pasoAhorro(tot),at=atajosPacto(tot).filter(function(a){return a.monto<=mx});
+    var ed2=hojear(),apQ=ed2?0:apartadoD(),tot=ed2?actuales().tenes:libre(),mx=ed2?actuales().max:Math.round(tot),paso=pasoAhorro(tot),sv=!ed2&&superD();
+    var at=(sv?atajosSupervivencia(tot,cuentaPacto(st,datos(),today()).fijos).map(function(a){return {monto:a.monto,pct:null,t:a.t}}):atajosPacto(tot)).filter(function(a){return a.monto<=mx});
     h='<h1 class="lb-h lb-tinta" id="lb-h">'+tinta('¿Cuánto de eso querés ahorrar?')+'</h1>'
-      +'<p class="lb-p">Por más mínimo que sea. '+(ed2?'Hoy tenés':apQ>0?'Para usar tenés':'Empezás con')+' <b>'+money(tot)+'</b>'+(apQ>0?' (sin contar los '+money(apQ)+' apartados)':'')+'.</p>'
+      +(sv?superHTML():'')
+      +'<p class="lb-p">'+(sv?'Si querés, guardá algo simbólico. ':'Por más mínimo que sea. ')+(ed2?'Hoy tenés':apQ>0?'Para usar tenés':'Empezás con')+' <b>'+money(tot)+'</b>'+(apQ>0?' (sin contar los '+money(apQ)+' apartados)':'')+'.</p>'
       +'<div class="lb-campo"><div class="lb-pct"><label for="lb-ahorro" class="lb-l">Quiero guardar</label><b id="lb-pct-n"></b></div>'
       +'<div class="lb-monto chico"><span>$</span><input id="lb-ahorro" type="number" inputmode="numeric" min="0" step="1" value="'+esc(D.ahorro)+'"></div></div>'
       +'<input class="lb-rango" id="lb-rango" type="range" min="0" max="'+Math.max(0,mx)+'" step="'+paso+'" value="'+Math.min(Math.round(num(D.ahorro)),Math.max(0,mx))+'" aria-label="Cuánto querés ahorrar">'
-      +(at.length?'<div class="lb-chips" role="group" aria-label="Atajos">'+at.map(function(a){return '<button class="lb-chip" type="button" data-lb="atajo" data-val="'+a.monto+'">'+a.pct+' %</button>'}).join('')+'</div>':'')
+      +(at.length?'<div class="lb-chips" role="group" aria-label="Atajos">'+at.map(function(a){return '<button class="lb-chip" type="button" data-lb="atajo" data-val="'+a.monto+'">'+(a.t?esc(a.t)+(a.monto?' · '+money(a.monto):''):a.pct+' %')+'</button>'}).join('')+'</div>':'')
       +'<p class="lb-queda" id="lb-queda" aria-live="polite"></p>'
       +'<div id="lb-avisos"></div>'
       +'<p class="lb-err" id="lb-err" role="alert" hidden></p>'+(ed2?accEdit():acc);
@@ -275,6 +278,7 @@ function devolverLetra(){var c=$('#plan-aj-casa'),f=$('#plan-aj');if(c&&f&&f.par
 function pctTxt(r){return (Math.round(r*1000)/10).toLocaleString('es-UY')+' %'}
 function avisosHTML(v){
   var h='';
+  if(v.cuenta&&v.cuenta.supervivencia)return '<p class="lb-aviso suave lb-superv"><b>Modo supervivencia.</b> Te quedarían '+money(v.cuenta.porDia)+' por día. Este pacto no se trata de guardar: se trata de llegar al cobro. En Hoy te voy a mostrar cuánto tenés por semana, qué pagar primero y dónde anotar la plata que te va a entrar.</p>';
   if(v.avisos.indexOf('bajo')>=0)h+='<p class="lb-aviso">Te quedarían '+money(v.cuenta.porDia)+' por día. Es poco: si querés, bajá un poco el ahorro. Igual podés seguir.</p>';
   if(v.avisos.indexOf('cero')>=0)h+='<p class="lb-aviso suave">Con cero también se puede empezar, pero este libro existe para que guardes algo. ¿Y si probás con un poquito?</p>';
   return h;
@@ -289,6 +293,13 @@ function datosAjuste(){var A=actuales(),id=E.edit;return {tenes:id==='q1'?Math.m
 function errAjuste(v){var k=Object.keys(v.errores)[0];if(!k)return '';var m=v.errores[k];return m==='max'?'Con esa plata, lo máximo que podés guardar es '+money(Math.floor(v.maxAhorro))+'.':m}
 function q(sel){return document.querySelector('#lb-pila .lb-pag:last-child '+sel)}
 function error(m){var e=q('#lb-err');if(e){e.textContent=m||'';e.hidden=!m}}
+
+/* ---------- Modo supervivencia (2.18): aunque no guardes nada, da menos de lo mínimo por día ---------- */
+function superD(){return cuentaPacto(st,Object.assign({},datos(),{ahorro:0}),today()).supervivencia}
+function superHTML(){
+  var c=cuentaPacto(st,Object.assign({},datos(),{ahorro:0}),today());
+  return '<p class="lb-aviso suave lb-superv"><b>Modo supervivencia.</b> Con '+money(c.gastar)+' para '+c.dias+' días son unos '+money(c.porDia)+' por día. Esta vez la meta es llegar al cobro, no guardar: está bien si ponés cero.</p>';
+}
 
 /* ---------- La plata apartada (2.17): «¿Toda esta plata la podés gastar?» ---------- */
 var nAp=0;
@@ -417,7 +428,7 @@ function valida(id){
   if(id==='q1'){
     if(D.conUsd&&num(D.usd)>0&&!(num(D.cotiz)>0)){error('Escribí a cuánto está el dólar.');return false}
     if(v.errores.total){error(v.errores.total);return false}
-    if(D.ahorro===null||D.ahorro===''){var at=atajosPacto(total());D.ahorro=at.length?String(at[0].monto):'0'}
+    if(D.ahorro===null||D.ahorro===''){var at=atajosPacto(total());D.ahorro=superD()?'0':at.length?String(at[0].monto):'0'}
     if(num(D.ahorro)>total())D.ahorro=String(Math.floor(total()));
   }
   if(id==='qa'){
@@ -425,7 +436,7 @@ function valida(id){
     if(D.hayAp&&!totalApartado(normApartado(D.ap))){error('Poné cuánto está apartado, o elegí «Sí, toda».');return false}
     if(v.errores.apartado){error(errApartado(v.errores.apartado));return false}
     /* el ahorro propuesto se calcula sobre lo que queda para usar */
-    var lb=libre();if(num(D.ahorro)>lb){var at2=atajosPacto(lb);D.ahorro=at2.length?String(at2[0].monto):'0'}
+    var lb=libre();if(superD())D.ahorro='0';else if(num(D.ahorro)>lb){var at2=atajosPacto(lb);D.ahorro=at2.length?String(at2[0].monto):'0'}
   }
   if(id==='q2'&&v.errores.ahorro){error(v.errores.ahorro==='fijos'?'Con tus gastos fijos, lo máximo que podés ahorrar es '+money(Math.floor(v.cuenta.maxAhorro))+'.':v.errores.ahorro);return false}
   if(id==='q3'&&v.errores.cobro){error(v.errores.cobro);return false}

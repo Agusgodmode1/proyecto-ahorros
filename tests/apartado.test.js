@@ -90,7 +90,7 @@ test('apartar baja el ahorro si ya no entra',function(){
 });
 
 test('migración v19: quien ya usaba la app arranca sin nada apartado',function(){
-  assert.equal(VERSION_ESTADO,19);
+  assert.ok(VERSION_ESTADO>=19);
   var d=defaults(HOY);d.v=18;delete d.pacto.apartado;d.plan.monto=20000;
   var s=migrar(d);
   assert.deepEqual(s.pacto.apartado,[]);assert.equal(s.plan.monto,20000);

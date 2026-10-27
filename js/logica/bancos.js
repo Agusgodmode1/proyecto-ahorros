@@ -254,6 +254,21 @@ var TIPOS=[
   ['retiro',/RETIRO|CAJERO|\bATM\b|REDBROU|BANRED|EXTRACCION|EFECTIVO/,'Retiros y transferencias'],
   ['transferencia',/TRANSF|\bTRF\b|\bP2P\b|ENVIO\s?DE\s?DINERO|DEPOSITO|GIRO\b/,'Retiros y transferencias']
 ];
+/* (2.15) Los cargos del banco con nombres claros, en oraciones (no «Comisión Mantenimiento Cuenta») */
+var CLAROS=[
+  [/MANTENIMIENTO|COSTO\s?(DE\s?)?CUENTA|CARGO\s?(FIJO|MENSUAL)/,'Mantenimiento de la cuenta'],
+  [/\bIVA\b/,'IVA de la comisión'],
+  [/ANUALIDAD|MEMBRESIA|RENOVACION|EMISION/,'Costo anual de la tarjeta'],
+  [/ENVIO\s?DE\s?ESTADO/,'Envío del estado de cuenta'],
+  [/\bMORA\b/,'Intereses por atraso'],
+  [/INTERES|FINANCIACION/,'Intereses de la tarjeta'],
+  [/RECARGO/,'Recargo'],
+  [/SEGURO\s?(DE\s?)?VIDA/,'Seguro de vida'],
+  [/SEGURO|POLIZA/,'Seguro'],
+  [/IMPUESTO\s?DEB/,'Impuesto a los débitos'],
+  [/SELLADO/,'Sellado'],
+  [/COMISION/,'Comisión del banco']
+];
 var MP_ANTES=/^(MERPAGO|MERCADOPAGO|MP|DLO|DLOCAL|PAYPAL|SQ|PAYU|EBANX|NUVEI)\s?\*\s?/;
 var RUIDO=/\b(POS|COMPRAS?|COMPRA CON TARJETA|CON TARJETA|DEB(ITO)?|AUT(OMATICO)?|DEB\.|TRJ|TARJ(ETA)?|VISA|MASTER(CARD)?|MAESTRO|ELECTRON|CABAL|CONSUMO|EXTERIOR|CONTACTLESS|NFC|QR|PAGO|PAGOS|ONLINE|WEB|RECURRENTE|RECURR|SUSCRIPCION|PLAN|MENSUAL|CREDITO|DEBITO|UYU|USD|U\$S|US\$|UY|URY|URUGUAY|MVD|MONTEVIDEO|CANELONES|MALDONADO|PUNTA DEL ESTE|PDE|CIUDAD DE LA COSTA|SALTO|PAYSANDU|COLONIA|RIVERA|SA|SRL|LTDA|INC|LLC|COM|WWW)\b/g;
 var ACENTOS={Comision:'Comisión',Interes:'Interés',Intereses:'Intereses',Credito:'Crédito',Debito:'Débito',Deposito:'Depósito',Envio:'Envío',Poliza:'Póliza',
@@ -283,6 +298,7 @@ export function comercio(desc){
     var w=s.split(' ').filter(function(x){return x.replace(/[.\-']/g,'').length>1}).slice(0,3);
     r.nombre=w.length?titular(w.join(' ')):(r.tipo==='comision'?'Comisión':r.tipo==='retiro'?'Retiro de efectivo':'Sin nombre');
   }
+  if(r.tipo==='comision'||r.tipo==='interes'||r.tipo==='seguro')for(var c=0;c<CLAROS.length;c++)if(CLAROS[c][0].test(u)){r.nombre=CLAROS[c][1];break}
   if(r.tipo==='retiro')r.nombre='Retiro de efectivo';
   if(r.tipo==='pago')r.nombre='Pago de la tarjeta';
   if(r.tipo==='transferencia')r.nombre=r.nombre&&r.nombre!=='Sin nombre'?'Transferencia · '+r.nombre:'Transferencia';

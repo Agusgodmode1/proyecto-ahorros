@@ -177,6 +177,11 @@ test('limpia el nombre del comercio y le pone categoría', function(){
   assert.equal(comercio('RETIRO REDBROU 1234').tipo,'retiro');
   assert.equal(comercio('TRANSF A JUAN PEREZ').nombre,'Transferencia · Juan Perez');
   assert.equal(comercio('COMISION MANTENIMIENTO CUENTA').tipo,'comision');
+  /* los cargos del banco, con nombres claros en oraciones */
+  assert.equal(comercio('COMISION MANTENIMIENTO CUENTA').nombre,'Mantenimiento de la cuenta');
+  assert.equal(comercio('IVA S/COMISION').nombre,'IVA de la comisión');
+  assert.equal(comercio('INTERESES FINANCIACION').nombre,'Intereses de la tarjeta');
+  assert.equal(comercio('SEGURO DE VIDA TARJETA').nombre,'Seguro de vida');
   assert.equal(comercio('SEGURO DE VIDA TARJETA').tipo,'seguro');
   assert.equal(comercio('COMPRA MERCADOLIBRE CUOTA 02/06').cuota.n,2);
   assert.equal(comercio('NETFLIX 12/10').cuota,null,'una fecha no es una cuota');

@@ -318,3 +318,22 @@
   .v2 .pie .flecha.ant{left:max(12px,calc(50% - 590px - 78px))}
   .v2 .pie .flecha.sig{right:max(12px,calc(50% - 590px - 78px))}
 }
+
+/* =====================================================================
+   Pulido (2.6): todo lo que se toca mide 44 px o más (revisado página por página).
+   ===================================================================== */
+.v2 .indice-btn{width:44px}
+.v2 .hero-cog{width:44px;height:44px}
+.v2 .btn.sm{min-height:44px;padding:6px 14px}
+.v2 .seg button{min-height:44px}
+.v2 details>summary{min-height:44px;display:flex;align-items:center}
+.v2 label.check{min-height:44px;display:flex;align-items:center;gap:10px}
+.v2 label.check input{width:22px;height:22px;flex:none;accent-color:var(--azul)}
+/* el calendario del prólogo: un poco más de ancho para que cada día mida 44 px */
+@media (max-width:420px){.lb-pag-in{padding-left:18px;padding-right:14px}.lb-cal table{border-spacing:2px}}
+/* En la doble página el formulario de fijos tiene media página: dos columnas, no cuatro */
+@media (min-width:1100px){
+  .v2 .fijoform{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .v2 .fijoform .field:first-child{grid-column:1 / -1}
+  .v2 main>section>*{min-width:0}
+}

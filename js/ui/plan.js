@@ -19,6 +19,7 @@ import {abrirLibro,polvo} from './libro.js';
 import {totalApartado} from '../logica/pacto.js';
 import {renderSuperv,initSuperv} from './supervivencia.js';
 import {renderCobre,initCobre} from './cobre.js';
+import {renderEntradas,initEntradas} from './entradas.js';
 import {periodoTxt} from '../logica/frecuencia.js';
 import {irAlPacto} from './indice.js';
 
@@ -187,7 +188,7 @@ export function renderResumen(pc){
   var sum=$('#plan-aj-sum');if(sum)sum.textContent=num(state.plan.monto)>0?money(Math.max(0,disponible(state,pc)))+' disponibles · guardás '+money(pc.ahorro)+' · hasta el '+fCorta(state.plan.cobro):'Completá los tres pasos';
   /* (2.15) la página de Hoy se dibuja solo cuando se ve: así pasar a otro capítulo no la rehace cada vez */
   if(ctx.tab!=='resumen')return;
-  renderCierre(pc);renderHoy(pc);renderCobre();renderSuperv(pc);renderRitmo(pc);
+  renderCierre(pc);renderHoy(pc);renderCobre();renderEntradas();renderSuperv(pc);renderRitmo(pc);
   var sf=aniosSinFeriados(state,today()),fa=$('#fer-aviso');
   if(fa)fa.innerHTML=sf.length?'<div class="banner"><p><b>No tengo los feriados de '+sf.join(' y ')+'.</b> Sin ellos, el día de cobro puede salir mal. Actualizá la app o agregalos en Ajustes → Feriados.</p><button class="btn" type="button" data-goto="ajustes">Ir a Feriados</button></div>':'';
   var p=state.plan,t=today(),L=liqNow(true),fp=fijosPeriodo(state.fijos,p.inicio,p.cobro);
@@ -244,6 +245,7 @@ export function renderResumen(pc){
     +row(parte?'Tu cobro, estimado (la parte del mes)':L.real?'Tu sueldo (según tu recibo)':'Tu sueldo, estimado',money(parte?nx.liquido:L.liquido),'','<button class="linklike" type="button" data-goto="sueldo">ver el cálculo</button>')
     +row(parte?'Tu parte de los fijos del mes':'Gastos fijos del mes','− '+money(nx.fij),'sub minus',state.fijos.length?state.fijos.length+' cargados':'<button class="linklike" type="button" data-goto="fijos">cargalos</button>')
     +(conAg?row('Aguinaldo de '+AG.nombre,'+ '+money(AG.liquido),'sub','<button class="linklike" type="button" data-goto="sueldo">estimado</button>, antes del '+Number(AG.pago.slice(8,10))+' de '+AG.nombre):'')
+    +(nx.ingresos>0?row('Tus ingresos fijos','+ '+money(nx.ingresos),'sub','<button class="linklike" type="button" data-goto="fijos">'+(parte?'la parte del período':'ver')+'</button>'):'')
     +row('Lo que vas a guardar','− '+money(nx.meta),'sub save','tu meta de ahorro')
     +row('Libre para gastar',money(nx.libre),'final')+'</div>';
   if(nx.metaPedida>nx.meta)h+='<p class="note">Tu meta de '+money(nx.metaPedida)+' es más de lo que te queda después de los fijos. Se usa '+money(nx.meta)+'.</p>';
@@ -376,7 +378,7 @@ function confirmarSaldo(real){
 }
 export function initPlan(){
   var pr=$('#p-resumen');
-  initSaldo();initSuperv();initCobre();
+  initSaldo();initSuperv();initCobre();initEntradas();
   $('#meta-alerta').addEventListener('click',function(e){
     var b=e.target.closest('#meta-bajar');
     if(b){ctx.state.plan.ahorro=Number(b.getAttribute('data-mx'))||0;ctx.persist();ctx.syncInputs();ctx.renderAll();toast('Meta bajada a '+money(ctx.state.plan.ahorro));return}

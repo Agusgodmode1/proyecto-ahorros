@@ -10,6 +10,7 @@ import {horasPorDefecto} from './logica/sueldo.js';
 import {categoriasBase,categoriasDesde} from './logica/categorias.js';
 import {pactoBase,pactoDesdePlan,normApartado} from './logica/pacto.js';
 import {normEsperado} from './logica/supervivencia.js';
+import {normIngresos} from './logica/ingresos.js';
 
 /* Subí este número cuando cambie la forma del estado y agregá el paso en migrar().
    v1–v3: archivo HTML · v4: voz y meta · v5: perfil propio y feriados editables · v6: sincronización
@@ -27,8 +28,10 @@ import {normEsperado} from './logica/supervivencia.js';
    v19: la plata apartada (state.pacto.apartado [{id, tipo, monto, nota}]): lo que tenés pero no es para gastar.
         Quien ya usaba la app arranca sin nada apartado (nada cambia en las cuentas).
    v20: modo supervivencia: la plata que te va a entrar antes de cobrar (state.plan.esperado [{id, fecha, monto, nota}]).
-        No cuenta hasta que llega. Quien ya usaba la app arranca sin nada esperado. */
-export var VERSION_ESTADO=20;
+        No cuenta hasta que llega. Quien ya usaba la app arranca sin nada esperado.
+   v21: ingresos fijos (state.ingresosFijos [{id, nombre, monto, dia}]) y state.plan.vistos (los ya respondidos).
+        Quien ya usaba la app arranca sin ingresos fijos (nada cambia en las cuentas). */
+export var VERSION_ESTADO=21;
 
 function hoyISO(){return iso(new Date())}
 /* Feriados: por defecto solo cuentan los 5 no laborables (1/1, 1/5, 18/7, 25/8, 25/12).
@@ -45,7 +48,7 @@ export function defaults(hoy){
   return {
     v:VERSION_ESTADO,ejemplo:false,
     perfil:perfilBase(),
-    plan:{monto:0,modo:'monto',ahorro:0,pct:30,inicio:hoy,cobro:cobroDesde(hoy,{tipo:'habil5'}),minimo:null,sobrante:'siguiente',sobranteSemana:{},esperado:[]},
+    plan:{monto:0,modo:'monto',ahorro:0,pct:30,inicio:hoy,cobro:cobroDesde(hoy,{tipo:'habil5'}),minimo:null,sobrante:'siguiente',sobranteSemana:{},esperado:[],vistos:[]},
     gastos:[],
     sueldo:sueldoBase(),
     extracto:{texto:'',formato:'auto',hormiga:400,cat:{},columnas:{},descartadas:{}}, /* columnas: por banco, qué columna es cada cosa (planillas); descartadas: avisos de Hoy que ya viste */
@@ -63,7 +66,8 @@ export function defaults(hoy){
     plantillasRecibo:{},                 /* por empleador: qué renglón del PDF es cada campo */
     pacto:pactoBase(),                   /* {sellado:fecha|null, numero, usd}: los datos del pacto viven en plan */
     grupos:[],                           /* con quién compartís fijos (logica/reparto.js y compartidos.js) */
-    repetidos:[]                         /* gastos que se repiten solos (logica/repetidos.js) */
+    repetidos:[],                        /* gastos que se repiten solos (logica/repetidos.js) */
+    ingresosFijos:[]                     /* (2.20) lo que te entra todos los meses además del sueldo (logica/ingresos.js) */
   };
 }
 
@@ -154,13 +158,16 @@ export function migrar(d){
     /* v15: sin grupos, todos los fijos son solo tuyos (nada cambia en las cuentas) */
     grupos:Array.isArray(x.grupos)?x.grupos:[],
     /* v18: sin gastos que se repiten solos (nada cambia) */
-    repetidos:Array.isArray(x.repetidos)?x.repetidos:[]};
+    repetidos:Array.isArray(x.repetidos)?x.repetidos:[],
+    /* v21: sin ingresos fijos (nada cambia) */
+    ingresosFijos:normIngresos(x.ingresosFijos)};
   /* v14: a quien ya usaba la app no se le muestra el prólogo: su plan pasa a ser su pacto */
   if(vx<14&&!state.pacto.sellado)state.pacto=pactoDesdePlan(state,hoyISO());
   /* v19: la plata apartada, siempre como lista prolija (sin nada apartado, nada cambia) */
   state.pacto.apartado=normApartado(state.pacto.apartado);
   /* v20: la plata que te va a entrar, siempre como lista prolija */
   state.plan.esperado=normEsperado(state.plan.esperado);
+  state.plan.vistos=Array.isArray(state.plan.vistos)?state.plan.vistos.map(String):[];
   /* v11: las categorías de siempre pasan a ser tu lista, más las que ya usaban tus gastos. Ningún gasto cambia. */
   if(!state.categorias)state.categorias=categoriasDesde(state);
   /* v12: sin mínimo (vale lo mismo que el objetivo) y lo que sobra pasa a la semana siguiente, como siempre */

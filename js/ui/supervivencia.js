@@ -1,20 +1,13 @@
 /* Modo supervivencia en Hoy (2.18): la tarjeta que aparece cuando la plata no da ni para lo básico hasta el cobro.
    La meta pasa a ser llegar: cuánto tenés por semana y por día, hasta cuándo te alcanza a tu ritmo, qué pagar primero
-   y la plata que te va a entrar antes de cobrar (no cuenta hasta que tocás «Me entró»). Las cuentas: logica/supervivencia.js. */
+   y anotar plata que te va a entrar antes de cobrar (se ve en «Te va a entrar», ui/entradas.js). Las cuentas: logica/supervivencia.js. */
 import {num} from '../logica/util.js';
 import {iso,addDays,parse} from '../logica/fechas.js';
-import {estadoSupervivencia,agregarEsperado,recibirEsperado,quitarEsperado,deshacerEsperado} from '../logica/supervivencia.js';
-import {ctx,$,today,money,esc,fLarga,toast,toastAccion,planNow} from './comun.js';
+import {estadoSupervivencia,agregarEsperado} from '../logica/supervivencia.js';
+import {ctx,$,today,money,esc,toast,planNow} from './comun.js';
 
 var formAbierto=false;
 
-function entradaHTML(x,llego){
-  if(llego)return '<li class="sv-llego" data-svid="'+esc(x.id)+'"><p><b>¿Te entraron los '+money(x.monto)+'?</b><small>'+(x.nota?esc(x.nota)+' · ':'')+'era para el '+esc(fLarga(x.fecha))+'</small></p>'
-    +'<div class="sv-recibir"><div class="money"><span>$</span><input type="number" inputmode="decimal" min="0" step="any" aria-label="Cuánto te entró" value="'+x.monto+'" data-svmonto></div>'
-    +'<button class="btn" type="button" data-sv="entro">Me entró</button></div>'
-    +'<button class="btn quiet" type="button" data-sv="no">No va a entrar</button></li>';
-  return '<li data-svid="'+esc(x.id)+'"><span>'+esc(fLarga(x.fecha))+(x.nota?'<small>'+esc(x.nota)+'</small>':'')+'</span><b>'+money(x.monto)+'</b><button class="btn quiet sv-x" type="button" data-sv="no" aria-label="Quitar">Quitar</button></li>';
-}
 function formHTML(){
   var p=ctx.state.plan,t=today(),max=iso(addDays(parse(p.cobro),-1));
   return '<form class="sv-form stack" id="sv-form" autocomplete="off"'+(formAbierto?'':' hidden')+'>'
@@ -39,29 +32,18 @@ export function renderSuperv(pc){
     +(r.fijosPend>0?'<li><b>Primero, los fijos.</b> Te faltan pagar '+money(r.fijosPend)+'; ya están descontados.</li>':'')
     +'<li><b>'+(r.fijosPend>0?'Después':'Primero')+', lo de todos los días:</b> comida, transporte, salud.</li>'
     +'<li><b>Lo demás espera</b> hasta que cobres.</li></ol>';
-  var llego=r.llego,luego=r.esperado.filter(function(x){return x.fecha>t});
-  if(llego.length)h+='<ul class="sv-lista">'+llego.map(function(x){return entradaHTML(x,true)}).join('')+'</ul>';
-  if(luego.length)h+='<div class="stack" style="gap:6px"><h3 class="sv-h3">Te va a entrar</h3><p class="note">No la cuento hasta que llegue.</p><ul class="sv-lista">'+luego.map(function(x){return entradaHTML(x,false)}).join('')+'</ul></div>';
   h+=(formAbierto?'':'<div class="row-btns"><button class="btn" type="button" data-sv="abrir">+ Me va a entrar plata</button></div>')+formHTML()+'</div>';
   el.innerHTML=h;
 }
 function cambio(){ctx.persist();ctx.syncInputs();ctx.renderAll()}
-function deshacible(msg,u){toastAccion(msg,'Deshacer',function(){deshacerEsperado(ctx.state,u);cambio()})}
 
 export function initSuperv(){
   var el=$('#superv');if(!el)return;
   el.addEventListener('click',function(e){
     var b=e.target.closest('[data-sv]');if(!b)return;
-    var a=b.getAttribute('data-sv'),li=b.closest('[data-svid]'),id=li&&li.getAttribute('data-svid');
+    var a=b.getAttribute('data-sv');
     if(a==='abrir'){formAbierto=true;renderSuperv(planNow());var m=$('#sv-monto');if(m)m.focus();return}
     if(a==='cerrar'){formAbierto=false;cambio();return}
-    if(a==='entro'){
-      var inp=li.querySelector('[data-svmonto]'),v=inp?inp.value:'';
-      if(v!==''&&!(num(v)>=0)){toast('Poné cuánto te entró.');return}
-      var u=recibirEsperado(ctx.state,id,v===''?null:num(v));if(!u)return;
-      cambio();deshacible('Sumé '+money(u.entro)+' a tu plata',u);return;
-    }
-    if(a==='no'){var u2=quitarEsperado(ctx.state,id);if(!u2)return;cambio();deshacible('Lo saqué de lo que te va a entrar',u2)}
   });
   el.addEventListener('submit',function(e){
     if(e.target.id!=='sv-form')return;
@@ -72,6 +54,6 @@ export function initSuperv(){
       er.textContent=r.error==='monto'?'Poné cuánto te va a entrar.':r.error==='pasada'?'Elegí hoy o un día que viene.':r.error==='despues'?'Si entra el día que cobrás o después, ya no es para este pacto.':'Elegí qué día.';
       return;
     }
-    formAbierto=false;cambio();toast('Anotado. Cuando te entre, tocá «Me entró» y se suma.');
+    formAbierto=false;cambio();toast('Anotado en «Te va a entrar». Cuando llegue, tocá «Me entró» y se suma.');
   });
 }

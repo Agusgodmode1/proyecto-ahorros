@@ -34,7 +34,7 @@ function fechaOk(s){return typeof s==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(s)&&i
 export function normEsperado(l){
   if(!Array.isArray(l))return [];
   return l.filter(function(x){return x&&typeof x==='object'&&num(x.monto)>0&&fechaOk(x.fecha)})
-    .map(function(x){return {id:String(x.id||uid()),fecha:x.fecha,monto:Math.round(num(x.monto)),nota:String(x.nota||'').trim().slice(0,40)}})
+    .map(function(x){var o={id:String(x.id||uid()),fecha:x.fecha,monto:Math.round(num(x.monto)),nota:String(x.nota||'').trim().slice(0,40)};if(x.fijo)o.fijo=String(x.fijo);return o})
     .sort(function(a,b){return a.fecha<b.fecha?-1:a.fecha>b.fecha?1:0});
 }
 /* Valida y anota. Devuelve {ok, error?, item?} */
@@ -55,16 +55,20 @@ export function recibirEsperado(st,id,real){
   var u={item:it,montoAntes:num(p.monto),entro:m};
   p.esperado=l.filter(function(x){return x.id!==id});
   p.monto=Math.round((num(p.monto)+m)*100)/100;
+  visto(p,it);
   return u;
 }
 /* «No va a entrar»: se borra sin tocar tu plata */
 export function quitarEsperado(st,id){
   var p=st.plan,l=normEsperado(p.esperado),it=l.filter(function(x){return x.id===id})[0];if(!it)return null;
   p.esperado=l.filter(function(x){return x.id!==id});
+  visto(p,it);
   return {item:it,montoAntes:num(p.monto),entro:0};
 }
+/* (2.20) un ingreso fijo respondido no se vuelve a anotar */
+function visto(p,it){if(it.fijo){p.vistos=(p.vistos||[]).filter(function(x){return x!==it.id});p.vistos.push(it.id)}}
 export function deshacerEsperado(st,u){
-  var p=st.plan;p.monto=u.montoAntes;
+  var p=st.plan;p.monto=u.montoAntes;if(u.item.fijo)p.vistos=(p.vistos||[]).filter(function(x){return x!==u.item.id});
   p.esperado=normEsperado((p.esperado||[]).filter(function(x){return x.id!==u.item.id}).concat([u.item]));
 }
 

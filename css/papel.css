@@ -1260,3 +1260,11 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 .v2 .cobre h2{margin:0}
 .v2 .cobre-fila{display:flex;gap:10px;align-items:center}
 .v2 .cobre-fila .money{flex:1;min-width:0}
+
+/* ---------- Ingresos fijos y «Te va a entrar» (2.20) ---------- */
+.v2 .entradas{box-shadow:inset 3px 0 0 var(--bien),inset 0 0 0 1px var(--line)}
+.v2 .ing-card h2{margin:0}
+.v2 .ing-lista li{flex-wrap:wrap}
+.v2 .ing-lista li>span:first-child{flex:1;min-width:0}
+.v2 .ing-acc{display:flex;gap:4px;width:100%;justify-content:flex-end}
+.v2 .ing-acc .btn{min-height:44px}

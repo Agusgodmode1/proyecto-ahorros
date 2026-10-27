@@ -83,7 +83,7 @@ test('al sellar un pacto nuevo sigue solo lo que todavía no llegó y entra ante
 });
 
 test('migración v20: sin nada esperado',function(){
-  assert.equal(VERSION_ESTADO,20);
+  assert.ok(VERSION_ESTADO>=20);
   var d=defaults(HOY);d.v=19;delete d.plan.esperado;
   assert.deepEqual(migrar(d).plan.esperado,[]);
   d.plan.esperado=[{fecha:'2026-11-05',monto:'300'},{fecha:'mal',monto:5},{fecha:'2026-11-01',monto:0}];

@@ -123,6 +123,8 @@ export function proximo(state,L){
   var fij=totalFijos(state.fijos,state)*fr,metaPedida=p.modo==='monto'?Math.max(0,Math.round(num(p.ahorro))):Math.round(L.liquido*num(p.pct)/100);
   /* Tope: no se puede guardar más de lo que cobrás menos los fijos */
   var meta=Math.min(metaPedida,Math.max(0,L.liquido-fij));
-  var libre=L.liquido-fij-meta;
-  return {nc:nc,dias:dias,fij:fij,meta:meta,metaPedida:metaPedida,libre:libre,dia:libre/dias,semana:libre*7/dias,liquido:L.liquido,fraccion:fr};
+  /* (2.20) los ingresos fijos del mes (la parte del período) se suman a lo libre */
+  var ing=0;(state.ingresosFijos||[]).forEach(function(x){if(num(x&&x.monto)>0)ing+=num(x.monto)});ing=Math.round(ing*fr);
+  var libre=L.liquido-fij-meta+ing;
+  return {nc:nc,dias:dias,fij:fij,meta:meta,metaPedida:metaPedida,libre:libre,dia:libre/dias,semana:libre*7/dias,liquido:L.liquido,fraccion:fr,ingresos:ing};
 }

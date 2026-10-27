@@ -321,19 +321,13 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
     </section>
     <!-- AJUSTES Y RESPALDO -->
     <section id="p-ajustes" role="tabpanel" class="tone-sky stack" hidden>
-      <div class="panel-head"><h2 class="ph-t">Ajustes del pacto</h2><p class="ph-s">Cambiá los tres datos de tu pacto cuando quieras: se recalcula todo. Más abajo, tu perfil y tus respaldos (tus datos viven solo en este teléfono).</p></div>
-      <div class="card stack pacto-card" id="pacto-card">
-        <div class="sec"><h2>Tu pacto</h2><p class="note" id="pa-nota"></p></div>
-        <form class="pacto-form" id="pacto-form" autocomplete="off" novalidate>
-          <div class="field"><label for="pa-tenes" class="sub-l">Tengo hoy</label><div class="money"><span>$</span><input id="pa-tenes" type="number" inputmode="decimal" min="0" step="any"></div><small>¿Gastaste algo sin anotarlo? Poné la plata que tenés de verdad y anoto la diferencia.</small></div>
-          <div class="field"><label for="pa-ahorro" class="sub-l">Quiero guardar</label><div class="money"><span>$</span><input id="pa-ahorro" type="number" inputmode="numeric" min="0" step="1"></div></div>
-          <div class="field"><label for="pa-cobro" class="sub-l">Cobro el</label><input id="pa-cobro" type="date"></div>
-          <p class="pa-prev" id="pa-prev" aria-live="polite"></p>
-          <p class="err" id="pa-err" role="alert" hidden></p>
-          <div class="row-btns"><button class="btn primary" type="submit" id="pa-ok">Guardar el pacto</button><button class="btn quiet" type="button" id="pa-reset">Dejarlo como estaba</button></div>
-        </form>
+      <div class="panel-head"><h2 class="ph-t">Ajustes</h2><p class="ph-s">La última página del libro: tu perfil, cómo se ve, tus respaldos y el resto de las opciones. Tus datos viven solo en este teléfono.</p></div>
+      <div class="card stack">
+        <div class="sec"><h2>Tu pacto</h2><p class="note">Lo que tenés, lo que guardás y el día de cobro se cambian en las primeras páginas del libro, cada uno en su pregunta. La letra chica (porcentaje, mínimo y fechas) está en la página del pacto.</p></div>
+        <div class="row-btns"><button class="btn primary" type="button" id="aj-prologo">Ir al prólogo</button><button class="btn" type="button" id="aj-tour">Ver el tour otra vez</button></div>
       </div>
-      <details class="plan-aj" id="plan-aj" open>
+      <div id="plan-aj-casa" hidden>
+      <details class="plan-aj" id="plan-aj">
       <summary><span class="pa-t">Más opciones del plan</span><span class="pa-s" id="plan-aj-sum"></span></summary>
       <p class="note">El ahorro en porcentaje, un mínimo aceptable y desde qué día cuenta el plan.</p>
 
@@ -389,9 +383,6 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
         <p class="err" id="plan-err" role="alert" hidden></p>
       </div>
       </details>
-      <div class="card stack">
-        <div class="sec"><h2>El libro</h2><p class="note">Volvé a leer el prólogo o mirá otra vez cómo se usa.</p></div>
-        <div class="row-btns"><button class="btn" type="button" id="aj-prologo">Releer el prólogo</button><button class="btn" type="button" id="aj-tour">Ver el tour otra vez</button></div>
       </div>
       <div class="card stack">
         <div class="sec"><h2>Modo discreto</h2><p class="note">Tapa todos los montos, por ejemplo si alguien mira tu pantalla. También con el ojo de arriba.</p></div>
@@ -412,10 +403,6 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
       <div class="card stack">
         <div class="sec"><h2>Bloqueo con PIN</h2></div>
         <div id="aj-pin"></div>
-      </div>
-      <div class="card stack">
-        <div class="sec"><h2>Lo que sobra de cada semana</h2><p class="note">Cuando una semana termina y no gastaste todo. Lo podés cambiar semana a semana en Semanas.</p></div>
-        <div class="seg" role="group" aria-label="Qué hacer con lo que sobra"><button type="button" data-sobrante="siguiente">Pasa a la semana siguiente</button><button type="button" data-sobrante="ahorro">Va directo al ahorro</button></div>
       </div>
       <div class="card stack">
         <div class="sec"><h2>Categorías</h2><p class="note">Las que aparecen al anotar un gasto, en la voz, en la tarjeta y en la planilla. Renombralas, cambiales el color, ordenalas u ocultá las que no usás. Si borrás una, sus gastos pasan a la que elijas.</p></div>
@@ -457,12 +444,13 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
       <div class="card stack"><h2>Sobre la app</h2><div class="receipt" id="aj-info"></div></div>
     </section>
   </main>
+  <nav class="pie" id="pie" aria-label="Pasar de página"></nav>
   </div>
 
   <button class="mic" id="mic" type="button" aria-label="Cargar por voz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg></button>
   <div class="voz-bg" id="voz" hidden><div class="voz" id="voz-box" role="dialog" aria-modal="true" aria-labelledby="voz-t"></div></div>
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-  <p class="foot"><span id="save-status"></span><button class="linklike" type="button" id="guia-show" hidden>Ver la guía de uso</button><button class="linklike" type="button" data-goto="ajustes">Ajustes y respaldo</button></p>
+  <p class="foot"><span id="save-status"></span><button class="linklike" type="button" id="guia-show" hidden>Ver la guía de uso</button></p>
 </div>
 </body>
 </html>

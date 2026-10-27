@@ -96,7 +96,7 @@
 /* ---------- Lo que rodea la página: el interior de la tapa, cielo nocturno ---------- */
 .v2 body{color:var(--ink);font:400 var(--t3)/1.5 var(--f-body);
   background:var(--cielo),radial-gradient(90% 55% at 80% 0%,color-mix(in srgb,var(--nebulosa) 22%,transparent),transparent 70%),linear-gradient(180deg,var(--cosmos-2),var(--cosmos-1));
-  background-size:240px 240px,auto,auto;background-attachment:fixed;
+  background-size:240px 240px,240px 240px,240px 240px,240px 240px,240px 240px,240px 240px,240px 240px,240px 240px,auto,auto;background-attachment:fixed;
   padding:calc(var(--e2) + env(safe-area-inset-top,0px)) max(var(--e2),env(safe-area-inset-right,0px)) calc(104px + env(safe-area-inset-bottom,0px)) max(var(--e2),env(safe-area-inset-left,0px))}
 
 /* ---------- La página ---------- */
@@ -223,7 +223,7 @@
 
 /* ---------- Barra de capítulos: lomos azul cósmico con números dorados ---------- */
 @media (max-width:767px){
-  :root.v2 .tabs{background:var(--cielo),linear-gradient(180deg,var(--cosmos-3),var(--cosmos-1));background-size:180px 180px,auto;border-radius:16px;
+  :root.v2 .tabs{background:var(--cielo),linear-gradient(180deg,var(--cosmos-3),var(--cosmos-1));background-size:180px 180px,180px 180px,180px 180px,180px 180px,180px 180px,180px 180px,180px 180px,180px 180px,auto;border-radius:16px;
     -webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:0 12px 30px rgba(3,6,20,.6),inset 0 1px 0 rgba(255,210,122,.35),inset 0 0 0 1px rgba(255,210,122,.18)}
   .v2 .tab.lomo{background:transparent;color:#C9CBE0;border-radius:var(--r-m)}
   .v2 .tab.lomo+.tab.lomo{box-shadow:inset 1px 0 0 rgba(255,210,122,.14)}

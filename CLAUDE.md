@@ -95,3 +95,13 @@ PWA para iPhone de finanzas personales de Agus (Uruguay). La publica GitHub Page
 - Escalas fijas: espacios `--e1…--e6` (4/8/12/16/24/32), letra `--t1…--t8`. Texto con la letra del sistema; títulos y números grandes en Cormorant; números `lining-nums tabular-nums`.
 - Piezas: página (`#app`, fibras `--fibra`, viñeta, sombra del lomo, cantos), recuadros finos (no tarjetas), botones que se hunden, campos como renglones, cinta del índice que cuelga del borde de arriba (`.indice-btn`), folio al pie, barra de lomos azul cósmico.
 - Tapa (`libro.css`, bloque «Tapa cósmica»): nebulosa, dos capas de estrellas que titilan (opacity) y estrella fugaz cada 9 s (transform); con «reducir movimiento», quietas.
+
+## El Libro del Ahorro (2.4: el libro y su navegación)
+- Páginas y folios (`logica/capitulos.js`, `numeroDePagina`): prólogo 1–5 (`PROLOGO`: p1 propósito, q1 plata, q2 ahorro, q3 cobro, pacto), índice 6, Hoy 7, una por semana, Fijos, Sueldo, Tarjeta, Logros y Ajustes (la última). `vecina`: desde Hoy hacia atrás va a `'prologo'` (abre el pacto); después de Logros viene Ajustes.
+- `ui/libro.js`, modos: `nuevo` (primera vez), `ciclo` (pacto nuevo al cobrar), `hojear` (ya hay datos: cada pregunta muestra tu valor de hoy con «Cambiar»; «Guardar» pasa por `aplicarAjuste` con «Deshacer» y reescribe el número) y `tapa` («Cerrar el libro»: la apertura al revés, 1,7× más rápida; al tocar la tapa vuelve a Hoy). `ctx.abrirPrologo(pagina, editar, dir)` y `ctx.cerrarLibro()` los pone app.js.
+- «Tenés», «Guardás» y «Actualizar saldo» abren la pregunta del prólogo ya en modo «Cambiar» (antes de cobrar). La tarjeta «Tu pacto» de Ajustes se sacó: el pacto se cambia en el prólogo.
+- Letra chica del pacto (página 5 en hojear): lo que sobra de cada semana y el formulario `#plan-aj` (porcentaje, mínimo, fechas). Ese formulario vive oculto en `#plan-aj-casa` (Ajustes) y se presta a la página mientras está abierta (`prestarLetra`/`devolverLetra`): sus ids y eventos (plan.js) no cambian.
+- Índice (`ui/indice.js`): papel, número de página por capítulo, cinta en el abierto, «Ir al prólogo» y «Cerrar el libro». Saltar lejos desde el índice hace el abanico (3 hojas, ≤ 700 ms).
+- Pie de cada página (`#pie`, dentro de `#hoja`): flecha anterior, folio y flecha siguiente (48 px, en las esquinas; en pantallas ≥ 1000 px, a los costados).
+- Pase de hoja: eje inclinado `rotate3d(-.16,1,0,…)` (la esquina de abajo se adelanta), sombra del pliegue, rebote leve al asentar (400–450 ms). Con «reducir movimiento», solo fundidos (comprobado: ninguna animación con transform).
+- `--cielo` tiene 8 capas: todo `background-size` que lo use tiene que repetir el tamaño 8 veces (si no, aparecen bandas).

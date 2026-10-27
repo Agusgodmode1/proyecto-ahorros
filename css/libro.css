@@ -291,3 +291,130 @@
 .lb-link{color:#C9CBE0;text-decoration-color:rgba(201,203,224,.45)}
 .lb-nota{color:#A9ACC8}
 @media (prefers-reduced-motion:reduce){.lb-astros,.lb-fugaz{animation:none}.lb-fugaz{display:none}}
+
+/* =====================================================================
+   Prólogo, pacto e índice en papel (2.4): las mismas páginas que el resto del libro.
+   Se reasignan las variables --lb-* a la tinta y el papel de papel.css (claro o de noche).
+   ===================================================================== */
+.lb-hojas,.indice{
+  --lb-tx:var(--ink); --lb-tx2:var(--muted); --lb-linea:var(--line);
+  --lb-lima:var(--oro); --lb-lima-cl:var(--azul); --lb-lima-pr:var(--oro-t);
+  --lb-n0:var(--page); --lb-n2:var(--surface); --lb-n3:var(--surface-2);
+  --lb-bien:var(--bien); --lb-ojo:var(--ojo); --lb-mal:var(--mal);
+  color:var(--ink)}
+.lb-hojas{background:var(--cielo),radial-gradient(90% 55% at 80% 0%,color-mix(in srgb,var(--nebulosa) 22%,transparent),transparent 70%),linear-gradient(180deg,var(--cosmos-2),var(--cosmos-1));background-size:240px 240px,240px 240px,240px 240px,240px 240px,240px 240px,240px 240px,240px 240px,240px 240px,auto,auto}
+.indice{background:color-mix(in srgb,var(--cosmos-1) 72%,transparent)}
+.lb-pag,.indice-pag{background:var(--fibra),radial-gradient(130% 100% at 60% 40%,transparent 62%,color-mix(in srgb,var(--page-2) 75%,transparent) 100%),linear-gradient(90deg,var(--page-2) 0,var(--page) 5%,var(--page) 100%);
+  box-shadow:0 24px 60px rgba(3,6,20,.6),inset 22px 0 26px -20px rgba(60,40,10,.45),inset 0 0 0 1px var(--line)}
+.lb-pag::after{background:repeating-linear-gradient(90deg,var(--canto) 0 1px,var(--page-2) 1px 2px);opacity:1}
+.lb-cap,.lb-folio{color:var(--oro-t)}
+.lb-h{color:var(--ink)}
+.lb-h em{color:var(--oro)}
+.lb-cita{color:var(--azul);border-left-color:var(--oro)}
+.lb-cap-ini::first-letter{color:var(--oro)}
+.lb-orla{color:var(--oro)}
+.lb-tres li>span{background:var(--oro-t);color:var(--page)}
+.lb-btn{background:transparent;color:var(--ink);border:1.5px solid var(--line-2);border-radius:var(--r-m,8px);box-shadow:0 2px 0 var(--line-2)}
+.lb-btn:active{transform:translateY(2px);box-shadow:none}
+.lb-btn.si{background:var(--cta);border-color:var(--cta);color:var(--on-cta);box-shadow:0 2px 0 color-mix(in srgb,var(--cta) 55%,#3a1500)}
+.lb-link{color:var(--azul);text-decoration-color:color-mix(in srgb,var(--azul) 45%,transparent)}
+.lb-mesa .lb-link{color:#C9CBE0;text-decoration-color:rgba(201,203,224,.45)}
+.lb-monto{border-bottom-color:var(--line-2)}
+.lb-monto:focus-within{border-bottom-color:var(--azul)}
+.lb-monto>span{color:var(--oro-t)}
+.lb-hojas .lb-monto input{color:var(--ink);caret-color:var(--azul)}
+.lb-monto input::placeholder{color:color-mix(in srgb,var(--ink) 25%,transparent)}
+.lb-check input{accent-color:var(--azul)}
+.lb-queda{background:color-mix(in srgb,var(--surface) 70%,transparent);border-color:var(--line);color:var(--muted)}
+.lb-queda b{color:var(--ink)}
+.lb-queda .n{color:var(--azul)}
+.lb-total b{color:var(--ink)}
+.lb-pct b{color:var(--oro)}
+.lb-chip{color:var(--ink);border-color:var(--line-2)}
+.lb-chip[aria-pressed="true"]{background:color-mix(in srgb,var(--azul) 12%,transparent);border-color:var(--azul);color:var(--azul)}
+.lb-rango::-webkit-slider-runnable-track{background:linear-gradient(90deg,var(--azul) 0 var(--v,0%),color-mix(in srgb,var(--ink) 14%,transparent) var(--v,0%))}
+.lb-rango::-moz-range-track{background:linear-gradient(90deg,var(--azul) 0 var(--v,0%),color-mix(in srgb,var(--ink) 14%,transparent) var(--v,0%))}
+.lb-rango::-webkit-slider-thumb{background:radial-gradient(circle at 35% 35%,#fff7e6,var(--cta) 55%,#9E3C1C);border-color:var(--page);box-shadow:0 0 0 4px color-mix(in srgb,var(--cta) 22%,transparent),0 2px 6px rgba(0,0,0,.35)}
+.lb-rango::-moz-range-thumb{background:var(--cta);border-color:var(--page)}
+.lb-cal-h b{color:var(--ink)}
+.lb-cal-h button{color:var(--azul);border-color:var(--line-2)}
+.lb-dia{color:var(--ink)}
+.lb-dia:disabled{color:color-mix(in srgb,var(--ink) 28%,transparent)}
+.lb-dia.fer{color:var(--ojo)}
+.lb-dia.fer::after{background:var(--ojo)}
+.lb-dia.sug{border-color:var(--oro)}
+.lb-dia.hoy{border-color:var(--line-2)}
+.lb-dia[aria-pressed="true"]{background:var(--cta);border-color:var(--cta);color:var(--on-cta);box-shadow:0 2px 0 color-mix(in srgb,var(--cta) 55%,#3a1500)}
+.lb-cal-ley .s{border-color:var(--oro)}
+.lb-cal-ley .f{background:var(--ojo)}
+.lb-pacto{border-top-color:var(--line)}
+.lb-pacto li{border-bottom-color:var(--line)}
+.lb-pacto li>b{color:var(--ink)}
+.lb-pacto li.ah>b{color:var(--bien)}
+.lb-pacto li.tot>b{color:transparent;background:var(--oro-deg);-webkit-background-clip:text;background-clip:text}
+.lb-pacto li.tot>b small{-webkit-text-fill-color:var(--muted);color:var(--muted)}
+.lb-sellado{color:var(--oro-t)}
+.lb-aviso{background:color-mix(in srgb,var(--ojo) 10%,transparent);border-color:color-mix(in srgb,var(--ojo) 40%,transparent);color:var(--ink)}
+.lb-aviso::before{color:var(--ojo)}
+.lb-aviso.suave{background:color-mix(in srgb,var(--azul) 7%,transparent);border-color:var(--line);color:var(--muted)}
+.lb-aviso.suave::before{color:var(--oro)}
+.lb-err{color:var(--mal)}
+.lb-chispa{background:#FFD27A;box-shadow:0 0 8px #FFB13D}
+/* el valor de hoy, en grande, en las páginas del prólogo (modo hojear) */
+.lb-valor{margin:4px 0 0;font:700 clamp(46px,14vw,64px)/1 var(--lb-serif);color:transparent;background:var(--oro-deg);-webkit-background-clip:text;background-clip:text}
+.lb-valor.fecha{font-size:clamp(34px,10vw,46px);line-height:1.08}
+/* la letra chica del pacto */
+.lb-letra{border-top:1px solid var(--line);padding-top:8px}
+.lb-letra>summary{min-height:48px;display:flex;align-items:center;gap:8px;cursor:pointer;font:600 18px var(--lb-serif);color:var(--oro-t);list-style:none}
+.lb-letra>summary::-webkit-details-marker{display:none}
+.lb-letra>summary::before{content:"›";display:inline-block;transition:transform .15s ease;font-size:22px}
+.lb-letra[open]>summary::before{transform:rotate(90deg)}
+.lb-letra-in{display:grid;gap:14px;padding:6px 0 4px;font-size:16px}
+.lb-letra-in .plan-aj>summary{display:none}
+.lb-letra-in .plan-aj{margin:0}
+.lb-letra-in .card{background:transparent;box-shadow:none;padding:0}
+/* índice */
+.indice-pag .ix-i{color:var(--ink);grid-template-columns:36px auto minmax(12px,1fr) auto;padding-right:24px}
+.ix-n{color:var(--oro)}
+.ix-t small{display:block;font:500 13.5px/1.3 var(--lb-sans);color:var(--muted);margin-top:2px}
+.ix-dots{border-bottom-color:color-mix(in srgb,var(--ink) 28%,transparent)}
+.ix-p{font:700 20px/1 var(--lb-serif);color:var(--oro-t);max-width:none}
+.ix-cinta{background:var(--c,var(--oro))}
+.ix-list li.actual .ix-cinta{box-shadow:none;background:var(--cta)}
+.ix-list li.actual .ix-t{color:var(--azul)}
+.ix-pro .ix-cinta{display:none}
+.ix-acc{margin-top:6px}
+
+/* ---------- Pie de página: flechas en las esquinas y el folio ---------- */
+.v2 .pie{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;margin-top:8px;padding-top:12px;border-top:1px solid var(--line)}
+.v2 .pie .folio{font:600 18px var(--f-libro);font-style:italic;color:var(--oro-t);text-align:center}
+.v2 .flecha{display:inline-flex;align-items:center;gap:6px;min-height:48px;min-width:48px;padding:0 12px;border-radius:var(--r-m);border:1.5px solid var(--line-2);background:transparent;color:var(--ink);font:600 15px var(--f-body);cursor:pointer;box-shadow:0 2px 0 var(--line-2);transition:transform .12s ease,box-shadow .12s ease}
+.v2 .flecha:active{transform:translateY(2px);box-shadow:none}
+.v2 .flecha span{font:700 26px/1 var(--f-libro);color:var(--oro-t)}
+.v2 .flecha small{font:inherit;max-width:8em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v2 .flecha.ant{justify-self:start}
+.v2 .flecha.sig{justify-self:end}
+.v2 .foot::before{content:none}
+/* en pantallas anchas las flechas van a los costados de la página */
+@media (min-width:1000px){
+  .v2 .pie .flecha{position:fixed;top:50%;transform:translateY(-50%);flex-direction:column;justify-content:center;width:64px;min-height:110px;padding:8px;
+    background:color-mix(in srgb,var(--page) 85%,transparent);text-align:center}
+  .v2 .pie .flecha:active{transform:translateY(calc(-50% + 2px))}
+  .v2 .pie .flecha small{white-space:normal;font-size:12px}
+  .v2 .pie .flecha.ant{left:max(16px,calc(50% - 360px - 96px))}
+  .v2 .pie .flecha.sig{right:max(16px,calc(50% - 360px - 96px))}
+}
+
+/* ---------- Abanico: hojas que pasan rápido al saltar lejos ---------- */
+.abanico{position:fixed;z-index:30;pointer-events:none;perspective:1800px}
+.abanico i{position:absolute;inset:0;transform-origin:left center;border-radius:3px 12px 12px 3px;backface-visibility:hidden;
+  background:var(--fibra),linear-gradient(90deg,var(--page-2) 0,var(--page) 6%,var(--page) 100%);box-shadow:0 0 0 1px var(--line),-12px 0 24px rgba(0,0,0,.18)}
+/* Por dentro de la tapa (al abrir o cerrar): guarda de cielo nocturno y hojas de papel */
+.lb-tapa-d{background:var(--cielo),radial-gradient(120% 120% at 70% 30%,#1B2A6B,#0E1640 60%,#070B24);background-size:120px 120px,120px 120px,120px 120px,120px 120px,120px 120px,120px 120px,120px 120px,120px 120px,auto;box-shadow:inset -10px 0 18px -8px rgba(0,0,0,.7)}
+.lb-tapa-d::before{border-color:rgba(255,210,122,.35)}
+.lb-hoja>i,.lb-bloque{background:var(--fibra),linear-gradient(90deg,var(--page-2),var(--page) 12%,var(--page))}
+.lb-hoja>i+i{background:var(--fibra),linear-gradient(270deg,var(--page-2),var(--page) 12%,var(--page))}
+.lb-canto,.lb-canto-a{background:repeating-linear-gradient(90deg,var(--canto) 0 1px,var(--page-2) 1px 2.4px)}
+.lb-canto-a{background:repeating-linear-gradient(0deg,var(--canto) 0 1px,var(--page-2) 1px 2.4px)}
+/* el monto del prólogo es un renglón: sin la caja de los campos comunes */
+.lb-hojas .lb-monto input{border:0!important;background:transparent!important;box-shadow:none!important;border-radius:0!important}

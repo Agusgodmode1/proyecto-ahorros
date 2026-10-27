@@ -1,7 +1,8 @@
 /* Arranque, pestañas y render general. */
 import {curWeek} from './logica/plan.js';
 import {migrar,cargar,guardar,pedirPersistencia,defaults,ejemplo,necesitaMigrar,guardarCopia,resumenDatos} from './estado.js';
-import {ctx,$,today,planNow,ICON,discreto,setDiscreto,toast} from './ui/comun.js';
+import {ctx,$,today,planNow,ICON,discreto,setDiscreto,toast,toastAccion,money} from './ui/comun.js';
+import {deshacerAjustePacto} from './logica/pacto.js';
 import {renderCountdown,renderResumen,syncPlan,initPlan} from './ui/plan.js';
 import {renderWeek,initSemanas} from './ui/semanas.js';
 import {renderSueldo,syncSueldo,initSueldo} from './ui/sueldo.js';
@@ -14,8 +15,8 @@ import {initVoz} from './ui/voz.js';
 import {abrirPerfil,initPerfil,resumenPerfil} from './ui/perfil.js';
 import {abrirInicio,initInicio} from './ui/inicio.js';
 import {abrirLibro,initLibro} from './ui/libro.js';
-import {initIndice,renderPacto} from './ui/indice.js';
-import {CAPITULOS,capituloDe,vecina} from './logica/capitulos.js';
+import {initIndice} from './ui/indice.js';
+import {CAPITULOS,capituloDe,vecina,numeroDePagina,nombreDePagina} from './logica/capitulos.js';
 import {DIAL,MESL,parse} from './logica/fechas.js';
 import {initTour,iniciarTour,tourSiPendiente} from './ui/tour.js';
 import {aplicarFeriados,renderFeriados,initFeriados} from './ui/feriados.js';
@@ -68,9 +69,16 @@ function marcarCapitulos(){
     var el=$(k==='semanas'?'#p-semana':PANELES[k]),c=capituloDe(k);
     if(el)el.setAttribute('data-cap',c?'capítulo '+c.n+' · '+c.t.toLowerCase():'fuera de los capítulos');
   });
-  var d=parse(today()),k=$('#cap-hoy'),c=capituloDe(ctx.tab),f=document.querySelector('.foot');
+  var d=parse(today()),k=$('#cap-hoy');
   if(k)k.textContent='capítulo I · '+DIAL[d.getDay()]+' '+d.getDate()+' de '+MESL[d.getMonth()];
-  if(f)f.setAttribute('data-folio','— '+(c?'capítulo '+c.n+' · '+c.t.toLowerCase():'ajustes del pacto')+' —');
+}
+/* Pie de página: flecha a la página anterior, el folio y flecha a la siguiente (en las esquinas, donde llega el pulgar) */
+function renderPie(pc){
+  var el=$('#pie');if(!el)return;
+  var n=pc.weeks.length,cw=curWeek(pc,today()),ant=vecina(ctx.tab,-1,n,cw),sig=vecina(ctx.tab,1,n,cw);
+  el.innerHTML=(ant?'<button class="flecha ant" type="button" data-pie="'+ant+'" aria-label="Página anterior: '+nombreDePagina(ant)+'"><span aria-hidden="true">‹</span><small>'+nombreDePagina(ant)+'</small></button>':'<span class="flecha-v"></span>')
+    +'<span class="folio">— '+(numeroDePagina(ctx.tab,n)||'')+' —</span>'
+    +(sig?'<button class="flecha sig" type="button" data-pie="'+sig+'" aria-label="Página siguiente: '+nombreDePagina(sig)+'"><small>'+nombreDePagina(sig)+'</small><span aria-hidden="true">›</span></button>':'<span class="flecha-v"></span>');
 }
 function showPanels(){
   var tab=ctx.tab;marcarCapitulos();
@@ -99,7 +107,8 @@ function renderAll(){
   if(ctx.tab==='gastos')renderGastos();
   if(ctx.tab==='fijos')renderFijos(pc);
   if(ctx.tab==='logros')renderLogros(pc);
-  if(ctx.tab==='ajustes'){renderPacto();renderAjustes(guardado);renderFeriados();renderCategorias();renderAjustesPin();
+  renderPie(pc);
+  if(ctx.tab==='ajustes'){renderAjustes(guardado);renderFeriados();renderCategorias();renderAjustesPin();
     document.querySelectorAll('[data-sobrante]').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-sobrante')===(ctx.state.plan.sobrante||'siguiente')))});renderCopias();$('#aj-perfil').innerHTML=resumenPerfil(ctx.state)}
   tourSiPendiente();
 }
@@ -113,20 +122,60 @@ function quieto(){try{return matchMedia('(prefers-reduced-motion: reduce)').matc
    - hacia adelante, desde abajo de la que se fue (apenas más chica y oscura);
    - hacia atrás, la anterior vuelve girando desde el lomo. */
 function hojaEl(){return document.getElementById('hoja')}
-function pasarHoja(dir){
+function pasarHoja(dir,demora){
   var h=hojaEl();if(!h||!h.animate)return;
   if(quieto()){h.animate([{opacity:.3},{opacity:1}],{duration:200});return}
-  h.animate(dir>0?[{transform:'scale(.97) translateX(10px)',opacity:.35},{transform:'none',opacity:1}]
-    :[{transform:'perspective(1600px) rotateY(-24deg) translateX(-12px)',opacity:.2},{transform:'none',opacity:1}],
-    {duration:dir>0?360:420,easing:'cubic-bezier(.22,.7,.25,1)'});
+  h.animate(dir>0?[{transform:'scale(.975) translateX(10px)',opacity:.35},{transform:'scale(1.004)',opacity:1,offset:.8},{transform:'none',opacity:1}]
+    :[{transform:'perspective(1600px) rotate3d(-.16,1,0,-26deg) translateX(-12px)',opacity:.2},{transform:'perspective(1600px) rotate3d(-.16,1,0,1.5deg)',opacity:1,offset:.8},{transform:'none',opacity:1}],
+    {duration:dir>0?400:450,delay:demora||0,easing:'cubic-bezier(.22,.7,.25,1)',fill:'backwards'});
 }
-function go(t){
+/* Saltar lejos desde el índice: varias hojas pasan rápido en abanico (≤ 700 ms) */
+function abanico(dir){
+  var app=$('#app');if(!app||quieto())return;
+  var r=app.getBoundingClientRect(),top=Math.max(0,r.top),alto=Math.min(window.innerHeight,r.bottom)-top;
+  var cont=document.createElement('div');cont.className='abanico';
+  cont.style.cssText='left:'+r.left+'px;top:'+top+'px;width:'+r.width+'px;height:'+alto+'px';
+  for(var i=0;i<3;i++){var f=document.createElement('i');cont.appendChild(f)}
+  document.body.appendChild(cont);
+  var hojas=cont.querySelectorAll('i'),hechas=0;
+  hojas.forEach(function(f,i){
+    var a=f.animate(dir>0?[{transform:'perspective(1800px) rotate3d(-.12,1,0,0deg)',opacity:1},{transform:'perspective(1800px) rotate3d(-.12,1,0,-150deg)',opacity:0}]
+      :[{transform:'perspective(1800px) rotate3d(-.12,1,0,-150deg)',opacity:0},{transform:'perspective(1800px) rotate3d(-.12,1,0,0deg)',opacity:1},{transform:'none',opacity:0}],
+      {duration:320,delay:i*110,easing:'cubic-bezier(.45,.05,.4,1)',fill:'both'});
+    a.onfinish=function(){if(++hechas===hojas.length)cont.remove()};
+  });
+}
+function go(t,opt){
+  if(t==='prologo'){abrirPrologo('pacto',null,-1);return}
   if(t==='semanas')t='w'+curWeek(planNow(),today());
-  var antes=ctx.tab;
+  var antes=ctx.tab,dir=orden(t)>=orden(antes)?1:-1;
   ctx.tab=t;renderAll();
-  if(antes!==t)pasarHoja(orden(t)>=orden(antes)?1:-1);
+  if(antes!==t){
+    var lejos=opt&&opt.abanico&&Math.abs(Math.floor(orden(t))-Math.floor(orden(antes)))>1;
+    if(lejos)abanico(dir);
+    pasarHoja(dir,lejos?260:0);
+  }
   var m=document.querySelector('main');
-  if(m&&m.getBoundingClientRect().top<0){try{m.scrollIntoView({block:'start'})}catch(e){}}
+  if(m&&m.getBoundingClientRect().top<0){try{window.scrollTo(0,0)}catch(e){}}
+}
+/* El prólogo con tus datos (modo hojear): se llega deslizando hacia atrás desde Hoy, desde el índice o desde «Tenés» y «Guardás» */
+function abrirPrologo(pagina,editar,dir){
+  abrirLibro({modo:'hojear',estado:ctx.state,pagina:pagina,editar:editar,dir:dir||1,
+    alGuardar:function(v){
+      persist();syncInputs();renderAll();
+      toastAccion('Listo: ≈ '+money(v.porDia)+' por día hasta que cobres','Deshacer',function(){deshacerAjustePacto(ctx.state,v.deshacer);persist();syncInputs();renderAll()});
+    },
+    alCerrar:function(){if(ctx.tab!=='resumen'){ctx.tab='resumen';renderAll()}pasarHoja(1)}});
+}
+/* «Cerrar el libro»: la tapa se cierra; al tocarla se abre de nuevo en Hoy */
+function cerrarLibro(){
+  abrirLibro({modo:'tapa',estado:ctx.state,listo:function(){ctx.tab='resumen';renderAll();window.scrollTo(0,0);entrada()}});
+}
+/* Al abrir: una transición corta (< 600 ms) hasta la página del día */
+function entrada(){
+  if(quieto()||!$('#app').animate)return;
+  $('#app').animate([{opacity:0},{opacity:1}],{duration:320});
+  hojaEl().animate([{transform:'perspective(1600px) rotateY(-8deg) scale(.985)',opacity:.4},{transform:'none',opacity:1}],{duration:480,easing:'cubic-bezier(.22,.7,.25,1)'});
 }
 /* Deslizar a los costados pasa la hoja: sigue al dedo (gira desde el lomo, hasta 22°) y, si la soltás
    a mitad de camino, vuelve. Desde campos, listas que se deslizan u hojas abiertas no se activa. */
@@ -137,7 +186,7 @@ function initDeslizar(){
   function poner(p){
     /* p < 0: la hoja se va hacia la izquierda (siguiente); p > 0: vuelve la anterior */
     var ang=p<0?p*22:p*10,tx=p<0?p*W*.08:p*W*.4;
-    h.style.transform='perspective(1600px) translateX('+tx.toFixed(1)+'px) rotateY('+ang.toFixed(2)+'deg)';
+    h.style.transform='perspective(1600px) translateX('+tx.toFixed(1)+'px) rotate3d(-.16,1,0,'+ang.toFixed(2)+'deg)'; /* el eje inclinado adelanta la esquina de abajo */
     h.style.setProperty('--pl',Math.min(1,Math.abs(p)*1.6).toFixed(2));
   }
   function limpiar(){if(!h)return;h.style.transform='';h.style.removeProperty('--pl');h.classList.remove('hojeando')}
@@ -168,7 +217,7 @@ function initDeslizar(){
       if(pasa){limpiar();go(dest);return}
       h.animate([{transform:desde},{transform:'none'}],{duration:240,easing:'cubic-bezier(.3,.7,.3,1)'});limpiar();return;
     }
-    var ida=dx<0?'perspective(1600px) translateX(-6%) rotateY(-70deg)':'perspective(1600px) translateX(45%) rotateY(14deg)';
+    var ida=dx<0?'perspective(1600px) translateX(-6%) rotate3d(-.16,1,0,-70deg)':'perspective(1600px) translateX(45%) rotate3d(-.16,1,0,14deg)';
     var a=h.animate([{transform:desde,opacity:1},{transform:ida,opacity:0}],{duration:200,easing:'cubic-bezier(.5,0,.8,.5)',fill:'forwards'});
     var desdeTab=ctx.tab;
     /* si mientras gira tocaste otro capítulo, manda lo que tocaste */
@@ -232,7 +281,8 @@ function initGlobal(){
     /* Mis datos (plata de hoy, meta y fijos) y el tour, desde Ajustes */
     if(e.target.closest('#aj-datos'))abrirInicio({nuevo:false,estado:ctx.state,alTerminar:function(){syncInputs();persist();renderAll();toast('Listo: se recalculó todo')}});
     if(e.target.closest('#aj-tour'))iniciarTour();
-    if(e.target.closest('#aj-prologo'))abrirLibro({modo:'releer',estado:ctx.state,alCerrar:function(){}});
+    if(e.target.closest('#aj-prologo'))abrirPrologo('p1');
+    var pie=e.target.closest('[data-pie]');if(pie)go(pie.getAttribute('data-pie'));
     /* Borrar los datos de ejemplo y crear el perfil (dos toques) */
     var c=e.target.closest('[data-cero]');
     if(c){
@@ -269,9 +319,9 @@ function arrancar(st){
   syncInputs();renderAll();
   /* Al abrir: una transición corta (< 600 ms) hasta la página del día */
   /* (en #app solo opacidad: la barra y el micrófono son fijos y no pueden moverse con la hoja) */
-  if(!quieto()&&$('#app').animate){$('#app').animate([{opacity:0},{opacity:1}],{duration:320});hojaEl().animate([{transform:'perspective(1600px) rotateY(-8deg) scale(.985)',opacity:.4},{transform:'none',opacity:1}],{duration:480,easing:'cubic-bezier(.22,.7,.25,1)'})}
+  entrada();
 }
-ctx.persist=persist;ctx.renderAll=renderAll;ctx.go=go;ctx.syncInputs=syncInputs;
+ctx.persist=persist;ctx.renderAll=renderAll;ctx.go=go;ctx.syncInputs=syncInputs;ctx.abrirPrologo=abrirPrologo;ctx.cerrarLibro=cerrarLibro;
 
 (async function boot(){
   initPerfil();initInicio();initTour();initPin();initLibro();initIndice();initDeslizar();

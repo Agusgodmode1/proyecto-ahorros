@@ -20,12 +20,33 @@ export function paginas(nSemanas){
   return l.concat(['fijos','sueldo','gastos','logros']);
 }
 /* La página vecina al deslizar (dir 1 = siguiente, -1 = anterior), o null en los bordes.
-   Desde Hoy, la siguiente es la semana actual (no la primera). */
+   Desde Hoy, la siguiente es la semana actual (no la primera) y la anterior es el prólogo (el pacto).
+   Ajustes es la última página: viene después de Logros. */
 export function vecina(tab,dir,nSemanas,semanaActual){
-  if(tab==='ajustes')return null;
+  if(tab==='ajustes')return dir<0?'logros':null;
+  if(tab==='logros'&&dir>0)return 'ajustes';
+  if(tab==='resumen'&&dir<0)return 'prologo';
   if(tab==='resumen'&&dir>0)return nSemanas>0?'w'+Math.min(nSemanas-1,Math.max(0,semanaActual||0)):'fijos';
   var l=paginas(nSemanas),i=l.indexOf(tab);
   if(i<0)return null;
   var j=i+dir;
   return j>=0&&j<l.length?l[j]:null;
+}
+
+/* Números de página (el folio): el prólogo ocupa las páginas 1 a 5 (propósito, plata, ahorro, cobro y pacto),
+   el índice la 6 y desde ahí los capítulos, una página por semana; Ajustes es la última. */
+export var PROLOGO=['p1','q1','q2','q3','pacto'];
+export var PAG_INDICE=6;
+export function numeroDePagina(tab,nSemanas){
+  var i=PROLOGO.indexOf(tab);if(i>=0)return i+1;
+  if(tab==='indice')return PAG_INDICE;
+  var l=paginas(nSemanas).concat(['ajustes']),j=l.indexOf(tab==='semanas'?'w0':tab);
+  return j<0?null:PAG_INDICE+1+j;
+}
+/* Nombre corto de una página, para las flechas («‹ Hoy», «Semana 2 ›») */
+export function nombreDePagina(tab){
+  if(tab==='prologo')return 'El pacto';
+  if(tab==='ajustes')return 'Ajustes';
+  if(/^w\d+$/.test(tab))return 'Semana '+(Number(tab.slice(1))+1);
+  var c=capituloDe(tab);return c?c.t:'';
 }

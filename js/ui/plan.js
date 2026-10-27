@@ -328,9 +328,11 @@ function saldoPrev(){
   else t='Tenés '+money(p.diff)+' más de lo anotado: lo sumo a tu plata disponible y se recalcula todo.';
   pv.textContent=t;
 }
+/* «Actualizar saldo» (desde «Tenés» o desde el aviso de un gasto): la página «¿Cuánta plata tenés hoy?» del prólogo, lista para cambiar.
+   Después de cobrar (fuera del plan) se usa la tarjeta de siempre. */
 function abrirSaldo(){
   var c=$('#saldo-card'),i=$('#saldo-in');if(!c||!i)return;
-  if(!(num(ctx.state.plan.monto)>0)){abrirPlan();return}
+  if(today()<ctx.state.plan.cobro){irAlPacto('tenes');return}
   ctx.go('resumen');c.hidden=false;i.value='';saldoPrev();
   try{c.scrollIntoView({block:'center',behavior:'smooth'})}catch(er){}
   setTimeout(function(){i.focus()},250);

@@ -50,6 +50,7 @@ PWA para iPhone de finanzas personales de Agus (Uruguay). La publica GitHub Page
 - Colores de categoría en pantalla: `colorCat()` (comun.js) pasa `var(--coral)` → `var(--cat-coral)`, una paleta validada para daltonismo (tokens `--cat-*` en los tres bloques de `papel.css`). Lo guardado sigue siendo `var(--coral)` (no se migra nada).
 - Metas (`state.metas`, `logica/metas.js`), aguinaldo y vacacional (`logica/aguinaldo.js`: estimaciones), CSV para Excel (`logica/csv.js`).
 - Empezar de cero (2.14, Ajustes → «Empezar de cero», `#cero-card`): pregunta, ofrece «Bajar un respaldo primero» y con «Sí, borrar todo» llama a `borrarTodo()` de `estado.js` (borra la base del teléfono con las copias y lo de la app en localStorage, menos tema, sonido y volumen; `borrando` frena cualquier guardado pendiente) y recarga: el libro vuelve a la tapa como la primera vez.
+- Ajustes (2.15) va en secciones con índice arriba (`.aj-ind`, `data-ajir`): Tu libro (pacto, perfil), Cómo se ve y suena, Privacidad (modo discreto, PIN), Plata y fechas (dólar, feriados), Tus datos (pasar a otro aparato, exportar, Excel, importar, copias, empezar de cero) y Sobre la app. Los ids de siempre no cambian.
 - PIN (`logica/pin.js`, `ui/pin.js`): opcional, de este aparato (localStorage `pa-pin` = {sal, hash SHA-256}); nunca en texto plano ni en los respaldos. "Olvidé el PIN" solo borra los datos del teléfono (no hay cuenta).
 - La carga por voz nunca guarda sin confirmación. Si falla `SpeechRecognition`, se usa el dictado del teclado.
 

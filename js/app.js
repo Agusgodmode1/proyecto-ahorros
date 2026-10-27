@@ -311,6 +311,9 @@ function initGlobal(){
     if(e.target.closest('#aj-tour')){olvidarIntros();iniciarTour()}
     if(e.target.closest('#aj-prologo'))abrirPrologo('p1');
     var pie=e.target.closest('[data-pie]');if(pie)go(pie.getAttribute('data-pie'));
+    /* (2.15) el índice de Ajustes: va a cada sección */
+    var aji=e.target.closest('[data-ajir]');
+    if(aji){var dst=document.getElementById(aji.getAttribute('data-ajir'));if(dst){var yy=dst.getBoundingClientRect().top+window.scrollY-70;try{window.scrollTo({top:yy,behavior:'smooth'})}catch(x){window.scrollTo(0,yy)}}return}
     /* Empezar de cero (Ajustes): primero pregunta y ofrece bajar un respaldo; después borra todo y vuelve a la tapa */
     if(e.target.closest('#cero-1')){$('#cero-conf').hidden=false;$('#cero-1-box').hidden=true;try{$('#cero-resp').focus()}catch(x){}return}
     if(e.target.closest('#cero-no')){$('#cero-conf').hidden=true;$('#cero-1-box').hidden=false;return}

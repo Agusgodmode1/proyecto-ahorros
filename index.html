@@ -372,6 +372,8 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
     <!-- AJUSTES Y RESPALDO -->
     <section id="p-ajustes" role="tabpanel" class="tone-sky stack" hidden>
       <div class="panel-head"><h2 class="ph-t">Ajustes</h2><p class="ph-s">La última página del libro: tu perfil, cómo se ve, tus respaldos y el resto de las opciones. Tus datos viven solo en este teléfono.</p></div>
+      <nav class="aj-ind" aria-label="Partes de Ajustes" data-nodeslizar><button type="button" data-ajir="aj-g-libro">Tu libro</button><button type="button" data-ajir="aj-g-ver">Cómo se ve y suena</button><button type="button" data-ajir="aj-g-priv">Privacidad</button><button type="button" data-ajir="aj-g-plata">Plata y fechas</button><button type="button" data-ajir="aj-g-datos">Tus datos</button><button type="button" data-ajir="aj-g-app">Sobre la app</button></nav>
+      <h3 class="aj-grupo" id="aj-g-libro">Tu libro</h3>
       <div class="card stack">
         <div class="sec"><h2>Tu pacto</h2><p class="note">Lo que tenés, lo que guardás y el día de cobro se cambian en las primeras páginas del libro, cada uno en su pregunta. La letra chica (porcentaje, mínimo y fechas) está en la página del pacto.</p></div>
         <div class="row-btns"><button class="btn primary" type="button" id="aj-prologo">Ir al prólogo</button><button class="btn" type="button" id="aj-tour">Ver el tour otra vez</button></div>
@@ -435,13 +437,10 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
       </details>
       </div>
       <div class="card stack">
-        <div class="sec"><h2>Modo discreto</h2><p class="note">Tapa todos los montos, por ejemplo si alguien mira tu pantalla. También con el ojo de arriba.</p></div>
-        <div class="seg" role="group" aria-label="Modo discreto" id="aj-discreto"><button type="button" data-discreto="0">Montos visibles</button><button type="button" data-discreto="1">Montos ocultos</button></div>
-      </div>
-      <div class="card stack">
         <div class="sec"><h2>Mi perfil</h2><p class="note" id="aj-perfil"></p></div>
         <div class="row-btns"><button class="btn primary" type="button" data-perfil="1">Editar mi perfil</button></div>
       </div>
+      <h3 class="aj-grupo" id="aj-g-ver">Cómo se ve y suena</h3>
       <div class="card stack">
         <div class="sec"><h2>Apariencia</h2><p class="note">Se guarda en este aparato.</p></div>
         <div class="seg" role="group" aria-label="Tema" id="aj-tema">
@@ -460,10 +459,16 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
         <label class="vol" id="aj-vol-box"><span>Volumen</span><input class="lb-rango" id="aj-volumen" type="range" min="0" max="100" step="5" aria-label="Volumen del libro"></label>
         <p class="note">Si el iPhone está en silencio, el libro no suena.</p>
       </div>
+      <h3 class="aj-grupo" id="aj-g-priv">Privacidad</h3>
+      <div class="card stack">
+        <div class="sec"><h2>Modo discreto</h2><p class="note">Tapa todos los montos, por ejemplo si alguien mira tu pantalla. También con el ojo de arriba.</p></div>
+        <div class="seg" role="group" aria-label="Modo discreto" id="aj-discreto"><button type="button" data-discreto="0">Montos visibles</button><button type="button" data-discreto="1">Montos ocultos</button></div>
+      </div>
       <div class="card stack">
         <div class="sec"><h2>Bloqueo con PIN</h2></div>
         <div id="aj-pin"></div>
       </div>
+      <h3 class="aj-grupo" id="aj-g-plata">Plata y fechas</h3>
       <div class="card stack">
         <div class="sec"><h2>Dólar</h2><p class="note" id="aj-dolar-nota">Para anotar gastos y fijos en dólares. Tocá el $ al lado del monto para cambiar a US$.</p></div>
         <form class="dolar-form" id="dolar-form" autocomplete="off"><div class="field"><label for="aj-dolar" class="sub-l">1 dólar son</label><div class="money"><span>$</span><input id="aj-dolar" type="number" inputmode="decimal" min="0" step="any" placeholder="40,50"></div></div><button class="btn primary" type="submit">Guardar</button></form>
@@ -472,6 +477,7 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
         <div class="sec"><h2>Feriados</h2><p class="note">Solo cuentan los 5 <b>no laborables</b> (1/1, 1/5, 18/7, 25/8 y 25/12): no son días hábiles para el cobro y, si los trabajás, se pagan como feriado. Los <i>laborables</i> (Carnaval, Turismo, 12 de octubre…) son días comunes; eso se puede cambiar en Mi perfil. Sacá los que tu trabajo no toma y agregá los que falten.</p></div>
         <div id="aj-feriados"></div>
       </div>
+      <h3 class="aj-grupo" id="aj-g-datos">Tus datos</h3>
       <div class="card stack" id="aj-pase">
         <div class="sec"><h2>Pasar mis datos a otro aparato</h2><p class="note">Para tener lo mismo en el celular y en la compu, o en un teléfono nuevo. Se pasa con un archivo: nada pasa por ningún servidor ni por internet de la app.</p></div>
         <ol class="steps pase">
@@ -505,7 +511,7 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
           <div class="row-btns"><button class="btn" type="button" id="cero-resp">Bajar un respaldo primero</button><button class="btn danger" type="button" id="cero-si">Sí, borrar todo</button><button class="btn quiet" type="button" id="cero-no">Cancelar</button></div>
         </div>
       </div>
-      <div class="card stack"><h2>Sobre la app</h2><div class="receipt" id="aj-info"></div></div>
+      <div class="card stack aj-sobre" id="aj-g-app"><h2>Sobre la app</h2><div class="receipt" id="aj-info"></div></div>
     </section>
   </main>
   <nav class="pie" id="pie" aria-label="Pasar de página"></nav>

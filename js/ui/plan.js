@@ -21,6 +21,8 @@ import {renderSuperv,initSuperv} from './supervivencia.js';
 import {renderCobre,initCobre} from './cobre.js';
 import {renderEntradas,initEntradas} from './entradas.js';
 import {renderVentas,initVentas} from './ventas.js';
+import {tuPlataAlcanza} from '../logica/ventas.js';
+import {frecDe} from '../logica/frecuencia.js';
 import {periodoTxt} from '../logica/frecuencia.js';
 import {irAlPacto} from './indice.js';
 
@@ -163,8 +165,26 @@ function constelacion(on,desde){
   }
   return '<svg viewBox="0 0 300 38" preserveAspectRatio="xMidYMid meet">'+h+'</svg>';
 }
+/* (2.22) Cuando vendo no hay cobro que esperar: «Tu plata alcanza» (cuántos días te dura y si llegás al próximo pago) */
+function renderAlcanza(el){
+  var state=ctx.state,t=today(),r=tuPlataAlcanza(state,planNow(),t);
+  if(!r){el.innerHTML='';return}
+  var on=r.estrellas,desde=estrellasVistas===null?0:Math.min(estrellasVistas,on);estrellasVistas=on;
+  el.classList.remove('cd-lejos','cd-cerca','cd-ya','cd-hoy');el.classList.add(r.llega?'cd-lejos':'cd-cerca','cd-alcanza');
+  var P=r.pago,pago='';
+  if(P)pago='<span class="cd-pago">'+(P.dias<=0?'Hoy se paga ':'Próximo pago: ')+'<b>'+esc(P.nombre)+'</b>'+(P.dias>0?', en '+P.dias+(P.dias===1?' día':' días'):'')
+    +' · '+(r.falta>0?'tenés '+money(r.juntado)+' de '+money(P.monto):'ya tenés los '+money(P.monto))+'</span>'
+    +'<span class="cd-est '+(r.llega?'bien':'falta')+'">'+(r.llega?'✓ Llegás '+(P.dias<=0?'a pagarlo':'al pago')+'.':r.falta>0?'Te faltan '+money(r.falta)+': cada venta te acerca.':'Te faltan '+(P.dias-r.dias)+(P.dias-r.dias===1?' día':' días')+' de plata para llegar: cada venta suma días.')+'</span>';
+  el.innerHTML='<span class="cd-l">Tu plata alcanza</span><span class="cd-v"><span class="cd-n">'+r.dias+'</span><span class="cd-t">'+(r.dias===1?'día':'días')+'</span></span>'
+    +'<span class="cd-seg cd-const" aria-hidden="true">'+constelacion(on,desde)+'</span>'
+    +'<span class="cd-d">'+(r.hasta?'hasta el '+esc(fLarga(r.hasta)):'')+'</span>'
+    +'<span class="cd-ritmo">'+(r.porDia>0?'gastando '+(r.ritmo?'como venís':'como el plan')+', ≈ '+money(r.porDia)+' por día<br>':'')+'<button class="linklike" type="button" id="cd-total">actualizar el total</button></span>'+pago;
+  el.setAttribute('aria-label','Tu plata alcanza '+r.dias+(r.dias===1?' día':' días')+(r.hasta?', hasta el '+fLarga(r.hasta):'')+(P?'. Próximo pago: '+P.nombre+(P.dias>0?', en '+P.dias+' días':', hoy'):''));
+}
 export function renderCountdown(){
   var state=ctx.state,el=$('#countdown');if(!el)return;
+  if(frecDe(state.perfil&&state.perfil.cobro)==='ventas'&&num(state.plan.monto)>0&&today()<state.plan.cobro){renderAlcanza(el);return}
+  el.classList.remove('cd-alcanza');
   var t=today(),d=diffDays(t,state.plan.cobro),big,small,lab;
   if(d>0){big=String(d);small=(d===1?'día':'días');lab='Cobrás en'}
   else if(d===0){big='Hoy';small='cobrás';lab='Cobro'}
@@ -391,6 +411,7 @@ export function initPlan(){
   });
   pr.addEventListener('click',function(e){if(e.target.closest('#saldo-abrir2'))abrirSaldo()});
   $('#hoy-hero').addEventListener('click',function(e){if(e.target.closest('#hoy-empezar'))abrirPlan()});
+  $('#countdown').addEventListener('click',function(e){if(e.target.closest('#cd-total'))abrirSaldo()});
   $('#hero-chips').addEventListener('click',function(e){if(e.target.closest('#apartado-abrir')){ctx.abrirPrologo('qa');return}if(e.target.closest('#saldo-abrir'))abrirSaldo();if(e.target.closest('#ahorro-abrir'))abrirMeta()});
   initGasto();
   $('#cierre-aviso').addEventListener('click',function(e){

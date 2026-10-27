@@ -9,10 +9,10 @@ import {resumenCiclo} from '../js/logica/ciclo.js';
 import {defaults} from '../js/estado.js';
 
 var HOY='2026-11-01'; /* domingo; el pacto va hasta el 1 de diciembre: 30 días, 5 semanas (la última de 2) */
-function vendedor(fijos){
+function vendedor(fijos,total){
   var st=defaults(HOY);
   (fijos||[]).forEach(function(f){st.fijos.push(f)});
-  sellarPacto(st,{total:5000,ahorro:0,cobro:'2026-12-01',frecuencia:'ventas'},HOY);
+  sellarPacto(st,{total:total||5000,ahorro:0,cobro:'2026-12-01',frecuencia:'ventas'},HOY);
   return st;
 }
 
@@ -88,4 +88,42 @@ test('un pacto nuevo empieza sin entradas ni ganancia, y el cobro estimado es ce
   assert.equal(resumenCiclo(st,'2026-12-01').cobro,0);
   sellarPacto(st,{total:5000,ahorro:0,cobro:'2027-01-01',frecuencia:'ventas'},'2026-12-01');
   assert.deepEqual(st.plan.entradas,[]);assert.deepEqual(st.plan.ganancia,{});
+});
+
+import {tuPlataAlcanza,proximoPago,ritmoGasto} from '../js/logica/ventas.js';
+import {marcarPagado} from '../js/logica/plan.js';
+
+test('tu plata alcanza: días al ritmo del plan, y al tuyo cuando hay gastos',function(){
+  var st=vendedor([{id:'a',nombre:'Alquiler',monto:12000,dia:10,cat:'Vivienda'}],21000);
+  var pc=planCalc(st),r=tuPlataAlcanza(st,pc,HOY);
+  assert.equal(r.resto,9000);assert.equal(r.porDia,300,'9.000 en 30 días');assert.equal(r.dias,30);
+  assert.equal(r.pago.nombre,'Alquiler');assert.equal(r.pago.dias,9);assert.equal(r.juntado,12000);assert.equal(r.llega,true);assert.equal(r.estrellas,12);
+  ['2026-11-01','2026-11-02','2026-11-03'].forEach(function(f,i){st.gastos.push({id:'g'+i,fecha:f,monto:1000,cat:'Otros'})});
+  r=tuPlataAlcanza(st,planCalc(st),'2026-11-03');
+  assert.equal(ritmoGasto(st,'2026-11-03'),1000);assert.equal(r.resto,6000);assert.equal(r.dias,6);assert.equal(r.hasta,'2026-11-08');
+  assert.equal(r.pago.dias,7);assert.equal(r.llega,false,'6 días no llegan al 10');assert.equal(r.estrellas,10);
+});
+
+test('vender suma días',function(){
+  var st=vendedor(null,3000); /* 100 por día */
+  var a=tuPlataAlcanza(st,planCalc(st),HOY).dias;
+  cobreJornal(st,1000,HOY);
+  var b=tuPlataAlcanza(st,planCalc(st),HOY).dias;
+  assert.equal(st.plan.porDiaBase,100);assert.equal(a,30);assert.equal(b,40,'1.000 a 100 por día son 10 días más');
+});
+
+test('el próximo pago: el que no está pagado, aunque caiga en el mes que viene',function(){
+  var st=vendedor([{id:'a',nombre:'Alquiler',monto:12000,dia:10,cat:'Vivienda'},{id:'b',nombre:'UTE',monto:2000,dia:20,cat:'Vivienda'}]);
+  assert.equal(proximoPago(st,HOY).nombre,'Alquiler');
+  marcarPagado(st,'a',true,{monto:12000,fecha:'2026-11-09'});
+  assert.equal(proximoPago(st,'2026-11-09').nombre,'UTE');
+  marcarPagado(st,'b',true,{monto:2000,fecha:'2026-11-20'});
+  var n=proximoPago(st,'2026-11-21');assert.equal(n.nombre,'Alquiler');assert.equal(n.fecha,'2026-12-10');
+});
+
+test('si no alcanza para el pago, falta y no se encienden todas',function(){
+  var st=vendedor([{id:'a',nombre:'Alquiler',monto:12000,dia:10,cat:'Vivienda'}],20000);
+  st.gastos.push({id:'g',fecha:HOY,monto:15000,cat:'Otros'});
+  var r=tuPlataAlcanza(st,planCalc(st),HOY);
+  assert.equal(r.juntado,5000);assert.equal(r.falta,7000);assert.equal(r.llega,false);assert.ok(r.estrellas<=11);
 });

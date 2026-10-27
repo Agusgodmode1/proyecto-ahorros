@@ -6,6 +6,9 @@ import {histStats} from '../logica/logros.js';
 import {resumenGuardado} from '../logica/guardado.js';
 import {CAPITULOS,capituloDe,numeroDePagina} from '../logica/capitulos.js';
 import {ctx,$,today,planNow,liqNow,money,esc,fCorta} from './comun.js';
+import {buscarGastos} from '../logica/buscar.js';
+import {nombreDe} from '../logica/categorias.js';
+import {abrirHojaGasto} from './gastos.js';
 
 function quieto(){try{return matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){return false}}
 
@@ -30,7 +33,10 @@ function renglon(ir,n,t,sub,pag,cls,actual){
 export function abrirIndice(){
   var box=$('#indice-box'),el=$('#indice'),st=ctx.state,pc=planNow(),n=pc.weeks.length,actual=capituloDe(ctx.tab);
   var h='<div class="lb-cab"><span class="lb-cap">el libro del ahorro</span><button class="lb-link" type="button" data-ix="cerrar">Volver</button></div>'
-    +'<h1 class="lb-h" id="ix-t">Índice</h1><ol class="ix-list">'
+    +'<h1 class="lb-h" id="ix-t">Índice</h1>'
+    /* (2.15) buscar un gasto: por la nota, la categoría, el monto o la fecha */
+    +'<div class="ix-buscar"><label class="sr-only" for="ix-q">Buscar un gasto</label><input id="ix-q" type="search" enterkeyhint="search" autocomplete="off" placeholder="Buscar un gasto: café, súper, 350, 12/10…"></div>'
+    +'<div id="ix-res" aria-live="polite"></div><ol class="ix-list">'
     +renglon('data-ix="prologo"','·','Prólogo y pacto',st.pacto&&st.pacto.sellado?'sellado el '+esc(fCorta(st.pacto.sellado)):'',numeroDePagina('p1',n),'ix-pro',false);
   CAPITULOS.forEach(function(c){
     var on=!!actual&&actual.id===c.id;
@@ -42,6 +48,17 @@ export function abrirIndice(){
   box.innerHTML=h;el.hidden=false;document.documentElement.classList.add('voz-abierta');
   if(!quieto())box.animate([{transform:'perspective(1400px) rotate3d(-.16,1,0,-30deg) translateX(-4%)',opacity:0},{transform:'perspective(1400px) rotate3d(-.16,1,0,1.5deg)',opacity:1,offset:.8},{transform:'none',opacity:1}],{duration:420,easing:'cubic-bezier(.3,.6,.2,1)'});
   var b=box.querySelector('[aria-current]')||box.querySelector('[data-ix="cerrar"]');try{b.focus({preventScroll:true})}catch(e){}
+}
+/* Lo que encontró: tocar un gasto lo abre para corregirlo */
+var encontrados=[];
+function buscar(q){
+  var el=$('#ix-res'),lista=$('#indice-box .ix-list');if(!el)return;
+  var r=buscarGastos(ctx.state.gastos,q,{nombreCat:function(c){return c?nombreDe(ctx.state,c):''},max:40});encontrados=r.lista;
+  if(lista)lista.hidden=!!q.trim();
+  if(!q.trim()){el.innerHTML='';return}
+  el.innerHTML=r.n?'<p class="ix-res-t">'+r.n+(r.n===1?' gasto':' gastos')+' · '+money(r.total)+(r.n>r.lista.length?' (los '+r.lista.length+' más nuevos)':'')+'</p><ul class="ix-res">'
+    +r.lista.map(function(g,i){return '<li><button type="button" data-ixg="'+i+'"><span class="ix-rf">'+esc(fCorta(g.fecha))+'</span><span class="ix-rn">'+esc(g.nota||'Sin detalle')+(g.cat?'<small>'+esc(nombreDe(ctx.state,g.cat))+'</small>':'')+'</span><b>'+money(g.monto)+'</b></button></li>'}).join('')+'</ul>'
+    :'<p class="ix-res-t">No encontré gastos con «'+esc(q.trim())+'».</p>';
 }
 function cerrarIndice(fn){
   var el=$('#indice'),box=$('#indice-box');
@@ -59,6 +76,7 @@ export function initIndice(){
   $('#indice-abrir').addEventListener('click',abrirIndice);
   el.addEventListener('click',function(e){
     if(e.target===el){cerrarIndice();return}
+    var gs=e.target.closest('[data-ixg]');if(gs){var gg=encontrados[Number(gs.getAttribute('data-ixg'))];if(gg)cerrarIndice(function(){abrirHojaGasto({gasto:gg})});return}
     var g=e.target.closest('[data-ix-go]');if(g){var id=g.getAttribute('data-ix-go');cerrarIndice(function(){ctx.go(id,{abanico:true})});return}
     var b=e.target.closest('[data-ix]');if(!b)return;
     var a=b.getAttribute('data-ix');
@@ -67,4 +85,5 @@ export function initIndice(){
     if(a==='tapa')cerrarIndice(function(){ctx.cerrarLibro()});
   });
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!el.hidden)cerrarIndice()});
+  el.addEventListener('input',function(e){if(e.target.id==='ix-q')buscar(e.target.value)});
 }

@@ -4,7 +4,8 @@ import {categoriaGasto,aprender} from '../logica/voz.js';
 import {num,uid} from '../logica/util.js';
 import {cotizacion,gastoUSD,aPesos} from '../logica/monedas.js';
 import {frecuentes} from '../logica/frecuentes.js';
-import {ctx,esc,money,usd,toastAccion,toast,fCorta,today} from './comun.js';
+import {ctx,$,esc,money,usd,toastAccion,toast,fCorta,today,cap,fLarga} from './comun.js';
+import {parse,addDays,iso,DIA} from '../logica/fechas.js';
 import {nombresVisibles,nombreDe,colorDe} from '../logica/categorias.js';
 import {disponible} from '../logica/saldo.js';
 
@@ -139,4 +140,58 @@ export function itemGasto(g,cuando){
   return '<li><div class="gi-main"><i class="dot" style="background:'+catColor(c)+'"></i><span class="gi-nota">'+(g.nota?esc(g.nota):'<span class="muted">Sin detalle</span>')+'</span><span class="amt">'+money(g.monto)+(g.usd?'<small class="amt-usd">'+usd(g.usd)+'</small>':'')+'</span></div>'
     +'<div class="gi-sub"><span class="src">'+esc(cuando)+' · '+esc(c)+(g.src==='brou'?' · del extracto':g.src==='voz'?' · por voz':g.src==='ajuste'?' · ajuste de saldo':'')+'</span>'
     +'<span class="gbtns"><button class="btn quiet sm" type="button" data-editg="'+esc(g.id)+'" aria-label="Editar gasto">Editar</button><button class="btn quiet sm" type="button" data-delg="'+esc(g.id)+'" aria-label="Borrar gasto">Borrar</button></span></div></li>';
+}
+
+/* Renglón de una línea (Semanas): qué · día · monto, con corregir y borrar (borrar ofrece «Deshacer») */
+var LAPIZ='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="M13.5 6.5l4 4"/></svg>';
+var TACHO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>';
+export function renglonGasto(g){
+  var c=catDe(g),d=parse(g.fecha),qué=g.nota?esc(g.nota):'<span class="muted">Sin detalle</span>';
+  /* todo el renglón se toca para corregir; al lado, borrar */
+  return '<li class="gl1"><button class="gl-e" type="button" data-editg="'+esc(g.id)+'" aria-label="Corregir: '+esc((g.nota||'sin detalle')+', '+DIA[d.getDay()]+' '+d.getDate()+', '+money(g.monto))+'">'
+    +'<i class="dot" style="background:'+catColor(c)+'"></i><span class="gl-q">'+qué+'</span><span class="gl-d">'+DIA[d.getDay()]+' '+d.getDate()+'</span>'
+    +'<b class="amt">'+money(g.monto)+'</b>'+LAPIZ+'</button>'
+    +'<button class="gl-b" type="button" data-delg="'+esc(g.id)+'" aria-label="Borrar '+esc(g.nota||'el gasto')+'">'+TACHO+'</button></li>';
+}
+
+/* ---------- La hoja para anotar (o corregir) un gasto: la misma desde Hoy y desde cada semana ----------
+   o = {fechas:[[iso,texto]] (los días que se pueden elegir), fecha (la elegida), gasto (si se corrige), titulo} */
+var hojaEdit=null;
+function diasRecientes(){var t=today(),ay=iso(addDays(parse(t),-1)),an=iso(addDays(parse(t),-2));return [[t,'Hoy'],[ay,'Ayer'],[an,'Anteayer, '+fCorta(an)]]}
+/* Los días de una semana que ya pasaron o son hoy (los de más adelante no se pueden elegir) */
+export function diasHasta(inicio,fin){
+  var t=today(),ay=iso(addDays(parse(t),-1)),r=[];
+  for(var d=parse(inicio),k=0;k<14;k++,d=addDays(d,1)){var x=iso(d);if(x>fin||x>t)break;r.push([x,x===t?'Hoy':x===ay?'Ayer, '+fLarga(x):cap(fLarga(x))])}
+  return r;
+}
+export function abrirHojaGasto(o){
+  var s=$('#gasto-sheet'),b=$('#gasto-box');if(!s||!b)return;
+  o=o||{};var g=o.gasto||null,fechas=o.fechas&&o.fechas.length?o.fechas:diasRecientes();
+  if(g&&!fechas.some(function(f){return f[0]===g.fecha}))fechas=[[g.fecha,cap(fLarga(g.fecha))]].concat(fechas);
+  hojaEdit=g?g.id:null;
+  b.innerHTML='<div class="sheet-top"><h2 id="gs-t">'+esc(g?'Corregir el gasto':o.titulo||'Anotar un gasto')+'</h2><button class="btn quiet" type="button" id="gasto-x">Cerrar</button></div>'
+    +(g?'':chipsFrecuentes('q'))
+    +formGasto('q',{fecha:g?g.fecha:o.fecha||fechas[0][0],fechas:fechas,gasto:g,boton:g?'Guardar cambios':'Anotar'});
+  s.hidden=false;document.documentElement.classList.add('hoja');
+  /* En iPhone el teclado solo aparece si el foco se pone en el mismo toque (sin esperar) */
+  var m=$('#q-monto');if(m)try{m.focus({preventScroll:true});if(g)m.select()}catch(e){m.focus()}
+}
+export function cerrarHojaGasto(){var s=$('#gasto-sheet');if(s)s.hidden=true;hojaEdit=null;document.documentElement.classList.remove('hoja')}
+export function initHojaGasto(){
+  var s=$('#gasto-sheet');if(!s)return;
+  initFormsGasto(s);
+  s.addEventListener('click',function(e){
+    if(e.target===s||e.target.closest('#gasto-x')||e.target.closest('[data-gcancel="q"]')){cerrarHojaGasto();return}
+    var fr=e.target.closest('[data-frec]');if(fr){var fe=$('#q-fecha');anotarFrecuente(Number(fr.getAttribute('data-frec')),fe?fe.value:today());cerrarHojaGasto();return}
+  });
+  s.addEventListener('submit',function(e){
+    if(!e.target.getAttribute||e.target.getAttribute('data-gform')!=='q')return;
+    e.preventDefault();
+    var d=leerForm(e.target);if(!d)return;
+    var era=hojaEdit,id=guardarGasto(d,era);cerrarHojaGasto();ctx.renderAll();
+    if(era){toast('Listo: corregido');return}
+    var li=document.querySelector('#hoy-out [data-delg="'+id+'"],#p-semana [data-delg="'+id+'"]');if(li&&li.closest('li'))li.closest('li').classList.add('tinta-nueva');
+    avisoAnotado(id,'Anotado: '+money(d.monto)+(d.nota?' en '+d.nota:''));
+  });
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!s.hidden)cerrarHojaGasto()});
 }

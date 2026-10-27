@@ -10,10 +10,10 @@ import {aguinaldo} from '../logica/aguinaldo.js';
 import {aniosSinFeriados} from '../logica/avisos.js';
 import {ritmoDelMes,minimoDe} from '../logica/mes.js';
 import {sensibilidadDolar} from '../logica/recibos.js';
-import {formGasto,initFormsGasto,leerForm,avisoAnotado,guardarGasto,borrarGasto,itemGasto,chipsFrecuentes,anotarFrecuente} from './gastos.js';
+import {formGasto,initFormsGasto,leerForm,avisoAnotado,guardarGasto,borrarGasto,itemGasto,chipsFrecuentes,anotarFrecuente,abrirHojaGasto,initHojaGasto} from './gastos.js';
 import {editarGasto,resetWeekSel} from './semanas.js';
 import {cicloTerminado,resumenCiclo,cerrarCiclo} from '../logica/ciclo.js';
-import {abrirLibro} from './libro.js';
+import {abrirLibro,polvo} from './libro.js';
 import {irAlPacto} from './indice.js';
 
 function rankTxt(s){
@@ -123,34 +123,10 @@ function aplicarVista(){
   if(a)a.classList.toggle('simple',s);
   document.querySelectorAll('[data-simple]').forEach(function(b){b.setAttribute('aria-pressed',String((b.getAttribute('data-simple')==='1')===s))});
 }
-/* Hoja para anotar un gasto: se abre desde el botón grande de la portada */
-function abrirGasto(){
-  var s=$('#gasto-sheet'),b=$('#gasto-box');if(!s||!b)return;
-  var t=today(),ay=iso(addDays(parse(t),-1)),an=iso(addDays(parse(t),-2));
-  b.innerHTML='<div class="sheet-top"><h2 id="gs-t">Anotar un gasto</h2><button class="btn quiet" type="button" id="gasto-x">Cerrar</button></div>'+chipsFrecuentes('q')
-    +formGasto('q',{fecha:t,fechas:[[t,'Hoy'],[ay,'Ayer'],[an,'Anteayer, '+fCorta(an)]],boton:'Anotar'});
-  s.hidden=false;document.documentElement.classList.add('hoja');
-  /* En iPhone el teclado solo aparece si el foco se pone en el mismo toque (sin esperar) */
-  var m=$('#q-monto');if(m)try{m.focus({preventScroll:true})}catch(e){m.focus()}
-}
-function cerrarGasto(){var s=$('#gasto-sheet');if(s)s.hidden=true;document.documentElement.classList.remove('hoja')}
+/* La hoja para anotar un gasto (ui/gastos.js): se abre desde el botón grande de la portada */
 function initGasto(){
-  var s=$('#gasto-sheet');
-  initFormsGasto(s);
-  s.addEventListener('click',function(e){
-    if(e.target===s||e.target.closest('#gasto-x')){cerrarGasto();return}
-    var fr=e.target.closest('[data-frec]');if(fr){var fe=$('#q-fecha');anotarFrecuente(Number(fr.getAttribute('data-frec')),fe?fe.value:today());cerrarGasto();return}
-  });
-  s.addEventListener('submit',function(e){
-    if(!e.target.getAttribute||e.target.getAttribute('data-gform')!=='q')return;
-    e.preventDefault();
-    var d=leerForm(e.target);if(!d)return;
-    var id=guardarGasto(d,null);cerrarGasto();ctx.renderAll();
-    var li=document.querySelector('#hoy-out [data-delg="'+id+'"]');if(li&&li.closest('li'))li.closest('li').classList.add('tinta-nueva');
-    avisoAnotado(id,'Anotado: '+money(d.monto)+(d.nota?' en '+d.nota:''));
-  });
-  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!s.hidden)cerrarGasto()});
-  $('#hoy-hero').addEventListener('click',function(e){if(e.target.closest('#gasto-abrir'))abrirGasto()});
+  initHojaGasto();
+  $('#hoy-hero').addEventListener('click',function(e){if(e.target.closest('#gasto-abrir'))abrirHojaGasto()});
   /* Hoy en versión corta (Ajustes) */
   document.addEventListener('click',function(e){var b=e.target.closest('[data-simple]');if(!b)return;try{localStorage.setItem(VS,b.getAttribute('data-simple'))}catch(er){}aplicarVista();ctx.renderAll()});
   aplicarVista();
@@ -158,6 +134,7 @@ function initGasto(){
 var plegados={};/* tarjetas plegables abiertas, por id */
 function foldIni(id,tono,tit,sub){return '<details class="card fold '+tono+'" data-fold="'+id+'"'+(plegados[id]?' open':'')+'><summary><span class="fold-t">'+tit+'</span><span class="fold-s">'+sub+'</span></summary><div class="stack fold-b">'}
 /* Cuenta regresiva del cobro, con su propia tarjeta y una barra de 12 tramos */
+var estrellasVistas=null,polvoDia=null;
 export function renderCountdown(){
   var state=ctx.state,el=$('#countdown');if(!el)return;
   var t=today(),d=diffDays(t,state.plan.cobro),big,small,lab;
@@ -167,8 +144,14 @@ export function renderCountdown(){
   var tot=diffDays(state.plan.inicio||t,state.plan.cobro),pas=diffDays(state.plan.inicio||t,t);
   var on=tot>0?Math.max(0,Math.min(12,Math.round(12*pas/tot))):0,seg='';
   if(d<=0)on=12;
-  for(var i=0;i<12;i++)seg+='<i'+(i<on?' class="on"':'')+'></i>';
+  /* 12 estrellitas que se van encendiendo; solo las que se encienden ahora tienen su brillo de entrada */
+  var desde=estrellasVistas===null?0:Math.min(estrellasVistas,on);estrellasVistas=on;
+  for(var i=0;i<12;i++)seg+='<i'+(i<on?' class="on'+(i>=desde?' nueva':'')+'" style="--i:'+(i-desde)+'"':'')+'></i>';
+  /* el color se calienta a medida que se acerca el cobro: lejos, oro pálido; cerca, dorado; los últimos 3 días, ámbar; el día, dorado con polvo de estrellas */
+  el.classList.remove('cd-lejos','cd-cerca','cd-ya','cd-hoy');
+  el.classList.add(d<=0?'cd-hoy':d<=3?'cd-ya':d<=7?'cd-cerca':'cd-lejos');
   el.innerHTML='<span class="cd-l">'+lab+'</span><span class="cd-v"><span class="cd-n'+(d>0?'':' txt')+'">'+esc(big)+'</span><span class="cd-t">'+esc(small)+'</span></span><span class="cd-seg" aria-hidden="true">'+seg+'</span><span class="cd-d">'+esc(fLarga(state.plan.cobro))+'</span>';
+  if(d===0&&polvoDia!==t&&ctx.tab==='resumen'){polvoDia=t;setTimeout(function(){polvo(el.querySelector('.cd-v'),18,0)},250)}
   el.setAttribute('aria-label',(d>0?d+' '+small+' para cobrar':(d===0?'Cobrás hoy':'Ya cobraste'))+', '+fLarga(state.plan.cobro));
 }
 

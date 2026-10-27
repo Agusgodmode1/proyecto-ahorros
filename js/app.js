@@ -16,6 +16,7 @@ import {initVoz} from './ui/voz.js';
 import {abrirPerfil,initPerfil,resumenPerfil} from './ui/perfil.js';
 import {abrirLibro,initLibro} from './ui/libro.js';
 import {copiaVisible,girar,empezar,terminar as terminarPase} from './ui/pase.js';
+import {introCapitulo,olvidarIntros} from './ui/intro.js';
 import {initIndice} from './ui/indice.js';
 import {renderGuardado,initGuardado} from './ui/guardado.js';
 import {CAPITULOS,capituloDe,vecina,numeroDePagina,nombreDePagina} from './logica/capitulos.js';
@@ -113,6 +114,8 @@ function renderAll(){
   if(ctx.tab==='logros')renderLogros(pc);
   if(ctx.tab==='guardado')renderGuardado();
   renderPie(pc);
+  /* la introducción del capítulo: completa la primera vez, después en una línea */
+  var capA=capituloDe(ctx.tab);if(capA&&capA.id!=="resumen")introCapitulo($(capA.id==="semanas"?"#p-semana":PANELES[capA.id]),capA.id);else if(ctx.tab==='ajustes')introCapitulo($('#p-ajustes'),'ajustes');
   if(ctx.tab==='ajustes'){renderAjustes(guardado);renderFeriados();renderAjustesPin();marcarSonido();
     document.querySelectorAll('[data-sobrante]').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-sobrante')===(ctx.state.plan.sobrante||'siguiente')))});renderCopias();$('#aj-perfil').innerHTML=resumenPerfil(ctx.state)}
   tourSiPendiente();
@@ -300,7 +303,7 @@ function initGlobal(){
     var pf=e.target.closest('[data-perfil]');
     if(pf)abrirPerfil(Number(pf.getAttribute('data-perfil'))||1,{nuevo:false,estado:ctx.state,alTerminar:function(){syncInputs();persist();renderAll()}});
     /* Mis datos (plata de hoy, meta y fijos) y el tour, desde Ajustes */
-    if(e.target.closest('#aj-tour'))iniciarTour();
+    if(e.target.closest('#aj-tour')){olvidarIntros();iniciarTour()}
     if(e.target.closest('#aj-prologo'))abrirPrologo('p1');
     var pie=e.target.closest('[data-pie]');if(pie)go(pie.getAttribute('data-pie'));
     /* Borrar los datos de ejemplo y crear el perfil (dos toques) */

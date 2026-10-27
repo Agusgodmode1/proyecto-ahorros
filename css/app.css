@@ -570,7 +570,7 @@ html.voz-abierta,html.voz-abierta body{overflow:hidden}
 :root[data-theme="dark"] .sbar{background:var(--bg)}
 :root[data-theme="dark"] .toast{background:#262624;color:var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.45),inset 0 0 0 1px var(--line)}
 /* Con la app ya en uso, las explicaciones de cada pestaña se ocultan: queda lo importante */
-html.en-uso .ph-s{display:none}
+/* (2.10) la introducción de cada capítulo ya no se oculta: queda en una línea «¿Qué es esto?» (papel.css, ui/intro.js) */
 /* Semanas en Plan: una fila por semana, fácil de leer de un vistazo */
 #resumen-out .weeks{grid-template-columns:1fr;gap:8px}
 #resumen-out .wk{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"top v" "d v" "bar bar" "f f";column-gap:12px;row-gap:2px;padding:12px 14px}

@@ -18,6 +18,8 @@
   --ink:#1C2440; --muted:#4A5170; --line:rgba(28,36,64,.16); --line-2:rgba(28,36,64,.28);
   --oro:#A87A1F; --oro-t:#765616; --oro-cl:#D9B25A;
   --cta:#E07A3C; --on-cta:#1C2440; --naranja-t:#8E4419;
+  /* «Cobrás en» se calienta a medida que se acerca el cobro (2.10) */
+  --cobro-lejos:#8A7034; --cobro-cerca:#A87A1F; --cobro-ya:#B4621A;
   --azul:#2A4FB8; --sel:#1C2440; --on-sel:#F6ECD6;
   --bien:#326739; --ojo:#7E5415; --mal:#9E3C2C;
   /* los colores de siempre, con la paleta del libro */
@@ -41,6 +43,7 @@
   --ink:#F1E7D0; --muted:#B9B6C8; --line:rgba(241,231,208,.14); --line-2:rgba(241,231,208,.26);
   --oro:#E2B65A; --oro-t:#E2B65A; --oro-cl:#F3D488;
   --cta:#F08A4B; --on-cta:#191C30; --naranja-t:#F08A4B;
+  --cobro-lejos:#E8D6A4; --cobro-cerca:#E2B65A; --cobro-ya:#F2A243;
   --azul:#9DB4FF; --sel:#9DB4FF; --on-sel:#191C30;
   --bien:#79C28A; --ojo:#E2A84A; --mal:#EE8A7A;
   --sky:#9DB4FF; --sky-soft:#283053; --sky-ink:#C9D5FF;
@@ -63,6 +66,7 @@
     --ink:#F1E7D0; --muted:#B9B6C8; --line:rgba(241,231,208,.14); --line-2:rgba(241,231,208,.26);
     --oro:#E2B65A; --oro-t:#E2B65A; --oro-cl:#F3D488;
     --cta:#F08A4B; --on-cta:#191C30; --naranja-t:#F08A4B;
+    --cobro-lejos:#E8D6A4; --cobro-cerca:#E2B65A; --cobro-ya:#F2A243;
     --azul:#9DB4FF; --sel:#9DB4FF; --on-sel:#191C30;
     --bien:#79C28A; --ojo:#E2A84A; --mal:#EE8A7A;
     --sky:#9DB4FF; --sky-soft:#283053; --sky-ink:#C9D5FF;
@@ -588,3 +592,109 @@ html{font-variation-settings:'SOFT' 100,'WONK' 0}
 .v2 .vol span{font-size:16px;color:var(--muted)}
 .v2 .vol .lb-rango::-webkit-slider-runnable-track{background:linear-gradient(90deg,var(--azul) 0 var(--v,0%),color-mix(in srgb,var(--ink) 14%,transparent) var(--v,0%))}
 .v2 .vol .lb-rango::-webkit-slider-thumb{background:radial-gradient(circle at 35% 35%,#fff7e6,var(--cta) 55%,#9E3C1C);border-color:var(--page)}
+
+/* =====================================================================
+   Hoy y Semanas, más compactos (2.10)
+   ===================================================================== */
+/* «Cobrás en»: 30 % más chico; sigue siendo lo más importante, sin dominar la página */
+.v2 .cd{--cobro-c:var(--cobro-cerca)}
+.v2 .cd.cd-lejos{--cobro-c:var(--cobro-lejos)}
+.v2 .cd.cd-ya{--cobro-c:var(--cobro-ya)}
+.v2 .cd.cd-hoy{--cobro-c:var(--oro)}
+.v2 .cd .cd-n{font-size:clamp(72px,24vw,104px);background:linear-gradient(180deg,color-mix(in srgb,var(--cobro-c) 60%,var(--oro-cl)) 0%,var(--cobro-c) 52%,color-mix(in srgb,var(--cobro-c) 80%,#000) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.v2 .cd .cd-n.txt{font-size:clamp(46px,15vw,62px)}
+.v2 .cd .cd-t{font-size:19px;color:var(--ink)}
+.v2 .cd .cd-v{position:relative;isolation:isolate}
+/* los últimos 3 días: un brillo suave que respira */
+.v2 .cd.cd-ya .cd-v::before{content:"";position:absolute;inset:-18px -26px -10px;border-radius:50%;z-index:-1;pointer-events:none;
+  background:radial-gradient(closest-side,color-mix(in srgb,var(--cobro-ya) 30%,transparent),transparent);animation:cd-brillo 3.2s ease-in-out infinite alternate}
+@keyframes cd-brillo{from{opacity:.4;transform:scale(.94)}to{opacity:1;transform:scale(1.04)}}
+/* 12 estrellitas en lugar de tramos */
+.v2 .cd .cd-seg{display:flex;justify-content:space-between;gap:2px;height:auto}
+.v2 .cd .cd-seg i{flex:0 0 auto;width:14px;height:14px;border-radius:0;background:color-mix(in srgb,var(--ink) 16%,transparent);
+  clip-path:polygon(50% 0,61% 37%,100% 50%,61% 63%,50% 100%,39% 63%,0 50%,39% 37%)}
+.v2 .cd .cd-seg i.on{background:var(--cobro-c)}
+.v2 .cd .cd-seg i.nueva{animation:cd-estrella .34s cubic-bezier(.3,1.6,.5,1) backwards;animation-delay:calc(var(--i,0)*45ms)}
+@keyframes cd-estrella{from{opacity:0;transform:scale(.2) rotate(-60deg)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.v2 .cd.cd-ya .cd-v::before,.v2 .cd .cd-seg i.nueva{animation:none}}
+
+/* Introducción de cada capítulo: completa la primera vez; después, una línea «¿Qué es esto? ▸» */
+.v2 .ph-intro>summary{list-style:none;display:inline-flex;align-items:center;gap:6px;min-height:44px;cursor:pointer;font:600 15px var(--f-body);color:var(--azul)}
+.v2 .ph-intro>summary::-webkit-details-marker{display:none}
+.v2 .ph-intro>summary::after{content:"▸";display:inline-block;transition:transform .15s ease}
+.v2 .ph-intro[open]>summary::after{transform:rotate(90deg)}
+.v2 .ph-intro.primera>summary{display:none}
+
+/* Cada semana */
+.v2 .wk-res{gap:var(--e3)}
+.v2 .wk-cab{display:flex;align-items:center;justify-content:space-between;gap:var(--e2);flex-wrap:wrap}
+.v2 .wk-cab h2{font-size:var(--t5);margin:0}
+.v2 .wk-res .wk-big{display:grid;gap:0;margin:0}
+.v2 .wk-res .wk-bl{font:600 14px var(--f-body);color:var(--muted)}
+.v2 .wk-res .wk-bv{font-size:clamp(44px,13vw,60px);line-height:1}
+.v2 .wk-dos{display:flex;gap:var(--e5)}
+.v2 .wk-dos span{display:grid}
+.v2 .wk-dos small{font:600 13.5px var(--f-body);color:var(--muted)}
+.v2 .wk-dos b{font:600 22px var(--f-libro);color:var(--ink);font-variant-numeric:lining-nums tabular-nums}
+.v2 .wk-dos b.plata{color:var(--azul)}
+.v2 .bar.fina{height:6px;border-radius:99px;background:color-mix(in srgb,var(--ink) 12%,transparent);overflow:hidden}
+.v2 .bar.fina>i{display:block;height:100%;border-radius:99px;background:var(--azul)}
+.v2 .bar.fina.over>i{background:var(--mal)}
+/* la tira de días: el día, su barrita de color y el monto */
+.v2 .wk-res .days{gap:4px;margin:0}
+.v2 .wk-res .day{display:grid;justify-items:center;gap:3px;padding:6px 2px 6px;min-height:0;border-radius:var(--r-s,8px)}
+.v2 .wk-res .day .w{font:600 12.5px var(--f-body);color:var(--muted)}
+.v2 .wk-res .day .n{font:600 17px var(--f-libro);color:var(--ink)}
+.v2 .wk-res .day.fut .n,.v2 .wk-res .day.fut .w{opacity:.55}
+.v2 .wk-res .day .s{font:600 11.5px var(--f-body);color:var(--muted);min-height:15px;font-variant-numeric:tabular-nums}
+.v2 .db{display:block;width:80%;height:4px;border-radius:99px;background:color-mix(in srgb,var(--ink) 10%,transparent);position:relative;overflow:hidden}
+.v2 .db::after{content:"";position:absolute;inset:0;width:var(--p,100%);border-radius:inherit;background:transparent}
+.v2 .db.bien::after{background:var(--bien)}
+.v2 .db.cerca::after{background:var(--ojo)}
+.v2 .db.mal::after{background:var(--mal);width:100%}
+.v2 .wk-res .day.today{background:var(--sel);box-shadow:inset 0 -2px 0 var(--oro)}
+.v2 .wk-res .day.today .w,.v2 .wk-res .day.today .n,.v2 .wk-res .day.today .s{color:var(--on-sel);opacity:1}
+/* ¿De dónde sale? */
+.v2 .wk-de>summary{list-style:none;display:inline-flex;align-items:center;gap:6px;min-height:44px;cursor:pointer;font:600 15px var(--f-body);color:var(--azul)}
+.v2 .wk-de>summary::-webkit-details-marker{display:none}
+.v2 .wk-de>summary::after{content:"▸";display:inline-block;transition:transform .15s ease}
+.v2 .wk-de[open]>summary::after{transform:rotate(90deg)}
+.v2 .wk-de-in{display:grid;gap:var(--e2);font-size:15px;color:var(--muted)}
+.v2 .wk-de-in p{margin:0}
+.v2 .wk-de-in b{color:var(--ink)}
+.v2 .wk-ley{display:flex;flex-wrap:wrap;gap:var(--e2) var(--e4)}
+.v2 .wk-ley span{display:inline-flex;align-items:center;gap:6px;font-size:14px}
+.v2 .wk-ley .db{width:22px}
+/* Los gastos de la semana: renglones de una línea */
+.v2 .wk-mas{width:100%}
+.v2 .gl-1 li.gl1{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto 44px 44px;align-items:center;gap:8px;padding:2px 0;min-height:48px;border-bottom:1px solid var(--line)}
+.v2 .gl1 .gl-q{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:16px;color:var(--ink)}
+.v2 .gl1 .gl-d{font:600 13.5px var(--f-body);color:var(--muted);white-space:nowrap}
+.v2 .gl1 .amt{font:600 16px var(--f-body);color:var(--ink);white-space:nowrap;font-variant-numeric:tabular-nums}
+.v2 .gl-b{display:grid;place-items:center;width:44px;height:44px;border:0;border-radius:var(--r-m);background:transparent;color:var(--muted);cursor:pointer}
+.v2 .gl-b:active{background:color-mix(in srgb,var(--ink) 8%,transparent)}
+.v2 .gl-b svg{width:19px;height:19px}
+/* sin la flechita general de los desplegables: estos llevan «▸» al final */
+.v2 .ph-intro>summary::before,.v2 .wk-de>summary::before{content:none;display:none}
+/* en los capítulos que no son Hoy, el encabezado corrido va pegado a los íconos (las filas ocultas no dejan huecos) */
+.v2 .hoja[data-vista="otra"] .hero{grid-template-areas:"top top" "mini mini"}
+/* «¿Qué es esto? ▸» va en la línea de «capítulo II · semanas», a la derecha: no ocupa un renglón más */
+.v2 main>section>.panel-head{position:relative}
+.v2 .ph-intro:not(.primera)>summary{position:absolute;right:-6px;top:-39px;padding:0 6px}
+.v2 .ph-intro:not(.primera):not([open]){margin:0;height:0}
+.v2 .panel-head:has(.ph-intro:not(.primera):not([open])){gap:0}
+/* el encabezado de la semana en una sola línea */
+.v2 .wk-cab{flex-wrap:nowrap}
+.v2 .wk-cab h2{font-size:18px;line-height:1.2;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v2 .wk-cab .pill{flex:none;font-size:13px;padding:3px 9px}
+.v2 .wk-cab h2{font-size:18px;overflow:visible}
+.v2 .wk-cab .wk-rango{font:600 15px var(--f-body);color:var(--muted)}
+.v2 .wk-cab .pill{font-size:12.5px;padding:2px 8px}
+/* los renglones: el renglón entero corrige (con su lápiz) y al lado, borrar */
+.v2 .gl-1 li.gl1{grid-template-columns:minmax(0,1fr) 44px;gap:4px}
+.v2 .gl-e{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto 16px;align-items:center;gap:8px;min-height:48px;padding:0 6px 0 0;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer;font:inherit;border-radius:var(--r-m)}
+.v2 .gl-e:active{background:color-mix(in srgb,var(--ink) 6%,transparent)}
+.v2 .gl-e svg{width:15px;height:15px;color:var(--muted)}
+/* las estrellitas se achican si hace falta, para entrar siempre en la tarjeta */
+.v2 .cd .cd-seg{min-width:0;gap:1px}
+.v2 .cd .cd-seg i{flex:1 1 0;min-width:0;max-width:14px;width:auto;height:auto;aspect-ratio:1}

@@ -7,7 +7,7 @@ export function marcarTour(){try{localStorage.setItem(KEY,'pendiente')}catch(e){
 export function tourPendiente(){try{return localStorage.getItem(KEY)==='pendiente'}catch(e){return false}}
 function hecho(){try{localStorage.setItem(KEY,'hecho')}catch(e){}}
 
-var PASOS=[
+var BASE=[
   {tab:'resumen',sel:'#countdown',t:'Cobrás en',x:'Los días que faltan para volver a cobrar. Es lo primero que ves al abrir el libro.'},
   {tab:'resumen',sel:'#hoy-hero .hh-n',t:'Hoy podés gastar',x:'Lo que podés gastar hoy sin tocar tu ahorro. Cada gasto que anotás lo baja, y lo que no gastás pasa a mañana.'},
   {tab:'resumen',sel:'#gasto-abrir',t:'Anotar un gasto',x:'Tocá «+ Gasto» y poné cuánto fue y en qué. Nada más. Si te olvidaste de uno, podés anotarlo con la fecha de ayer.'},
@@ -22,7 +22,20 @@ var PASOS=[
   {tab:'guardado',sel:'.tab[data-tab="guardado"]',t:'Capítulo VII · Lo guardado',x:'Todo lo que juntaste pacto a pacto, tu fondo de emergencia y tus metas, con un consejo de qué hacer con lo guardado.'},
   {tab:'resumen',sel:'.mic',t:'Anotar con la voz',x:'Tocá el micrófono y decí, por ejemplo, «gasté 350 en un café». Siempre te pido confirmar antes de guardar.'}
 ];
-var i=0,corre=false;
+var i=0,corre=false,PASOS=BASE;
+/* (2.25) el tour según cómo te entra la plata: por jornal o cuando vendo, «Tu plata alcanza», «Entró plata» y el capítulo Ingresos */
+function pasosDelModo(){
+  var f=ctx.state&&ctx.state.perfil&&ctx.state.perfil.cobro&&ctx.state.perfil.cobro.frecuencia,v=f==='ventas';
+  if(f!=='jornal'&&!v)return BASE;
+  var l=BASE.map(function(p){
+    if(p.sel==='#countdown')return Object.assign({},p,{t:'Tu plata alcanza',x:'Cuántos días te dura la plata del día a día y si llegás al próximo pago fuerte. Cada vez que te entra plata, suma días.'});
+    if(p.tab==='sueldo')return Object.assign({},p,{t:'Capítulo IV · Ingresos',x:'Lo que te entró semana a semana, tu promedio y tu mejor semana. Ahí también podés borrar algo anotado por error.'});
+    return p;
+  });
+  l.splice(1,0,{tab:'resumen',sel:'#cobre',t:v?'Entró plata':'Cobré',x:v?'Cada venta o pedido cobrado, anotalo acá: se suma a lo que tenés y a lo vendido de la semana.':'Cada vez que cobres, anotalo acá: se suma a lo que tenés y aparto sola la parte que elegiste guardar.'});
+  if(v)l.splice(2,0,{tab:'resumen',sel:'#ventas',t:'Tu semana',x:'Lo que vendiste contra la parte de los fijos de la semana. Lo que pasa de ahí es ganancia: guardala con un toque.'});
+  return l;
+}
 
 function el(){return $('#tour')}
 function cerrar(){
@@ -61,7 +74,7 @@ function ubicar(){
 }
 export function iniciarTour(){
   if(corre)return;
-  corre=true;i=0;mostrar(1);
+  PASOS=pasosDelModo();corre=true;i=0;mostrar(1);
   window.addEventListener('resize',ubicar);
 }
 export function initTour(){

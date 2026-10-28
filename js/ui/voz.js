@@ -2,6 +2,9 @@
    Nunca guarda sin que toques "Guardar". Si el reconocimiento de voz no anda (pasa en la app instalada
    en iOS), abre un campo de texto para dictar con el micrófono del teclado. */
 import {interpretar,responder,aprender,fechaTxt,FIJO_CATS} from '../logica/voz.js';
+import {esIngresos} from './ingresos-ver.js';
+import {tuPlataAlcanza,resumenIngresos} from '../logica/ventas.js';
+import {cobreJornal} from '../logica/pacto.js';
 import {nombresVisibles,nombreDe} from '../logica/categorias.js';
 import {semanaDe,fijosPeriodo,totalFijos,isPagado,marcarPagado,montoEsperado} from '../logica/plan.js';
 import {mins,mesTrabajo,reglasHoras} from '../logica/sueldo.js';
@@ -86,7 +89,7 @@ function escribir(msg,texto){
 /* ---------- Entender y confirmar ---------- */
 function entender(txt){
   var st=ctx.state;
-  r=interpretar(txt,{hoy:today(),fijos:st.fijos,aprendido:st.voz.cats,horas:reglasHoras(st)});
+  r=interpretar(txt,{hoy:today(),fijos:st.fijos,aprendido:st.voz.cats,horas:reglasHoras(st),entradas:esIngresos(st)});
   if(r.intencion==='gasto'&&r.cat)r.cat=nombreDe(ctx.state,r.cat);
   catSugerida=r.cat||null;pesosOk=!r.dolares;
   /* "50 dólares": con la cotización cargada, se guarda en dólares y se pasa a pesos solo */
@@ -105,14 +108,18 @@ function opts(lista,sel){return lista.map(function(c){return '<option'+(c===sel?
 function campo(id,label,input){return '<div class="field"><label for="'+id+'" class="sub-l">'+label+'</label>'+input+'</div>'}
 function moneyIn(id,v){return '<div class="money"><span>'+(r&&r.enUSD?'US$':'$')+'</span><input id="'+id+'" type="number" inputmode="decimal" min="0" step="any" value="'+(v===null||v===undefined?'':v)+'"></div>'}
 
-var TITULOS={gasto:'Gasto',fijo:'Gasto fijo nuevo',pagado:'Fijo pagado',horas:'Horas extra'};
+var TITULOS={gasto:'Gasto',fijo:'Gasto fijo nuevo',pagado:'Fijo pagado',horas:'Horas extra',entrada:'Entró plata'};
 function tarjeta(){
   var h='<div class="voz-h"><h2 id="voz-t">'+TITULOS[r.intencion]+'</h2><button class="btn quiet" type="button" data-v="cerrar">Cancelar</button></div>';
   h+='<p class="voz-dijo">Escuché: «'+esc(r.texto)+'» <button class="linklike" type="button" data-v="editar">cambiar</button></p>';
   h+='<p class="voz-res" id="vz-res"></p>';
   h+='<div class="voz-campos">';
   var hoy=today();
-  if(r.intencion==='gasto'){
+  if(r.intencion==='entrada'){
+    h+=campo('vz-monto','¿Cuánto entró?',moneyIn('vz-monto',r.monto))
+      +campo('vz-nota','¿De qué? (opcional)','<input id="vz-nota" type="text" maxlength="40" value="'+esc(r.nota||'')+'">')
+      +campo('vz-fecha','¿Qué día?','<input id="vz-fecha" type="date" min="'+ctx.state.plan.inicio+'" max="'+hoy+'" value="'+r.fecha+'">');
+  }else if(r.intencion==='gasto'){
     h+=campo('vz-monto','¿Cuánto?',moneyIn('vz-monto',r.monto))
       +campo('vz-nota','¿En qué?','<input id="vz-nota" type="text" maxlength="60" value="'+esc(r.nota||'')+'">')
       +campo('vz-cat','Categoría','<select id="vz-cat">'+opts(nombresVisibles(ctx.state).indexOf(r.cat)<0?nombresVisibles(ctx.state).concat([r.cat]):nombresVisibles(ctx.state),r.cat)+'</select>')
@@ -144,6 +151,7 @@ function tarjeta(){
 function leer(){
   if(!r)return;
   var g=function(id){var e=$('#'+id);return e?e.value:null};
+  if(r.intencion==='entrada'){var me=g('vz-monto');r.monto=me===''?null:num(me);r.nota=g('vz-nota').trim();r.fecha=g('vz-fecha')||r.fecha}
   if(r.intencion==='gasto'){var m=g('vz-monto');r.monto=m===''?null:num(m);r.nota=g('vz-nota').trim();r.cat=g('vz-cat');r.fecha=g('vz-fecha')||r.fecha}
   if(r.intencion==='fijo'){var m2=g('vz-monto');r.monto=m2===''?null:num(m2);r.nombre=g('vz-nombre').trim();r.dia=Math.min(31,Math.max(1,Math.round(num(g('vz-dia')))||1));r.cat=g('vz-cat')}
   if(r.intencion==='pagado'&&$('#vz-fijo')){r.fijoId=g('vz-fijo')||null}
@@ -153,7 +161,10 @@ function leer(){
 function resumen(){
   var el=$('#vz-res');if(!el||!r)return;
   var hoy=today(),p=[],ok=true;
-  if(r.intencion==='gasto'){
+  if(r.intencion==='entrada'){
+    p=['Entró plata',r.monto?money(r.monto):'falta el monto',r.nota||'',fechaTxt(r.fecha,hoy)];
+    ok=r.monto>0&&!!r.fecha&&r.fecha<=hoy&&r.fecha>=ctx.state.plan.inicio;
+  }else if(r.intencion==='gasto'){
     var i=semanaDe(planNow(),r.fecha);
     p=['Gasto',r.monto?(r.enUSD?usd(r.monto)+' = '+money(aPesos(r.monto,r.cot)):money(r.monto)):'falta el monto',r.nota||'sin detalle',fechaTxt(r.fecha,hoy),i>=0?'va a la Semana '+(i+1):'queda fuera del plan'];
     ok=r.monto>0&&!!r.fecha&&r.fecha<=hoy;
@@ -178,7 +189,11 @@ function resumen(){
 function guardar(){
   leer();
   var st=ctx.state,msg='',gid=null;
-  if(r.intencion==='gasto'){
+  if(r.intencion==='entrada'){
+    if(!(r.monto>0))return;
+    var ue=cobreJornal(st,r.monto,r.fecha,r.nota);if(!ue)return;
+    msg='Sumé '+money(ue.cobro)+(ue.guarda>0?' y guardé '+money(ue.guarda):'')+(r.nota?' · '+r.nota:'');
+  }else if(r.intencion==='gasto'){
     if(!(r.monto>0))return;
     var ng={id:uid(),fecha:r.fecha,monto:Math.round(r.monto*100)/100,nota:r.nota.slice(0,60),cat:r.cat,src:'voz'};
     if(r.enUSD)Object.assign(ng,gastoUSD(r.monto,r.cot));
@@ -211,6 +226,7 @@ function datosConsulta(){
   var i=semanaDe(pc,t),sem=null;
   if(i>=0){var w=pc.weeks[i],rem=diffDays(t,w.end)+1;sem={queda:w.left,porDia:Math.max(w.left,0)/Math.max(rem,1),fin:w.end,gastado:w.spent,tenias:w.avail}}
   return {semana:sem,liquido:L.liquido,cobro:st.plan.cobro,dias:diffDays(t,st.plan.cobro),fijosMes:totalFijos(st.fijos,st),fijosPeriodo:pc.fijos,
+    alcanza:esIngresos(st)?tuPlataAlcanza(st,pc,t):null,entro:esIngresos(st)?resumenIngresos(st,pc,t).total:0,entroVeces:esIngresos(st)?resumenIngresos(st,pc,t).veces:0,
     minSem:mins(st,'sem'),minFin:mins(st,'fin'),extras:L.N-num(st.sueldo.nominal),ahorro:pc.ahorro,gastadoPlan:pc.spentInPlan,paraGastar:pc.gastar};
 }
 function responderConsulta(){

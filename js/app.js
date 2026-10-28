@@ -341,6 +341,7 @@ function initGlobal(){
     /* Mis datos (plata de hoy, meta y fijos) y el tour, desde Ajustes */
     if(e.target.closest('#aj-tour')){olvidarIntros();iniciarTour()}
     if(e.target.closest('#aj-prologo'))abrirPrologo('p1');
+    if(e.target.closest('#aj-cobro'))abrirPrologo('qi');
     var pie=e.target.closest('[data-pie]');if(pie)go(pie.getAttribute('data-pie'));
     /* (2.15) el índice de Ajustes: va a cada sección */
     var aji=e.target.closest('[data-ajir]');

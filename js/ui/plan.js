@@ -21,7 +21,7 @@ import {renderSuperv,initSuperv} from './supervivencia.js';
 import {renderCobre,initCobre} from './cobre.js';
 import {renderEntradas,initEntradas} from './entradas.js';
 import {renderVentas,initVentas} from './ventas.js';
-import {tuPlataAlcanza} from '../logica/ventas.js';
+import {tuPlataAlcanza,semanasVentas,resumenIngresos} from '../logica/ventas.js';
 import {frecDe} from '../logica/frecuencia.js';
 import {periodoTxt} from '../logica/frecuencia.js';
 import {irAlPacto} from './indice.js';
@@ -92,6 +92,14 @@ function renderAlertaMeta(pc){
 }
 /* Fin del capítulo: el día de cobro, el libro resume el ciclo (lo ahorrado y la racha) y ofrece un pacto nuevo.
    El pacto nuevo cierra el mes en el historial (igual que «Cerrar el mes» de Logros) y vuelve a hacer las 3 preguntas. */
+/* (2.25) Al cerrar: lo que entró, según cómo te entra la plata */
+function finModo(st,pc,t){
+  var f=frecDe(st.perfil&&st.perfil.cobro);
+  if(f==='ventas'){var V=semanasVentas(st,pc,t),n=V.semanas.length,ok=V.semanas.filter(function(x){return x.cubierta}).length;
+    return '<p class="fin-s">Vendiste <b>'+money(V.vendido)+'</b>'+(V.fijos>0?' y cubriste los fijos <b>'+ok+' de '+n+'</b> semanas':'')+(V.guardada>0?'; guardaste '+money(V.guardada)+' de ganancia':'')+'.</p>'}
+  if(f==='jornal'){var R=resumenIngresos(st,pc,t);return '<p class="fin-s">Te entraron <b>'+money(R.total)+'</b>'+(R.veces?' en '+R.veces+(R.veces===1?' cobro':' cobros'):'')+'.</p>'}
+  return '';
+}
 function renderCierre(pc){
   var el=$('#cierre-aviso');if(!el)return;
   var st=ctx.state,t=today();
@@ -101,6 +109,7 @@ function renderCierre(pc){
   var tit=r.cumplido?'¡Cumpliste el pacto!':r.minimoOk?'Llegaste a tu mínimo':'Se terminó este capítulo';
   el.innerHTML='<section class="fin-cap" aria-labelledby="fin-t"><p class="cap-kick">fin del capítulo</p><h2 id="fin-t">'+tit+'</h2>'
     +'<p class="fin-n">Ahorraste <b>'+money(r.ahorrado)+'</b></p>'
+    +finModo(st,pc,t)
     +'<p class="fin-s">'+(r.racha>0?'Tu racha va en <b>'+r.racha+(r.racha===1?' mes':' meses')+'</b>. ':'Esta vez no sumaste a la racha: el próximo pacto es otra oportunidad. ')+'Tu meta era '+money(r.meta)+'.</p>'
     +'<div class="row-btns"><button class="btn primary" type="button" id="ciclo-nuevo">Empezar un pacto nuevo</button><button class="btn quiet" type="button" id="cierre-ir">Cerrarlo a mano en Logros</button></div></section>';
 }

@@ -14,7 +14,7 @@ import {miParte} from './reparto.js';
 export function normEntradas(l){
   if(!Array.isArray(l))return [];
   return l.filter(function(x){return x&&typeof x==='object'&&num(x.monto)>0&&/^\d{4}-\d{2}-\d{2}$/.test(String(x.fecha||''))})
-    .map(function(x){return {id:String(x.id||''),fecha:x.fecha,monto:Math.round(num(x.monto)),nota:String(x.nota||'').trim().slice(0,40)}});
+    .map(function(x){var o={id:String(x.id||''),fecha:x.fecha,monto:Math.round(num(x.monto)),nota:String(x.nota||'').trim().slice(0,40)};if(num(x.g)>0)o.g=Math.round(num(x.g));return o});
 }
 export function normGanancia(o){
   var r={};if(!o||typeof o!=='object'||Array.isArray(o))return r;
@@ -98,3 +98,30 @@ export function tuPlataAlcanza(st,pc,hoy){
   }else{r.llega=true;r.estrellas=Math.max(0,Math.min(12,Math.round(12*Math.min(1,dias/30))))}
   return r;
 }
+
+/* ---------- Ingresos (2.24): el capítulo IV para quien cobra por día o cuando vende ----------
+   Lo que entró en el pacto, semana a semana, el promedio de las semanas que ya pasaron (o la de hoy), la mejor semana
+   y lo que se guardó solo (por jornal, la parte de cada cobro). */
+export function resumenIngresos(st,pc,hoy){
+  var ent=normEntradas(st.plan.entradas),sem=[],tot=0,auto=0;
+  pc.weeks.forEach(function(w,i){
+    var v=0,n=0;ent.forEach(function(e){if(e.fecha>=w.start&&e.fecha<=w.end){v+=e.monto;n++}});
+    sem.push({i:i,start:w.start,end:w.end,entro:v,veces:n,pasada:w.end<hoy,actual:hoy>=w.start&&hoy<=w.end});
+  });
+  ent.forEach(function(e){tot+=e.monto;auto+=num(e.g)});
+  var vistas=sem.filter(function(x){return x.pasada||x.actual}),prom=0;
+  vistas.forEach(function(x){prom+=x.entro});prom=vistas.length?prom/vistas.length:0;
+  var mejor=null;sem.forEach(function(x){if(x.entro>0&&(!mejor||x.entro>mejor.entro))mejor=x});
+  return {semanas:sem,total:tot,veces:ent.length,promedio:Math.round(prom),mejor:mejor,guardadoSolo:auto,
+    entradas:ent.slice().sort(function(a,b){return a.fecha<b.fecha?1:a.fecha>b.fecha?-1:0})};
+}
+/* Borrar una entrada anotada por error: sale de tu plata (y lo que se había guardado de ella, del ahorro) */
+export function quitarEntrada(st,id){
+  var p=st.plan,l=normEntradas(p.entradas),e=l.filter(function(x){return x.id===id})[0];if(!e)return null;
+  var u={entrada:e,monto:p.monto,ahorro:p.ahorro};
+  p.entradas=l.filter(function(x){return x.id!==id});
+  p.monto=Math.max(0,Math.round((num(p.monto)-e.monto)*100)/100);
+  if(num(e.g)>0&&p.modo==='monto')p.ahorro=Math.max(0,Math.round(num(p.ahorro))-num(e.g));
+  return u;
+}
+export function deshacerQuitarEntrada(st,u){var p=st.plan;p.monto=u.monto;p.ahorro=u.ahorro;p.entradas=normEntradas(p.entradas).concat([u.entrada])}

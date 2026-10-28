@@ -5,6 +5,8 @@ import {hoyPodes,curWeek} from '../logica/plan.js';
 import {histStats} from '../logica/logros.js';
 import {resumenGuardado} from '../logica/guardado.js';
 import {CAPITULOS,capituloDe,numeroDePagina} from '../logica/capitulos.js';
+import {esIngresos} from './ingresos-ver.js';
+import {resumenIngresos} from '../logica/ventas.js';
 import {ctx,$,today,planNow,liqNow,money,esc,fCorta} from './comun.js';
 import {buscarGastos} from '../logica/buscar.js';
 import {nombreDe} from '../logica/categorias.js';
@@ -19,6 +21,7 @@ function pista(id,pc){
     if(id==='resumen'){var H=hoyPodes(pc,st.gastos,t);return H.queda<0?'te pasaste '+money(-H.queda):'podés gastar '+money(H.queda)}
     if(id==='semanas')return pc.weeks.length?'semana '+(curWeek(pc,t)+1)+' de '+pc.weeks.length:'';
     if(id==='fijos')return st.fijos.length?st.fijos.length+(st.fijos.length===1?' fijo':' fijos'):'sin cargar';
+    if(id==='sueldo'&&esIngresos(st)){var RI=resumenIngresos(st,pc,t);return RI.total>0?'entró '+money(RI.total):'lo que te entra'}
     if(id==='sueldo'){var L=liqNow(true);return L.liquido>0?'cobrás ≈ '+money(L.liquido):'cargá tu sueldo'}
     if(id==='gastos')return st.extracto.texto&&st.extracto.texto.trim()?'extracto cargado':'sin extracto';
     if(id==='guardado'){var G=resumenGuardado(st,t);return G.total>0?'guardaste '+money(G.total):'tu fondo y tus metas'}

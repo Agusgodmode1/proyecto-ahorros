@@ -9,6 +9,11 @@ export var CAPITULOS=[
   {id:'logros',n:'VI',t:'Logros',tono:'tone-sun'},
   {id:'guardado',n:'VII',t:'Lo guardado',corto:'Guardado',tono:'tone-mint'}
 ];
+/* (2.24) Para quien cobra por día o cuando vende, el capítulo IV no es un sueldo: se llama «Ingresos» */
+export function nombrarCapitulos(frec){
+  var ing=frec==='jornal'||frec==='ventas';
+  CAPITULOS.forEach(function(c){if(c.id==='sueldo'){c.t=ing?'Ingresos':'Sueldo';c.corto=ing?'Ingresos':undefined}});
+}
 /* El capítulo de una pestaña: 'w2' es Semanas; 'ajustes' es Ajustes del pacto (fuera de los capítulos) */
 export function capituloDe(tab){
   if(/^w\d+$/.test(tab))return CAPITULOS[1];

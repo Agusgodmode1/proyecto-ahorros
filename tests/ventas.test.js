@@ -127,3 +127,26 @@ test('si no alcanza para el pago, falta y no se encienden todas',function(){
   var r=tuPlataAlcanza(st,planCalc(st),HOY);
   assert.equal(r.juntado,5000);assert.equal(r.falta,7000);assert.equal(r.llega,false);assert.ok(r.estrellas<=11);
 });
+
+import {resumenIngresos,quitarEntrada,deshacerQuitarEntrada} from '../js/logica/ventas.js';
+import {nombrarCapitulos,CAPITULOS,nombreDePagina} from '../js/logica/capitulos.js';
+test('(2.24) Ingresos: semana a semana, promedio, mejor semana y lo guardado solo',function(){
+  var st=defaults(HOY);sellarPacto(st,{total:2000,ahorro:0,cobro:'2026-11-15',cobroCfg:{frecuencia:'jornal'},pctCobro:10},HOY);
+  cobreJornal(st,1000,'2026-11-02');cobreJornal(st,3000,'2026-11-09');cobreJornal(st,500,'2026-11-09');
+  var r=resumenIngresos(st,planCalc(st),'2026-11-09');
+  assert.deepEqual(r.semanas.map(function(x){return x.entro}),[1000,3500]);
+  assert.equal(r.total,4500);assert.equal(r.veces,3);assert.equal(r.promedio,2250);assert.equal(r.mejor.i,1);assert.equal(r.guardadoSolo,450);
+  assert.equal(r.entradas[0].fecha,'2026-11-09');
+});
+test('(2.24) borrar una entrada saca la plata y lo guardado de ella; Deshacer la trae',function(){
+  var st=defaults(HOY);sellarPacto(st,{total:2000,ahorro:0,cobro:'2026-11-15',cobroCfg:{frecuencia:'jornal'},pctCobro:10},HOY);
+  cobreJornal(st,1000,'2026-11-02');var id=st.plan.entradas[0].id;
+  assert.equal(st.plan.monto,3000);assert.equal(st.plan.ahorro,100);
+  var u=quitarEntrada(st,id);assert.equal(st.plan.monto,2000);assert.equal(st.plan.ahorro,0);assert.equal(st.plan.entradas.length,0);
+  deshacerQuitarEntrada(st,u);assert.equal(st.plan.monto,3000);assert.equal(st.plan.ahorro,100);assert.equal(st.plan.entradas.length,1);
+});
+test('(2.24) el capítulo IV se llama Ingresos por jornal o cuando vendo',function(){
+  nombrarCapitulos('ventas');assert.equal(nombreDePagina('sueldo'),'Ingresos');
+  nombrarCapitulos('mensual');assert.equal(nombreDePagina('sueldo'),'Sueldo');
+  assert.equal(CAPITULOS[3].corto,undefined);
+});

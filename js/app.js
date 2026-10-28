@@ -23,7 +23,9 @@ import {initFlechas,actualizarFlechas} from './ui/flechas.js';
 import {initNotas,agruparNotas} from './ui/notas.js';
 import {renderGuardado,initGuardado} from './ui/guardado.js';
 import {initPostal} from './ui/postal.js';
-import {CAPITULOS,capituloDe,vecina,numeroDePagina,nombreDePagina} from './logica/capitulos.js';
+import {CAPITULOS,capituloDe,vecina,numeroDePagina,nombreDePagina,nombrarCapitulos} from './logica/capitulos.js';
+import {frecDe} from './logica/frecuencia.js';
+import {renderIngresosVer,initIngresosVer,esIngresos} from './ui/ingresos-ver.js';
 import {DIAL,MESL,parse} from './logica/fechas.js';
 import {initTour,iniciarTour,tourSiPendiente} from './ui/tour.js';
 import {aplicarFeriados,renderFeriados,initFeriados} from './ui/feriados.js';
@@ -114,11 +116,12 @@ function renderAll(){
   /* Con el perfil hecho, la explicación del encabezado ya no hace falta y deja lugar a lo importante */
   var hs=document.querySelector('.hero-sub');if(hs)hs.hidden=!!ctx.state.perfil.hecho;
   var st=ctx.state;document.documentElement.classList.toggle('en-uso',!st.ejemplo&&!!st.perfil.hecho&&(st.gastos.length+st.horas.length+st.hist.length)>3);
+  nombrarCapitulos(frecDe(st.perfil&&st.perfil.cobro));
   renderCountdown();renderTabs(pc);showPanels();renderAvisoRespaldo();renderResumen(pc);
   /* (2.15) cada capítulo se dibuja solo cuando se ve (pasar de página no rehace los que están ocultos) */
   if(ctx.tab==='resumen'){renderAvisoTarjeta();agruparNotas()}
   if(/^w\d+$/.test(ctx.tab))renderWeek(pc);
-  if(ctx.tab==='sueldo'){renderSueldo();renderRecibos()}
+  if(ctx.tab==='sueldo'){renderIngresosVer(pc);if(!esIngresos(ctx.state)){renderSueldo();renderRecibos()}}
   if(ctx.tab==='gastos'){renderGastos();renderCategorias()}
   if(ctx.tab==='fijos')renderFijos(pc);
   if(ctx.tab==='logros')renderLogros(pc);
@@ -391,7 +394,7 @@ function arrancar(st){
   var rs=aplicarRepetidos(st,today());if(rs.length)persist();
   try{var t=localStorage.getItem(TK);if(t)ctx.tab=t}catch(e){}
   initNotas();
-  guiaInit();initGlobal();initPlan();initSemanas();initSueldo();initTarjeta();initFijos();initLogros();initAjustes(reemplazar,juntarDatos);initGuardado();initVoz();initFeriados();initCategorias();initRecibos();initAjustesPin();initPostal();
+  guiaInit();initGlobal();initIngresosVer();initPlan();initSemanas();initSueldo();initTarjeta();initFijos();initLogros();initAjustes(reemplazar,juntarDatos);initGuardado();initVoz();initFeriados();initCategorias();initRecibos();initAjustesPin();initPostal();
   marcarDiscreto();
   ctx.booted=true;
   $('#app').hidden=false;

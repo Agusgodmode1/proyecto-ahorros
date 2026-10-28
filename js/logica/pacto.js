@@ -282,7 +282,7 @@ export function cobreJornal(st,monto,hoy,nota){
   var x=Math.round(num(monto));if(!(x>0))return null;
   var p=st.plan,ventas=frecDe(st.perfil&&st.perfil.cobro)==='ventas';
   var pct=ventas?0:Math.max(0,Math.min(1,num(st.pacto&&st.pacto.pct))),g=Math.round(x*pct);
-  var e={id:'en'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),fecha:hoy||p.inicio,monto:x,nota:String(nota||'').trim().slice(0,40)};
+  var e={id:'en'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),fecha:hoy||p.inicio,monto:x,nota:String(nota||'').trim().slice(0,40)};if(g>0)e.g=g;
   var u={monto:p.monto,ahorro:p.ahorro,modo:p.modo,cobro:x,guarda:g,entrada:e.id};
   p.monto=Math.round((num(p.monto)+x)*100)/100;
   if(p.modo==='monto')p.ahorro=Math.round(num(p.ahorro))+g;

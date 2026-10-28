@@ -222,18 +222,19 @@ export function renderResumen(pc){
   var h=state.ejemplo?'<div class="banner"><p><b>Estás viendo datos de ejemplo.</b> Son de muestra: no son tuyos.</p><button class="btn" type="button" data-cero>Borrar el ejemplo y crear mi perfil</button></div>':'';
   /* fijos compartidos: quién te debe plata (nota al margen, con «Me pagaron») */
   var deudas=balanceHTML(true);if(deudas)h+='<div class="banner deudas">'+deudas+'</div>';
-  h+=foldIni('cobrar','tone-mint','Hasta que cobres',resto<0?'Te faltan '+money(-resto)+' para llegar a tu meta':'Te queda para gastar '+money(resto)+' · '+esc(rango(p.inicio,p.cobro)));
-  var fsub=fp.length?fp.map(function(o){return esc(o.f.nombre)+' ('+esc(fCorta(o.fecha))+')'}).join(', '):(state.fijos.length?'ninguno vence antes de cobrar':'<button class="linklike" type="button" data-goto="fijos">cargá tus gastos fijos</button>');
+  var fqH=frecDe(state.perfil&&state.perfil.cobro),sinCobro=fqH==='jornal'||fqH==='ventas';
+  h+=foldIni('cobrar','tone-mint',sinCobro?'Hasta el '+esc(fCorta(p.cobro)):'Hasta que cobres',resto<0?'Te faltan '+money(-resto)+' para llegar a tu meta':'Te queda para gastar '+money(resto)+' · '+esc(rango(p.inicio,p.cobro)));
+  var fsub=fp.length?fp.map(function(o){return esc(o.f.nombre)+' ('+esc(fCorta(o.fecha))+')'}).join(', '):(state.fijos.length?(sinCobro?'ninguno vence en este pacto':'ninguno vence antes de cobrar'):'<button class="linklike" type="button" data-goto="fijos">cargá tus gastos fijos</button>');
   h+='<div class="receipt">'
     +row('Plata que tenés ahora',money(disp),'','según lo que anotaste · <button class="linklike" type="button" id="saldo-abrir2">actualizar</button>')
     +row('Gastos fijos que faltan pagar','− '+money(pend),'sub minus',pagF>0?'ya pagaste '+money(pagF)+(pend>0?'. Faltan: ':'')+(pend>0?fsub:''):fsub)
-    +row('Lo que guardás','− '+money(pc.ahorro),'sub save','tu meta de este mes')
+    +row('Lo que guardás','− '+money(pc.ahorro),'sub save','tu meta de '+periodoTxt(cfgCobro(state)).este)
     +row('Te queda para gastar',money(resto),'final')+'</div>';
   if(resto<0)h+='<p class="err" style="margin-top:0">Con lo que te queda no llegás a guardar todo: te faltan '+money(-resto)+'. Bajá el ahorro o revisá los gastos.</p>';
   h+='<div><div class="split-bar" role="img" aria-label="Fijos '+Math.round(pf)+'%, ahorro '+Math.round(pa)+'%, para gastar '+Math.round(pg)+'%"><i class="split-fix" style="width:'+pf+'%"></i><i class="split-save" style="width:'+pa+'%"></i><i class="split-spend" style="width:'+pg+'%"></i></div>';
   h+='<div class="split-key">'+(pend>0?'<span><i class="dot" style="background:var(--teal)"></i>Fijos, '+Math.round(pf)+'%</span>':'')+'<span><i class="dot" style="background:var(--sun)"></i>Guardás, '+Math.round(pa)+'%</span><span><i class="dot" style="background:var(--sky)"></i>Para gastar, '+Math.round(pg)+'%</span></div></div>';
   h+='<div class="tiles">'
-    +tile('tone-sky','Por semana',money(pDia*7),money(pDia)+' por día, parejo hasta cobrar')
+    +tile('tone-sky','Por semana',money(pDia*7),money(pDia)+' por día, parejo hasta '+(sinCobro?'el '+esc(fCorta(p.cobro)):'cobrar')+'')
     +tile('tone-coral','Gastaste',money(pc.spentInPlan),'de '+money(pc.gastar)+' para gastar')
     +'</div></div></details>';
 
@@ -257,6 +258,8 @@ export function renderResumen(pc){
   if(Math.round(fuera)>0)h+='<p class="note">Hay '+money(fuera)+' en gastos con fecha fuera del plan. No cuentan en las semanas.</p>';
   h+='</div></details>';
 
+  /* (2.24) por jornal o cuando vendo no hay un cobro que estimar: «Cuando cobres» no va (lo que entra está en Ingresos) */
+  if(sinCobro){$('#resumen-out').innerHTML=h;return}
   var nx=proximo(state,L);
   /* Si el aguinaldo cae en ese mes, se suma a lo libre */
   var AG=aguinaldo(state,t),conAg=AG.pago>=p.cobro&&AG.pago<nx.nc&&AG.liquido>0;

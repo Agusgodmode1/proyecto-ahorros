@@ -45,7 +45,7 @@ export function renderLogros(pc){
   /* (2.14) sin meses cerrados no hay ceros gigantes: una invitación y, si ya hay semanas dentro del tope, ese dato */
   if(!S.hs.length){
     $('#logros-top').innerHTML='<div class="card streak vacio"><div class="st-main"><span class="st-ic">'+ICONL.flame+'</span><div class="st-txt"><span class="tile-l">Tu racha empieza con este pacto</span><b class="st-inv">Cerralo cumpliendo tu meta</b>'
-      +'<span class="tile-h">El día que cobrás, lo que no gastaste se guarda: es tu primer mes y ahí arranca la racha. Abajo están los logros que te esperan'+(un?' (ya tenés '+un+')':'')+'.</span></div></div>'
+      +'<span class="tile-h">'+(cfgCobro(state).frecuencia==='jornal'||cfgCobro(state).frecuencia==='ventas'?'Cuando termine este pacto, lo que no gastaste se guarda':'El día que cobrás, lo que no gastaste se guarda')+': es tu primer mes y ahí arranca la racha. Abajo están los logros que te esperan'+(un?' (ya tenés '+un+')':'')+'.</span></div></div>'
       +(rs.actual>0?'<p class="st-sem"><b>'+rs.actual+(rs.actual===1?' semana':' semanas')+'</b> seguidas dentro de lo que podías gastar.</p>':'')+'</div>';
   }else
   $('#logros-top').innerHTML='<div class="card streak">'
@@ -54,6 +54,9 @@ export function renderLogros(pc){
       +tile('tone-grape','Meses con objetivo',S.curObj+' seguidos','en total: '+S.obj+' · mejor racha: '+S.bestObj)
       +tile('tone-sun','Mejor racha',S.best+' '+(S.best===1?'mes':'meses'),'meses seguidos')+tile('tone-mint','Meses cumplidos',S.met+' de '+S.hs.length,'meses cerrados')+tile('tone-sky','Guardado en total',money(S.tot),'en meses cerrados')+tile('tone-grape','Logros',un+' de '+list.length,'desbloqueados')+'</div></div>';
   var p=state.plan,d=diffDays(today(),p.cobro),nc=nextCobro(p.cobro,cfgCobro(state));
+  /* (2.25) sin cobro mensual se cierra el pacto, no el mes */
+  var fqG=cfgCobro(state).frecuencia,pac=fqG&&fqG!=='mensual';
+  var hc=document.querySelector('#cierre-note');if(hc&&hc.previousElementSibling)hc.previousElementSibling.textContent=pac?'Cerrar el pacto':'Cerrar el mes';var bc=$('#c-cerrar');if(bc)bc.textContent=pac?'Cerrar el pacto':'Cerrar el mes';
   var mn=minimoDe(state,pc);
   $('#cierre-note').innerHTML=(mn<pc.ahorro?'Tu objetivo de este período es <b>'+money(pc.ahorro)+'</b> y tu mínimo, <b>'+money(mn)+'</b>: con el mínimo el mes ya cuenta como logrado. ':'Tu meta de este período es <b>'+money(pc.ahorro)+'</b>. ')+(d>0?'Lo ideal es cerrarlo el día que cobrás, el '+esc(fLarga(p.cobro))+' (faltan '+d+' '+(d===1?'día':'días')+').':'Ya cobraste: es buen momento para cerrarlo.')+' Al cerrar se guarda en tu historial y el plan arranca de nuevo del '+esc(fCorta(p.cobro))+' al '+esc(fCorta(nc))+'.';
   var ia=$('#c-ahorrado'),im=$('#c-monto');

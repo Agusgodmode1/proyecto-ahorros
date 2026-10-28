@@ -31,10 +31,13 @@ function apartadoHTML(){
 export function renderGuardado(){
   var top=$('#guardado-top'),pac=$('#guardado-pactos');if(!top)return;
   var r=resumenGuardado(ctx.state,today()),h='';
+  /* (2.25) por jornal o cuando vendo no hay «hasta que cobres» */
+  var fqV=ctx.state.perfil&&ctx.state.perfil.cobro&&ctx.state.perfil.cobro.frecuencia,sinC=fqV==='jornal'||fqV==='ventas';
+  var cons=function(x){return sinC?x.replace(/hasta que cobres/g,'el día a día'):x};
   h+='<div class="card guard-tot"><span class="cd-l">Guardaste en total</span>'+(r.total>0||r.pactos.length?'<b class="guard-n">'+money(r.total)+'</b>':'<b class="guard-n vacio">Todavía nada</b>')
     +'<span class="note">'+(r.pactos.length?'en '+plural(r.pactos.length,'pacto cerrado','pactos cerrados')+' · el último, '+money(r.ultimo.ahorrado):'Todavía no cerraste ningún pacto: cuando cobres, lo que no gastaste se suma acá.')+'</span></div>';
   h+=apartadoHTML();
-  h+='<div class="banner"><p>'+CONSEJO[r.paso]+'</p></div>';
+  h+='<div class="banner"><p>'+cons(CONSEJO[r.paso])+'</p></div>';
   if(r.fondo){
     var f=r.fondo,pct=Math.round(f.pct*100);
     h+='<div class="card stack guard-fondo"><h2>Tu fondo de emergencia</h2><div class="fondo">'

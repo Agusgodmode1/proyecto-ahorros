@@ -233,7 +233,10 @@ export function interpretar(texto,opt){
   /* Consulta: "cuánto me queda esta semana", "cuánto voy a cobrar", "cuánto llevo gastado" */
   if(/ cuanto | cuanta | cuantos | cuantas /.test(f)||/^ que me queda/.test(f)||/\?\s*$/.test(r.texto)){
     r.intencion='consulta';
-    if(/ falta|faltan /.test(f)&&/ cobr/.test(f))r.que='dias';
+    /* (2.25) por jornal o cuando vendo no hay cobro: «cuánto me falta» es cuánto te alcanza, y «cuánto vendí» lo que entró */
+    if(opt.entradas&&/ vend| entr| cobre | cobramos | gane /.test(f))r.que='entro';
+    else if(opt.entradas&&(/ falta|faltan | alcanza| dura /.test(f)))r.que='alcanza';
+    else if(/ falta|faltan /.test(f)&&/ cobr/.test(f))r.que='dias';
     else if(/ cobr| sueldo | liquido /.test(f))r.que='cobro';
     else if(/ fijo/.test(f))r.que='fijos';
     else if(/ extra| horas /.test(f))r.que='horas';
@@ -306,6 +309,13 @@ export function interpretar(texto,opt){
   var pago=hay(t,/^(pague|pagamos|pagado|pago|abone|abonamos|abonado)$/);
   var fijo=buscarFijo(opt.fijos,notaToks.map(function(x){return x.o}).join(' '));
 
+  /* (2.25) Plata que entró, por jornal o cuando vendo: "vendí 1200 de empanadas", "me entraron 1500", "cobré 800" */
+  if(opt.entradas&&monto2&&hay(t,/^(vendi|vendimos|vendio|cobre|cobramos|entro|entraron|gane|ganamos|ingreso|ingresaron|hice|hicimos)$/)&&!pago){
+    var ENT=/^(vendi|vendimos|vendio|cobre|cobramos|me|nos|entro|entraron|gane|ganamos|ingreso|ingresaron|hice|hicimos|plata|pesos|hoy|ayer)$/;
+    r.intencion='entrada';r.monto=monto2.v;r.fecha=fecha;
+    r.nota=nombreLindo(notaToks.filter(function(x){return !ENT.test(x.n)}));
+    return r;
+  }
   /* Fijo pagado: "pagué el alquiler", "ya pagué UTE" */
   if(pago&&!monto2){
     r.intencion='pagado';r.dicho=nota;r.fijoId=fijo?fijo.id:null;r.nombre=fijo?fijo.nombre:nota;
@@ -350,6 +360,8 @@ function durTxt(m){var h=Math.floor(m/60),r=Math.round(m%60);return h?(h+(h===1?
 /* Respuesta a una consulta. d trae los números ya calculados por la app. */
 export function responder(que,d){
   switch(que){
+    case 'alcanza':return !d.alcanza?'Todavía no tenés un plan armado.':'Tu plata alcanza '+d.alcanza.dias+(d.alcanza.dias===1?' día':' días')+(d.alcanza.hasta?', hasta el '+fechaLarga(d.alcanza.hasta):'')+'.'+(d.alcanza.pago?' Tu próximo pago es '+d.alcanza.pago.nombre+(d.alcanza.pago.dias>0?', en '+d.alcanza.pago.dias+(d.alcanza.pago.dias===1?' día':' días'):', hoy')+(d.alcanza.llega?': llegás.':'.'):'');
+    case 'entro':return 'En este pacto te entraron '+pesos(d.entro||0)+(d.entroVeces?' en '+d.entroVeces+(d.entroVeces===1?' vez':' veces'):'')+'.';
     case 'cobro':return 'Vas a cobrar unos '+pesos(d.liquido)+' el '+fechaLarga(d.cobro)+'.';
     case 'dias':return d.dias>0?'Faltan '+d.dias+(d.dias===1?' día':' días')+' para cobrar: el '+fechaLarga(d.cobro)+'.':d.dias===0?'Cobrás hoy.':'Ya cobraste: cerrá el mes en Logros.';
     case 'fijos':return 'Tus gastos fijos suman '+pesos(d.fijosMes)+' por mes. Antes de cobrar vencen '+pesos(d.fijosPeriodo)+'.';

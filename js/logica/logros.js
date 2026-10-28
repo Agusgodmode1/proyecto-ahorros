@@ -68,6 +68,9 @@ export function logrosLista(state,pc,hoy,A){
   });
   /* Sin horas extra en el perfil, el logro de horas no aplica */
   if(reglasHoras(state).activo===false)lista=lista.filter(function(l){return l.id!=='horas'});
+  /* (2.25) por jornal o cuando vendo no hay recibo ni horas extra */
+  var fqL=state.perfil&&state.perfil.cobro&&state.perfil.cobro.frecuencia;
+  if(fqL==='jornal'||fqL==='ventas')lista=lista.filter(function(l){return l.id!=='horas'&&l.id!=='recibo'});
   return lista;
 }
 /* Marca con la fecha de hoy los logros recién alcanzados y los devuelve. */

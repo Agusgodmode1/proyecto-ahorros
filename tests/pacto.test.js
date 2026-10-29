@@ -148,14 +148,18 @@ test('migración: un estado ya en v14 sin sellar sigue sin sellar',function(){
   assert.equal(pactoDesdePlan({plan:{}},HOY).sellado,HOY);
 });
 
-import {normFijosNuevos} from '../js/logica/pacto.js';
-test('(2.23) el prólogo carga los pagos fijos; siempre se cobra por mes',function(){
-  var st=nuevo();
-  var d={total:30000,ahorro:0,cobro:'2026-11-06',fijos:[{nombre:'Alquiler',monto:12000,dia:5,cat:'Vivienda'},{nombre:'',monto:0}]};
-  assert.equal(normFijosNuevos(d.fijos).length,1);
+test('(2.26) el pacto son 3 datos: los fijos que ya cargaste se descuentan; siempre se cobra por mes',function(){
+  var st=nuevo();st.fijos.push({id:'a',nombre:'Alquiler',monto:12000,dia:5,cat:'Vivienda'});
+  var d={total:30000,ahorro:0,cobro:'2026-11-06'};
   var c=cuentaPacto(st,d,HOY);
   assert.equal(c.fijos,12000,'el alquiler vence el 5, antes de cobrar: se descuenta entero');
   var v=sellarPacto(st,d,HOY);assert.equal(v.ok,true);
-  assert.equal(st.fijos.length,1);assert.equal(st.fijos[0].nombre,'Alquiler');
-  assert.equal(st.perfil.cobro.frecuencia,undefined);assert.equal(st.pacto.pct,undefined);
+  assert.equal(st.fijos.length,1);assert.equal(st.perfil.cobro.frecuencia,undefined);
+});
+test('(2.26) lo apartado que ya tenías sigue aparte: el total del pacto es lo que podés usar más lo apartado',function(){
+  var st=nuevo(),ap=[{id:'x',tipo:'ahorro',monto:5000,nota:''}];
+  var c=cuentaPacto(st,{total:20000+5000,ahorro:1000,cobro:'2026-11-06',apartado:ap},HOY);
+  assert.equal(c.total,20000);assert.equal(c.apartado,5000);
+  var v=sellarPacto(st,{total:25000,ahorro:1000,cobro:'2026-11-06',apartado:ap},HOY);
+  assert.equal(v.ok,true);assert.equal(st.plan.monto,20000);assert.equal(st.pacto.apartado[0].monto,5000);
 });

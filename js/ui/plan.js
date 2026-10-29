@@ -387,7 +387,7 @@ export function initPlan(){
   });
   pr.addEventListener('click',function(e){if(e.target.closest('#saldo-abrir2'))abrirSaldo()});
   $('#hoy-hero').addEventListener('click',function(e){if(e.target.closest('#hoy-empezar'))abrirPlan()});
-  $('#hero-chips').addEventListener('click',function(e){if(e.target.closest('#apartado-abrir')){ctx.abrirPrologo('qa');return}if(e.target.closest('#saldo-abrir'))abrirSaldo();if(e.target.closest('#ahorro-abrir'))abrirMeta()});
+  $('#hero-chips').addEventListener('click',function(e){if(e.target.closest('#apartado-abrir')){ctx.abrirPrologo('pacto','qa');return}if(e.target.closest('#saldo-abrir'))abrirSaldo();if(e.target.closest('#ahorro-abrir'))abrirMeta()});
   initGasto();
   $('#cierre-aviso').addEventListener('click',function(e){
     if(e.target.closest('#ciclo-nuevo')){pactoNuevo();return}

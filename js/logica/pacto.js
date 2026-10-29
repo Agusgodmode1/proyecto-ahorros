@@ -57,13 +57,6 @@ export function sugerirCobro(st,hoy){
   return {fecha:cobroDesde(hoy,cfg),perfil:conPerfil,tipo:cfg.tipo||'habil5'};
 }
 
-/* ---------- Los pagos fijos que se cargan en el prólogo (2.23) ---------- */
-export function normFijosNuevos(l){
-  if(!Array.isArray(l))return [];
-  return l.filter(function(x){return x&&num(x.monto)>0}).map(function(x,i){return {id:String(x.id||('fn'+i)),nombre:String(x.nombre||'Gasto fijo').trim().slice(0,40)||'Gasto fijo',monto:Math.round(num(x.monto)),dia:Math.min(31,Math.max(1,Math.round(num(x.dia))||1)),cat:String(x.cat||'Otros')}});
-}
-/* El estado con los fijos que estás cargando en el prólogo, para hacer las cuentas */
-function conFijos(st,d){var n=normFijosNuevos(d&&d.fijos);return n.length?Object.assign({},st,{fijos:(st.fijos||[]).concat(n)}):st}
 function conPacto(st,d,hoy){
   var plan=Object.assign({},st.plan,{monto:Math.max(0,num(d.total)),modo:'monto',ahorro:Math.max(0,Math.round(num(d.ahorro))),inicio:hoy,cobro:d.cobro});
   return Object.assign({},st,{plan:plan,gastos:[]});
@@ -73,7 +66,6 @@ function fechaOk(s){return typeof s==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(s)&&i
 /* Lo que se ve al instante: cuánto queda para gastar, por día y por cuántos días.
    Los fijos que vencen antes de cobrar se descuentan primero (con un pacto nuevo y fijos ya cargados). */
 export function cuentaPacto(st,d,hoy){
-  st=conFijos(st,d);
   var bruto=Math.max(0,num(d.total)),apartado=totalApartado(normApartado(d.apartado)),total=Math.max(0,bruto-apartado),cobro=fechaOk(d.cobro)&&d.cobro>hoy?d.cobro:sugerirCobro(st,hoy).fecha;
   var pc=planCalc(conPacto(st,{total:total,ahorro:d.ahorro,cobro:cobro},hoy));
   var maxAhorro=Math.max(0,total-pc.fijos),ahorro=Math.min(Math.max(0,Math.round(num(d.ahorro))),maxAhorro);
@@ -125,8 +117,6 @@ export function sellarPacto(st,d,hoy){
   p.vistos=(Array.isArray(p.vistos)?p.vistos:[]).filter(function(id){return String(id).slice(-10)>=hoy});
   if(!st.pacto)st.pacto=pactoBase();
   st.pacto.apartado=normApartado(d.apartado);
-  /* (2.23) los pagos fijos que cargaste en el prólogo */
-  normFijosNuevos(d.fijos).forEach(function(f,i){f.id='f'+Date.now().toString(36)+i;st.fijos.push(f)});
   st.pacto.sellado=hoy;st.pacto.numero=(Math.round(num(st.pacto.numero))||0)+1;
   st.pacto.usd=num(d.usd)>0&&num(d.cotiz)>0?Math.round(num(d.usd)*100)/100:0;
   if(st.pacto.usd&&st.monedas){st.monedas.cotizacion=num(d.cotiz);st.monedas.fecha=hoy}

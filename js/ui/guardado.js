@@ -57,7 +57,7 @@ export function initGuardado(){
   var el=$('#p-guardado');if(!el)return;
   el.addEventListener('click',function(e){
     var po=e.target.closest('[data-postal]');if(po){abrirPostal(po.getAttribute('data-postal'));return}
-    if(e.target.closest('[data-ap-cambiar]')){ctx.abrirPrologo('qa','qa');return}
+    if(e.target.closest('[data-ap-cambiar]')){ctx.abrirPrologo('pacto','qa');return}
     if(e.target.closest('[data-fondo-crear]')){
       var form=$('#meta-form'),r=resumenGuardado(ctx.state,today());if(!form)return;
       form.hidden=false;$('#m-nombre').value='Fondo de emergencia';if(r.fondo)$('#m-obj').value=Math.round(r.fondo.objetivo);

@@ -170,9 +170,12 @@ test('v17 → v18: suma los gastos que se repiten solos, sin tocar nada más',fu
   assert.deepEqual(m.repetidos,[]);
   assert.deepEqual(migrar({v:17,repetidos:'roto'}).repetidos,[]);
   assert.deepEqual(defaults().repetidos,[]);
+  /* (2.30) se dejaron de repetir solos: lo guardado se conserva tal cual y el ejemplo trae el boleto de hoy */
+  var r=[{id:'r1',nota:'Boleto',monto:50,cat:'Transporte',cada:'dia',desde:'2026-10-01',ultimo:'2026-10-20',pausa:false}];
+  assert.deepEqual(migrar({v:22,repetidos:r}).repetidos,r);
   var e=ejemplo('2026-10-27');
-  assert.equal(e.repetidos.length,1,'«Solo mirar» trae un gasto que se repite');
-  assert.equal(e.repetidos[0].ultimo,'2026-10-26','el de hoy se anota solo al abrir');
+  assert.deepEqual(e.repetidos,[]);
+  assert.deepEqual(e.gastos.map(function(x){return [x.fecha,x.monto,x.nota]}),[['2026-10-27',50,'Boleto']]);
 });
 
 test('v21: ingresos fijos y respondidos, sin cambiar nada de lo que había',function(){

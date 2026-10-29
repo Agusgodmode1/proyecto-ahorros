@@ -23,7 +23,7 @@ var ICONL={
   eye:SV+'<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" fill="none"/><circle cx="12" cy="12" r="3" fill="none"/></svg>',
   coins:ICON.plan,cal:ICON.semanas
 };
-var cDirtyA=false,cDirtyM=false;
+var cDirtyA=false,cDirtyM=false,verTodos=false;
 function mesNombre(k){return cap(MESL[Number(k.slice(5,7))-1])+' '+k.slice(0,4)}
 
 /* Al desbloquear: el logro queda guardado con la fecha y aparece un aviso. */
@@ -45,41 +45,44 @@ export function renderLogros(pc){
   /* (2.14) sin meses cerrados no hay ceros gigantes: una invitación y, si ya hay semanas dentro del tope, ese dato */
   if(!S.hs.length){
     $('#logros-top').innerHTML='<div class="card streak vacio"><div class="st-main"><span class="st-ic">'+ICONL.flame+'</span><div class="st-txt"><span class="tile-l">Tu racha empieza con este pacto</span><b class="st-inv">Cerralo cumpliendo tu meta</b>'
-      +'<span class="tile-h">El día que cobrás, lo que no gastaste se guarda: es tu primer mes y ahí arranca la racha. Abajo están los logros que te esperan'+(un?' (ya tenés '+un+')':'')+'.</span></div></div>'
+      +'<span class="tile-h">El día que cobrás se cierra tu primer mes y arranca la racha.</span></div></div>'
       +(rs.actual>0?'<p class="st-sem"><b>'+rs.actual+(rs.actual===1?' semana':' semanas')+'</b> seguidas dentro de lo que podías gastar.</p>':'')+'</div>';
   }else
   $('#logros-top').innerHTML='<div class="card streak">'
     +'<div class="st-main"><span class="st-ic">'+ICONL.flame+'</span><div class="st-txt"><span class="tile-l" style="color:var(--sun-ink)">Racha actual</span><b class="st-n">'+S.cur+' '+(S.cur===1?'mes':'meses')+'</b><span class="tile-h">'+(S.cur>0?'Cerrá el próximo mes cumpliendo la meta y llegás a '+(S.cur+1)+'.':'Cumplí la meta de este mes y arrancás tu racha.')+'</span></div></div>'
-    +'<div class="tiles">'+tile('tone-mint','Semanas seguidas',(function(r){return r.actual+(r.actual===1?' semana':' semanas')})(rachaSemanas(state.hist,pc,today())),'dentro del tope · mejor: '+rachaSemanas(state.hist,pc,today()).mejor)
-      +tile('tone-grape','Meses con objetivo',S.curObj+' seguidos','en total: '+S.obj+' · mejor racha: '+S.bestObj)
-      +tile('tone-sun','Mejor racha',S.best+' '+(S.best===1?'mes':'meses'),'meses seguidos')+tile('tone-mint','Meses cumplidos',S.met+' de '+S.hs.length,'meses cerrados')+tile('tone-sky','Guardado en total',money(S.tot),'en meses cerrados')+tile('tone-grape','Logros',un+' de '+list.length,'desbloqueados')+'</div></div>';
+    +'<div class="tiles">'+tile('tone-mint','Semanas seguidas',rs.actual+(rs.actual===1?' semana':' semanas'),'mejor: '+rs.mejor)
+      +tile('tone-sun','Mejor racha',S.best+' '+(S.best===1?'mes':'meses'),'seguidos')+tile('tone-mint','Meses cumplidos',S.met+' de '+S.hs.length,'cerrados')+tile('tone-sky','Guardado en total',money(S.tot),'en meses cerrados')+'</div></div>';
   var p=state.plan,d=diffDays(today(),p.cobro),nc=nextCobro(p.cobro,cfgCobro(state));
   var mn=minimoDe(state,pc);
+  /* (2.30) cerrar el mes, solo desde el día de cobro */
+  $('#cierre-card').hidden=d>0;
   $('#cierre-note').innerHTML=(mn<pc.ahorro?'Tu objetivo de este período es <b>'+money(pc.ahorro)+'</b> y tu mínimo, <b>'+money(mn)+'</b>: con el mínimo el mes ya cuenta como logrado. ':'Tu meta de este período es <b>'+money(pc.ahorro)+'</b>. ')+(d>0?'Lo ideal es cerrarlo el día que cobrás, el '+esc(fLarga(p.cobro))+' (faltan '+d+' '+(d===1?'día':'días')+').':'Ya cobraste: es buen momento para cerrarlo.')+' Al cerrar se guarda en tu historial y el plan arranca de nuevo del '+esc(fCorta(p.cobro))+' al '+esc(fCorta(nc))+'.';
   var ia=$('#c-ahorrado'),im=$('#c-monto');
   if(!cDirtyA&&document.activeElement!==ia)ia.value=Math.round(pc.ahorro)||'';
   if(!cDirtyM&&document.activeElement!==im)im.value=Math.round(L.liquido)||'';
   var sobra=pc.gastar-pc.spentInPlan;
   $('#c-hint').textContent=pc.spentInPlan>0&&sobra>0?'Te puse tu meta. Del presupuesto de las semanas te sobran '+money(sobra)+': si no los gastás, sumalos.':'Te puse tu meta. Si guardaste más, cambialo y ganás el logro de ahorro extra.';
-  var g='<div class="sec"><div class="sec-h"><h2>Tus logros</h2><span class="note">'+un+' de '+list.length+' desbloqueados</span></div><div class="logros">';
-  list.forEach(function(l){
-    var ok=!!state.logros[l.id]||l.val>=l.need,pr=Math.min(1,l.val/l.need);
+  var g='<div class="sec"><div class="sec-h"><h2>Tus logros</h2><span class="note">'+un+' de '+list.length+'</span></div><div class="logros">';
+  /* (2.30) los logrados y los 3 que tenés más cerca; el resto, con «Ver todos» */
+  var esOk=function(l){return !!state.logros[l.id]||l.val>=l.need};
+  var falta=list.filter(function(l){return !esOk(l)}).sort(function(a,b){return b.val/b.need-a.val/a.need});
+  var ver=verTodos?list:list.filter(function(l){return esOk(l)||falta.indexOf(l)<3});
+  ver.forEach(function(l){
+    var ok=esOk(l),pr=Math.min(1,l.val/l.need);
     g+='<div class="logro'+(ok?' on':'')+'"><span class="lg-ic">'+ICONL[l.ic]+'</span><b>'+esc(l.t)+'</b><span class="lg-d">'+esc(l.d)+'</span>'
       +(ok?'<span class="lg-st">Desbloqueado'+(state.logros[l.id]?' el '+esc(fCorta(state.logros[l.id])):'')+'</span>'
           :'<span class="bar"><i style="width:'+Math.round(pr*100)+'%"></i></span><span class="lg-st">'+(l.money?money(Math.min(l.val,l.need))+' de '+money(l.need):Math.min(l.val,l.need)+' de '+l.need)+'</span>')+'</div>';
   });
-  g+='</div></div>';
-  g+='<div class="card stack"><div class="sec"><h2>Historial</h2><p class="note">Cada mes cerrado. La racha cuenta meses seguidos con la meta cumplida.</p></div>';
-  if(!S.hs.length)g+='<div class="empty">Todavía no cerraste ningún mes. Cuando cobres, cerrá el mes acá arriba. Si ya venías ahorrando, cargá los meses anteriores abajo.</div>';
-  else{
+  g+='</div>'+(falta.length>3?'<p class="lg-mas"><button class="linklike" type="button" data-lgver>'+(verTodos?'Ver menos':'Ver todos ('+list.length+')')+'</button></p>':'')+'</div>';
+  if(S.hs.length){
+    g+='<div class="card stack"><div class="sec"><h2>Historial</h2></div>';
     g+='<ul class="list">';
     S.hs.slice().reverse().forEach(function(x){
       var ok=histOk(x),ex=histExtra(x);
       g+='<li><span class="what" style="flex-direction:column;align-items:flex-start;gap:1px"><b>'+esc(mesNombre(x.k))+'</b><span class="src">Meta '+money(num(x.meta))+' · guardaste '+money(num(x.ahorrado))+'</span></span><span class="pill '+(ex?'ex':ok?'ok':'bad')+'">'+(ex?'Con extra':ok?'Cumplida':'No llegó')+'</span><button class="btn quiet" type="button" data-delhist="'+esc(x.k)+'">Borrar</button></li>';
     });
-    g+='</ul>';
+    g+='</ul></div>';
   }
-  g+='</div>';
   $('#logros-out').innerHTML=g;
   renderMetas();
 }
@@ -107,7 +110,7 @@ export function initLogros(){
   $('#h-add').addEventListener('click',function(){
     var state=ctx.state,k=$('#h-anio').value+'-'+$('#h-mes').value,me=num($('#h-meta').value),ah=num($('#h-ahorrado').value),er=$('#h-err');
     if(!(me>0)&&!(ah>0)){er.textContent='Poné cuánto te habías propuesto guardar y cuánto guardaste.';er.hidden=false;return}
-    if(k>=mesKey(state.plan.inicio)){er.textContent='Ese mes es el actual o uno futuro. Para este mes usá "Cerrar el mes".';er.hidden=false;return}
+    if(k>=mesKey(state.plan.inicio)){er.textContent='Ese mes es el actual o uno futuro: este se cierra el día de cobro.';er.hidden=false;return}
     er.hidden=true;
     state.hist=state.hist.filter(function(x){return x.k!==k});
     state.hist.push({k:k,meta:Math.round(me),ahorrado:Math.round(ah),manual:true});
@@ -115,6 +118,7 @@ export function initLogros(){
     ctx.persist();ctx.renderAll();toast(mesNombre(k)+' agregado al historial');
   });
   $('#p-logros').addEventListener('click',function(e){
+    if(e.target.closest('[data-lgver]')){verTodos=!verTodos;renderLogros();return}
     var b=e.target.closest('[data-delhist]');if(!b)return;
     if(!armar(b))return;
     var k=b.getAttribute('data-delhist');ctx.state.hist=ctx.state.hist.filter(function(x){return x.k!==k});ctx.persist();ctx.renderAll();

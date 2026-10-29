@@ -78,7 +78,7 @@ export function defaults(hoy){
     plantillasRecibo:{},                 /* por empleador: qué renglón del PDF es cada campo */
     pacto:pactoBase(),                   /* {sellado:fecha|null, numero, usd}: los datos del pacto viven en plan */
     grupos:[],                           /* con quién compartís fijos (logica/reparto.js y compartidos.js) */
-    repetidos:[],                        /* gastos que se repiten solos (logica/repetidos.js) */
+    repetidos:[],                        /* gastos que se repetían solos (2.16, se sacó en 2.30: se conserva lo guardado) */
     ingresosFijos:[]                     /* (2.20) lo que te entra todos los meses además del sueldo (logica/ingresos.js) */
   };
 }
@@ -131,9 +131,8 @@ export function ejemplo(hoy){
   s.perfil.horas.preguntado=true;
   /* un recibo de ejemplo del mes anterior (inventado), para ver «¿Te pagaron bien?» */
   s.recibos=[{id:'ej-rec',mes:'2026-09',moneda:'UYU',nominal:45000,haberes:47812.5,aportes:7171.88,fonasa:2151.56,irpf:0,otros:47.81,liquido:38441.25,horasCant:7.5,horasMonto:2812.5,fuente:'ejemplo'}];
-  /* un gasto que se repite solo (2.16): el boleto de cada día; al abrir el ejemplo se anota solo el de hoy */
-  var ayer=iso(new Date(parse(hoy||hoyISO()).getTime()-864e5));
-  s.repetidos=[{id:'ej-rep',nota:'Boleto',monto:50,cat:'Transporte',cada:'dia',desde:ayer,ultimo:ayer,pausa:false}];
+  /* el boleto de hoy, para ver «Gastaste hoy» */
+  s.gastos=[{id:'ej-hoy',fecha:hoy||hoyISO(),monto:50,nota:'Boleto',cat:'Transporte'}];
   /* un extracto de ejemplo (inventado) para ver el detector de la Tarjeta */
   s.extracto.texto=extractoEjemplo();
   var k=s.plan.cobro;s.fijosPagos={};s.fijosPagos[k]={'ej-alq':{monto:22000,parte:11000,fecha:'2026-10-15',nombre:'Alquiler',paga:'yo'}};

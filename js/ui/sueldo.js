@@ -2,7 +2,7 @@
 import {parse,MESL} from '../logica/fechas.js';
 import {num,uid} from '../logica/util.js';
 import {mesTrabajo,mins,pagoSem,tarifas,reglasHoras,extraDelDia,ingresoDe,mesIngreso} from '../logica/sueldo.js';
-import {ctx,$,today,liqNow,planNow,money,money2,usd,pctTxt,veces,fmtH,esc,fLarga,fMin,tile,row,cap,toast,armar} from './comun.js';
+import {ctx,$,today,liqNow,planNow,money,money2,usd,pctTxt,veces,fmtH,esc,fLarga,fMin,tile,row,cap,toast,armar,abrirDetalle} from './comun.js';
 import {renderResumen} from './plan.js';
 import {aguinaldo,salarioVacacional} from '../logica/aguinaldo.js';
 import {extraPorHorario,tipoDeDia,minimoExtra,tieneHorario,aplicarHorario,aplicarPago} from '../logica/horario.js';
@@ -396,7 +396,7 @@ export function initSueldo(){
     if(clicEmpezar(e))return;
     if(clicHorario(e))return;
     /* «Para afinarla»: abre el desplegable que hace falta */
-    var dir=e.target.closest('[data-sdir]');if(dir){var d=$('#sd-'+dir.getAttribute('data-sdir'));if(d&&d.hidden&&dir.getAttribute('data-sdir')==='subir')d=$('#sd-control');if(d){d.open=true;try{d.scrollIntoView({block:'start',behavior:'smooth'})}catch(x){}}return}
+    var dir=e.target.closest('[data-sdir]');if(dir){var d=$('#sd-'+dir.getAttribute('data-sdir'));if(d&&d.hidden&&dir.getAttribute('data-sdir')==='subir')d=$('#sd-control');if(d){abrirDetalle(d);try{d.scrollIntoView({block:'start',behavior:'smooth'})}catch(x){}}return}
     var hx=e.target.closest('[data-hx]');
     if(hx){var p=ctx.state.perfil;p.horas=Object.assign({},p.horas,{preguntado:true,activo:hx.getAttribute('data-hx')==='si'});ctx.persist();ctx.renderAll();toast(p.horas.activo?'Listo: sumá tus horas extra en «Horas extra»':'Listo: sin horas extra');
       /* (2.26) con extras, lo primero es tu horario: se abre «Horas extra» */
@@ -405,7 +405,7 @@ export function initSueldo(){
   });
   $('#bpc-aviso').addEventListener('click',function(e){
     if(e.target.id==='bpc-igual'){ctx.state.sueldo.bpcAnio=Number(today().slice(0,4));ctx.persist();renderSueldo()}
-    if(e.target.id==='bpc-ir'){var d=$('#s-bpc').closest('details');if(d)d.open=true;var i=$('#s-bpc');try{i.scrollIntoView({block:'center'})}catch(er){}i.focus();i.select()}
+    if(e.target.id==='bpc-ir'){abrirDetalle($('#s-bpc'));var i=$('#s-bpc');try{i.scrollIntoView({block:'center'})}catch(er){}i.focus();i.select()}
   });
   $('#sv-dias').addEventListener('input',function(){ctx.state.sueldo.diasLicencia=Math.max(0,Math.min(60,Math.round(num(this.value))));ctx.persist();renderVacacional()});
   ['s-nominal','s-bonofijo','s-otros','s-hijos','s-conyuge','s-bpc'].forEach(function(id){$('#'+id).addEventListener('input',onSueldoInput);$('#'+id).addEventListener('change',onSueldoInput)});

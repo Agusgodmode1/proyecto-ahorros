@@ -1,6 +1,6 @@
 /* Ajustes y respaldo: exportar, importar (con resumen y confirmación), recordatorio y bienvenida. */
 import {armarRespaldo,leerRespaldo,resumenDatos,diasSinRespaldo,leerCopias,migrar} from '../estado.js';
-import {ctx,$,today,esc,fCorta,toast,row,money} from './comun.js';
+import {ctx,$,today,esc,fCorta,toast,row,money,abrirDetalle} from './comun.js';
 import {cotizacion,actualizarFijosUSD} from '../logica/monedas.js';
 import {csvGastos} from '../logica/csv.js';
 import {catDe} from './gastos.js';
@@ -129,7 +129,7 @@ export function renderAjustes(estadoGuardado){
   var info=row('Versión de la app',esc(VERSION))
     +row('Tus datos',esc(resumenDatos(ctx.state)))
     +row('Dónde se guardan',estadoGuardado&&estadoGuardado.donde==='ls'?'en este navegador (modo simple)':'en este dispositivo')
-    +row('Protegidos contra borrado',estadoGuardado&&estadoGuardado.persistente?'sí':'no confirmado','',estadoGuardado&&estadoGuardado.persistente?'':'iOS puede borrar datos de webs que no usás hace semanas. Instalada en la pantalla de inicio y abriéndola seguido, no pasa.');
+    +row('Protegidos contra borrado',estadoGuardado&&estadoGuardado.persistente?'sí':'no seguro','',estadoGuardado&&estadoGuardado.persistente?'':'Abrila seguido desde la pantalla de inicio: iOS borra las webs que no usás.');
   $('#aj-info').innerHTML=info;
 }
 /* ---------- Apariencia (sigue al teléfono por defecto; se guarda en este aparato) ---------- */
@@ -187,7 +187,7 @@ export function initAjustes(reemplazar,juntarDatos){
   /* Abre el selector de archivos del importador; el resumen y "Juntar / Reemplazar" aparecen en esa tarjeta */
   $('#pase-importar').addEventListener('click',function(){
     var c=$('#aj-import-card'),f=c.querySelector('input[type=file]');
-    if(f)f.click();
+    abrirDetalle(c);if(f)f.click();
     try{c.scrollIntoView({block:'start',behavior:'smooth'})}catch(e){c.scrollIntoView()}
   });
   document.addEventListener('click',function(e){

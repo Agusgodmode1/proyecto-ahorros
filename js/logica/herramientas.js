@@ -12,7 +12,7 @@ import {sugerirCobro} from './pacto.js';
 export var HERRAMIENTAS=[
   {id:'sueldo',t:'Calcular mi sueldo y horas extra',d:'cuánto te queda en mano',tab:'sueldo',ancla:'#sd-empezar'},
   {id:'recibo',t:'Revisar si me pagaron bien',d:'subí tu recibo',tab:'sueldo',ancla:'#sd-subir'},
-  {id:'dividir',t:'Dividir gastos fijos',d:'en pareja o con otros',tab:'fijos',ancla:'#grupos-card'},
+  {id:'dividir',t:'Dividir gastos fijos',d:'en pareja o con otros',tab:'fijos',ancla:'#dividir-d'},
   {id:'extracto',t:'Ver en qué se me va la plata',d:'pegá o subí el extracto',tab:'gastos',ancla:'#gas-in'}
 ];
 export function herramienta(id){for(var i=0;i<HERRAMIENTAS.length;i++)if(HERRAMIENTAS[i].id===id)return HERRAMIENTAS[i];return null}

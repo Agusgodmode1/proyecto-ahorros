@@ -73,7 +73,7 @@ export function render(){
   var de=r.banco.id!=='generico'?' de <b>'+esc(r.banco.nombre)+'</b> ('+(r.banco.tarjeta?'tarjeta':TIPO_TXT[r.banco.tipo])+')':'';
   var s='Leí <b>'+r.movs.length+' movimientos</b>'+de+' del '+esc(fCorta(A.desde))+' al '+esc(fCorta(A.hasta))+'.';
   if(r.bad.length)s+=' No entendí '+r.bad.length+' línea'+(r.bad.length>1?'s':'')+'.';
-  if(r.dudosos)s+=' En '+r.dudosos+' no supe si era gasto o ingreso y lo conté como gasto; si no cierra, cambiá «Cómo vienen los montos».';
+  if(r.dudosos)s+=' En '+r.dudosos+' no supe si era gasto o ingreso y lo conté como gasto; si no cierra, cambiá «Cómo vienen los montos» (en Más opciones).';
   if(A.usdN)s+=' Dejé afuera '+A.usdN+' en dólares.';
   if(r.tabla&&r.tabla.seguro&&!vista.colsAbierto)s+=' <button class="linklike" type="button" data-gcols="abrir">¿Leí mal las columnas?</button>';
   st.innerHTML=s+(r.bad.length?'<details class="sub-d"><summary>Ver las líneas que no entendí</summary><div class="muted mono-l">'+r.bad.slice(0,8).map(esc).join('<br>')+'</div></details>':'');
@@ -128,7 +128,7 @@ export function render(){
   out.innerHTML=h;
 }
 function vacio(){
-  return '<div class="empty">Cuando traigas el extracto vas a ver por dónde se te va la plata: suscripciones, compras que se repiten, cobros dos veces, comisiones del banco, cuotas y tu mes día por día.</div>';
+  return '';
 }
 function calHTML(x){
   var A=x.A,pd=planDia(),meses=A.meses.map(function(m){return m.k});

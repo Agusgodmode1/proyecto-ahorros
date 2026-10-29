@@ -80,3 +80,5 @@ export var ICON={
   logros:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0V4Z" fill="none"/><path d="M16 5.5h3V7a3 3 0 0 1-3 3M8 5.5H5V7a3 3 0 0 0 3 3M12 13v4M8.5 20.5h7M10 17h4" fill="none"/></svg>',
   gastos:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h16" fill="none"/><rect x="5.5" y="11" width="3" height="7" rx="1" fill="none"/><rect x="10.5" y="5.5" width="3" height="12.5" rx="1" fill="none"/><rect x="15.5" y="13.5" width="3" height="4.5" rx="1" fill="none"/></svg>'
 };
+/* (2.30) Abrir un desplegable y los que lo contienen (p. ej. uno que está dentro de «Más opciones») */
+export function abrirDetalle(d){for(var x=d&&d.closest('details');x;x=x.parentElement&&x.parentElement.closest('details'))x.open=true}

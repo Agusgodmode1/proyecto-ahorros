@@ -28,7 +28,6 @@ import {DIAL,MESL,parse} from './logica/fechas.js';
 import {initTour,iniciarTour,tourSiPendiente} from './ui/tour.js';
 import {aplicarFeriados,renderFeriados,initFeriados} from './ui/feriados.js';
 import {prepararGuardado,juntar} from './logica/sync.js';
-import {aplicarRepetidos} from './logica/repetidos.js';
 import {tienePacto,pideElPacto,alDiaSinPacto,sugerenciaPacto,herramienta} from './logica/herramientas.js';
 import {listaHerrHTML,irHerramienta,mostrarHerramienta} from './ui/herramientas.js';
 import {renderCategorias,initCategorias} from './ui/categorias.js';
@@ -299,13 +298,6 @@ function initDeslizar(){
   document.addEventListener('pointercancel',function(){soltar(true)},{passive:true});
 }
 function syncInputs(){syncPlan();syncSueldo();syncGastos()}
-/* (2.16) Los gastos que se repiten solos: se anotan los que tocaron hasta hoy (al abrir y al volver a la app) */
-function repetirSolos(){
-  if(!ctx.state)return;
-  var n=aplicarRepetidos(ctx.state,today());if(!n.length)return;
-  persist();
-  if(ctx.booted)toast(n.length===1?'Se anotó solo: '+(n[0].nota||'un gasto que se repite')+' '+money(n[0].monto):'Se anotaron solos '+n.length+' gastos que se repiten')
-}
 
 /* Reemplaza todos los datos (importar un respaldo, volver a una copia, borrar el ejemplo).
    Antes guarda una copia de lo que había, para poder volver atrás. */
@@ -403,7 +395,7 @@ function initGlobal(){
   $('#discreto').addEventListener('click',function(){setDiscreto(!discreto.on);marcarDiscreto();renderAll();toast(discreto.on?'Montos ocultos':'Montos visibles')});
   document.addEventListener('visibilitychange',function(){
     if(document.visibilityState==='hidden')flushPendiente();
-    else if(ctx.state){repetirSolos();if(alDiaSinPacto(ctx.state,today()))persist();renderAll()} /* al volver otro día, se actualizan "hoy", la cuenta regresiva y lo que se repite */
+    else if(ctx.state){if(alDiaSinPacto(ctx.state,today()))persist();renderAll()} /* al volver otro día, se actualizan "hoy" y la cuenta regresiva */
   });
   window.addEventListener('pagehide',flushPendiente);
 }
@@ -423,7 +415,6 @@ function arrancar(st,tab){
   if(!st.meta.creado){st.meta.creado=today();persist()}
   /* (2.26) sin pacto, el «hasta el cobro» de Fijos y la Tarjeta se mantiene al día */
   if(alDiaSinPacto(st,today()))persist();
-  var rs=aplicarRepetidos(st,today());if(rs.length)persist();
   try{var t=localStorage.getItem(TK);if(t)ctx.tab=t}catch(e){}
   if(tab)ctx.tab=tab;
   initNotas();
@@ -432,7 +423,6 @@ function arrancar(st,tab){
   ctx.booted=true;
   $('#app').hidden=false;
   syncInputs();renderAll();precargarTarjeta();
-  if(rs.length)setTimeout(function(){toast(rs.length===1?'Se anotó solo: '+(rs[0].nota||'un gasto que se repite')+' '+money(rs[0].monto):'Se anotaron solos '+rs.length+' gastos que se repiten')},900);
   /* Al abrir: una transición corta (< 600 ms) hasta la página del día */
   /* (en #app solo opacidad: la barra y el micrófono son fijos y no pueden moverse con la hoja) */
   entrada();

@@ -15,7 +15,7 @@ import {fijosPagadosParte} from '../logica/saldo.js';
 import {renderIngresos,initIngresos} from './ingresos.js';
 
 export var FCATS=[['Vivienda','var(--sky)'],['Servicios','var(--sun)'],['Celular e internet','var(--grape)'],['Suscripciones','var(--pink)'],['Salud','var(--mint)'],['Transporte','var(--teal)'],['Deudas y cuotas','var(--coral)'],['Educación','var(--slate)'],['Otros','var(--muted)']];
-var FSUG=[['Alquiler','Vivienda'],['Gastos comunes','Vivienda'],['UTE','Servicios'],['OSE','Servicios'],['Internet','Celular e internet'],['Celular','Celular e internet'],['Netflix','Suscripciones'],['Spotify','Suscripciones'],['Gimnasio','Salud'],['Mutualista','Salud'],['Boleto STM','Transporte'],['Préstamo','Deudas y cuotas'],['Tarjeta de crédito','Deudas y cuotas']];
+var FSUG=[['Alquiler','Vivienda'],['UTE','Servicios'],['OSE','Servicios'],['Internet','Celular e internet'],['Celular','Celular e internet'],['Netflix','Suscripciones']];
 var fEdit=null,pagando=null,tarTocada=false;
 var form={paga:'yo',pagador:null,rep:null};           /* lo compartido del formulario */
 var gEdit=null,gVolverAlForm=false;                    /* el grupo que se está armando o cambiando */
@@ -40,12 +40,18 @@ export function renderFijos(pc){
     /* (2.15) lo que falta pagar antes de cobrar, en lugar de repetir el total */
     +tile('tone-sky','Falta pagar',money(Math.max(0,pc.fijos-Math.min(pc.fijos,fijosPagadosParte(state)))),fp.length?(fp.length===state.fijos.length?'todos vencen':fp.length+' vencen')+' antes del '+esc(fCorta(p.cobro)):'ninguno vence antes del '+esc(fCorta(p.cobro)))
     +tile('tone-mint','Pagados',pag+' de '+fp.length,'en este período')
-    +tile('tone-grape','Parte de tu sueldo',L.liquido>0?Math.round(R.teToca/L.liquido*100)+'%':'—','de lo que cobrás en mano')
+    +(L.liquido>0?tile('tone-grape','Parte de tu cobro',Math.round(R.teToca/L.liquido*100)+'%','de lo que cobrás en mano'):'')
     +'</div>';
+  /* (2.30) sin ningún fijo, nada de ceros: solo el formulario */
+  if(!state.fijos.length)$('#fijos-sum').innerHTML='';
   renderBalance();
   /* las secciones: una por grupo y «Solo míos» */
   var o='';
-  if(!state.fijos.length)o='<div class="empty">Todavía no cargaste gastos fijos. Tocá una sugerencia de abajo o escribí el tuyo.</div>';
+  if(!state.fijos.length){
+    o='<div class="empty">Todavía no cargaste gastos fijos.</div>';
+    /* (2.30) el formulario va plegado; la primera vez, sin ningún fijo, se abre solo */
+    var fc=$('#fijo-form-card');if(fc&&!fc.getAttribute('data-auto')){fc.setAttribute('data-auto','1');fc.open=true}
+  }
   else{
     var orden=function(a,b){return num(a.dia)-num(b.dia)};
     R.grupos.forEach(function(x){
@@ -57,7 +63,7 @@ export function renderFijos(pc){
         +'<div class="row-btns"><button class="btn quiet" type="button" data-compartir="'+esc(g.id)+'">Compartir el resumen</button></div></div>';
     });
     var solos=state.fijos.filter(function(f){return !grupoDe(state,f)});
-    if(solos.length)o+='<div class="card stack"><div class="sec"><h2>'+(R.hayCompartidos?'Solo míos':'Tus gastos fijos')+'</h2><p class="note">Cuando pagues uno, tocá <b>Pagar</b> y anotá cuánto pagaste de verdad. Al cerrar el mes se desmarcan solos.</p></div><ul class="list flist">'
+    if(solos.length)o+='<div class="card stack"><div class="sec"><h2>'+(R.hayCompartidos?'Solo míos':'Tus gastos fijos')+'</h2><p class="note">Cuando pagues uno, tocá <b>Pagar</b>.</p></div><ul class="list flist">'
       +solos.slice().sort(orden).map(function(f){return itemFijo(f,fp)}).join('')+'</ul></div>';
   }
   var A=exAnalisis();
@@ -66,7 +72,7 @@ export function renderFijos(pc){
     /* los retiros, las transferencias y las cuotas se repiten, pero no son gastos fijos */
     var noFijo={};(A.gas||[]).forEach(function(m){if(m.tipo==='retiro'||m.tipo==='transferencia'||m.cuota)noFijo[m.k]=1});
     var sug=A.com.filter(function(c){var k=c.k.toLowerCase();return c.fijo&&!noFijo[c.k]&&!names.some(function(n){return n.indexOf(k)>=0||k.indexOf(n)>=0})});
-    if(sug.length)o+='<div class="callout tone-coral"><h2>Cobros que se repiten en tu extracto</h2><p class="note">Parecen gastos fijos. Agregalos con un toque y después ajustá el día si hace falta.</p><div class="sugs">'
+    if(sug.length)o+='<div class="callout tone-coral"><h2>En tu extracto parecen fijos</h2><p class="note">Agregalos con un toque.</p><div class="sugs">'
       +sug.slice(0,6).map(function(c){var f=c.f.slice().sort(),dia=Number(f[f.length-1].slice(8,10)),nom=A.nombres&&A.nombres[c.k]||titulo(c.k);var cat=c.c==='Suscripciones'?'Suscripciones':c.c==='Servicios y cuentas'?'Servicios':'Otros';return '<button class="btn" type="button" data-sugf="'+esc(nom)+'" data-sugm="'+Math.round(c.prom)+'" data-sugd="'+dia+'" data-sugc="'+esc(cat)+'">+ '+esc(nom)+' · '+money(c.prom)+'</button>'}).join('')
       +'</div></div>';
   }
@@ -121,7 +127,8 @@ function renderBalance(){
 
 /* ---------- Con quién compartís ---------- */
 function renderGrupos(){
-  var state=ctx.state,gs=state.grupos||[],h='<div class="sec"><h2>Con quién compartís</h2><p class="note">Armá un grupo con quienes dividís gastos (la casa, el depto, las plataformas). Los nombres y lo que gana cada uno quedan solo en este teléfono.</p></div>';
+  var state=ctx.state,gs=state.grupos||[],h='<div class="sec"><h2>Con quién compartís</h2><p class="note">Los nombres quedan solo en este teléfono.</p></div>';
+  var ds=$('#dividir-s');if(ds)ds.textContent=gs.length?gs.map(function(g){return g.nombre}).join(', '):'en pareja, con amigos o en la casa';
   if(gEdit){$('#grupos-card').innerHTML=h+editorGrupo();pintarPorcentajes();return}
   if(gs.length)h+='<ul class="list glist-g">'+gs.map(function(g){
     var n=state.fijos.filter(function(f){return f.grupo===g.id}).length;
@@ -164,7 +171,7 @@ function guardarGrupo(){
   state.fijos.forEach(function(f){if(f.grupo===g.id&&f.paga==='otro'&&!g.personas.some(function(p){return p.id===f.pagador}))f.pagador=g.personas[1].id});
   var volver=gVolverAlForm;gEdit=null;gVolverAlForm=false;
   ctx.persist();ctx.renderAll();toast('Grupo «'+g.nombre+'» guardado');
-  if(volver){$('#f-grupo').value=g.id;cambioGrupo();try{$('#fijo-form-card').scrollIntoView({block:'start'})}catch(e){}}
+  if(volver){$('#f-grupo').value=g.id;cambioGrupo();$('#fijo-form-card').open=true;try{$('#fijo-form-card').scrollIntoView({block:'start'})}catch(e){}}
 }
 
 /* ---------- El formulario: ¿de quién es? y ¿quién lo paga? ---------- */
@@ -177,7 +184,7 @@ function opcionesGrupo(){
 function grupoForm(){var id=$('#f-grupo').value;return (ctx.state.grupos||[]).filter(function(g){return g.id===id})[0]||null}
 function cambioGrupo(){
   var g=grupoForm();
-  if($('#f-grupo').value==='+'){$('#f-grupo').value='';gEdit=nuevoGrupo('Casa',2);gVolverAlForm=true;renderGrupos();try{$('#grupos-card').scrollIntoView({block:'start'})}catch(e){}var n=$('[data-gep-nombre="1"]');if(n){n.select();n.focus()}return}
+  if($('#f-grupo').value==='+'){$('#f-grupo').value='';gEdit=nuevoGrupo('Casa',2);gVolverAlForm=true;renderGrupos();$('#dividir-d').open=true;try{$('#grupos-card').scrollIntoView({block:'start'})}catch(e){}var n=$('[data-gep-nombre="1"]');if(n){n.select();n.focus()}return}
   if(g&&(!form.pagador||!g.personas.some(function(p){return p.id===form.pagador})))form.pagador=g.personas[1].id;
   pintarCompartido();
 }
@@ -211,7 +218,7 @@ function resetFijoForm(){
   tarTocada=false;$('#f-var').checked=false;$('#f-tar').checked=false;
   fEdit=null;$('#f-nombre').value='';$('#f-monto').value='';$('#f-dia').value='';$('#f-cat').value='Otros';$('#f-grupo').value='';
   form={paga:'yo',pagador:null,rep:null};pintarCompartido();
-  $('#fijo-form-t').textContent='Agregá un gasto fijo';$('#f-save').textContent='Agregar';$('#f-cancel').hidden=true;
+  $('#fijo-form-t').textContent='+ Agregar un gasto fijo';$('#fijo-sug-box').hidden=false;$('#f-save').textContent='Agregar';$('#f-cancel').hidden=true;
 }
 
 /* ---------- Calculadora de la casa (no guarda nada) ---------- */
@@ -242,7 +249,7 @@ function guardarCalc(){
   if(!g){g=nuevoGrupo('Casa',calc.n,calc.personas.slice(1).map(function(p){return p.nombre}));if(calc.modo==='ingresos'){g.reparto.tipo='ingresos';g.personas.forEach(function(p,i){p.ingreso=num(calc.personas[i].ingreso)})}if(!state.grupos)state.grupos=[];state.grupos.push(g);ctx.persist();ctx.renderAll()}
   resetFijoForm();$('#f-monto').value=Math.round(m*100)/100;$('#f-grupo').value=g.id;form.pagador=g.personas[1].id;
   if(calc.modo==='ingresos'&&(g.reparto||{}).tipo!=='ingresos')form.rep={tipo:'ingresos',pct:{},montos:{}};
-  pintarCompartido();try{$('#fijo-form-card').scrollIntoView({block:'start'})}catch(e){}$('#f-nombre').focus();
+  pintarCompartido();$('#fijo-form-card').open=true;try{$('#fijo-form-card').scrollIntoView({block:'start'})}catch(e){}$('#f-nombre').focus();
   toast('Ponele un nombre y el día, y guardalo');
 }
 
@@ -308,7 +315,7 @@ export function initFijos(){
     if(ed){var id=ed.getAttribute('data-editf'),f=state.fijos.filter(function(x){return x.id===id})[0];if(!f)return;
       fEdit=id;$('#f-nombre').value=f.nombre;$('#f-monto').value=f.usd||f.monto;monedaFijo(!!f.usd);$('#f-var').checked=!!f.variable;$('#f-tar').checked=!!f.tarjeta;tarTocada=true;$('#f-dia').value=f.dia;$('#f-cat').value=f.cat;
       var g=grupoDe(state,f);$('#f-grupo').value=g?g.id:'';form={paga:g?quienPaga(state,f):'yo',pagador:f.pagador||(g?g.personas[1].id:null),rep:f.reparto?JSON.parse(JSON.stringify(f.reparto)):null};pintarCompartido();
-      $('#fijo-form-t').textContent='Editar '+f.nombre;$('#f-save').textContent='Guardar cambios';$('#f-cancel').hidden=false;
+      $('#fijo-form-t').textContent='Cambiar «'+f.nombre+'»';$('#fijo-sug-box').hidden=true;$('#f-save').textContent='Guardar cambios';$('#f-cancel').hidden=false;$('#fijo-form-card').open=true;
       try{$('#fijo-form-card').scrollIntoView({block:'start'})}catch(er){}$('#f-monto').focus();return}
     var dl=e.target.closest('[data-delf]');
     if(dl){

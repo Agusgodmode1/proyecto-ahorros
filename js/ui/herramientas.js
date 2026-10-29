@@ -1,7 +1,7 @@
 /* Herramientas sueltas en pantalla (2.26): la lista (con su ícono de línea) que se ve en «¿Qué querés hacer?»,
    en la invitación de Hoy, Semanas y Logros cuando todavía no hay pacto y en el índice. Las cuentas: logica/herramientas.js. */
 import {HERRAMIENTAS,herramienta} from '../logica/herramientas.js';
-import {ctx,$,esc} from './comun.js';
+import {ctx,$,esc,abrirDetalle} from './comun.js';
 
 var IC={
   sueldo:'<rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M8 7h8M8 11h2M12 11h0M16 11h0M8 15h2M12 15h0M16 15h0M8 18.5h8"/>',
@@ -22,7 +22,7 @@ export function listaHerrHTML(cls,attr){
 export function mostrarHerramienta(id){
   var h=herramienta(id);if(!h)return;
   var el=$(h.ancla);if(!el||el.hidden||el.offsetParent===null)return;
-  if(el.tagName==='DETAILS')el.open=true;
+  abrirDetalle(el);
   try{el.scrollIntoView({block:'start',behavior:'smooth'})}catch(e){el.scrollIntoView()}
 }
 export function irHerramienta(id,alLlegar){

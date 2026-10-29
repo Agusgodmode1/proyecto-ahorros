@@ -4,11 +4,13 @@ import {marcarCambios,combinar,iguales,tieneDatos,prepararGuardado,juntar,SECCIO
 import {ejemplo,defaults,migrar,armarRespaldo,leerRespaldo} from '../js/estado.js';
 
 function copia(x){return JSON.parse(JSON.stringify(x))}
+/* el ejemplo, sin el boleto de hoy (2.30), para contar solo los gastos de cada prueba */
+function ej(){var e=ejemplo();e.gastos=[];return e}
 /* Simula un aparato: parte de un estado y guarda cambios en un momento dado */
 function guardar(prev,cambiar,t){var cur=copia(prev);cambiar(cur);return marcarCambios(prev,cur,t)}
 
 test('anota qué sección y qué gasto cambió',function(){
-  var a=ejemplo();marcarCambios(null,a,0);
+  var a=ej();marcarCambios(null,a,0);
   var b=guardar(a,function(s){s.plan.monto=50000;s.gastos.push({id:'g1',fecha:'2026-10-13',monto:850})},100);
   assert.equal(b.sync.t.plan,100);
   assert.equal(b.sync.t.sueldo,undefined);
@@ -20,7 +22,7 @@ test('anota qué sección y qué gasto cambió',function(){
 });
 
 test('dos aparatos sin conexión: se juntan los gastos de los dos',function(){
-  var base=ejemplo();marcarCambios(null,base,0);
+  var base=ej();marcarCambios(null,base,0);
   var cel=guardar(base,function(s){s.gastos.push({id:'cel',fecha:'2026-10-13',monto:100})},10);
   var pc=guardar(base,function(s){s.gastos.push({id:'pc',fecha:'2026-10-13',monto:200})},20);
   var m=combinar(cel,pc);
@@ -59,7 +61,7 @@ test('las horas y los meses cerrados también se juntan',function(){
 });
 
 test('el estado con datos de sincronización pasa por migrar sin perderlos',function(){
-  var a=ejemplo();marcarCambios(null,a,0);
+  var a=ej();marcarCambios(null,a,0);
   var b=guardar(a,function(s){s.gastos.push({id:'g',fecha:'2026-10-13',monto:1})},5);
   var m=migrar(copia(b));
   assert.equal(m.sync.t.ejemplo,undefined);

@@ -101,24 +101,22 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
 
     <!-- GASTOS -->
     <section id="p-gastos" role="tabpanel" class="tone-coral stack" hidden>
-      <div class="panel-head"><h2 class="ph-t">Por dónde se te va la plata</h2><p class="ph-s">Traé el extracto de tu banco, tarjeta o billetera y te muestro suscripciones, compras que se repiten, cobros dos veces, comisiones y tu mes día por día.</p></div>
+      <div class="panel-head"><h2 class="ph-t">Por dónde se te va la plata</h2><p class="ph-s">Traé el extracto de tu banco o tarjeta: te muestro suscripciones, cobros dobles, comisiones y tu mes día por día.</p></div>
       <details class="card sdes tj-in" id="gas-in" open>
         <summary><span class="sdes-t">Tu extracto</span><span class="sdes-d" id="gas-in-d">Pegalo o elegí el archivo</span></summary>
         <div class="sdes-in stack">
-          <ol class="steps">
-            <li class="step"><span class="badge" aria-hidden="true">1</span><div><p class="step-t">Bajá tus movimientos</p><p class="note">Desde la web o la app de tu banco, tarjeta o billetera: BROU, Itaú, Santander, Scotiabank, BBVA, HSBC, OCA, Cabal, Creditel, Anda, Prex, Midinero, Mercado Pago u otro. Sirve el PDF, el Excel o el CSV.</p></div></li>
-            <li class="step"><span class="badge" aria-hidden="true">2</span><div><p class="step-t">Elegí el archivo o pegalo</p><p class="note">Tocá «Elegir archivo», o copiá la lista de movimientos y pegala abajo. El banco lo reconozco solo.</p></div></li>
-            <li class="step"><span class="badge" aria-hidden="true">3</span><div><p class="step-t">Mirá por dónde se te va</p><p class="note">Aparece debajo, sin tocar nada más.</p></div></li>
-          </ol>
+          <p class="note">El PDF, Excel o CSV de tu banco, tarjeta o billetera. Se lee en tu teléfono y no se guarda.</p>
           <div class="row-btns"><label class="btn primary filebtn">Elegir archivo<input type="file" id="gas-file" class="sr-only" accept=".pdf,.csv,.txt,.tsv,.xlsx,.xls,application/pdf,text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"></label></div>
-          <div class="field"><label for="gas-txt">O pegá tus movimientos</label><textarea id="gas-txt" spellcheck="false" placeholder="09/10/2026  COMPRA POS TIENDA INGLESA  1.890,50  12.800,00"></textarea><small>Todo se lee en tu teléfono: el archivo no se guarda ni sale de acá. Los números largos (cuentas, tarjetas) se tapan solos.</small></div>
-          <div class="grid2">
-            <div class="field"><label for="gas-fmt">Cómo vienen los montos</label>
-              <select id="gas-fmt"><option value="auto">Automático</option><option value="neg">Gastos con signo menos</option><option value="pos">Gastos en positivo</option></select>
-              <small>Dejalo en automático: en una tarjeta de crédito los gastos vienen en positivo y lo sé solo. Si los números no cierran, probá las otras.</small></div>
-            <div class="field"><label for="gas-hor">Cuento como gasto chico si es menor a</label><div class="money"><span>$</span><input type="number" id="gas-hor" min="0" step="50" inputmode="numeric"></div><small>Sirve para ver los gastos hormiga.</small></div>
-          </div>
-          <div class="row-btns"><button class="btn danger" type="button" id="gas-clear">Borrar extracto</button></div>
+          <div class="field"><label for="gas-txt">O pegá tus movimientos</label><textarea id="gas-txt" spellcheck="false" placeholder="09/10/2026  COMPRA POS TIENDA INGLESA  1.890,50  12.800,00"></textarea></div>
+          <details class="mas-op" id="gas-mas"><summary>Más opciones</summary><div class="stack">
+            <div class="grid2">
+              <div class="field"><label for="gas-fmt">Cómo vienen los montos</label>
+                <select id="gas-fmt"><option value="auto">Automático</option><option value="neg">Gastos con signo menos</option><option value="pos">Gastos en positivo</option></select>
+                <small>Si los números no cierran, probá las otras.</small></div>
+              <div class="field"><label for="gas-hor">Gasto chico (hormiga): menos de</label><div class="money"><span>$</span><input type="number" id="gas-hor" min="0" step="50" inputmode="numeric"></div></div>
+            </div>
+          </div></details>
+          <div class="row-btns" id="gas-clear-box" hidden><button class="btn danger" type="button" id="gas-clear">Borrar extracto</button></div>
         </div>
       </details>
       <p id="gas-stat" class="note gas-stat" aria-live="polite"></p>
@@ -126,7 +124,7 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
       <details class="card sdes" id="cats-d">
         <summary><span class="sdes-t">Tus categorías</span><span class="sdes-d">Renombralas, cambiales el color u ocultalas</span></summary>
         <div class="sdes-in stack">
-          <p class="note">Este es el único lugar del libro con categorías: al anotar un gasto se eligen solas por lo que escribís, y acá las corregís. Renombralas, cambiales el color, ordenalas u ocultá las que no usás. Si borrás una, sus gastos pasan a la que elijas.</p>
+          <p class="note">Al anotar, la categoría se elige sola; acá la corregís. Si borrás una, sus gastos pasan a otra.</p>
           <div id="aj-cats"></div>
         </div>
       </details>
@@ -138,9 +136,8 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
       <div id="fijos-sum"></div>
       <div id="fijos-balance"></div>
       <div id="fijos-out" class="stack"></div>
-      <div class="card stack" id="fijo-form-card">
-        <h2 id="fijo-form-t">Agregá un gasto fijo</h2>
-        <div class="field"><span class="lab">Ideas para empezar</span><div class="sugs" id="fijo-sug"></div></div>
+      <details class="card fold" id="fijo-form-card"><summary><span class="fold-t" id="fijo-form-t">+ Agregar un gasto fijo</span><span class="fold-s" id="fijo-form-s">alquiler, luz, internet…</span></summary><div class="stack fold-b">
+        <div class="field" id="fijo-sug-box"><span class="lab">Ideas</span><div class="sugs" id="fijo-sug"></div></div>
         <form class="fijoform" id="fijo-form" autocomplete="off">
           <div class="field"><label for="f-nombre" class="sub-l">¿Qué es?</label><input id="f-nombre" type="text" maxlength="40" placeholder="Alquiler, celular, internet"></div>
           <div class="field"><label for="f-monto" class="sub-l">¿Cuánto por mes? (el total)</label><div class="money"><button type="button" class="mon-btn" id="f-mon" data-moneda="UYU" aria-label="Cambiar moneda: ahora en pesos">$</button><input id="f-monto" type="number" inputmode="decimal" min="0" step="any"></div><small id="f-usd-nota"></small></div>
@@ -160,14 +157,16 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
             <p class="note f-parte" id="f-parte" aria-live="polite"></p>
           </div>
           <div class="f-opc">
-            <label class="check"><input id="f-var" type="checkbox"> El monto cambia cada mes (UTE, OSE…): uso el promedio de lo que pagaste</label>
-            <label class="check"><input id="f-tar" type="checkbox"> Es el pago de la tarjeta de crédito: no lo resto, porque lo que comprás con la tarjeta ya lo anotás como gasto</label>
+            <label class="check"><input id="f-var" type="checkbox"> El monto cambia cada mes (uso el promedio)</label>
+            <label class="check"><input id="f-tar" type="checkbox"> Es el pago de la tarjeta (no lo resto: lo que comprás ya lo anotás)</label>
           </div>
           <div class="row-btns"><button class="btn primary" type="submit" id="f-save">Agregar</button><button class="btn quiet" type="button" id="f-cancel" hidden>Cancelar</button></div>
         </form>
-      </div>
-      <div class="card stack" id="grupos-card"></div>
-      <details class="card fold calc-casa" id="calc-casa"><summary><span class="fold-t">Calculadora de la casa</span><span class="fold-s">Dividí cualquier monto entre varios, sin guardar nada</span></summary><div class="stack fold-b" id="calc-in"></div></details>
+      </div></details>
+      <details class="card fold" id="dividir-d"><summary><span class="fold-t">Dividir con otros</span><span class="fold-s" id="dividir-s">en pareja, con amigos o en la casa</span></summary><div class="stack fold-b">
+        <div class="stack" id="grupos-card"></div>
+        <details class="sub-d calc-casa" id="calc-casa"><summary>Calculadora: dividir un monto sin guardarlo</summary><div class="stack" id="calc-in"></div></details>
+      </div></details>
       <div id="ingresos-fijos"></div>
     </section>
 
@@ -187,10 +186,9 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
         </div>
       </div>
       <div id="logros-out" class="stack"></div>
-      <details class="card">
-        <summary>Cargar un mes anterior</summary>
-        <div class="stack" style="margin-top:14px">
-          <p class="note">Si ya venías ahorrando, cargá esos meses para que cuenten en la racha y en el total guardado.</p>
+      <details class="mas-op" id="lg-mas"><summary>Más opciones</summary><div class="stack">
+        <div class="card stack">
+          <div class="sec"><h2>Cargar un mes anterior</h2><p class="note">Si ya venías ahorrando, suma a tu racha.</p></div>
           <div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px">
             <div class="field"><label for="h-mes" class="sub-l">Mes</label><select id="h-mes"></select></div>
             <div class="field"><label for="h-anio" class="sub-l">Año</label><select id="h-anio"></select></div>
@@ -200,7 +198,7 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
           <div class="row-btns"><button class="btn primary" type="button" id="h-add">Agregar al historial</button></div>
           <p class="err" id="h-err" role="alert" hidden></p>
         </div>
-      </details>
+      </div></details>
     </section>
 
     <!-- LO GUARDADO -->
@@ -321,6 +319,13 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
           <div class="out" id="sueldo-out"></div>
         </div>
       </details>
+      <details class="card sdes" data-sdes="factura" id="sd-factura" hidden>
+        <summary><span class="sdes-t">Tus facturas y costos</span><span class="sdes-d" id="sd-factura-d"></span></summary>
+        <div class="stack sdes-in">
+          <div class="stack" id="factura-out"></div>
+        </div>
+      </details>
+      <details class="mas-op" id="sd-mas"><summary>Más opciones</summary><div class="stack">
       <details class="card sdes" data-sdes="aguinaldo" id="sd-aguinaldo">
         <summary><span class="sdes-t">Aguinaldo y licencia</span><span class="sdes-d" id="sd-aguinaldo-d"></span></summary>
         <div class="stack sdes-in">
@@ -329,12 +334,6 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
         <div class="sv-row"><div class="field"><label for="sv-dias" class="sub-l">Días de licencia que te vas a tomar</label><input id="sv-dias" type="number" inputmode="numeric" min="0" max="60" step="1" placeholder="0"></div><p class="note" id="sv-out"></p></div>
         <p class="note">Son estimaciones: el aguinaldo paga aportes como el sueldo y el IRPF se ajusta aparte; el salario vacacional solo paga IRPF.</p>
       </div>
-        </div>
-      </details>
-      <details class="card sdes" data-sdes="factura" id="sd-factura" hidden>
-        <summary><span class="sdes-t">Tus facturas y costos</span><span class="sdes-d" id="sd-factura-d"></span></summary>
-        <div class="stack sdes-in">
-          <div class="stack" id="factura-out"></div>
         </div>
       </details>
       <details class="card sdes datos" data-sdes="ajustes" id="sd-ajustes">
@@ -383,14 +382,15 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
             </details>
           </div>
         </details>
+      </div></details>
     </section>
     <!-- AJUSTES Y RESPALDO -->
     <section id="p-ajustes" role="tabpanel" class="tone-sky stack" hidden>
-      <div class="panel-head"><h2 class="ph-t">Ajustes</h2><p class="ph-s">La última página del libro: tu perfil, cómo se ve, tus respaldos y el resto de las opciones. Tus datos viven solo en este teléfono.</p></div>
+      <div class="panel-head"><h2 class="ph-t">Ajustes</h2><p class="ph-s">Tu perfil, cómo se ve y tus respaldos. Tus datos viven solo en este teléfono.</p></div>
       <nav class="aj-ind" aria-label="Partes de Ajustes" data-nodeslizar><button type="button" data-ajir="aj-g-libro">Tu libro</button><button type="button" data-ajir="aj-g-ver">Cómo se ve y suena</button><button type="button" data-ajir="aj-g-priv">Privacidad</button><button type="button" data-ajir="aj-g-plata">Plata y fechas</button><button type="button" data-ajir="aj-g-datos">Tus datos</button><button type="button" data-ajir="aj-g-app">Sobre la app</button></nav>
       <h3 class="aj-grupo" id="aj-g-libro">Tu libro</h3>
       <div class="card stack">
-        <div class="sec"><h2>Tu pacto</h2><p class="note">Lo que tenés, lo que guardás y el día de cobro se cambian en las primeras páginas del libro, cada uno en su pregunta. La letra chica (porcentaje, mínimo y fechas) está en la página del pacto.</p></div>
+        <div class="sec"><h2>Tu pacto</h2><p class="note">Se cambia en el prólogo, pregunta por pregunta.</p></div>
         <div class="row-btns"><button class="btn primary" type="button" id="aj-prologo">Ir al prólogo</button><button class="btn" type="button" id="aj-tour">Ver el tour otra vez</button></div>
       </div>
       <div id="plan-aj-casa" hidden>
@@ -485,37 +485,41 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
         <form class="dolar-form" id="dolar-form" autocomplete="off"><div class="field"><label for="aj-dolar" class="sub-l">1 dólar son</label><div class="money"><span>$</span><input id="aj-dolar" type="number" inputmode="decimal" min="0" step="any" placeholder="40,50"></div></div><button class="btn primary" type="submit">Guardar</button></form>
       </div>
       <div class="card stack">
-        <div class="sec"><h2>Feriados</h2><p class="note">Solo cuentan los 5 <b>no laborables</b> (1/1, 1/5, 18/7, 25/8 y 25/12): no son días hábiles para el cobro y, si los trabajás, se pagan como feriado. Los <i>laborables</i> (Carnaval, Turismo, 12 de octubre…) son días comunes; eso se puede cambiar en Mi perfil. Sacá los que tu trabajo no toma y agregá los que falten.</p></div>
-        <div id="aj-feriados"></div>
+        <div class="sec"><h2>Feriados</h2><p class="note">Cuentan los 5 <b>no laborables</b>; los laborables son días comunes.</p></div>
+        <details class="sub-d" id="aj-fer-d"><summary>Ver y cambiar los feriados</summary><div class="stack" id="aj-feriados"></div></details>
       </div>
       <h3 class="aj-grupo" id="aj-g-datos">Tus datos</h3>
       <div class="card stack" id="aj-pase">
-        <div class="sec"><h2>Pasar mis datos a otro aparato</h2><p class="note">Para tener lo mismo en el celular y en la compu, o en un teléfono nuevo. Se pasa con un archivo: nada pasa por ningún servidor ni por internet de la app.</p></div>
+        <div class="sec"><h2>Pasar mis datos a otro aparato</h2><p class="note">Con un archivo, sin internet: a la compu o a un teléfono nuevo.</p></div>
+        <div class="row-btns"><button class="btn primary" type="button" id="pase-export">Llevar mis datos</button><button class="btn" type="button" id="pase-importar">Traer de otro aparato</button></div>
+        <details class="sub-d"><summary>¿Cómo funciona?</summary>
         <ol class="steps pase">
-          <li class="step"><span class="badge" aria-hidden="true">1</span><div><p class="step-t">En este aparato</p><p class="note">Tocá el botón y mandate el archivo por AirDrop, iCloud Drive, WhatsApp o mail.</p><div class="row-btns"><button class="btn primary" type="button" id="pase-export">Llevar mis datos a otro aparato</button></div></div></li>
-          <li class="step"><span class="badge" aria-hidden="true">2</span><div><p class="step-t">En el otro aparato</p><p class="note">Abrí la app, entrá a Ajustes, tocá este botón y elegí el archivo. Te muestro qué tiene y tocás <b>Juntar con lo de este teléfono</b>.</p><div class="row-btns"><button class="btn" type="button" id="pase-importar">Traer datos de otro aparato</button></div></div></li>
-          <li class="step"><span class="badge" aria-hidden="true">3</span><div><p class="step-t">Si usás los dos, repetilo al revés cada tanto</p><p class="note">Los cambios de los dos lados se juntan sin pisarse: si un mismo dato cambió en los dos, queda el más nuevo, y lo que borraste no vuelve a aparecer.</p></div></li>
-        </ol>
+          <li class="step"><span class="badge" aria-hidden="true">1</span><div><p class="step-t">En este aparato</p><p class="note">Tocá «Llevar mis datos» y mandate el archivo por AirDrop, iCloud Drive, WhatsApp o mail.</p></div></li>
+          <li class="step"><span class="badge" aria-hidden="true">2</span><div><p class="step-t">En el otro aparato</p><p class="note">Tocá «Traer de otro aparato», elegí el archivo y tocá <b>Juntar con lo de este teléfono</b>.</p></div></li>
+          <li class="step"><span class="badge" aria-hidden="true">3</span><div><p class="step-t">Si usás los dos, repetilo al revés cada tanto</p><p class="note">Se juntan sin pisarse: queda lo más nuevo y lo borrado no vuelve.</p></div></li>
+        </ol></details>
       </div>
       <div class="card stack">
+        <div class="sec"><h2>Gastos a Excel</h2><p class="note">Una planilla con cada gasto, para Excel o Numbers.</p></div>
+        <div class="row-btns"><button class="btn primary" type="button" data-csv="periodo" id="csv-periodo">Gastos de este período</button><button class="btn" type="button" data-csv="todos">Todos los gastos</button></div>
+      </div>
+      <details class="card fold" id="aj-resp"><summary><span class="fold-t">Respaldos</span><span class="fold-s" id="aj-resp-s">exportar, importar y copias automáticas</span></summary><div class="stack fold-b">
+      <div class="stack aj-sub">
         <div class="sec"><h2>Exportar un respaldo</h2><p class="note" id="aj-export-note"></p></div>
         <div class="row-btns"><button class="btn primary" type="button" id="aj-export">Exportar mis datos</button><button class="btn quiet" type="button" id="aj-copy">Copiar como texto</button></div>
         <div class="stack" id="exp-box" hidden><p class="note">No se pudo copiar solo. Tocá el cuadro, seleccioná todo y copialo.</p><textarea id="exp-txt" readonly spellcheck="false" aria-label="Tus datos en texto"></textarea><div class="row-btns"><button class="btn quiet" type="button" id="exp-close">Cerrar</button></div></div>
       </div>
-      <div class="card stack">
-        <div class="sec"><h2>Gastos a Excel</h2><p class="note">Una planilla con fecha, monto, moneda, categoría y nota de cada gasto. Se abre en Excel o en Numbers.</p></div>
-        <div class="row-btns"><button class="btn primary" type="button" data-csv="periodo" id="csv-periodo">Gastos de este período</button><button class="btn" type="button" data-csv="todos">Todos los gastos</button></div>
-      </div>
-      <div class="card stack" id="aj-import-card">
-        <div class="sec"><h2>Importar un respaldo</h2><p class="note">Elegí un archivo exportado desde esta app (de este u otro aparato). Te muestro qué tiene y elegís: juntarlo con lo de este teléfono o reemplazar todo. Antes de cambiar nada se guarda una copia automática.</p></div>
+      <div class="stack aj-sub" id="aj-import-card">
+        <div class="sec"><h2>Importar un respaldo</h2><p class="note">Te muestro qué tiene y elegís: juntar o reemplazar. Antes se guarda una copia.</p></div>
         <div id="aj-import"></div>
       </div>
-      <div class="card stack">
-        <div class="sec"><h2>Copias automáticas</h2><p class="note">Si algo sale mal después de una actualización o de importar, volvés a como estaban tus datos. Quedan las 3 más nuevas, en este teléfono.</p></div>
+      <div class="stack aj-sub">
+        <div class="sec"><h2>Copias automáticas</h2><p class="note">Si algo sale mal, volvés a como estaban tus datos. Quedan las 3 más nuevas.</p></div>
         <div id="aj-copias"></div>
       </div>
+      </div></details>
       <div class="card stack cero-card" id="cero-card">
-        <div class="sec"><h2>Empezar de cero</h2><p class="note">Borra todo lo que guardaste en este teléfono (el pacto, tus gastos, el sueldo, los fijos, el extracto, los recibos y las copias automáticas) y el libro vuelve a la tapa, como la primera vez. Después cargás todo de nuevo o importás un respaldo.</p></div>
+        <div class="sec"><h2>Empezar de cero</h2><p class="note">Borra todo lo de este teléfono y el libro vuelve a la tapa.</p></div>
         <div class="row-btns" id="cero-1-box"><button class="btn danger" type="button" id="cero-1">Borrar todo y empezar de nuevo</button></div>
         <div class="stack cero-conf" id="cero-conf" hidden>
           <div class="banner alerta"><p><b>No se puede deshacer.</b> Si querés poder volver atrás, bajá un respaldo antes: con ese archivo traés todo de vuelta desde «Importar un respaldo».</p></div>

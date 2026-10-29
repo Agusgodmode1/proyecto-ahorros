@@ -15,8 +15,10 @@ function hayTexto(){var t=ctx.state.extracto.texto;return !!(t&&t.trim())}
 export function renderGastos(){
   var d=$('#gas-in');
   if(d&&!inTocado)d.open=!hayTexto();
+  /* (2.30) «Borrar extracto» solo cuando hay uno */
+  var cb=$('#gas-clear-box');if(cb)cb.hidden=!hayTexto();
   if(V){V.render();return}
-  if(!hayTexto()){$('#gas-stat').textContent='';$('#gas-out').innerHTML='<div class="empty">Cuando traigas el extracto vas a ver por dónde se te va la plata: suscripciones, compras que se repiten, cobros dos veces, comisiones del banco, cuotas y tu mes día por día.</div>';return}
+  if(!hayTexto()){$('#gas-stat').textContent='';$('#gas-out').innerHTML='';return}
   $('#gas-out').innerHTML='<div class="empty" aria-busy="true">Leyendo tu extracto…</div>';
   cargar().then(function(m){if(ctx.tab==='gastos')m.render()}).catch(function(){$('#gas-out').innerHTML='<div class="empty">No pude abrir esta parte. Revisá la conexión la primera vez y probá de nuevo.</div>'});
 }

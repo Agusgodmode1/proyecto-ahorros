@@ -29,16 +29,16 @@ export function lectorHTML(){
 }
 /* (2.14) «Subí tu recibo de sueldo», arriba de todo en Sueldo: lo lee, muestra cómo te pagan y pregunta lo que no está claro */
 export function subirHTML(hayEsteMes){
-  if(S)return '<div class="sec"><h2>Así te pagan</h2><p class="note">Lo leí en tu teléfono. Revisá que esté bien; si un renglón no es lo que dice, corregilo y lo recuerdo para la próxima.</p></div>'+propuestaHTML();
+  if(S)return '<div class="sec"><h2>Así te pagan</h2><p class="note">Revisá que esté bien: si corregís un renglón, lo recuerdo.</p></div>'+propuestaHTML();
   return '<div class="sec"><h2>'+(hayEsteMes?'¿Te llegó otro recibo?':'Subí tu recibo de sueldo')+'</h2><p class="note">'
-    +(hayEsteMes?'Subilo y lo sumo a tus recibos: cada uno manda sobre la estimación de ese mes.':'Lo leo, te muestro cómo te pagan cada cosa (tu hora, las extras y cada descuento) y, si tengo dudas, te pregunto. Con eso hago todas las cuentas.')+'</p></div>'+entradaHTML();
+    +(hayEsteMes?'Subilo y lo sumo: manda sobre la estimación de ese mes.':'Te muestro cómo te pagan cada cosa y, si tengo dudas, te pregunto.')+'</p></div>'+entradaHTML();
 }
 function entradaHTML(){
   return '<div class="lector stack"><div class="row-btns"><label class="btn primary filebtn">Leer un PDF<input type="file" class="sr-only" accept="application/pdf,.pdf" id="lec-pdf"></label>'
     +'<button class="btn" type="button" data-lec="pegar" aria-expanded="'+pegar+'">Pegar el texto</button><button class="btn" type="button" data-reca="manual">Cargar a mano</button></div>'
     +(pegar?'<div class="field"><label for="lec-texto" class="sub-l">El texto del recibo</label><textarea id="lec-texto" rows="7" placeholder="En el iPhone: abrí la foto del recibo, mantené apretado el texto, tocá Copiar y pegalo acá."></textarea></div>'
       +'<div class="row-btns"><button class="btn primary" type="button" data-lec="leer">Leer</button></div>':'')
-    +'<p class="note">Se lee en este teléfono y no se guarda: solo los números que confirmes. ¿Sin un recibo a mano? <button class="linklike" type="button" data-lec="ejemplo">Probalo con uno de ejemplo</button>.</p></div>';
+    +'<p class="note">Se lee en tu teléfono y no se guarda. <button class="linklike" type="button" data-lec="ejemplo">Probar con uno de ejemplo</button></p></div>';
 }
 
 /* ---------- Leer ---------- */
@@ -47,7 +47,7 @@ export function procesar(lineas,fuente){
   if(tipoDocumento(lineas)==='factura'){
     S=null;pegar=false;
     if(esFactura(st)){toast('Es una factura: la cargo en «Tus facturas y costos»');document.dispatchEvent(new CustomEvent('factura-leida',{detail:lineas}));return}
-    toast('Eso parece una factura. Si cobrás con factura, elegí «Cobro con factura» en Mi perfil.');ctx.renderAll();return;
+    toast('Eso parece una factura: si cobrás así, cambialo en Sueldo → «Cómo cobrás».');ctx.renderAll();return;
   }
   var L=leer(lineas,st.plantillasRecibo);
   if(L.sinTexto||!L.renglones.length){S=null;toast(L.sinTexto?'Ese PDF es una imagen: no tiene texto. Probá pegando el texto o cargalo a mano.':'No reconocí renglones de un recibo. Cargalo a mano.');ctx.renderAll();return}

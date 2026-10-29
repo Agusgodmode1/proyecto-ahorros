@@ -119,7 +119,7 @@ export function renderAvisoRespaldo(){
 function renderDolar(){
   var c=cotizacion(ctx.state),f=ctx.state.monedas.fecha,i=$('#aj-dolar');
   if(document.activeElement!==i)i.value=c||'';
-  $('#aj-dolar-nota').innerHTML=c?'Usás <b>1 dólar = $ '+esc(String(c).replace('.',','))+'</b>'+(f?', cargado el '+esc(fCorta(f)):'')+'. Los gastos que ya anotaste en dólares guardan la cotización de ese día; los fijos en dólares se recalculan con esta.':'Para anotar gastos y fijos en dólares. Tocá el $ al lado del monto para cambiar a US$.';
+  $('#aj-dolar-nota').innerHTML=c?'Usás <b>1 dólar = $ '+esc(String(c).replace('.',','))+'</b>'+(f?', cargado el '+esc(fCorta(f)):'')+'. Los fijos en dólares se recalculan con esta.':'Para gastos y fijos en dólares: tocá el $ al lado del monto.';
 }
 export function renderAjustes(estadoGuardado){
   renderDolar();

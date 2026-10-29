@@ -101,7 +101,7 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
 
     <!-- GASTOS -->
     <section id="p-gastos" role="tabpanel" class="tone-coral stack" hidden>
-      <div class="panel-head"><h2 class="ph-t">Por dónde se te va la plata</h2><p class="ph-s">Traé el extracto de tu banco o tarjeta: te muestro suscripciones, cobros dobles, comisiones y tu mes día por día.</p></div>
+      <div class="panel-head"><h2 class="ph-t">Por dónde se te va la plata</h2><p class="ph-s">Traé el extracto: te muestro suscripciones, cobros dobles y comisiones.</p></div>
       <details class="card sdes tj-in" id="gas-in" open>
         <summary><span class="sdes-t">Tu extracto</span><span class="sdes-d" id="gas-in-d">Pegalo o elegí el archivo</span></summary>
         <div class="sdes-in stack">
@@ -132,7 +132,7 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
 
     <!-- FIJOS -->
     <section id="p-fijos" role="tabpanel" class="tone-teal stack" hidden>
-      <div class="panel-head"><h2 class="ph-t">Gastos fijos</h2><p class="ph-s">Lo que pagás sí o sí todos los meses: alquiler, celular, internet, suscripciones. Los descuento antes de calcular cuánto podés gastar, así no te agarran de sorpresa.</p></div>
+      <div class="panel-head"><h2 class="ph-t">Gastos fijos</h2><p class="ph-s">Lo que pagás todos los meses. Lo descuento antes de calcular cuánto podés gastar.</p></div>
       <div id="fijos-sum"></div>
       <div id="fijos-balance"></div>
       <div id="fijos-out" class="stack"></div>
@@ -172,13 +172,13 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
 
     <!-- LOGROS -->
     <section id="p-logros" role="tabpanel" class="tone-sun stack" hidden>
-      <div class="panel-head"><h2 class="ph-t">Logros</h2><p class="ph-s">Cada mes que cumplís tu meta de ahorro suma a tu racha. Si guardás de más, ganás logros extra.</p></div>
+      <div class="panel-head"><h2 class="ph-t">Logros</h2><p class="ph-s">Cada mes que cumplís tu meta suma a tu racha.</p></div>
       <div id="logros-top"></div>
       <div class="card stack" id="cierre-card">
         <div class="sec"><h2>Cerrar el mes</h2><p class="note" id="cierre-note"></p></div>
         <div class="grid2">
           <div class="field"><label for="c-ahorrado">¿Cuánto guardaste de verdad?</label><div class="money"><span>$</span><input id="c-ahorrado" type="number" inputmode="numeric" min="0" step="any"></div><small id="c-hint"></small></div>
-          <div class="field"><label for="c-monto">¿Con cuánta plata arrancás el mes nuevo?</label><div class="money"><span>$</span><input id="c-monto" type="number" inputmode="numeric" min="0" step="any"></div><small>Te puse el sueldo estimado. Cambialo por lo que cobres de verdad.</small></div>
+          <div class="field"><label for="c-monto">¿Con cuánta plata arrancás el mes nuevo?</label><div class="money"><span>$</span><input id="c-monto" type="number" inputmode="numeric" min="0" step="any"></div><small>Te puse tu cobro estimado. Cambialo si cobraste otra cosa.</small></div>
         </div>
         <div id="c-metas"></div>
         <div class="row-btns"><button class="btn primary" type="button" id="c-cerrar">Cerrar el mes</button>
@@ -203,7 +203,7 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
 
     <!-- LO GUARDADO -->
     <section id="p-guardado" role="tabpanel" class="tone-mint stack" hidden>
-      <div class="panel-head"><h2 class="ph-t">Lo guardado</h2><p class="ph-s">Todo lo que fuiste juntando pacto a pacto, y qué hacer con eso para que te cuide.</p></div>
+      <div class="panel-head"><h2 class="ph-t">Lo guardado</h2><p class="ph-s">Lo que juntaste pacto a pacto y qué hacer con eso.</p></div>
       <div id="guardado-top" class="stack"></div>
       <div class="card stack tone-mint" id="metas-card">
         <div class="sec-h"><h2>Tus metas</h2><button class="btn quiet" type="button" id="meta-nueva">Nueva meta</button></div>
@@ -220,7 +220,7 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
 
     <!-- SUELDO -->
     <section id="p-sueldo" role="tabpanel" class="tone-grape stack" hidden>
-      <div class="panel-head"><h2 class="ph-t">Tu sueldo</h2><p class="ph-s">Sumá tus horas extra y te calculo cuánto vas a cobrar, con los descuentos de Uruguay. Cuando llegue el recibo, comparalo acá para ver si te pagaron bien.</p></div>
+      <div class="panel-head"><h2 class="ph-t">Tu sueldo</h2><p class="ph-s">Cuánto vas a cobrar, con tus horas extra, y si te pagaron bien.</p></div>
       <div id="ej-banner"></div>
       <div id="bpc-aviso"></div>
       <div class="card stack sd-emp" id="sd-empezar" hidden></div>
@@ -290,13 +290,13 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
         <summary><span class="sdes-t">¿Te pagaron bien?</span><span class="sdes-d" id="sd-control-d"></span></summary>
         <div class="stack sdes-in">
         <div class="stack" id="card-recibos">
-          <div class="sec"><h3>Tus recibos</h3><p class="note">Guardá el recibo de cada mes: pasa a ser lo que cobraste de verdad (para el plan y el aguinaldo), y te muestro qué renglón explica cualquier diferencia con lo calculado.</p></div>
+          <div class="sec"><h3>Tus recibos</h3><p class="note">El recibo de cada mes manda sobre lo calculado y te muestro qué explica la diferencia.</p></div>
           <div id="recibos-out" class="stack"></div>
         </div>
 
         <details class="sub-d control" id="card-control"><summary>Comparar a mano, número por número</summary><div class="stack">
           <div class="sec">
-            <p class="note">Cuando llegue el recibo, copiá estos números del papel. Te marco en verde lo que coincide y en rojo lo que hay que revisar. Podés dejar vacío lo que no quieras comparar.</p></div>
+            <p class="note">Copiá los números del recibo: en verde lo que coincide, en rojo lo que hay que revisar.</p></div>
           <div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px">
             <div class="field"><label for="r-sue" class="sub-l">Sueldo mensual</label><div class="money"><span>$</span><input id="r-sue" type="number" inputmode="decimal" step="any"></div></div>
             <div class="field"><label for="r-heh" class="sub-l">Horas extras: cantidad</label><input id="r-heh" type="number" inputmode="decimal" step="any" placeholder="2,5"></div>
@@ -465,14 +465,14 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
         </div>
       </div>
       <div class="card stack">
-        <div class="sec"><h2>Sonido</h2><p class="note">El roce de la hoja al pasar, el sello del pacto y el broche de la tapa, a volumen bajo.</p></div>
+        <div class="sec"><h2>Sonido</h2><p class="note">El roce de la hoja, el sello y el broche, a volumen bajo.</p></div>
         <div class="seg" role="group" aria-label="Sonido"><button type="button" data-sonido="0">Sin sonido</button><button type="button" data-sonido="1">Con sonido</button></div>
         <label class="vol" id="aj-vol-box"><span>Volumen</span><input class="lb-rango" id="aj-volumen" type="range" min="0" max="100" step="5" aria-label="Volumen del libro"></label>
         <p class="note">Si el iPhone está en silencio, el libro no suena.</p>
       </div>
       <h3 class="aj-grupo" id="aj-g-priv">Privacidad</h3>
       <div class="card stack">
-        <div class="sec"><h2>Modo discreto</h2><p class="note">Tapa todos los montos, por ejemplo si alguien mira tu pantalla. También con el ojo de arriba.</p></div>
+        <div class="sec"><h2>Modo discreto</h2><p class="note">Tapa los montos. También con el ojo de arriba.</p></div>
         <div class="seg" role="group" aria-label="Modo discreto" id="aj-discreto"><button type="button" data-discreto="0">Montos visibles</button><button type="button" data-discreto="1">Montos ocultos</button></div>
       </div>
       <div class="card stack">
@@ -481,7 +481,7 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
       </div>
       <h3 class="aj-grupo" id="aj-g-plata">Plata y fechas</h3>
       <div class="card stack">
-        <div class="sec"><h2>Dólar</h2><p class="note" id="aj-dolar-nota">Para anotar gastos y fijos en dólares. Tocá el $ al lado del monto para cambiar a US$.</p></div>
+        <div class="sec"><h2>Dólar</h2><p class="note" id="aj-dolar-nota">Para gastos y fijos en dólares: tocá el $ al lado del monto.</p></div>
         <form class="dolar-form" id="dolar-form" autocomplete="off"><div class="field"><label for="aj-dolar" class="sub-l">1 dólar son</label><div class="money"><span>$</span><input id="aj-dolar" type="number" inputmode="decimal" min="0" step="any" placeholder="40,50"></div></div><button class="btn primary" type="submit">Guardar</button></form>
       </div>
       <div class="card stack">

@@ -13,8 +13,8 @@ export function renderMetas(){
   var ms=ctx.state.metas||[],t=today();
   if(!ms.length){
     var fe=fondoEmergencia(ctx.state);
-    el.innerHTML='<p class="note">Poné nombre a lo que estás juntando ("Viaje a Brasil", "Auto") y te digo cuánto te falta y cuándo llegás.</p>'
-      +'<div class="meta-fondo"><b>Primero, un fondo de emergencia</b><p class="note">Antes de pensar en invertir, lo primero es juntar entre 3 y 6 meses de tus gastos para los imprevistos.'+(fe?' Con lo que gastás hoy, serían unos <b>'+money(fe)+'</b> (3 meses).':'')+'</p><button class="btn primary" type="button" id="meta-fondo">Crear mi fondo de emergencia</button></div>';
+    el.innerHTML='<p class="note">Ponele nombre y te digo cuánto te falta.</p>'
+      +'<div class="meta-fondo"><b>Primero, un fondo de emergencia</b><p class="note">De 3 a 6 meses de tus gastos, para imprevistos'+(fe?': unos <b>'+money(fe)+'</b>.':'.')+'</p><button class="btn primary" type="button" id="meta-fondo">Crear mi fondo de emergencia</button></div>';
     renderCierreMetas();return;
   }
   el.innerHTML='<ul class="metas">'+ms.map(function(m){

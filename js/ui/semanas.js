@@ -33,7 +33,7 @@ export function renderWeek(pc){
   var pct=w.avail>0?Math.min(100,Math.max(0,w.spent/w.avail*100)):(w.spent>0?100:0);
   var over=w.left<0,dayAllow=w.budget/w.days,ult=i===pc.weeks.length-1;
   var ds=parse(w.start);
-  var h='<div class="panel-head"><h2 class="ph-t">Semanas</h2><p class="ph-s">Anotá lo que gastás cada día. Cada semana tiene su presupuesto y lo que sobra pasa a la siguiente.</p></div>';
+  var h='<div class="panel-head"><h2 class="ph-t">Semanas</h2><p class="ph-s">Cada semana tiene su presupuesto: lo que sobra pasa a la siguiente.</p></div>';
   h+='<div class="wkpick" role="group" aria-label="Elegir semana">';
   pc.weeks.forEach(function(x){h+='<button type="button" class="wkp" data-goto="w'+x.i+'" aria-pressed="'+(x.i===i)+'"><b>Semana '+(x.i+1)+'</b><span>'+esc(rango(x.start,x.end))+'</span></button>'});
   h+='</div>';

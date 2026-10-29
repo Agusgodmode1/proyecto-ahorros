@@ -7,6 +7,7 @@ import {ctx,$,today,esc,money2,fLarga,fMin} from './comun.js';
 import {aplicarFeriados} from './feriados.js';
 import {PUESTOS,puesto} from '../logica/puestos.js';
 import {facturaBase} from '../logica/factura.js';
+import {tieneHorario} from '../logica/horario.js';
 /* «Cobro con factura» (2.12) se elige como un tipo más; se guarda como ingreso independiente con factura:true
    (así el cálculo de siempre, en sueldo.js, lo trata como independiente: sin horas extra ni aguinaldo) */
 var TIPOS=TIPOS_INGRESO.concat([['factura','Cobro con factura']]);
@@ -232,6 +233,6 @@ export function resumenPerfil(st){
   var cobro=reglaCobro(c);
   var ti=p.ingreso&&p.ingreso.factura?'factura':(p.ingreso&&p.ingreso.tipo)||'uy',nt=NOMBRE_TIPO[ti]||'Sueldo en Uruguay',tipoTxt=nt.charAt(0).toLowerCase()+nt.slice(1)+(ti!=='uy'&&p.ingreso.moneda==='USD'?', en dólares':'');
   return (p.nombre?'<b>'+esc(p.nombre)+'</b> · ':'')+tipoTxt+' · cobrás '+cobro+' · '
-    +(sinHoras(ti)||H.activo===false?'sin horas extra':'hora normal = sueldo ÷ '+num(H.divisor)+', extra ×'+String(H.multSem).replace('.',',')+', finde ×'+String(H.multFin).replace('.',',')+', cuenta si pasás '+fMin(num(H.umbral)));
+    +(sinHoras(ti)||H.activo===false?'sin horas extra':!tieneHorario(H)?'horas extra: falta tu horario':'horas extra ×'+String(H.multSem).replace('.',',')+' (finde ×'+String(H.multFin).replace('.',',')+')');
 }
 

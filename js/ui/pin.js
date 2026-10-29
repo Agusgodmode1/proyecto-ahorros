@@ -91,7 +91,7 @@ export function renderAjustesPin(){
   var el=$('#aj-pin');if(!el)return;
   var on=pinActivo(),h='';
   if(!paso){
-    h='<p class="note">'+(on?'Está activado: se pide al abrir la app y al volver después de 5 minutos.':'Un PIN de 4 números para abrir la app. Es de este teléfono: no viaja en los respaldos.')+'</p>'
+    h='<p class="note">'+(on?'Está activado: se pide al abrir la app y al volver después de 5 minutos.':'Un PIN de 4 números para abrir la app, solo en este teléfono.')+'</p>'
       +'<div class="row-btns">'+(on?'<button class="btn" type="button" data-ajpin="cambiar">Cambiar el PIN</button><button class="btn quiet" type="button" data-ajpin="sacar">Sacar el PIN</button>':'<button class="btn primary" type="button" data-ajpin="activar">Activar el PIN</button>')+'</div>';
   }else{
     var t={actual:'Tu PIN actual',nuevo:'El PIN nuevo (4 números)',repetir:'Repetí el PIN nuevo'}[paso];

@@ -87,7 +87,7 @@ export function render(){
   h+='<nav class="tj-ind" aria-label="Partes de la Tarjeta" data-nodeslizar>'+ind.map(function(z){return '<button type="button" data-tjir="'+z[0]+'">'+z[1]+'</button>'}).join('')+'</nav>';
   /* (2.15) «a este ritmo», aparte: es el resumen de todo */
   if(pd>0)h+='<div class="tj-ritmo'+(rit?' mal':'')+'" id="tj-ritmo"><p class="tj-ritmo-t">A este ritmo</p><p>Gastás <b>'+money(A.porDia)+'</b> por día y tu plan da <b>'+money(pd)+'</b>'
-    +(rit?': en un mes serían <b class="mal-t">'+money(rit.mes)+' de más</b>. Bajar '+money(A.porDia-pd)+' por día te deja dentro.':': <b class="bien-t">vas dentro de tu plan</b>.')+'</p></div>';
+    +(rit?': <b class="mal-t">'+money(rit.mes)+' de más</b> por mes. Bajá '+money(A.porDia-pd)+' por día.':': <b class="bien-t">vas dentro de tu plan</b>.')+'</p></div>';
 
   /* Por dónde se te va */
   if(P.length)h+='<section class="card stack tj-pdv" id="tj-pdv"><div class="sec"><h2>Por dónde se te va</h2><p class="note">Lo que más pesa cada mes, a este ritmo.</p></div>'+porDondeHTML(P,function(hh){return txt(hh,x)})+'</section>';
@@ -100,24 +100,24 @@ export function render(){
   /* Tu mes, día por día */
   var meses=A.meses.map(function(m){return m.k});
   if(!vista.mes||meses.indexOf(vista.mes)<0)vista.mes=meses[meses.length-1];
-  h+='<section class="card stack tj-cal" id="tj-cals"><div class="sec"><h2>Tu mes, día por día</h2><p class="note">Cada día contra lo que da tu plan. Tocá uno para ver qué gastaste.</p></div><div id="tj-cal">'+calHTML(x)+'</div><div id="cal-dia" aria-live="polite">'+diaHTML(vista.dia,vista.dia?porDiaDelMes(A,vista.dia.slice(0,7))[vista.dia]:null,money,nom)+'</div></section>';
+  h+='<section class="card stack tj-cal" id="tj-cals"><div class="sec"><h2>Tu mes, día por día</h2><p class="note">Cada día contra lo que da tu plan.</p></div><div id="tj-cal">'+calHTML(x)+'</div><div id="cal-dia" aria-live="polite">'+diaHTML(vista.dia,vista.dia?porDiaDelMes(A,vista.dia.slice(0,7))[vista.dia]:null,money,nom)+'</div></section>';
 
   /* Suscripciones, como un ticket */
   var subs=H.filter(function(hh){return hh.tipo==='subs'})[0];
-  if(subs)h+='<section class="card stack tj-subs" id="tj-subs"><div class="sec"><h2>Lo que pagás todos los meses</h2><p class="note">Suscripciones que encontré en el extracto. Si alguna no la usás, darte de baja es plata que vuelve cada mes.</p></div>'+ticketHTML(subs,money)+'</section>';
+  if(subs)h+='<section class="card stack tj-subs" id="tj-subs"><div class="sec"><h2>Lo que pagás todos los meses</h2><p class="note">Si alguna no la usás, darte de baja es plata que vuelve cada mes.</p></div>'+ticketHTML(subs,money)+'</section>';
 
   /* Además encontré: lo urgente primero, después de lo que más pesa a lo que menos (sin repetir los 3 de arriba) */
   var resto=H.filter(function(hh){return P.indexOf(hh)<0}),urg=resto.filter(function(hh){return hh.urgente});
   resto=urg.concat(resto.filter(function(hh){return !hh.urgente}));
   var item=function(hh){var t=txt(hh,x);return '<li class="hall-i'+(hh.urgente?' urg':'')+'"><p class="hall-t"><b>'+esc(t.titulo)+'</b><span>'+esc(t.cifra)+'</span></p><p class="hall-d">'+esc(t.detalle)+'</p><p class="hall-c">'+esc(t.consejo)+'</p></li>'};
-  if(resto.length)h+='<section class="card stack tj-todo" id="tj-todo"><div class="sec"><h2>'+(P.length?'Además encontré':'Lo que encontré')+'</h2><p class="note">Primero lo que conviene mirar ya; después, de lo que más pesa a lo que menos.</p></div><ul class="hall">'
-    +resto.slice(0,5).map(item).join('')+'</ul>'
-    +(resto.length>5?'<details class="sub-d"><summary>Ver '+(resto.length-5===1?'uno más':'los otros '+(resto.length-5))+'</summary><ul class="hall">'+resto.slice(5).map(item).join('')+'</ul></details>':'')+'</section>';
+  if(resto.length)h+='<section class="card stack tj-todo" id="tj-todo"><div class="sec"><h2>'+(P.length?'Además encontré':'Lo que encontré')+'</h2></div><ul class="hall">'
+    +resto.slice(0,3).map(item).join('')+'</ul>'
+    +(resto.length>3?'<details class="sub-d"><summary>Ver '+(resto.length-3===1?'uno más':'los otros '+(resto.length-3))+'</summary><ul class="hall">'+resto.slice(3).map(item).join('')+'</ul></details>':'')+'</section>';
 
   /* Mes a mes y tu ritmo contra tu plan */
   var serie=serieRitmo(A,pd);vista.serie=serie;
   if(A.meses.length>1||serie)h+='<section class="card stack tj-rit" id="tj-rit">'
-    +(serie?'<div class="sec"><h2>Tu ritmo contra tu plan</h2><p class="note">'+esc(serie.nota)+' Tocá o deslizá el dedo sobre el dibujo para ver cada día.</p></div>'+ritmoSVG(serie.p,money):'')
+    +(serie?'<div class="sec"><h2>Tu ritmo contra tu plan</h2><p class="note">'+esc(serie.nota)+' Deslizá el dedo para ver cada día.</p></div>'+ritmoSVG(serie.p,money):'')
     +(A.meses.length>1?'<div class="sec"><h2>Mes a mes</h2><p class="note">Lo que gastaste cada mes del extracto.</p></div>'+mesAMesSVG(A.meses,money):'')+'</section>';
 
   /* Lo que anotaste vs. el extracto */
@@ -137,7 +137,7 @@ function calHTML(x){
 function serieRitmo(A,pd){
   if(!(pd>0))return null;
   var p=ctx.state.plan,t=today(),desde=p.inicio>A.desde?p.inicio:A.desde,hasta=[A.hasta,p.cobro,t].sort()[0],nota;
-  if(desde<=hasta&&diffDays(desde,hasta)>=2)nota='Desde que empezó tu plan ('+fCorta(p.inicio)+'), con lo que dice el extracto.';
+  if(desde<=hasta&&diffDays(desde,hasta)>=2)nota='Desde el '+fCorta(p.inicio)+'.';
   else{hasta=A.hasta;desde=addD(hasta,-29);if(desde<A.desde)desde=A.desde;nota='Los últimos días del extracto, contra lo que da tu plan por día.'}
   if(diffDays(desde,hasta)<2)return null;
   return {p:ritmoContraPlan(A,desde,hasta,pd),nota:nota};
@@ -149,10 +149,14 @@ function controlHTML(A,nom){
   var C=cruzar(A.gas.map(function(m){return {f:m.f,monto:Math.round(-m.m*100)/100,d:m.d,k:m.k,c:m.c}}),state.gastos,desde,hasta);
   faltan=C.faltan;
   var tf=0;C.faltan.forEach(function(m){tf+=m.monto});
-  var h='<div class="card stack tone-mint" id="control-card"><div class="sec"><h2>Lo que anotaste vs. el extracto</h2><p class="note">Del '+esc(fCorta(desde))+' al '+esc(fCorta(hasta))+'. Cada movimiento se busca entre tus gastos (mismo monto, hasta 3 días de diferencia). El extracto no suma nada solo: vos elegís qué agregar.</p></div>'
+  var h='<div class="card stack tone-mint" id="control-card"><div class="sec"><h2>Lo que anotaste vs. el extracto</h2><p class="note">Del '+esc(fCorta(desde))+' al '+esc(fCorta(hasta))+'. El extracto no suma nada solo: vos elegís qué agregar.</p></div>'
     +'<div class="tiles">'+tile('tone-mint','Coincide',String(C.coinciden.length),'anotado y en el extracto')+tile('tone-coral','No lo anotaste',String(C.faltan.length),C.faltan.length?money(tf):'todo al día')+tile('tone-sky','Solo anotado',String(C.soloAnotados.length),'efectivo u otra tarjeta')+'</div>';
-  if(C.faltan.length)h+='<div class="sec"><div class="sec-h"><h3 class="sub-h">En el extracto pero no lo anotaste</h3>'+(C.faltan.length>1?'<button class="btn" type="button" data-falta="todos">Agregar los '+C.faltan.length+'</button>':'')+'</div><ul class="list">'
-    +C.faltan.map(function(m,i){return '<li><span class="when">'+esc(fCorta(m.f))+'</span><span class="what">'+esc(nom(m.k))+'</span><span class="amt">'+money(m.monto)+'</span><button class="btn quiet sm" type="button" data-falta="'+i+'">Agregar</button></li>'}).join('')+'</ul></div>';
+  if(C.faltan.length)h+='<div class="sec"><div class="sec-h"><h3 class="sub-h">En el extracto pero no lo anotaste</h3>'+(C.faltan.length>1?'<button class="btn" type="button" data-falta="todos">Agregar los '+C.faltan.length+'</button>':'')+'</div>'+(function(){
+      /* (2.30) los 3 primeros a la vista; el resto, plegado */
+      var li=function(m,i){return '<li><span class="when">'+esc(fCorta(m.f))+'</span><span class="what">'+esc(nom(m.k))+'</span><span class="amt">'+money(m.monto)+'</span><button class="btn quiet sm" type="button" data-falta="'+i+'">Agregar</button></li>'};
+      var l=C.faltan.map(li);
+      return '<ul class="list">'+l.slice(0,3).join('')+'</ul>'+(l.length>3?'<details class="sub-d"><summary>Ver los otros '+(l.length-3)+'</summary><ul class="list">'+l.slice(3).join('')+'</ul></details>':'');
+    })()+'</div>';
   if(C.soloAnotados.length)h+='<details class="sub-d"><summary>Anotado pero no está en el extracto ('+C.soloAnotados.length+')</summary><p class="note">Puede ser efectivo u otra tarjeta. Es solo para que lo veas.</p><ul class="list">'
     +C.soloAnotados.map(function(g){return '<li><span class="when">'+esc(fCorta(g.fecha))+'</span><span class="what">'+esc(g.nota||'Sin detalle')+'</span><span class="amt">'+money(g.monto)+'</span></li>'}).join('')+'</ul></details>';
   if(C.coinciden.length)h+='<details class="sub-d"><summary>Coincide ('+C.coinciden.length+')</summary><ul class="list">'

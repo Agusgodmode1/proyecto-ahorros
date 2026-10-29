@@ -155,7 +155,7 @@ export function renderSueldo(){
   ['r-heh','r-hem','r-des','r-fer'].forEach(function(id){var f=$('#'+id).closest('.field');if(f)f.hidden=!conHoras});
   if(!uy){renderOtroIngreso(Lr,conHoras);datosDesplegables(Lr,L0,conHoras,mc,me);return}
   var ban='';
-  if(state.ejemplo)ban='<div class="banner"><p><b>Estás viendo valores de ejemplo.</b> Sueldo, valor de las horas y registro de tiempo son de muestra. Borralos y creá tu perfil cuando quieras.</p><button class="btn" type="button" data-cero>Borrar el ejemplo y crear mi perfil</button></div>';
+  if(state.ejemplo)ban='<div class="banner"><p><b>Son valores de ejemplo.</b></p><button class="btn" type="button" data-cero>Borrar el ejemplo y crear mi perfil</button></div>';
   $('#ej-banner').innerHTML=ban;
 
   /* el recibo en miniatura: del recibo real si lo cargaste; si no, la estimación */
@@ -188,7 +188,7 @@ export function renderSueldo(){
   if(L.otros>0)h+=row('Otros descuentos','− '+money(L.otros),'sub minus');
   h+=row('Total descuentos','− '+money(desc),'tot minus');
   h+=row('Lo que cobrás',money(L.liquido),'final');
-  h+='<p class="note" style="margin-top:6px">'+(state.perfil.recibosAgus?'Es una estimación hecha con tus recibos de junio a septiembre. Los descuentos dan igual y el bono puede variar unos $50 a $250. ':'Es una estimación con las reglas de tu perfil y los descuentos de Uruguay. ')+'No incluye aguinaldo ni salario vacacional.</p>';
+  h+='<p class="note" style="margin-top:6px">'+(state.perfil.recibosAgus?'Estimado con tus recibos: el bono puede variar unos $50 a $250. ':'Estimado con tu perfil y los descuentos de Uruguay. ')+'Sin aguinaldo ni vacacional.</p>';
   h+='<details><summary>Cómo se calcula</summary><p class="note">Se suman sueldo, horas extra, descanso trabajado y bono para tener el nominal. Tu hora normal es sueldo ÷ '+num(R.divisor)+'. La hora extra de semana vale '+fmtH(num(R.multSem))+' veces la normal y se paga con los minutos del mes'+REDTXT[R.redondeo]+'. Cada hora de fin de semana o feriado vale '+fmtH(num(R.multFin))+' veces la normal'+(R.finDividido!==false?': una hora como descanso trabajado y el resto en el bono':'')+'. Después se descuenta 15% de jubilación, FONASA (3% hasta 2,5 BPC, 4,5% por encima, +1,5% si tenés hijos a cargo, +2% por cónyuge sin cobertura) y 0,1% de FRL, como en tus recibos. El IRPF usa la escala mensual de la DGI (no pagás hasta 7 BPC = '+money(7*bpc)+') y se le resta un crédito de 14% de los aportes (8% si el nominal pasa 15 BPC).</p></details></div>';
   $('#sueldo-out').innerHTML=h;
   $('#sec-rates').hidden=!conHoras;$('#card-horas').hidden=!conHoras;
@@ -216,7 +216,7 @@ function datosDesplegables(Lr,L0,conHoras,mc,me){
 function enMoneda(L,v){return L.moneda==='USD'&&L.cotiz?' <span class="src">('+usd(v/L.cotiz)+')</span>':''}
 function renderOtroIngreso(L,conHoras){
   var state=ctx.state,s=state.sueldo,variable=L.tipo==='variable',nom=num(s.nominal);
-  var ban=state.ejemplo?'<div class="banner"><p><b>Estás viendo valores de ejemplo.</b> Borralos y creá tu perfil cuando quieras.</p><button class="btn" type="button" data-cero>Borrar el ejemplo y crear mi perfil</button></div>':'';
+  var ban=state.ejemplo?'<div class="banner"><p><b>Son valores de ejemplo.</b></p><button class="btn" type="button" data-cero>Borrar el ejemplo y crear mi perfil</button></div>':'';
   if(L.sinCotizacion)ban+='<div class="banner"><p><b>Cobrás en dólares y falta la cotización.</b> Cargala en Ajustes → Dólar para pasar tu ingreso a pesos. Mientras tanto uso el número tal cual.</p><button class="btn" type="button" data-goto="ajustes">Ir a Ajustes</button></div>';
   $('#ej-banner').innerHTML=ban;$('#bpc-aviso').innerHTML='';
   var mesN=MESL[Number(String(L.mes||mesIngreso(state)).slice(5,7))-1];
@@ -264,7 +264,7 @@ function renderAguinaldo(){
     +row('Aguinaldo (÷ 12)',money(A.bruto))
     +row('Aportes (jubilación, FONASA y FRL)','− '+money(A.aportes.total),'sub minus')
     +row('En mano',money(A.liquido),'final')+'</div>'
-    +(A.estimados?'<p class="note" style="margin-top:8px">'+A.estimados+(A.estimados===1?' mes está estimado':' meses están estimados')+' con tu sueldo base. Cuando cierres cada mes en Logros, se usa lo que ganaste de verdad.</p>':'')
+    +(A.estimados?'<p class="note" style="margin-top:8px">'+A.estimados+(A.estimados===1?' mes está estimado':' meses están estimados')+' con tu sueldo base; con el recibo de cada mes, uso lo de verdad.</p>':'')
     +'</details>';
   el.innerHTML=h;
   var d=$('#sv-dias');if(document.activeElement!==d)d.value=num(ctx.state.sueldo.diasLicencia)||'';

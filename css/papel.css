@@ -980,7 +980,7 @@ html{font-variation-settings:'SOFT' 100,'WONK' 0}
    como un número de imprenta antigua): más elegante que la letra manuscrita, del mismo tamaño.
    Las estrellitas siguen doradas (el dorado es el tiempo) y se calientan al acercarse el cobro.
    ===================================================================== */
-.v2 .hoja .cd,.v2 #app.simple .hoja .cd{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"l d" "v v" "seg seg";align-items:baseline;column-gap:12px;row-gap:0;padding:14px 18px 16px;text-align:left}
+.v2 .hoja .cd{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"l d" "v v" "seg seg";align-items:baseline;column-gap:12px;row-gap:0;padding:14px 18px 16px;text-align:left}
 .v2 .hoja .cd .cd-l{grid-area:l;font:600 14px var(--f-body);color:var(--muted);opacity:1}
 .v2 .hoja .cd .cd-d{grid-area:d;font:600 14px var(--f-body);color:var(--muted);opacity:1;text-align:right}
 .v2 .hoja .cd .cd-v{grid-area:v;display:flex;flex-direction:row;align-items:baseline;justify-content:flex-start;gap:10px;margin:2px 0 0}
@@ -993,7 +993,6 @@ html{font-variation-settings:'SOFT' 100,'WONK' 0}
 /* los últimos 3 días el brillo es violeta, como la tinta */
 .v2 .hoja .cd.cd-ya .cd-v::before{inset:-12px -20px -8px;background:radial-gradient(closest-side,color-mix(in srgb,var(--cobro-tinta) 22%,transparent),transparent)}
 /* el cobro va solo en Hoy: también con «Hoy en versión corta» (antes aparecía en todos los capítulos y desarmaba el encabezado) */
-.v2 #app.simple .hoja[data-vista="otra"] .cd{display:none}
 
 /* =====================================================================
    Flechas para pasar de página (2.14): dos puntas de papel en los bordes, discretas.
@@ -1343,3 +1342,14 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 .v2 .hx-q .seg button{flex:1 1 auto;min-height:44px}
 .v2 .hx-otro{max-width:14em;margin-top:var(--e2)}
 .v2 #sd-horas.sin-horario #sec-rates,.v2 #sd-horas.sin-horario #card-horas{display:none!important}
+
+/* ---------- 2.30: Hoy más simple ---------- */
+/* «Tu plan»: un solo desplegable; «Cuando cobres» va adentro, con su subtítulo */
+.v2 .plan-h{margin:var(--e3) 0 0;padding-top:var(--e4);border-top:1px solid var(--line);font:600 var(--t4)/1.2 var(--f-display);color:var(--ink)}
+.v2 .plan-sem{margin:0}
+.v2 .plan-sem .linklike{min-height:44px}
+/* La plata que te entró, como nota al margen: el monto y los dos botones en una línea */
+.v2 .banner.entrada{box-shadow:inset 3px 0 0 var(--bien),inset 0 0 0 1px var(--line)}
+.v2 .banner.entrada>p{flex-basis:100%}
+.v2 .banner.entrada .sv-recibir{flex-basis:100%;flex-wrap:wrap}
+.v2 .banner.entrada .sv-recibir .money{flex:1 1 120px}

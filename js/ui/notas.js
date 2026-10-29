@@ -1,13 +1,13 @@
 /* Notas al margen de Hoy (2.15): una sola a la vista. Primero lo que conviene saber ya («ojo»), después que son
-   datos de ejemplo, quién te debe, la Tarjeta, el ritmo, el respaldo y los feriados. Si hay más de una,
+   datos de ejemplo, quién te debe o la plata que te entró (2.30), la Tarjeta, el ritmo, el respaldo y los feriados. Si hay más de una,
    abajo dice «nota 1 de 3» con ‹ › para pasar. Cada aviso se sigue armando donde siempre; acá solo se ordenan. */
-var LUGARES=['#tarjeta-aviso','#resp-aviso','#ritmo-aviso','#fer-aviso','#hoy-out','#resumen-out'];
+var LUGARES=['#superv','#entradas','#tarjeta-aviso','#resp-aviso','#ritmo-aviso','#fer-aviso','#hoy-out','#resumen-out'];
 var idx=0,firma='';
 
 function peso(b){
   if(b.classList.contains('alerta'))return 0;
   if(b.querySelector('[data-cero]'))return 1;
-  if(b.classList.contains('deudas'))return 2;
+  if(b.classList.contains('deudas')||b.classList.contains('entrada'))return 2;
   if(b.closest('#tarjeta-aviso'))return 3;
   if(b.closest('#ritmo-aviso'))return 4;
   if(b.closest('#resp-aviso'))return 5;

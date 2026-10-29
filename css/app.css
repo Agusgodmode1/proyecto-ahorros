@@ -767,7 +767,6 @@ button.hchip:active{filter:brightness(1.15)}
 .simple-btn[aria-pressed="true"]{background:var(--sky);color:var(--on-accent)}
 .hero-top .hero-hi{margin-right:auto}
 .hero-top .simple-btn{margin-left:0}
-#app.simple #plan-aj,#app.simple #resumen-out,#app.simple #guia,#app.simple #ritmo-aviso,#app.simple #fer-aviso{display:none}
 /* Hoja para anotar un gasto */
 .sheet{position:fixed;inset:0;z-index:55;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center}
 .sheet[hidden]{display:none}
@@ -819,7 +818,6 @@ input[type=number],input[type=date],input[type=text],input[type=time],select{min
 .hoy-hero{order:2}
 .cd{order:3}
 .hero-chips{order:4}
-#app.simple .cd{display:grid}
 
 /* =====================================================================
    Diseño 2.0 (1.18): mismo color, otra forma.
@@ -958,8 +956,6 @@ input[type=number],input[type=date],input[type=text],input[type=time],select{min
 @media (max-width:360px){.v2 .tab span{display:none}.v2 .tab{min-height:48px}}
 @media (min-width:768px){.v2 .wrap{max-width:720px}}
 
-/* Vista simple: lo mismo, sin las listas */
-.v2 #app.simple .cd{display:flex}
 
 /* Modo claro: mismas formas, con las superficies claras */
 .v2:not([data-theme="dark"]) .hoy-hero .hh-n:not(.neg){color:var(--sky)}

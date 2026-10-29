@@ -7,20 +7,12 @@ export function marcarTour(){try{localStorage.setItem(KEY,'pendiente')}catch(e){
 export function tourPendiente(){try{return localStorage.getItem(KEY)==='pendiente'}catch(e){return false}}
 function hecho(){try{localStorage.setItem(KEY,'hecho')}catch(e){}}
 
+/* (2.30) Cuatro pasos: lo que se usa todos los días. El resto se descubre al hojear. */
 var PASOS=[
-  {tab:'resumen',sel:'#countdown',t:'Cobrás en',x:'Los días que faltan para volver a cobrar. Es lo primero que ves al abrir el libro.'},
-  {tab:'resumen',sel:'#hoy-hero .hh-n',t:'Hoy podés gastar',x:'Lo que podés gastar hoy sin tocar tu ahorro. Cada gasto que anotás lo baja, y lo que no gastás pasa a mañana.'},
-  {tab:'resumen',sel:'#gasto-abrir',t:'Anotar un gasto',x:'Tocá «+ Gasto» y poné cuánto fue y en qué. Nada más. Si te olvidaste de uno, podés anotarlo con la fecha de ayer.'},
-  {tab:'resumen',sel:'#hero-chips',t:'Tenés y Guardás',x:'Tocá cualquiera y te llevo a esa página del prólogo, con «Cambiar». Al guardar se recalcula todo.'},
-  {tab:'resumen',sel:'#indice-abrir',t:'La cinta del índice',x:'Todos los capítulos con su número de página. Desde ahí también vas al prólogo o cerrás el libro.'},
-  {tab:'resumen',sel:window.innerWidth<1100?'.fl-sig':'#pie',t:'Pasar de página',x:'Con las flechas de los bordes (o las del pie) o deslizando el dedo. Hacia atrás desde Hoy está tu pacto y, antes, la tapa del libro.'},
-  {tab:'semanas',sel:'.tab[data-tab^="w"]',t:'Capítulo II · Semanas',x:'Cada semana es una página, con su presupuesto. Lo que sobra o falta pasa a la siguiente.'},
-  {tab:'fijos',sel:'.tab[data-tab="fijos"]',t:'Capítulo III · Fijos',x:'Tus gastos de todos los meses. Se descuentan antes de calcular cuánto podés gastar.'},
-  {tab:'sueldo',sel:'.tab[data-tab="sueldo"]',t:'Capítulo IV · Sueldo',x:'Cuánto te queda en mano. Subí tu recibo de sueldo y te muestro cómo te pagan cada cosa; con eso hago todas las cuentas.'},
-  {tab:'gastos',sel:'.tab[data-tab="gastos"]',t:'Capítulo V · Tarjeta',x:'Traé el extracto de tu banco, tarjeta o billetera: te muestro por dónde se te va la plata y lo comparo con lo que anotaste. Acá están tus categorías.'},
-  {tab:'logros',sel:'.tab[data-tab="logros"]',t:'Capítulo VI · Logros',x:'Tus sellos y tus rachas.'},
-  {tab:'guardado',sel:'.tab[data-tab="guardado"]',t:'Capítulo VII · Lo guardado',x:'Todo lo que juntaste pacto a pacto, tu fondo de emergencia y tus metas, con un consejo de qué hacer con lo guardado.'},
-  {tab:'resumen',sel:'.mic',t:'Anotar con la voz',x:'Tocá el micrófono y decí, por ejemplo, «gasté 350 en un café». Siempre te pido confirmar antes de guardar.'}
+  {tab:'resumen',sel:'#hoy-hero .hh-n',t:'Hoy podés gastar',x:'Lo que podés gastar hoy sin tocar tu ahorro.'},
+  {tab:'resumen',sel:'#gasto-abrir',t:'Anotá un gasto',x:'Tocá «+ Gasto»: cuánto y en qué. Nada más.'},
+  {tab:'resumen',sel:window.innerWidth<1100?'.fl-sig':'#pie',t:'Pasá de página',x:'Deslizá o tocá las flechas. La cinta de arriba es el índice.'},
+  {tab:'resumen',sel:'.mic',t:'O decilo',x:'Tocá el micrófono y decí «gasté 350 en un café». Siempre te pido confirmar.'}
 ];
 var i=0,corre=false;
 

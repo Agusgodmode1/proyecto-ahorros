@@ -11,7 +11,6 @@ import {categoriasBase,categoriasDesde} from './logica/categorias.js';
 import {pactoBase,pactoDesdePlan,normApartado} from './logica/pacto.js';
 import {normEsperado} from './logica/supervivencia.js';
 import {normIngresos} from './logica/ingresos.js';
-import {normEntradas,normGanancia} from './logica/ventas.js';
 
 /* Subí este número cuando cambie la forma del estado y agregá el paso en migrar().
    v1–v3: archivo HTML · v4: voz y meta · v5: perfil propio y feriados editables · v6: sincronización
@@ -33,8 +32,11 @@ import {normEntradas,normGanancia} from './logica/ventas.js';
    v21: ingresos fijos (state.ingresosFijos [{id, nombre, monto, dia}]) y state.plan.vistos (los ya respondidos).
         Quien ya usaba la app arranca sin ingresos fijos (nada cambia en las cuentas).
    v22: cuando vendo: lo que entró en el pacto (state.plan.entradas [{id, fecha, monto, nota}]) y la ganancia guardada
-        por semana (state.plan.ganancia {inicio: monto}). Quien ya usaba la app arranca sin nada (nada cambia). */
-export var VERSION_ESTADO=22;
+        por semana (state.plan.ganancia {inicio: monto}). Quien ya usaba la app arranca sin nada (nada cambia).
+   v23: una sola forma de cobrar, por mes (sueldo o factura). Quien cobraba cada 15 días, cada semana, por jornal o cuando
+        vendía pasa a mensual (la regla de su perfil, o el 5.º día hábil). Su plata, su pacto (hasta su fecha), sus gastos,
+        su historial y lo que anotó que entró quedan igual. */
+export var VERSION_ESTADO=23;
 
 function hoyISO(){return iso(new Date())}
 /* Feriados: por defecto solo cuentan los 5 no laborables (1/1, 1/5, 18/7, 25/8, 25/12).
@@ -51,7 +53,7 @@ export function defaults(hoy){
   return {
     v:VERSION_ESTADO,ejemplo:false,
     perfil:perfilBase(),
-    plan:{monto:0,modo:'monto',ahorro:0,pct:30,inicio:hoy,cobro:cobroDesde(hoy,{tipo:'habil5'}),minimo:null,sobrante:'siguiente',sobranteSemana:{},esperado:[],vistos:[],entradas:[],ganancia:{}},
+    plan:{monto:0,modo:'monto',ahorro:0,pct:30,inicio:hoy,cobro:cobroDesde(hoy,{tipo:'habil5'}),minimo:null,sobrante:'siguiente',sobranteSemana:{},esperado:[],vistos:[]},
     gastos:[],
     sueldo:sueldoBase(),
     extracto:{texto:'',formato:'auto',hormiga:400,cat:{},columnas:{},descartadas:{}}, /* columnas: por banco, qué columna es cada cosa (planillas); descartadas: avisos de Hoy que ya viste */
@@ -171,8 +173,6 @@ export function migrar(d){
   /* v20: la plata que te va a entrar, siempre como lista prolija */
   state.plan.esperado=normEsperado(state.plan.esperado);
   state.plan.vistos=Array.isArray(state.plan.vistos)?state.plan.vistos.map(String):[];
-  /* v22: lo que entró y la ganancia guardada, siempre prolijos */
-  state.plan.entradas=normEntradas(state.plan.entradas);state.plan.ganancia=normGanancia(state.plan.ganancia);
   /* v11: las categorías de siempre pasan a ser tu lista, más las que ya usaban tus gastos. Ningún gasto cambia. */
   if(!state.categorias)state.categorias=categoriasDesde(state);
   /* v12: sin mínimo (vale lo mismo que el objetivo) y lo que sobra pasa a la semana siguiente, como siempre */
@@ -211,6 +211,11 @@ export function migrar(d){
   if(!Array.isArray(state.sueldo.descuentos))state.sueldo.descuentos=[];
   state.sueldo.ingresosMes=obj(state.sueldo.ingresosMes);
   if(vx<7)corregirCobroV7(state);
+  /* v23: siempre por mes. Sale lo que armaba las otras formas de cobrar; lo demás no cambia */
+  var cc=state.perfil.cobro;
+  if(cc){['frecuencia','dias','dow','horizonte','diaV'].forEach(function(k){delete cc[k]});if(['habil5','ultimoHabil','fijo'].indexOf(cc.tipo)<0)cc.tipo='habil5'}
+  if(state.pacto)delete state.pacto.pct;
+  delete state.plan.porDiaBase;
   /* v16: «¿hay horas extra?» ya está contestado para quien armó su perfil o cargó horas */
   if(vx<16&&state.perfil.horas&&obj(obj(x.perfil).horas).preguntado===undefined)state.perfil.horas.preguntado=!!(state.perfil.hecho||state.perfil.recibosAgus||state.horas.length);
   /* Los datos que venían de los recibos de Agus son del puesto de CRM */

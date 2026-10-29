@@ -1,5 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
+import {planCalc} from '../js/logica/plan.js';
+import {disponible} from '../js/logica/saldo.js';
 import {defaults,ejemplo,migrar,leerRespaldo,armarRespaldo,resumenDatos,diasSinRespaldo,VERSION_ESTADO,agregarCopia,necesitaMigrar} from '../js/estado.js';
 
 test('los datos de ejemplo ya están en la versión actual',function(){
@@ -182,12 +184,30 @@ test('v21: ingresos fijos y respondidos, sin cambiar nada de lo que había',func
   assert.deepEqual(migrar(d).ingresosFijos,[{id:'a',nombre:'Ayuda',monto:5000,dia:31}]);
 });
 
-test('v22: lo que entró y la ganancia guardada, sin cambiar nada de lo que había',function(){
-  var d=defaults('2026-10-26');d.v=21;delete d.plan.entradas;delete d.plan.ganancia;d.plan.monto=20000;
-  var s=migrar(d);
-  assert.equal(VERSION_ESTADO,22);
-  assert.deepEqual(s.plan.entradas,[]);assert.deepEqual(s.plan.ganancia,{});assert.equal(s.plan.monto,20000);
-  d.plan.entradas=[{id:'a',fecha:'2026-10-27',monto:'1500'},{fecha:'mal',monto:5}];d.plan.ganancia={'2026-10-26':'300',x:5};
-  var m=migrar(d);
-  assert.deepEqual(m.plan.entradas,[{id:'a',fecha:'2026-10-27',monto:1500,nota:''}]);assert.deepEqual(m.plan.ganancia,{'2026-10-26':300});
+test('v23: quien cobraba cada 15 días, cada semana, por jornal o cuando vendía pasa a mensual sin perder nada',function(){
+  var cfgs=[{frecuencia:'quincenal',dias:[1,15]},{frecuencia:'semanal',dow:5},{frecuencia:'jornal',horizonte:7,tipo:undefined},{frecuencia:'ventas',diaV:1}];
+  cfgs.forEach(function(cfg){
+    var d=defaults('2026-10-26');d.v=22;
+    d.perfil.cobro=Object.assign({tipo:'habil5',laborableHabil:true},cfg);
+    d.plan=Object.assign(d.plan,{monto:18000,ahorro:1500,inicio:'2026-10-20',cobro:'2026-11-03',porDiaBase:640,entradas:[{id:'e1',fecha:'2026-10-22',monto:2500,nota:'pedido'}],ganancia:{'2026-10-20':300}});
+    d.pacto=Object.assign(d.pacto,{sellado:'2026-10-20',numero:3,pct:0.1,apartado:[{id:'res-fijos',tipo:'reserva',monto:4600,nota:'para los fijos'}]});
+    d.gastos=[{id:'g1',fecha:'2026-10-21',monto:850,nota:'Súper',cat:'Supermercado'}];
+    d.hist=[{k:'2026-09',meta:1000,ahorrado:1200}];
+    var antes=disponible(d,planCalc(d)),m=migrar(d);
+    assert.equal(m.v,VERSION_ESTADO);
+    assert.equal(m.perfil.cobro.frecuencia,undefined,cfg.frecuencia);
+    ['dias','dow','horizonte','diaV'].forEach(function(k){assert.equal(m.perfil.cobro[k],undefined)});
+    assert.equal(m.perfil.cobro.tipo,'habil5');
+    /* su plata, su pacto (hasta su fecha), sus gastos, su historial y lo que entró: igual */
+    assert.equal(m.plan.monto,18000);assert.equal(m.plan.ahorro,1500);assert.equal(m.plan.inicio,'2026-10-20');assert.equal(m.plan.cobro,'2026-11-03');
+    assert.equal(disponible(m,planCalc(m)),antes);
+    assert.deepEqual(m.gastos,d.gastos);assert.deepEqual(m.hist,d.hist);
+    assert.deepEqual(m.plan.entradas,d.plan.entradas);assert.deepEqual(m.plan.ganancia,d.plan.ganancia);
+    assert.equal(m.pacto.sellado,'2026-10-20');assert.equal(m.pacto.numero,3);
+    assert.equal(m.pacto.apartado[0].monto,4600,'lo apartado para los fijos sigue apartado');
+    assert.equal(m.pacto.pct,undefined);assert.equal(m.plan.porDiaBase,undefined);
+  });
+  /* quien ya cobraba por mes no cambia nada */
+  var d2=defaults('2026-10-26');d2.v=22;d2.perfil.cobro={tipo:'fijo',dia:10,laborableHabil:true,frecuencia:'mensual'};
+  assert.deepEqual(migrar(d2).perfil.cobro,{tipo:'fijo',dia:10,laborableHabil:true});
 });

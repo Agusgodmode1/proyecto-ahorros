@@ -13,6 +13,7 @@ import {precision} from '../logica/precision.js';
 import {reciboDe,compararRecibo} from '../logica/recibos.js';
 import {esFactura} from '../logica/factura.js';
 import {renderFactura,initFactura} from './factura.js';
+import {formaCobroTxt} from './perfil.js';
 import {initLector} from './lector.js';
 
 /* ---------- Arriba de todo (2.12): «Vas a cobrar ≈ $X el vie 6 nov», el recibo en miniatura y la precisión ---------- */
@@ -45,6 +46,8 @@ export function renderSueldo(){
   var state=ctx.state,s=state.sueldo,Lr=liqNow(true),L=Lr.estimado||Lr,L0=liqNow(false),mc=mins(state,'sem'),me=mins(state,'fin');
   var bpc=num(s.bpc)||6864,nom=num(s.nominal),t=tarifas(state),R=reglasHoras(state),hn=t.hora,finH=t.heEsp+t.bonoHora,conHoras=R.activo!==false;
   var desc=L.mont+L.fon+L.frl+L.irpf+L.otros,extras=L.N-nom;
+  /* (2.26) cómo cobrás: se elige acá (sueldo o factura, y el día del mes) */
+  var ft=$('#sd-forma-txt');if(ft)ft.textContent=formaCobroTxt(state);
   var ing=ingresoDe(state),uy=ing.tipo==='uy';
   /* Lo que es solo del sueldo en Uruguay: aguinaldo, BPC, control del recibo y descuentos de ley */
   var fac=esFactura(state);

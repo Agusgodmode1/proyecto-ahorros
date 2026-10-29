@@ -1,7 +1,5 @@
 /* Pestaña Semanas: selector, "te quedan", los 7 días, anotar y borrar gastos. */
 import {textoCada} from '../logica/repetidos.js';
-import {frecDe} from '../logica/frecuencia.js';
-import {semanasVentas,resumenIngresos} from '../logica/ventas.js';
 import {parse,addDays,iso,diffDays,DIA,DIAL,MES} from '../logica/fechas.js';
 import {ctx,$,today,planNow,money,n0,esc,fLarga,rango,cap,toast,toastAccion} from './comun.js';
 import {sobranteDe} from '../logica/mes.js';
@@ -50,12 +48,6 @@ export function renderWeek(pc){
   h+='<div class="wk-dos">'+(past?'<span><small>Tenías</small><b>'+money(w.avail)+'</b></span>':'<span><small>Por día'+(cur?' hasta el '+DIAL[parse(w.end).getDay()]:'')+'</small><b class="plata">'+money(perDay)+'</b></span>')
     +'<span><small>Gastaste</small><b>'+money(w.spent)+'</b></span></div>';
   h+='<div class="bar fina'+(over?' over':'')+'" role="img" aria-label="Gastaste el '+Math.round(pct)+' % de lo que tenías"><i style="width:'+pct+'%"></i></div>';
-  /* (2.24) por jornal o cuando vendo: lo que entró esa semana (y si cubrió los fijos) */
-  var fqS=frecDe(state.perfil&&state.perfil.cobro);
-  if(!fut&&(fqS==='ventas'||fqS==='jornal')){
-    if(fqS==='ventas'){var V=semanasVentas(state,pc,t).semanas[i];if(V)h+='<p class="wk-vt">Vendiste <b>'+money(V.vendido)+'</b>'+(V.meta>0?' · '+(V.cubierta?'<span class="ok">fijos de la semana ✓</span>':'para los fijos faltan '+money(V.falta)):'')+(V.ganancia>0?' · ganancia <b class="ok">'+money(V.ganancia)+'</b>':'')+'</p>'}
-    else{var RI=resumenIngresos(state,pc,t).semanas[i];if(RI)h+='<p class="wk-vt">Te entró <b>'+money(RI.entro)+'</b> esta semana'+(RI.veces>1?' ('+RI.veces+' cobros)':'')+'.</p>'}
-  }
   /* la tira de días */
   h+='<div class="days" style="grid-template-columns:repeat('+w.days+',minmax(0,1fr))" role="list" aria-label="Lo que gastaste cada día">';
   for(var k=0;k<w.days;k++){

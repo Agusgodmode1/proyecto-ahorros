@@ -1,7 +1,7 @@
 /* Pestaña Plan: portada con "Hoy podés gastar", anotar un gasto, plan plegable, hasta que cobres, semanas y "cuando cobres". */
 import {parse,diffDays,bizRank,MESL,addDays,iso} from '../logica/fechas.js';
 import {num} from '../logica/util.js';
-import {fijosPeriodo,totalFijos,proximo,hoyPodes,planCalc,cfgCobro} from '../logica/plan.js';
+import {fijosPeriodo,totalFijos,proximo,hoyPodes,planCalc} from '../logica/plan.js';
 import {disponible,fijosPagadosParte,maxAhorro,previaSaldo,ajustarSaldo,deshacerAjuste} from '../logica/saldo.js';
 import {balanceHTML} from './fijos.js';
 import {mesTrabajo,mins,reglasHoras} from '../logica/sueldo.js';
@@ -18,12 +18,7 @@ import {abrirPostal} from './postal.js';
 import {abrirLibro,polvo} from './libro.js';
 import {totalApartado} from '../logica/pacto.js';
 import {renderSuperv,initSuperv} from './supervivencia.js';
-import {renderCobre,initCobre} from './cobre.js';
 import {renderEntradas,initEntradas} from './entradas.js';
-import {renderVentas,initVentas} from './ventas.js';
-import {tuPlataAlcanza,semanasVentas,resumenIngresos} from '../logica/ventas.js';
-import {frecDe} from '../logica/frecuencia.js';
-import {periodoTxt} from '../logica/frecuencia.js';
 import {irAlPacto} from './indice.js';
 
 function rankTxt(s){
@@ -75,7 +70,7 @@ function heroChips(pc){
   /* Dos datos en la misma fila: cuánta plata tenés y cuánto guardás (el cobro tiene su propia tarjeta) */
   $('#hero-chips').innerHTML=''
     +'<button class="hchip hc-saldo" type="button" id="saldo-abrir"><span>Tenés</span><b>'+money(Math.max(0,disponible(state,pc)))+'</b><small>actualizar</small></button>'
-    +'<button class="hchip hc-ahorro" type="button" id="ahorro-abrir"><span>Guardás '+periodoTxt(cfgCobro(state)).este+'</span><b>'+money(pc.ahorro)+'</b><small>actualizar</small></button>'
+    +'<button class="hchip hc-ahorro" type="button" id="ahorro-abrir"><span>Guardás este mes</span><b>'+money(pc.ahorro)+'</b><small>actualizar</small></button>'
     /* (2.17) la plata apartada: se ve, pero aparte de lo que podés usar */
     +(totalApartado(state)>0?'<button class="hc-ap" type="button" id="apartado-abrir">Además tenés <b>'+money(totalApartado(state))+'</b> apartados, que no se tocan<small>ver</small></button>':'');
 }
@@ -92,14 +87,6 @@ function renderAlertaMeta(pc){
 }
 /* Fin del capítulo: el día de cobro, el libro resume el ciclo (lo ahorrado y la racha) y ofrece un pacto nuevo.
    El pacto nuevo cierra el mes en el historial (igual que «Cerrar el mes» de Logros) y vuelve a hacer las 3 preguntas. */
-/* (2.25) Al cerrar: lo que entró, según cómo te entra la plata */
-function finModo(st,pc,t){
-  var f=frecDe(st.perfil&&st.perfil.cobro);
-  if(f==='ventas'){var V=semanasVentas(st,pc,t),n=V.semanas.length,ok=V.semanas.filter(function(x){return x.cubierta}).length;
-    return '<p class="fin-s">Vendiste <b>'+money(V.vendido)+'</b>'+(V.fijos>0?' y cubriste los fijos <b>'+ok+' de '+n+'</b> semanas':'')+(V.guardada>0?'; guardaste '+money(V.guardada)+' de ganancia':'')+'.</p>'}
-  if(f==='jornal'){var R=resumenIngresos(st,pc,t);return '<p class="fin-s">Te entraron <b>'+money(R.total)+'</b>'+(R.veces?' en '+R.veces+(R.veces===1?' cobro':' cobros'):'')+'.</p>'}
-  return '';
-}
 function renderCierre(pc){
   var el=$('#cierre-aviso');if(!el)return;
   var st=ctx.state,t=today();
@@ -109,7 +96,6 @@ function renderCierre(pc){
   var tit=r.cumplido?'¡Cumpliste el pacto!':r.minimoOk?'Llegaste a tu mínimo':'Se terminó este capítulo';
   el.innerHTML='<section class="fin-cap" aria-labelledby="fin-t"><p class="cap-kick">fin del capítulo</p><h2 id="fin-t">'+tit+'</h2>'
     +'<p class="fin-n">Ahorraste <b>'+money(r.ahorrado)+'</b></p>'
-    +finModo(st,pc,t)
     +'<p class="fin-s">'+(r.racha>0?'Tu racha va en <b>'+r.racha+(r.racha===1?' mes':' meses')+'</b>. ':'Esta vez no sumaste a la racha: el próximo pacto es otra oportunidad. ')+'Tu meta era '+money(r.meta)+'.</p>'
     +'<div class="row-btns"><button class="btn primary" type="button" id="ciclo-nuevo">Empezar un pacto nuevo</button><button class="btn quiet" type="button" id="cierre-ir">Cerrarlo a mano en Logros</button></div></section>';
 }
@@ -174,28 +160,8 @@ function constelacion(on,desde){
   }
   return '<svg viewBox="0 0 300 38" preserveAspectRatio="xMidYMid meet">'+h+'</svg>';
 }
-/* (2.22) Cuando vendo no hay cobro que esperar: «Tu plata alcanza» (cuántos días te dura y si llegás al próximo pago) */
-function renderAlcanza(el){
-  var state=ctx.state,t=today(),r=tuPlataAlcanza(state,planNow(),t);
-  if(!r){el.innerHTML='';return}
-  var on=r.estrellas,desde=estrellasVistas===null?0:Math.min(estrellasVistas,on);estrellasVistas=on;
-  el.classList.remove('cd-lejos','cd-cerca','cd-ya','cd-hoy');el.classList.add(r.llega?'cd-lejos':'cd-cerca','cd-alcanza');
-  var P=r.pago,pago='';
-  if(P)pago='<span class="cd-pago">'+(P.dias<=0?'Hoy se paga ':'Próximo pago: ')+'<b>'+esc(P.nombre)+'</b>'+(P.dias>0?', en '+P.dias+(P.dias===1?' día':' días'):'')
-    +' · '+(r.falta>0?'tenés '+money(r.juntado)+' de '+money(P.monto):'ya tenés los '+money(P.monto))+'</span>'
-    +'<span class="cd-est '+(r.llega?'bien':'falta')+'">'+(r.llega?'✓ Llegás '+(P.dias<=0?'a pagarlo':'al pago')+'.':r.falta>0?'Te faltan '+money(r.falta)+': cada venta te acerca.':'Te faltan '+(P.dias-r.dias)+(P.dias-r.dias===1?' día':' días')+' de plata para llegar: cada venta suma días.')+'</span>';
-  el.innerHTML='<span class="cd-l">Tu plata alcanza</span><span class="cd-v"><span class="cd-n">'+r.dias+'</span><span class="cd-t">'+(r.dias===1?'día':'días')+'</span></span>'
-    +'<span class="cd-seg cd-const" aria-hidden="true">'+constelacion(on,desde)+'</span>'
-    +'<span class="cd-d">'+(r.hasta?'hasta el '+esc(fLarga(r.hasta)):'')+'</span>'
-    +'<span class="cd-ritmo">'+(r.porDia>0?'gastando '+(r.ritmo?'como venís':'como el plan')+', ≈ '+money(r.porDia)+' por día<br>':'')+'<button class="linklike" type="button" id="cd-total">actualizar el total</button></span>'+pago;
-  el.setAttribute('aria-label','Tu plata alcanza '+r.dias+(r.dias===1?' día':' días')+(r.hasta?', hasta el '+fLarga(r.hasta):'')+(P?'. Próximo pago: '+P.nombre+(P.dias>0?', en '+P.dias+' días':', hoy'):''));
-}
 export function renderCountdown(){
   var state=ctx.state,el=$('#countdown');if(!el)return;
-  /* (2.23) por jornal tampoco hay un cobro que esperar */
-  var fqc=frecDe(state.perfil&&state.perfil.cobro);
-  if((fqc==='ventas'||fqc==='jornal')&&num(state.plan.monto)>0&&today()<state.plan.cobro){renderAlcanza(el);return}
-  el.classList.remove('cd-alcanza');
   var t=today(),d=diffDays(t,state.plan.cobro),big,small,lab;
   if(d>0){big=String(d);small=(d===1?'día':'días');lab='Cobrás en'}
   else if(d===0){big='Hoy';small='cobrás';lab='Cobro'}
@@ -220,7 +186,7 @@ export function renderResumen(pc){
   var sum=$('#plan-aj-sum');if(sum)sum.textContent=num(state.plan.monto)>0?money(Math.max(0,disponible(state,pc)))+' disponibles · guardás '+money(pc.ahorro)+' · hasta el '+fCorta(state.plan.cobro):'Completá los tres pasos';
   /* (2.15) la página de Hoy se dibuja solo cuando se ve: así pasar a otro capítulo no la rehace cada vez */
   if(ctx.tab!=='resumen')return;
-  renderCierre(pc);renderHoy(pc);renderCobre();renderVentas(pc);renderEntradas();renderSuperv(pc);renderRitmo(pc);
+  renderCierre(pc);renderHoy(pc);renderEntradas();renderSuperv(pc);renderRitmo(pc);
   var sf=aniosSinFeriados(state,today()),fa=$('#fer-aviso');
   if(fa)fa.innerHTML=sf.length?'<div class="banner"><p><b>No tengo los feriados de '+sf.join(' y ')+'.</b> Sin ellos, el día de cobro puede salir mal. Actualizá la app o agregalos en Ajustes → Feriados.</p><button class="btn" type="button" data-goto="ajustes">Ir a Feriados</button></div>':'';
   var p=state.plan,t=today(),L=liqNow(true),fp=fijosPeriodo(state.fijos,p.inicio,p.cobro);
@@ -231,19 +197,18 @@ export function renderResumen(pc){
   var h=state.ejemplo?'<div class="banner"><p><b>Estás viendo datos de ejemplo.</b> Son de muestra: no son tuyos.</p><button class="btn" type="button" data-cero>Borrar el ejemplo y crear mi perfil</button></div>':'';
   /* fijos compartidos: quién te debe plata (nota al margen, con «Me pagaron») */
   var deudas=balanceHTML(true);if(deudas)h+='<div class="banner deudas">'+deudas+'</div>';
-  var fqH=frecDe(state.perfil&&state.perfil.cobro),sinCobro=fqH==='jornal'||fqH==='ventas';
-  h+=foldIni('cobrar','tone-mint',sinCobro?'Hasta el '+esc(fCorta(p.cobro)):'Hasta que cobres',resto<0?'Te faltan '+money(-resto)+' para llegar a tu meta':'Te queda para gastar '+money(resto)+' · '+esc(rango(p.inicio,p.cobro)));
-  var fsub=fp.length?fp.map(function(o){return esc(o.f.nombre)+' ('+esc(fCorta(o.fecha))+')'}).join(', '):(state.fijos.length?(sinCobro?'ninguno vence en este pacto':'ninguno vence antes de cobrar'):'<button class="linklike" type="button" data-goto="fijos">cargá tus gastos fijos</button>');
+  h+=foldIni('cobrar','tone-mint','Hasta que cobres',resto<0?'Te faltan '+money(-resto)+' para llegar a tu meta':'Te queda para gastar '+money(resto)+' · '+esc(rango(p.inicio,p.cobro)));
+  var fsub=fp.length?fp.map(function(o){return esc(o.f.nombre)+' ('+esc(fCorta(o.fecha))+')'}).join(', '):(state.fijos.length?'ninguno vence antes de cobrar':'<button class="linklike" type="button" data-goto="fijos">cargá tus gastos fijos</button>');
   h+='<div class="receipt">'
     +row('Plata que tenés ahora',money(disp),'','según lo que anotaste · <button class="linklike" type="button" id="saldo-abrir2">actualizar</button>')
     +row('Gastos fijos que faltan pagar','− '+money(pend),'sub minus',pagF>0?'ya pagaste '+money(pagF)+(pend>0?'. Faltan: ':'')+(pend>0?fsub:''):fsub)
-    +row('Lo que guardás','− '+money(pc.ahorro),'sub save','tu meta de '+periodoTxt(cfgCobro(state)).este)
+    +row('Lo que guardás','− '+money(pc.ahorro),'sub save','tu meta de este mes')
     +row('Te queda para gastar',money(resto),'final')+'</div>';
   if(resto<0)h+='<p class="err" style="margin-top:0">Con lo que te queda no llegás a guardar todo: te faltan '+money(-resto)+'. Bajá el ahorro o revisá los gastos.</p>';
   h+='<div><div class="split-bar" role="img" aria-label="Fijos '+Math.round(pf)+'%, ahorro '+Math.round(pa)+'%, para gastar '+Math.round(pg)+'%"><i class="split-fix" style="width:'+pf+'%"></i><i class="split-save" style="width:'+pa+'%"></i><i class="split-spend" style="width:'+pg+'%"></i></div>';
   h+='<div class="split-key">'+(pend>0?'<span><i class="dot" style="background:var(--teal)"></i>Fijos, '+Math.round(pf)+'%</span>':'')+'<span><i class="dot" style="background:var(--sun)"></i>Guardás, '+Math.round(pa)+'%</span><span><i class="dot" style="background:var(--sky)"></i>Para gastar, '+Math.round(pg)+'%</span></div></div>';
   h+='<div class="tiles">'
-    +tile('tone-sky','Por semana',money(pDia*7),money(pDia)+' por día, parejo hasta '+(sinCobro?'el '+esc(fCorta(p.cobro)):'cobrar')+'')
+    +tile('tone-sky','Por semana',money(pDia*7),money(pDia)+' por día, parejo hasta cobrar')
     +tile('tone-coral','Gastaste',money(pc.spentInPlan),'de '+money(pc.gastar)+' para gastar')
     +'</div></div></details>';
 
@@ -267,26 +232,23 @@ export function renderResumen(pc){
   if(Math.round(fuera)>0)h+='<p class="note">Hay '+money(fuera)+' en gastos con fecha fuera del plan. No cuentan en las semanas.</p>';
   h+='</div></details>';
 
-  /* (2.24) por jornal o cuando vendo no hay un cobro que estimar: «Cuando cobres» no va (lo que entra está en Ingresos) */
-  if(sinCobro){$('#resumen-out').innerHTML=h;return}
   var nx=proximo(state,L);
   /* Si el aguinaldo cae en ese mes, se suma a lo libre */
   var AG=aguinaldo(state,t),conAg=AG.pago>=p.cobro&&AG.pago<nx.nc&&AG.liquido>0;
   if(conAg){nx=Object.assign({},nx,{libre:nx.libre+AG.liquido});nx.dia=nx.libre/nx.dias;nx.semana=nx.libre*7/nx.dias}
-  var QV=periodoTxt(cfgCobro(state)).que,QVc=QV.charAt(0).toUpperCase()+QV.slice(1),parte=nx.fraccion!==1;
-  h+=foldIni('cuando','tone-grape','Cuando cobres',nx.libre>=0?QVc+': '+money(nx.semana)+' por semana':QVc+' te faltan '+money(-nx.libre));
-  h+='<p class="lead">'+(nx.libre>=0?QVc+' vas a poder gastar unos <b class="c-mint">'+money(nx.semana)+' por semana</b>.':QVc+' no te alcanza para la meta: te faltan <b class="neg">'+money(-nx.libre)+'</b>.')+'</p>';
+  h+=foldIni('cuando','tone-grape','Cuando cobres',nx.libre>=0?'El mes que viene: '+money(nx.semana)+' por semana':'El mes que viene te faltan '+money(-nx.libre));
+  h+='<p class="lead">'+(nx.libre>=0?'El mes que viene vas a poder gastar unos <b class="c-mint">'+money(nx.semana)+' por semana</b>.':'El mes que viene no te alcanza para la meta: te faltan <b class="neg">'+money(-nx.libre)+'</b>.')+'</p>';
   h+='<div class="receipt">'
-    +row(parte?'Tu cobro, estimado (la parte del mes)':L.real?'Tu sueldo (según tu recibo)':'Tu sueldo, estimado',money(parte?nx.liquido:L.liquido),'','<button class="linklike" type="button" data-goto="sueldo">ver el cálculo</button>')
-    +row(parte?'Tu parte de los fijos del mes':'Gastos fijos del mes','− '+money(nx.fij),'sub minus',state.fijos.length?state.fijos.length+' cargados':'<button class="linklike" type="button" data-goto="fijos">cargalos</button>')
+    +row(L.real?'Tu sueldo (según tu recibo)':'Tu sueldo, estimado',money(L.liquido),'','<button class="linklike" type="button" data-goto="sueldo">ver el cálculo</button>')
+    +row('Gastos fijos del mes','− '+money(nx.fij),'sub minus',state.fijos.length?state.fijos.length+' cargados':'<button class="linklike" type="button" data-goto="fijos">cargalos</button>')
     +(conAg?row('Aguinaldo de '+AG.nombre,'+ '+money(AG.liquido),'sub','<button class="linklike" type="button" data-goto="sueldo">estimado</button>, antes del '+Number(AG.pago.slice(8,10))+' de '+AG.nombre):'')
-    +(nx.ingresos>0?row('Tus ingresos fijos','+ '+money(nx.ingresos),'sub','<button class="linklike" type="button" data-goto="fijos">'+(parte?'la parte del período':'ver')+'</button>'):'')
+    +(nx.ingresos>0?row('Tus ingresos fijos','+ '+money(nx.ingresos),'sub','<button class="linklike" type="button" data-goto="fijos">ver</button>'):'')
     +row('Lo que vas a guardar','− '+money(nx.meta),'sub save','tu meta de ahorro')
     +row('Libre para gastar',money(nx.libre),'final')+'</div>';
   if(nx.metaPedida>nx.meta)h+='<p class="note">Tu meta de '+money(nx.metaPedida)+' es más de lo que te queda después de los fijos. Se usa '+money(nx.meta)+'.</p>';
   var sd=sensibilidadDolar(L);
   if(sd)h+='<p class="note">Cobrás en dólares y gastás en pesos: si el dólar se mueve un '+sd.pct+' %, lo que te queda libre cambia unos <b>'+money(sd.cambio)+'</b>, para arriba o para abajo.</p>';
-  h+='<div class="tiles">'+tile('tone-sky','Por día',money(nx.dia),nx.dias+' días hasta el '+esc(fCorta(nx.nc)))+tile('tone-sun','Ese día tenés',money(pc.ahorro+(parte?nx.liquido:L.liquido)),'lo guardado más el '+(parte?'cobro':'sueldo'))+'</div>';
+  h+='<div class="tiles">'+tile('tone-sky','Por día',money(nx.dia),nx.dias+' días hasta el '+esc(fCorta(nx.nc)))+tile('tone-sun','Ese día tenés',money(pc.ahorro+L.liquido),'lo guardado más el sueldo')+'</div>';
   h+='<p class="note">El sueldo ya tiene descontados BPS, FONASA y FRL'+(reglasHoras(state).activo!==false?', e incluye las horas extra de '+mtN:'')+'. Si te sobra plata de las semanas, se suma.</p></div></details>';
   $('#resumen-out').innerHTML=h;
 }
@@ -413,7 +375,7 @@ function confirmarSaldo(real){
 }
 export function initPlan(){
   var pr=$('#p-resumen');
-  initSaldo();initSuperv();initCobre();initEntradas();initVentas();
+  initSaldo();initSuperv();initEntradas();
   $('#meta-alerta').addEventListener('click',function(e){
     var b=e.target.closest('#meta-bajar');
     if(b){ctx.state.plan.ahorro=Number(b.getAttribute('data-mx'))||0;ctx.persist();ctx.syncInputs();ctx.renderAll();toast('Meta bajada a '+money(ctx.state.plan.ahorro));return}
@@ -425,7 +387,6 @@ export function initPlan(){
   });
   pr.addEventListener('click',function(e){if(e.target.closest('#saldo-abrir2'))abrirSaldo()});
   $('#hoy-hero').addEventListener('click',function(e){if(e.target.closest('#hoy-empezar'))abrirPlan()});
-  $('#countdown').addEventListener('click',function(e){if(e.target.closest('#cd-total'))abrirSaldo()});
   $('#hero-chips').addEventListener('click',function(e){if(e.target.closest('#apartado-abrir')){ctx.abrirPrologo('qa');return}if(e.target.closest('#saldo-abrir'))abrirSaldo();if(e.target.closest('#ahorro-abrir'))abrirMeta()});
   initGasto();
   $('#cierre-aviso').addEventListener('click',function(e){

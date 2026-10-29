@@ -169,19 +169,3 @@ test('respuestas de las consultas',function(){
   assert.equal(responder('cobro',d),'Vas a cobrar unos 41.251 pesos el lunes 9 de noviembre.');
   assert.match(responder('semana',{semana:{queda:-300,porDia:0,fin:'2026-10-18'}}),/te pasaste por 300 pesos/);
 });
-
-test('(2.25) por jornal o cuando vendo: «vendí 1200 de empanadas» es plata que entró',function(){
-  var r=interpretar('vendí 1200 de empanadas',{hoy:'2026-10-27',fijos:[],aprendido:{},entradas:true});
-  assert.equal(r.intencion,'entrada');assert.equal(r.monto,1200);assert.equal(r.fecha,'2026-10-27');assert.match(r.nota,/empanadas/i);
-  assert.equal(interpretar('me entraron 1.500 ayer',{hoy:'2026-10-27',fijos:[],aprendido:{},entradas:true}).fecha,'2026-10-26');
-  assert.equal(interpretar('cobré 800',{hoy:'2026-10-27',fijos:[],aprendido:{},entradas:true}).intencion,'entrada');
-  assert.notEqual(interpretar('vendí 1200 de empanadas',{hoy:'2026-10-27',fijos:[],aprendido:{}}).intencion,'entrada','con sueldo, no');
-  assert.equal(interpretar('gasté 850 en el súper',{hoy:'2026-10-27',fijos:[],aprendido:{},entradas:true}).intencion,'gasto');
-});
-test('(2.25) consultas: cuánto me alcanza y cuánto vendí',function(){
-  assert.equal(interpretar('¿cuánto me falta?',{hoy:'2026-10-27',entradas:true}).que,'alcanza');
-  assert.equal(interpretar('¿cuánto vendí?',{hoy:'2026-10-27',entradas:true}).que,'entro');
-  assert.equal(interpretar('¿cuánto me falta para cobrar?',{hoy:'2026-10-27'}).que,'dias');
-  assert.match(responder('alcanza',{alcanza:{dias:12,hasta:'2026-11-07',pago:{nombre:'Alquiler',dias:14},llega:false}}),/12 días.*Alquiler, en 14 días/);
-  assert.match(responder('entro',{entro:4300,entroVeces:2}),/4\.300.*2 veces/);
-});

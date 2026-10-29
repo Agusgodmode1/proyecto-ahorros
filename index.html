@@ -84,8 +84,6 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
     <!-- PLAN -->
     <section id="p-resumen" role="tabpanel" class="tone-sky stack">
       <div id="resp-aviso"></div>
-      <div id="cobre"></div>
-      <div id="ventas"></div>
       <div id="entradas"></div>
       <div id="superv"></div>
       <div id="ritmo-aviso"></div>
@@ -223,7 +221,6 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
     <!-- SUELDO -->
     <section id="p-sueldo" role="tabpanel" class="tone-grape stack" hidden>
       <div class="panel-head"><h2 class="ph-t">Tu sueldo</h2><p class="ph-s">Sumá tus horas extra y te calculo cuánto vas a cobrar, con los descuentos de Uruguay. Cuando llegue el recibo, comparalo acá para ver si te pagaron bien.</p></div>
-      <div id="ingresos-ver" hidden></div>
       <div id="ej-banner"></div>
       <div id="bpc-aviso"></div>
       <div id="sueldo-hero"></div>
@@ -337,8 +334,9 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
         </div>
       </details>
       <details class="card sdes datos" data-sdes="ajustes" id="sd-ajustes">
-          <summary><span class="sdes-t">Ajustes del sueldo</span><span class="sdes-d">sueldo, bono, descuentos y BPC · las reglas de las horas y el día de cobro están en Mi perfil</span></summary>
+          <summary><span class="sdes-t">Ajustes del sueldo</span><span class="sdes-d">cómo y qué día cobrás, sueldo, bono, descuentos y BPC</span></summary>
           <div class="stack sdes-in">
+            <div class="sd-forma"><div><span class="lab">Cómo cobrás</span><p class="note" id="sd-forma-txt"></p></div><button class="btn" type="button" data-perfil="2">Cambiar</button></div>
             <div class="grid2">
               <div class="field">
                 <label for="s-nominal">Sueldo nominal mensual</label>
@@ -389,7 +387,7 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
       <h3 class="aj-grupo" id="aj-g-libro">Tu libro</h3>
       <div class="card stack">
         <div class="sec"><h2>Tu pacto</h2><p class="note">Lo que tenés, lo que guardás y el día de cobro se cambian en las primeras páginas del libro, cada uno en su pregunta. La letra chica (porcentaje, mínimo y fechas) está en la página del pacto.</p></div>
-        <div class="row-btns"><button class="btn primary" type="button" id="aj-prologo">Ir al prólogo</button><button class="btn" type="button" id="aj-cobro">Cómo me entra la plata</button><button class="btn" type="button" id="aj-tour">Ver el tour otra vez</button></div>
+        <div class="row-btns"><button class="btn primary" type="button" id="aj-prologo">Ir al prólogo</button><button class="btn" type="button" id="aj-tour">Ver el tour otra vez</button></div>
       </div>
       <div id="plan-aj-casa" hidden>
       <details class="plan-aj" id="plan-aj">

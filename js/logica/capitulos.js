@@ -9,11 +9,6 @@ export var CAPITULOS=[
   {id:'logros',n:'VI',t:'Logros',tono:'tone-sun'},
   {id:'guardado',n:'VII',t:'Lo guardado',corto:'Guardado',tono:'tone-mint'}
 ];
-/* (2.24) Para quien cobra por día o cuando vende, el capítulo IV no es un sueldo: se llama «Ingresos» */
-export function nombrarCapitulos(frec){
-  var ing=frec==='jornal'||frec==='ventas';
-  CAPITULOS.forEach(function(c){if(c.id==='sueldo'){c.t=ing?'Ingresos':'Sueldo';c.corto=ing?'Ingresos':undefined}});
-}
 /* El capítulo de una pestaña: 'w2' es Semanas; 'ajustes' es Ajustes del pacto (fuera de los capítulos) */
 export function capituloDe(tab){
   if(/^w\d+$/.test(tab))return CAPITULOS[1];
@@ -39,10 +34,10 @@ export function vecina(tab,dir,nSemanas,semanaActual){
   return j>=0&&j<l.length?l[j]:null;
 }
 
-/* Números de página (el folio): el prólogo ocupa las páginas 1 a 8 (propósito, cómo te entra la plata, plata, lo apartado, pagos fijos, ahorro, cobro y pacto),
-   el índice la 9 y desde ahí los capítulos, una página por semana; Ajustes es la última. */
-export var PROLOGO=['p1','qi','q1','qa','qf','q2','q3','pacto'];
-export var PAG_INDICE=9;
+/* Números de página (el folio): el prólogo ocupa las páginas 1 a 7 (propósito, plata, lo apartado, pagos fijos, ahorro, cobro y pacto),
+   el índice la 8 y desde ahí los capítulos, una página por semana; Ajustes es la última. */
+export var PROLOGO=['p1','q1','qa','qf','q2','q3','pacto'];
+export var PAG_INDICE=8;
 export function numeroDePagina(tab,nSemanas){
   var i=PROLOGO.indexOf(tab);if(i>=0)return i+1;
   if(tab==='indice')return PAG_INDICE;

@@ -3,8 +3,6 @@
 import {num,uid} from '../logica/util.js';
 import {horasPorDefecto,tarifas,TIPOS_INGRESO} from '../logica/sueldo.js';
 import {cobroDesde} from '../logica/plan.js';
-import {FRECUENCIAS,frecDe} from '../logica/frecuencia.js';
-import {reglaTxt} from './libro.js';
 import {ctx,$,today,esc,money2,fLarga,fMin} from './comun.js';
 import {aplicarFeriados} from './feriados.js';
 import {PUESTOS,puesto} from '../logica/puestos.js';
@@ -12,6 +10,11 @@ import {facturaBase} from '../logica/factura.js';
 /* «Cobro con factura» (2.12) se elige como un tipo más; se guarda como ingreso independiente con factura:true
    (así el cálculo de siempre, en sueldo.js, lo trata como independiente: sin horas extra ni aguinaldo) */
 var TIPOS=TIPOS_INGRESO.concat([['factura','Cobro con factura']]);
+/* (2.26) Dos formas de cobrar, las dos por mes: sueldo (en Uruguay o con mis descuentos) o factura mensual.
+   «Independiente o variable» solo se ofrece a quien ya lo tenía elegido (no se le cambia nada). */
+var NOMBRE_TIPO={uy:'Sueldo en Uruguay',personalizado:'Sueldo con mis descuentos',variable:'Independiente o variable',factura:'Factura mensual'};
+function tiposPara(ti){return TIPOS.filter(function(t){return t[0]!=='variable'||ti==='variable'}).map(function(t){return [t[0],NOMBRE_TIPO[t[0]]||t[1]]})}
+export function nombreTipo(st){var i=st.perfil&&st.perfil.ingreso||{};return NOMBRE_TIPO[i.factura?'factura':i.tipo||'uy']}
 function sinHoras(t){return t==='variable'||t==='factura'}
 
 var d=null,paso=1,opciones=null,vio3=false;
@@ -39,7 +42,7 @@ function moneyIn(id,v,usd){return '<div class="money"><span>'+(usd?'US$':'$')+'<
 var AYUDA_TIPO={uy:'Con BPS, FONASA, FRL e IRPF, como en un recibo de sueldo de Uruguay.',
   personalizado:'Ponés tu sueldo y tus descuentos a mano (en pesos o en %), sin las reglas de Uruguay.',
   variable:'Freelance o comisiones: cada mes cargás lo que cobraste y el plan usa ese valor.',
-  factura:'Unipersonal o profesional: cargás tus facturas y tus costos (BPS, FONASA, IVA, contador) y te digo cuánto te queda.'};
+  factura:'Empresa o unipersonal que factura una vez por mes: cargás tus facturas y tus costos (BPS, FONASA, IVA, contador) y te digo cuánto te queda.'};
 var NOMINAL_TXT={uy:['Sueldo nominal mensual','El sueldo antes de descuentos, sin horas extra. Lo ves en el recibo.'],
   personalizado:['Sueldo mensual, antes de tus descuentos','Si solo sabés lo que te queda en mano, ponelo acá y dejá los descuentos vacíos.'],
   variable:['¿Cuánto cobrás en un mes normal?','En mano. Lo uso hasta que cargues lo que cobraste de verdad cada mes, en la pestaña Sueldo.'],
@@ -61,12 +64,12 @@ function pintar(){
   }else if(paso===2){
     var ti=d.ingreso.tipo,usd=ti!=='uy'&&d.ingreso.moneda==='USD';
     h+='<h1 id="wiz-t">¿Cómo cobrás?</h1>'
-      +'<div class="field"><span class="lab">¿Qué tipo de ingreso tenés?</span>'+seg('tipo',ti,TIPOS)+'<small>'+AYUDA_TIPO[ti]+'</small></div>'
+      +'<div class="field"><span class="lab">¿Qué cobrás cada mes?</span>'+seg('tipo',ti,tiposPara(ti))+'<small>'+AYUDA_TIPO[ti]+'</small></div>'
       +(ti!=='uy'?'<div class="field"><span class="lab">¿En qué moneda cobrás?</span>'+seg('moneda',d.ingreso.moneda,[['UYU','Pesos'],['USD','Dólares']])+(usd?'<small>Lo paso a pesos con la cotización del dólar que cargás en Ajustes.</small>':'')+'</div>':'')
       +campo('w-nominal',NOMINAL_TXT[ti][0],moneyIn('w-nominal',d.nominal,usd),NOMINAL_TXT[ti][1])
-      +'<div class="field"><span class="lab">Cómo te entra la plata</span><p class="note"><b>'+esc(reglaTxt(d.cobro).replace(/^./,function(x){return x.toUpperCase()}))+'</b>. Se elige en la primera página del prólogo.</p>'
-        +(opciones.nuevo?'':'<div class="row-btns"><button class="btn" type="button" data-wa="cobro-prologo">Cambiar</button></div>')+'</div>'
-      +(frecDe(d.cobro)==='mensual'&&d.cobro.tipo!=='fijo'?'<div class="field"><span class="lab">Los feriados laborables (Carnaval, Turismo, 12 de octubre…), ¿cuentan como día hábil para tu cobro?</span>'+seg('labhabil',d.cobro.laborableHabil!==false,[[true,'Sí, son días comunes'],[false,'No']])+'<small>En Uruguay solo 5 feriados son no laborables: 1/1, 1/5, 18/7, 25/8 y 25/12. Los demás son días comunes.</small></div>':'')
+      +'<div class="field"><span class="lab">¿Qué día cobrás?</span>'+seg('cobro',d.cobro.tipo,[['habil5','5.º día hábil'],['ultimoHabil','Último día hábil'],['fijo','Un día fijo']])+'</div>'
+      +(d.cobro.tipo==='fijo'?campo('w-dia','¿Qué día del mes?','<input id="w-dia" type="number" inputmode="numeric" min="1" max="31" step="1" value="'+(d.cobro.dia||1)+'">','Si el mes es más corto, uso el último día.'):'')
+      +(d.cobro.tipo!=='fijo'?'<div class="field"><span class="lab">Los feriados laborables (Carnaval, Turismo, 12 de octubre…), ¿cuentan como día hábil para tu cobro?</span>'+seg('labhabil',d.cobro.laborableHabil!==false,[[true,'Sí, son días comunes'],[false,'No']])+'<small>En Uruguay solo 5 feriados son no laborables: 1/1, 1/5, 18/7, 25/8 y 25/12. Los demás son días comunes.</small></div>':'')
       +'<p class="note" id="w-prox"></p>';
   }else if(paso===3){
     var H=d.horas,on=H.activo!==false,variable=sinHoras(d.ingreso.tipo);
@@ -126,7 +129,7 @@ function leerHM(id){return Math.max(0,Math.round(num(v(id+'-h'))))*60+Math.max(0
 /* Lee lo que hay en la pantalla del paso actual */
 function leer(){
   if(paso===1)d.nombre=v('w-nombre').trim().slice(0,30);
-  if(paso===2){d.nominal=num(v('w-nominal'));if($('#w-q1'))d.cobro.dias=[v('w-q1'),v('w-q2')].map(function(x){return Math.min(31,Math.max(1,Math.round(num(x))||1))}).sort(function(a,b){return a-b});if(d.cobro.tipo==='fijo'&&$('#w-dia'))d.cobro.dia=Math.min(31,Math.max(1,Math.round(num(v('w-dia')))||1))}
+  if(paso===2){d.nominal=num(v('w-nominal'));if(d.cobro.tipo==='fijo'&&$('#w-dia'))d.cobro.dia=Math.min(31,Math.max(1,Math.round(num(v('w-dia')))||1))}
   if(paso===3&&d.horas.activo!==false&&$('#w-div')){
     var H=d.horas;
     H.divisor=num(v('w-div'))||240;H.multSem=num(v('w-msem'));H.multFin=num(v('w-mfin'));
@@ -185,9 +188,6 @@ export function initPerfil(){
       leer();
       var k=b.getAttribute('data-w'),val=b.getAttribute('data-val');
       if(k==='cobro')d.cobro.tipo=val;
-      if(k==='frec')d.cobro.frecuencia=val;
-      if(k==='dow')d.cobro.dow=Number(val);
-      if(k==='horiz')d.cobro.horizonte=Number(val);
       if(k==='tipo')d.ingreso.tipo=val;
       if(k==='moneda')d.ingreso.moneda=val;
       if(k==='dividido')d.horas.finDividido=val==='true';
@@ -203,7 +203,6 @@ export function initPerfil(){
     if(b.hasAttribute('data-dq')){leer();d.descuentos.splice(Number(b.getAttribute('data-dq')),1);pintar();return}
     if(b.hasAttribute('data-dt')){leer();var x=d.descuentos[Number(b.getAttribute('data-dt'))];if(x)x.tipo=b.getAttribute('data-val');pintar();return}
     var a=b.getAttribute('data-wa');
-    if(a==='cobro-prologo'){cerrar();if(opciones.alCancelar)opciones.alCancelar();if(ctx.abrirPrologo)ctx.abrirPrologo('qi','qi');return}
     if(a==='cancelar'){cerrar();if(opciones.alCancelar)opciones.alCancelar();return}
     leer();error('');
     if(a==='atras'){paso--;pintar();return}
@@ -222,13 +221,14 @@ export function initPerfil(){
   box.addEventListener('input',function(e){if(paso===3||paso===2){leer();previa()}});
 }
 
+function reglaCobro(c){c=c||{};return c.tipo==='ultimoHabil'?'el último día hábil':c.tipo==='fijo'?'el día '+(c.dia||1):'el 5.º día hábil'}
+/* (2.26) En Sueldo: «Sueldo en Uruguay · cobrás el 5.º día hábil de cada mes» */
+export function formaCobroTxt(st){return nombreTipo(st)+' · cobrás '+reglaCobro(st.perfil&&st.perfil.cobro)+' de cada mes'}
 /* Resumen para Ajustes */
 export function resumenPerfil(st){
   var p=st.perfil,H=p.horas,c=p.cobro;
-  var DS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],fq=frecDe(c),qd=c.dias||[1,15];
-  var cobro=fq==='ventas'?'a medida que vendés (planes por mes, semana a semana)':fq==='semanal'?'cada '+DS[c.dow===undefined?5:c.dow]:fq==='quincenal'?'el '+qd[0]+' y el '+(qd[1]>=31?'último día':qd[1])+' de cada mes':fq==='jornal'?'por día (planes de '+(c.horizonte||7)+' días)'
-    :c.tipo==='ultimoHabil'?'el último día hábil':c.tipo==='fijo'?'el día '+c.dia:'el 5.º día hábil';
-  var ti=p.ingreso&&p.ingreso.factura?'factura':(p.ingreso&&p.ingreso.tipo)||'uy',tipoTxt=TIPOS.filter(function(t){return t[0]===ti})[0][1].toLowerCase()+(ti!=='uy'&&p.ingreso.moneda==='USD'?', en dólares':'');
+  var cobro=reglaCobro(c);
+  var ti=p.ingreso&&p.ingreso.factura?'factura':(p.ingreso&&p.ingreso.tipo)||'uy',nt=NOMBRE_TIPO[ti]||'Sueldo en Uruguay',tipoTxt=nt.charAt(0).toLowerCase()+nt.slice(1)+(ti!=='uy'&&p.ingreso.moneda==='USD'?', en dólares':'');
   return (p.nombre?'<b>'+esc(p.nombre)+'</b> · ':'')+tipoTxt+' · cobrás '+cobro+' · '
     +(sinHoras(ti)||H.activo===false?'sin horas extra':'hora normal = sueldo ÷ '+num(H.divisor)+', extra ×'+String(H.multSem).replace('.',',')+', finde ×'+String(H.multFin).replace('.',',')+', cuenta si pasás '+fMin(num(H.umbral)));
 }

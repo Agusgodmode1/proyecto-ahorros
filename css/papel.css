@@ -1257,11 +1257,6 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 .lb-superv b{color:var(--ink)}
 .v2 .sv-llego small{display:block;color:var(--muted);font-size:14px;margin-top:2px}
 
-/* ---------- Cobro por jornal: «Cobré» (2.19) ---------- */
-.v2 .cobre h2{margin:0}
-.v2 .cobre-fila{display:flex;gap:10px;align-items:center}
-.v2 .cobre-fila .money{flex:1;min-width:0}
-
 /* ---------- Ingresos fijos y «Te va a entrar» (2.20) ---------- */
 .v2 .entradas{box-shadow:inset 3px 0 0 var(--bien),inset 0 0 0 1px var(--line)}
 .v2 .ing-card h2{margin:0}
@@ -1270,64 +1265,19 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 .v2 .ing-acc{display:flex;gap:4px;width:100%;justify-content:flex-end}
 .v2 .ing-acc .btn{min-height:44px}
 
-/* ---------- Cuando vendo (2.21) ---------- */
-.v2 .ventas{box-shadow:inset 3px 0 0 var(--oro),inset 0 0 0 1px var(--line)}
-.v2 .vt-n{margin:0;display:flex;align-items:baseline;justify-content:space-between;gap:12px}
-.v2 .vt-n span{font:600 15px/1.2 var(--f-body);color:var(--muted)}
-.v2 .vt-n b{font:600 32px/1.1 var(--f-display);color:var(--azul);font-variant-numeric:lining-nums}
-.v2 .ventas .bar.ok i{background:var(--bien)}
-.v2 .vt-estado{margin:0;font-weight:700}
-.v2 .vt-estado.bien{color:var(--bien)}
-.v2 .vt-estado.falta{color:var(--ink)}
-.v2 .vt-gan{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border-radius:14px;background:color-mix(in srgb,var(--bien) 9%,transparent)}
-.v2 .vt-gan p{margin:0;display:grid;gap:2px}
-.v2 .vt-gan span{font:600 13.5px/1.2 var(--f-body);color:var(--muted)}
-.v2 .vt-gan b{font:600 24px/1.1 var(--f-display);color:var(--bien);font-variant-numeric:lining-nums}
-.v2 .vt-gan small{color:var(--muted);font-size:14px}
-.v2 .vt-pas summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-weight:600}
-.v2 .vt-g{color:var(--bien);font-weight:700;font-size:14px}
-.v2 #cobre-nota{width:100%}
-
-/* ---------- «Tu plata alcanza» (2.22, cuando vendo): en el lugar de «Cobrás en» ---------- */
-.v2 .hoja .cd.cd-alcanza{grid-template-areas:"l d" "v v" "seg seg" "r r" "p p" "e e"}
-.v2 .hoja .cd .cd-ritmo{grid-area:r;font:500 14px/1.4 var(--f-body);color:var(--muted);margin-top:4px}
-.v2 .hoja .cd .cd-ritmo .linklike{min-height:44px;font-size:14px}
-.v2 .hoja .cd .cd-pago{grid-area:p;font:500 15px/1.4 var(--f-body);color:var(--ink);margin-top:6px;padding-top:10px;border-top:1px solid var(--line)}
-.v2 .hoja .cd .cd-est{grid-area:e;font:700 15px/1.4 var(--f-body);margin-top:2px}
-.v2 .hoja .cd .cd-est.bien{color:var(--bien)}
-.v2 .hoja .cd .cd-est.falta{color:var(--ink)}
-.v2 .cd-mas{align-self:center;margin-left:6px;white-space:nowrap;font:700 18px var(--f-body);color:var(--bien);animation:cd-mas 2.2s ease-out forwards;pointer-events:none}
-@keyframes cd-mas{0%{opacity:0;transform:translateY(8px)}15%{opacity:1;transform:none}75%{opacity:1}100%{opacity:0;transform:translateY(-14px)}}
-@media (prefers-reduced-motion:reduce){.v2 .cd-mas{animation:cd-mas-q 2.2s linear forwards}@keyframes cd-mas-q{0%,80%{opacity:1}100%{opacity:0}}}
-
-/* ---------- Prólogo (2.23): «¿Cómo te entra la plata?» y «Tus pagos fijos» ---------- */
-.lb-modos{display:grid;gap:8px}
-.lb-modo{display:grid;gap:2px;text-align:left;min-height:56px;padding:10px 14px;border-radius:14px;border:1px solid var(--line-2);background:transparent;color:var(--ink);font:inherit;cursor:pointer}
-.lb-modo b{font:700 17px/1.25 var(--f-body)}
-.lb-modo small{font:500 14px/1.3 var(--f-body);color:var(--muted)}
-.lb-modo[aria-checked="true"]{background:var(--sel);border-color:var(--sel);color:var(--on-sel);box-shadow:inset 0 -3px 0 var(--oro)}
-.lb-modo[aria-checked="true"] small{color:color-mix(in srgb,var(--on-sel) 80%,transparent)}
-.lb-modo:focus-visible{outline:2px solid var(--azul);outline-offset:2px}
-.lb-detalle{display:grid;gap:10px}
+/* ---------- Prólogo (2.23): «Tus pagos fijos» ---------- */
 .lb-sep{padding-top:12px;border-top:1px solid var(--line)}
 .lb-p.chico{font-size:15px;margin:0}
 .lb-dia-in{max-width:9.5em}
 .lb-hojas .lb-dia-in input{font-size:24px!important}
-.lb-pacto li>b.lb-regla{font:600 17px/1.3 var(--f-body)!important;max-width:62%}
 
-/* ---------- Capítulo IV · Ingresos (2.24, por jornal y cuando vendo) ---------- */
-#p-sueldo.solo-ingresos>:not(#ingresos-ver){display:none!important}
-.v2 .ing-sem{list-style:none;margin:0;padding:0;display:grid;gap:10px}
-.v2 .ing-sem li{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"r v" "b b" "s s";gap:4px 12px;align-items:baseline}
-.v2 .ing-sem .ing-r{grid-area:r;font:600 14px var(--f-body);color:var(--muted)}
-.v2 .ing-sem li.actual .ing-r{color:var(--ink)}
-.v2 .ing-sem b{grid-area:v;font-variant-numeric:lining-nums tabular-nums}
-.v2 .ing-sem .ing-b{grid-area:b;height:8px;border-radius:99px;background:var(--line)}
-.v2 .ing-sem .ing-b i{display:block;height:100%;border-radius:inherit;background:var(--azul)}
-.v2 .ing-sem small{grid-area:s;color:var(--muted);font-size:14px}
-.v2 .ing-sem li.fut{opacity:.55}
-.v2 .ing-auto b{color:var(--bien)}
-.v2 .ing-lista2 li{align-items:center}
-.v2 .ing-lista2 .what small{display:block;color:var(--muted);font-size:13.5px}
-.v2 .wk-vt{margin:0;font:500 15px/1.4 var(--f-body);color:var(--ink)}
-.v2 .wk-vt .ok{color:var(--bien);font-weight:700}
+/* =====================================================================
+   Sueldo: cómo cobrás (2.26)
+   ===================================================================== */
+.v2 .sd-forma{display:flex;align-items:center;justify-content:space-between;gap:var(--e3);padding-bottom:var(--e3);border-bottom:1px solid var(--line)}
+.v2 .sd-forma .note{margin:2px 0 0}
+.v2 .sd-forma .btn{flex:none;min-height:44px}
+
+/* (2.26) en el prólogo, el campo del ahorro y el deslizador miden 44 px de alto (se tocan con el dedo) */
+.lb-hojas .lb-monto.chico input{min-height:44px}
+.lb-hojas .lb-rango{min-height:44px}

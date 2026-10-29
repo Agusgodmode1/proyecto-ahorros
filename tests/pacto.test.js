@@ -82,7 +82,7 @@ test('sugiere el 5.º día hábil contando solo los feriados no laborables',func
   var s=sugerirCobro(nuevo(),HOY);
   assert.equal(s.fecha,'2026-11-06');assert.equal(s.perfil,false);
   var st=nuevo();st.perfil.hecho=true;st.perfil.cobro={tipo:'fijo',dia:15,laborableHabil:true};
-  assert.deepEqual(sugerirCobro(st,HOY),{fecha:'2026-11-15',perfil:true,tipo:'fijo',frecuencia:'mensual'});
+  assert.deepEqual(sugerirCobro(st,HOY),{fecha:'2026-11-15',perfil:true,tipo:'fijo'});
 });
 
 test('sellar pasa los datos al plan, arranca hoy y anota el sello',function(){
@@ -91,7 +91,7 @@ test('sellar pasa los datos al plan, arranca hoy y anota el sello',function(){
   assert.equal(v.ok,true);
   assert.equal(st.plan.monto,24050);assert.equal(st.plan.ahorro,5000);assert.equal(st.plan.modo,'monto');
   assert.equal(st.plan.inicio,HOY);assert.equal(st.plan.cobro,'2026-11-06');
-  assert.deepEqual(st.pacto,{sellado:HOY,numero:1,usd:100,apartado:[],pct:0.208});
+  assert.deepEqual(st.pacto,{sellado:HOY,numero:1,usd:100,apartado:[]});
   assert.equal(st.monedas.cotizacion,40.5);
 });
 
@@ -149,21 +149,13 @@ test('migración: un estado ya en v14 sin sellar sigue sin sellar',function(){
 });
 
 import {normFijosNuevos} from '../js/logica/pacto.js';
-test('(2.23) el prólogo carga pagos fijos, ingresos fijos y la regla de cobro',function(){
+test('(2.23) el prólogo carga los pagos fijos; siempre se cobra por mes',function(){
   var st=nuevo();
-  var d={total:30000,ahorro:0,cobro:'2026-11-02',cobroCfg:{frecuencia:'semanal',dow:1},
-    fijos:[{nombre:'Alquiler',monto:12000,dia:5,cat:'Vivienda'},{nombre:'',monto:0}],ingresos:[{nombre:'Ayuda',monto:5000,dia:10}],pctCobro:''};
+  var d={total:30000,ahorro:0,cobro:'2026-11-06',fijos:[{nombre:'Alquiler',monto:12000,dia:5,cat:'Vivienda'},{nombre:'',monto:0}]};
   assert.equal(normFijosNuevos(d.fijos).length,1);
   var c=cuentaPacto(st,d,HOY);
-  assert.equal(c.reserva.parte,2760,'semanal: aparta 7/30,4 del alquiler que todavía no está cargado');
+  assert.equal(c.fijos,12000,'el alquiler vence el 5, antes de cobrar: se descuenta entero');
   var v=sellarPacto(st,d,HOY);assert.equal(v.ok,true);
   assert.equal(st.fijos.length,1);assert.equal(st.fijos[0].nombre,'Alquiler');
-  assert.equal(st.ingresosFijos.length,1);
-  assert.equal(st.perfil.cobro.frecuencia,'semanal');assert.equal(st.perfil.cobro.dow,1);
-  assert.equal(sugerirCobro(st,HOY,{frecuencia:'semanal',dow:5}).fecha,'2026-10-30');
-});
-test('(2.23) por jornal: la parte de cada cobro y cuánto dura el plan',function(){
-  var st=nuevo();
-  sellarPacto(st,{total:3000,ahorro:0,cobro:'2026-11-09',cobroCfg:{frecuencia:'jornal',horizonte:7},pctCobro:10},HOY);
-  assert.equal(st.pacto.pct,0.1);assert.equal(st.perfil.cobro.horizonte,14);
+  assert.equal(st.perfil.cobro.frecuencia,undefined);assert.equal(st.pacto.pct,undefined);
 });

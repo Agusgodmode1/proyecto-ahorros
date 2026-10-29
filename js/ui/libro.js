@@ -2,7 +2,9 @@
    El prólogo son las primeras 7 páginas del libro: propósito, ¿con cuánta plata?, ¿toda se puede gastar? (la plata apartada),
    tus pagos fijos, ¿cuánto ahorrar?, ¿qué día cobrás? y el pacto. Siempre se cobra una vez al mes (la regla del día está en el perfil).
    Modos:
-   - 'nuevo': la primera vez. Tapa (con importar o ver el ejemplo) → apertura → las 5 páginas → «Sellar el pacto».
+   - 'nuevo': la primera vez. Tapa (con importar o ver el ejemplo) → apertura → «¿Qué querés hacer?» (2.26: el pacto o una
+     herramienta suelta, o.alHerramienta) → las páginas del prólogo → «Sellar el pacto». Con o.sinTapa (armar el pacto
+     después de usar una herramienta) arranca directo en la primera página, con «Ahora no» para volver.
    - 'ciclo': al cobrar. Solo las 3 preguntas y el pacto nuevo; o.antes(estado) cierra el ciclo justo antes de sellar.
    - 'hojear': ya hay datos. Las mismas páginas muestran tus valores de hoy, con «Cambiar» para corregirlos en el lugar.
    - 'tapa': «Cerrar el libro». La tapa se cierra (la apertura al revés, más rápida) y al tocarla se abre de nuevo en Hoy.
@@ -19,6 +21,7 @@ import {atajosSupervivencia} from '../logica/supervivencia.js';
 import {aplicarFeriados} from './feriados.js';
 import {montarImportador} from './respaldo.js';
 import {marcarTour} from './tour.js';
+import {listaHerrHTML} from './herramientas.js';
 import {$,today,money,usd,esc,toastAccion,ctx} from './comun.js';
 import {sonar} from './sonido.js';
 import {girar,terminar as terminarPase} from './pase.js';
@@ -164,16 +167,22 @@ function actuales(){var pc=planCalc(st);return {tenes:Math.round(Math.max(0,disp
 
 function pagHTML(id){
   var ciclo=o.modo==='ciclo',n=PROLOGO.indexOf(id)+1;
-  var folio='<p class="lb-folio">— '+n+' —</p>';
+  var folio=n>0?'<p class="lb-folio">— '+n+' —</p>':'';
   var conBrote=id==='q1'||id==='qa'||id==='qf'||id==='q2'||id==='q3';
-  var cab='<div class="lb-cab'+(conBrote?' con-brote':'')+'"><span class="lb-cap">'+(ciclo?'pacto nuevo':id==='pacto'?'el pacto':'prólogo')+'</span>'
+  var cab='<div class="lb-cab'+(conBrote?' con-brote':'')+'"><span class="lb-cap">'+(ciclo?'pacto nuevo':id==='que'?'el libro del ahorro':id==='pacto'?'el pacto':'prólogo')+'</span>'
     +(conBrote?broteHTML(Math.min(broteVisto,3)):'')
-    +(hojear()||ciclo?'<button class="lb-link" type="button" data-lb="cerrar-libro">'+(ciclo?'Ahora no':'Ir a Hoy')+'</button>':conBrote?'<span></span>':'')+'</div>';
+    +(hojear()||ciclo||o.sinTapa?'<button class="lb-link" type="button" data-lb="cerrar-libro">'+(ciclo||o.sinTapa?'Ahora no':'Ir a Hoy')+'</button>':conBrote?'<span></span>':'')+'</div>';
   var atras=idx>0?'<button class="lb-btn chico" type="button" data-lb="atras" aria-label="Página anterior">‹ Atrás</button>'
     :(hojear()&&o.alTapa?'<button class="lb-btn chico" type="button" data-lb="atras" aria-label="Cerrar el libro: la tapa">‹ La tapa</button>':'');
   var sig='<button class="lb-btn si" type="button" data-lb="sig">'+(id==='p1'?(hojear()?'Pasar la página':'Empezar'):'Seguir')+'</button>';
   var acc='<div class="lb-acc">'+atras+sig+'</div>',h='';
-  if(id==='p1'){
+  if(id==='que'){
+    /* (2.26) ¿Qué querés hacer?: el pacto completo o una herramienta suelta, sin llenar nada más */
+    h='<h1 class="lb-h lb-tinta" id="lb-h">'+tinta('¿Qué querés hacer?')+'</h1>'
+      +'<button class="lb-camino" type="button" data-lb="sig"><span><b>Armar mi pacto de ahorro</b><small>Cuánto podés gastar cada día hasta que cobres. Unos 2 minutos.</small></span><i aria-hidden="true">›</i></button>'
+      +'<p class="lb-o">O usá una herramienta suelta, sin llenar nada más:</p>'
+      +listaHerrHTML('lb-herr','data-lb="herr"');
+  }else if(id==='p1'){
     h=exLibrisHTML()+'<h1 class="lb-h lb-tinta" id="lb-h">'+tinta('Este libro tiene un solo propósito')+'</h1>'
       +'<p class="lb-cita">que generes un ahorro, por más mínimo que sea.</p>'+ORLA
       +'<p class="lb-p lb-cap-ini">No es un libro para leer: es un libro para usar. Cada día te dice cuánto podés gastar sin tocar lo que guardás, y hasta cuándo te alcanza. Para armar tu plan necesito saber <b>tres cosas</b>:</p>'
@@ -191,6 +200,7 @@ function pagHTML(id){
         :ed?'Si gastaste algo sin anotarlo, poné lo que tenés de verdad: anoto la diferencia y se recalcula todo.'+(apH>0?' Contá también lo apartado ('+money(apH)+'): lo descuento solo.':'')
         :'Todo lo que tenés hoy, en la cuenta y en efectivo, aunque una parte no sea para gastar.')+'</p>'
       +'<div class="lb-campo"><label for="lb-pesos">Tengo hoy</label><div class="lb-monto"><span>$</span><input id="lb-pesos" type="number" inputmode="decimal" min="0" step="any" placeholder="0" value="'+esc(D.pesos)+'"></div></div>'
+      +(!ed&&!ciclo&&o.sugerencia&&o.sugerencia.monto?'<div class="lb-chips" role="group" aria-label="Sugerencia"><button class="lb-chip" type="button" data-lb="sug-monto" data-val="'+o.sugerencia.monto+'">Lo que cobrás: '+money(o.sugerencia.monto)+'</button></div>':'')
       +'<label class="lb-check"><input type="checkbox" id="lb-conusd"'+(D.conUsd?' checked':'')+'> También tengo dólares</label>'
       +'<div class="lb-dos" id="lb-usd-box"'+(D.conUsd?'':' hidden')+'>'
       +'<div class="lb-campo"><label for="lb-usd">Dólares</label><div class="lb-monto chico"><span>US$</span><input id="lb-usd" type="number" inputmode="decimal" min="0" step="any" placeholder="0" value="'+esc(D.usd)+'"></div></div>'
@@ -624,10 +634,11 @@ export function abrirLibro(opt){
   var sg=sugerirCobro(st,today()),c=parse(sg.fecha);
   D={nombre:null,pesos:'',usd:'',cotiz:cotizacion(st)?String(cotizacion(st)):'',conUsd:false,ahorro:null,cobro:sg.fecha,mes:[c.getFullYear(),c.getMonth()],hayAp:null,ap:[],fj:[]};
   broteVisto=0;
-  PAGS=o.modo==='ciclo'?PROLOGO.slice(1):PROLOGO.slice();
+  PAGS=o.modo==='ciclo'?PROLOGO.slice(1):(o.modo==='nuevo'&&o.alHerramienta?['que']:[]).concat(PROLOGO);
   var m=$('#libro');
   document.documentElement.classList.add('voz-abierta','lb-abierto');
   if(o.modo==='ciclo'){D.ap=JSON.parse(JSON.stringify((st.pacto&&st.pacto.apartado)||[]));D.hayAp=D.ap.length?true:null;D.pesos=String(Math.round(num(o.total)+totalApartado(D.ap))||'');D.ahorro=String(Math.round(num(st.plan.ahorro))||'');vista='hojas';abrirHojas();return}
+  if(o.modo==='nuevo'&&o.sinTapa){vista='hojas';abrirHojas(PAGS[0],1);return}
   if(o.modo==='hojear'){vista='hojas';var pg=o.editar||o.pagina||'p1';broteVisto=Math.max(0,etapa(pg)-1);abrirHojas(pg,o.dir||1);if(o.editar)empezarEdicion(o.editar);return}
   m.innerHTML=htmlPortada(!!o.alEjemplo);m.hidden=false;m.style.opacity='';
   tapaQuieta(m);montarTapa(m);
@@ -678,6 +689,8 @@ export function initLibro(){
     if(a==='sig'){if(!valida(PAGS[idx]))return;if(idx<PAGS.length-1)irA(idx+1,1);return}
     if(a==='atras'){if(idx>0){E.edit=null;irA(idx-1,-1)}else if(hojear()&&o.alTapa)aLaTapa();return}
     if(a==='cambiar'){empezarEdicion(PAGS[idx]);return}
+    if(a==='herr'){var hid=b.getAttribute('data-h');cerrarTodo(1);o.alHerramienta(st,hid);return}
+    if(a==='sug-monto'){D.pesos=b.getAttribute('data-val');var ip=q('#lb-pesos');if(ip)ip.value=D.pesos;error('');vivoQ1();return}
     if(a==='fila-mas'){D.fj.push({nombre:'',monto:'',dia:''});irA(idx,0);var fm=q('.lb-fila[data-l="fj"]:last-of-type input');if(fm)try{fm.focus()}catch(x){}return}
     if(a==='fila-x'){D.fj.splice(Number(b.getAttribute('data-i')),1);irA(idx,0);return}
     if(a==='fj-sug'){D.fj.push({nombre:b.getAttribute('data-n'),cat:b.getAttribute('data-c'),monto:'',dia:''});irA(idx,0);var fs=q('.lb-fila[data-l="fj"]:last-of-type [data-k="monto"]');if(fs)try{fs.focus()}catch(x){}return}

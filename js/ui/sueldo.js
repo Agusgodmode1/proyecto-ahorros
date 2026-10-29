@@ -14,6 +14,7 @@ import {reciboDe,compararRecibo} from '../logica/recibos.js';
 import {esFactura} from '../logica/factura.js';
 import {renderFactura,initFactura} from './factura.js';
 import {formaCobroTxt} from './perfil.js';
+import {sueldoVacio,aplicarFormaCobro} from '../logica/herramientas.js';
 import {initLector} from './lector.js';
 
 /* ---------- Arriba de todo (2.12): «Vas a cobrar ≈ $X el vie 6 nov», el recibo en miniatura y la precisión ---------- */
@@ -38,6 +39,44 @@ function renderPregunta(conHoras,tipo){
   el.innerHTML=!H.preguntado&&tipo!=='variable'?'<div class="card stack pregunta-horas"><h2>¿En tu trabajo hay horas extra?</h2><p class="note">Te lo pregunto una sola vez. Si no hay, saco todo lo de las horas extra de esta página (lo podés cambiar en Mi perfil).</p><div class="row-btns"><button class="btn primary" type="button" data-hx="si">Sí, a veces</button><button class="btn" type="button" data-hx="no">No, nunca</button></div></div>':'';
 }
 
+/* ---------- (2.26) «Calcular mi sueldo»: sin nada cargado, una sola pregunta arriba ---------- */
+var emp={tipo:'uy',cobro:'habil5'};
+var EMP_TIPOS=[['uy','Sueldo en Uruguay'],['personalizado','Sueldo con mis descuentos'],['factura','Factura mensual']];
+var EMP_NOM={uy:'Tu sueldo nominal (antes de descuentos)',personalizado:'Tu sueldo, antes de tus descuentos',factura:'Lo que facturás en un mes normal (sin IVA)'};
+var EMP_DIA=[['habil5','5.º día hábil'],['ultimoHabil','Último día hábil'],['fijo','Un día fijo']];
+function segEmp(k,lista,val){return lista.map(function(x){return '<button type="button" data-emp-'+k+'="'+x[0]+'" aria-pressed="'+(val===x[0])+'">'+x[1]+'</button>'}).join('')}
+function renderEmpezar(vacio){
+  var el=$('#sd-empezar');if(!el)return;
+  $('#p-sueldo').classList.toggle('sd-vacio',vacio);
+  el.hidden=!vacio;if(!vacio){el.innerHTML='';return}
+  if(el.innerHTML&&el.contains(document.activeElement))return; /* no se redibuja mientras escribís */
+  el.innerHTML='<h2>¿Cuánto cobrás por mes?</h2>'
+    +'<p class="note">Con esto te digo cuánto te queda en mano y cuánto vale tu hora.</p>'
+    +'<div class="field"><span class="lab" id="emp-tl">¿Qué cobrás?</span><div class="seg emp-seg" role="group" aria-labelledby="emp-tl">'+segEmp('tipo',EMP_TIPOS,emp.tipo)+'</div></div>'
+    +'<div class="field"><label for="emp-nom" id="emp-nl">'+EMP_NOM[emp.tipo]+'</label><div class="money"><span>$</span><input id="emp-nom" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></div></div>'
+    +'<div class="field"><span class="lab" id="emp-cl">¿Qué día cobrás?</span><div class="seg emp-seg" role="group" aria-labelledby="emp-cl">'+segEmp('cobro',EMP_DIA,emp.cobro)+'</div></div>'
+    +'<div class="field" id="emp-dia-f"'+(emp.cobro==='fijo'?'':' hidden')+'><label for="emp-dia">¿Qué día del mes?</label><input id="emp-dia" type="number" inputmode="numeric" min="1" max="31" step="1" placeholder="10"></div>'
+    +'<p class="err" id="emp-err" role="alert" hidden></p>'
+    +'<div class="row-btns"><button class="btn primary" type="button" id="emp-ok">Calcular</button></div>'
+    +'<p class="note">¿Tenés el recibo? <button class="linklike" type="button" data-emp-recibo>Subilo y lo leo</button>.</p>';
+}
+function clicEmpezar(e){
+  var t=e.target.closest('[data-emp-tipo]');
+  if(t){emp.tipo=t.getAttribute('data-emp-tipo');t.parentNode.querySelectorAll('button').forEach(function(b){b.setAttribute('aria-pressed',String(b===t))});$('#emp-nl').textContent=EMP_NOM[emp.tipo];return true}
+  var c=e.target.closest('[data-emp-cobro]');
+  if(c){emp.cobro=c.getAttribute('data-emp-cobro');c.parentNode.querySelectorAll('button').forEach(function(b){b.setAttribute('aria-pressed',String(b===c))});$('#emp-dia-f').hidden=emp.cobro!=='fijo';return true}
+  if(e.target.closest('[data-emp-recibo]')){var s=$('#sd-subir');if(s&&!s.hidden)try{s.scrollIntoView({block:'start',behavior:'smooth'})}catch(x){}return true}
+  if(e.target.closest('#emp-ok')){
+    var r=aplicarFormaCobro(ctx.state,{tipo:emp.tipo,nominal:$('#emp-nom').value,cobro:{tipo:emp.cobro,dia:$('#emp-dia').value}},today()),er=$('#emp-err');
+    if(!r.ok){er.textContent=emp.tipo==='factura'?'Escribí cuánto facturás en un mes normal.':'Escribí tu sueldo.';er.hidden=false;try{$('#emp-nom').focus()}catch(x){}return true}
+    ctx.persist();ctx.syncInputs();ctx.renderAll();
+    try{window.scrollTo({top:0,behavior:'smooth'})}catch(x){window.scrollTo(0,0)}
+    toast('Listo: te quedan ≈ '+money(liqNow(true).liquido)+' en mano por mes');
+    return true;
+  }
+  return false;
+}
+
 var tipoSel='sem',confirmClear=false;
 var REDTXT={media:' y se pagan redondeados a la media hora',cuarto:' y se pagan redondeados al cuarto de hora',no:' y se pagan sin redondear'};
 
@@ -46,6 +85,8 @@ export function renderSueldo(){
   var state=ctx.state,s=state.sueldo,Lr=liqNow(true),L=Lr.estimado||Lr,L0=liqNow(false),mc=mins(state,'sem'),me=mins(state,'fin');
   var bpc=num(s.bpc)||6864,nom=num(s.nominal),t=tarifas(state),R=reglasHoras(state),hn=t.hora,finH=t.heEsp+t.bonoHora,conHoras=R.activo!==false;
   var desc=L.mont+L.fon+L.frl+L.irpf+L.otros,extras=L.N-nom;
+  /* (2.26) sin nada cargado: primero «¿Cuánto cobrás por mes?» (o subir el recibo) */
+  renderEmpezar(sueldoVacio(state));
   /* (2.26) cómo cobrás: se elige acá (sueldo o factura, y el día del mes) */
   var ft=$('#sd-forma-txt');if(ft)ft.textContent=formaCobroTxt(state);
   var ing=ingresoDe(state),uy=ing.tipo==='uy';
@@ -291,7 +332,10 @@ export function initSueldo(){
   /* los desplegables recuerdan si los abriste */
   var ab=abiertos();document.querySelectorAll('#p-sueldo [data-sdes]').forEach(function(d){d.open=!!ab[d.getAttribute('data-sdes')]});
   $('#p-sueldo').addEventListener('toggle',function(e){var d=e.target;if(!d.matches||!d.matches('[data-sdes]'))return;var a=abiertos();a[d.getAttribute('data-sdes')]=d.open?1:0;try{localStorage.setItem(KA,JSON.stringify(a))}catch(x){}},true);
+  /* (2.26) «Calcular mi sueldo»: Enter en el monto o el día también calcula */
+  $('#p-sueldo').addEventListener('keydown',function(e){if(e.key==='Enter'&&(e.target.id==='emp-nom'||e.target.id==='emp-dia')){e.preventDefault();var b=$('#emp-ok');if(b)b.click()}});
   $('#p-sueldo').addEventListener('click',function(e){
+    if(clicEmpezar(e))return;
     /* «Para afinarla»: abre el desplegable que hace falta */
     var dir=e.target.closest('[data-sdir]');if(dir){var d=$('#sd-'+dir.getAttribute('data-sdir'));if(d&&d.hidden&&dir.getAttribute('data-sdir')==='subir')d=$('#sd-control');if(d){d.open=true;try{d.scrollIntoView({block:'start',behavior:'smooth'})}catch(x){}}return}
     var hx=e.target.closest('[data-hx]');

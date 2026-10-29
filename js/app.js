@@ -29,6 +29,8 @@ import {initTour,iniciarTour,tourSiPendiente} from './ui/tour.js';
 import {aplicarFeriados,renderFeriados,initFeriados} from './ui/feriados.js';
 import {prepararGuardado,juntar} from './logica/sync.js';
 import {aplicarRepetidos} from './logica/repetidos.js';
+import {tienePacto,pideElPacto,alDiaSinPacto,sugerenciaPacto,herramienta} from './logica/herramientas.js';
+import {listaHerrHTML,irHerramienta,mostrarHerramienta} from './ui/herramientas.js';
 import {renderCategorias,initCategorias} from './ui/categorias.js';
 import {renderRecibos,initRecibos} from './ui/recibos.js';
 import {pinActivo,pedirPin,initPin,renderAjustesPin,initAjustesPin} from './ui/pin.js';
@@ -109,7 +111,11 @@ function renderAll(){
   var pc=planNow();
   if(/^w\d+$/.test(ctx.tab)&&Number(ctx.tab.slice(1))>=pc.weeks.length)ctx.tab='resumen';
   try{localStorage.setItem(TK,ctx.tab)}catch(e){}
-  evalLogros(pc);
+  var sinP=!tienePacto(ctx.state),inv=sinP&&pideElPacto(ctx.tab);
+  if(!sinP)evalLogros(pc);
+  /* (2.26) sin pacto: Hoy, Semanas y Logros muestran una invitación; los demás capítulos andan igual */
+  hojaEl().classList.toggle('no-pacto',sinP);hojaEl().classList.toggle('sin-pacto',inv);
+  var ip=$('#inv-pacto');if(ip){ip.hidden=!inv;ip.innerHTML=inv?invitacionHTML(ctx.tab):''}
   var n=ctx.state.perfil.nombre;$('#saludo').textContent=n?'Hola, '+n:'Hola';
   /* Con el perfil hecho, la explicación del encabezado ya no hace falta y deja lugar a lo importante */
   var hs=document.querySelector('.hero-sub');if(hs)hs.hidden=!!ctx.state.perfil.hecho;
@@ -129,6 +135,15 @@ function renderAll(){
   if(ctx.tab==='ajustes'){renderAjustes(guardado);renderFeriados();renderAjustesPin();marcarSonido();
     document.querySelectorAll('[data-sobrante]').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-sobrante')===(ctx.state.plan.sobrante||'siguiente')))});renderCopias();$('#aj-perfil').innerHTML=resumenPerfil(ctx.state)}
   tourSiPendiente();
+}
+/* (2.26) La invitación a armar el pacto (Hoy, Semanas y Logros sin pacto), con las herramientas que andan sin él */
+function invitacionHTML(tab){
+  var c=capituloDe(tab);
+  return '<section class="inv-pacto" aria-labelledby="inv-t">'+(c&&c.id!=='resumen'?'<p class="cap-kick">capítulo '+c.n+' · '+c.t.toLowerCase()+'</p>':'')
+    +'<h2 id="inv-t">Para esto, armá tu pacto</h2>'
+    +'<p class="inv-p">Son 3 preguntas: con cuánta plata empezás, cuánto querés guardar y qué día cobrás.</p>'
+    +'<div class="row-btns"><button class="btn primary" type="button" data-pacto-armar>Armar mi pacto</button></div>'
+    +'<p class="inv-o">O usá una herramienta suelta:</p>'+listaHerrHTML('inv-h','data-herr')+'</section>';
 }
 /* Orden de las páginas, para saber si pasar la hoja hacia adelante o hacia atrás */
 function orden(t){
@@ -187,6 +202,7 @@ function go(t,opt){
 }
 /* El prólogo con tus datos (modo hojear): se llega deslizando hacia atrás desde Hoy, desde el índice o desde «Tenés» y «Guardás» */
 function abrirPrologo(pagina,editar,dir){
+  if(!tienePacto(ctx.state)){abrirPacto();return}
   abrirLibro({modo:'hojear',estado:ctx.state,pagina:pagina,editar:editar,dir:dir||1,
     alGuardar:function(v){
       persist();syncInputs();renderAll();
@@ -196,6 +212,19 @@ function abrirPrologo(pagina,editar,dir){
     alCerrar:function(){if(ctx.tab!=='resumen'){ctx.tab='resumen';renderAll()}},
     /* desde la primera página del prólogo, hacia atrás: la tapa cerrada (al tocarla se abre en Hoy) */
     alTapa:function(){cerrarLibro()}});
+}
+/* (2.26) Armar el pacto después de usar una herramienta: el prólogo desde la primera página, con lo que ya cargaste
+   (la fecha de cobro sale de tu regla y, si calculaste tu sueldo, te sugiere el monto) */
+function abrirPacto(){
+  abrirLibro({modo:'nuevo',sinTapa:true,estado:ctx.state,sugerencia:sugerenciaPacto(ctx.state,today()),
+    listo:function(){persist();syncInputs();ctx.tab='resumen';renderAll();window.scrollTo(0,0);entrada()},
+    alCerrar:function(){renderAll()}});
+}
+/* La primera vez, una herramienta: arranca la app sin pacto, directo en su capítulo */
+function arrancarCon(st,id){
+  var h=herramienta(id);
+  arrancar(st,h&&h.tab);flush();
+  setTimeout(function(){mostrarHerramienta(id)},120);
 }
 /* «Cerrar el libro»: la tapa se cierra; al tocarla se abre de nuevo en Hoy */
 function cerrarLibro(){
@@ -280,10 +309,10 @@ function repetirSolos(){
 
 /* Reemplaza todos los datos (importar un respaldo, volver a una copia, borrar el ejemplo).
    Antes guarda una copia de lo que había, para poder volver atrás. */
-async function reemplazar(st,motivo){
+async function reemplazar(st,motivo,tab){
   if(ctx.state)await guardarCopia(JSON.parse(JSON.stringify(ctx.state)),motivo||'antes de reemplazar tus datos');
   if(!st.meta.creado)st.meta.creado=today();
-  ctx.state=st;ctx.tab='resumen';aplicarFeriados();fijarUltimo();
+  ctx.state=st;ctx.tab=tab||'resumen';aplicarFeriados();alDiaSinPacto(st,today());fijarUltimo();
   syncInputs();renderAll();precargarTarjeta();flush();
   window.scrollTo(0,0);
 }
@@ -338,6 +367,9 @@ function initGlobal(){
     /* Mis datos (plata de hoy, meta y fijos) y el tour, desde Ajustes */
     if(e.target.closest('#aj-tour')){olvidarIntros();iniciarTour()}
     if(e.target.closest('#aj-prologo'))abrirPrologo('p1');
+    /* (2.26) sin pacto: armarlo, o ir a una herramienta */
+    if(e.target.closest('[data-pacto-armar]')){abrirPacto();return}
+    var hr=e.target.closest('[data-herr]');if(hr){irHerramienta(hr.getAttribute('data-h'));return}
     var pie=e.target.closest('[data-pie]');if(pie)go(pie.getAttribute('data-pie'));
     /* (2.15) el índice de Ajustes: va a cada sección */
     var aji=e.target.closest('[data-ajir]');
@@ -358,7 +390,8 @@ function initGlobal(){
       if(c.getAttribute('data-armed')!=='1'){c.setAttribute('data-armed','1');c.textContent='¿Seguro? Se borra todo lo de ejemplo';return}
       var meta=ctx.state.meta,nuevo=defaults();nuevo.meta=meta;
       /* Perfil nuevo: el libro arranca de cero, con el prólogo y el pacto */
-      abrirLibro({modo:'nuevo',estado:nuevo,listo:function(st){reemplazar(st,'antes de borrar los datos de ejemplo')},alCerrar:function(){renderAll()}});
+      abrirLibro({modo:'nuevo',estado:nuevo,listo:function(st){reemplazar(st,'antes de borrar los datos de ejemplo')},alCerrar:function(){renderAll()},
+        alHerramienta:function(st,id){var h=herramienta(id);reemplazar(st,'antes de borrar los datos de ejemplo',h&&h.tab).then(function(){setTimeout(function(){mostrarHerramienta(id)},120)})}});
     }
   });
   /* el volumen: se escucha la hoja al soltar el control */
@@ -370,7 +403,7 @@ function initGlobal(){
   $('#discreto').addEventListener('click',function(){setDiscreto(!discreto.on);marcarDiscreto();renderAll();toast(discreto.on?'Montos ocultos':'Montos visibles')});
   document.addEventListener('visibilitychange',function(){
     if(document.visibilityState==='hidden')flushPendiente();
-    else if(ctx.state){repetirSolos();renderAll()} /* al volver otro día, se actualizan "hoy", la cuenta regresiva y lo que se repite */
+    else if(ctx.state){repetirSolos();if(alDiaSinPacto(ctx.state,today()))persist();renderAll()} /* al volver otro día, se actualizan "hoy", la cuenta regresiva y lo que se repite */
   });
   window.addEventListener('pagehide',flushPendiente);
 }
@@ -385,11 +418,14 @@ function marcarDiscreto(){
   document.querySelectorAll('[data-discreto]').forEach(function(x){x.setAttribute('aria-pressed',String((x.getAttribute('data-discreto')==='1')===discreto.on))});
 }
 /* ---------- Arranque ---------- */
-function arrancar(st){
+function arrancar(st,tab){
   ctx.state=st;aplicarFeriados();fijarUltimo();
   if(!st.meta.creado){st.meta.creado=today();persist()}
+  /* (2.26) sin pacto, el «hasta el cobro» de Fijos y la Tarjeta se mantiene al día */
+  if(alDiaSinPacto(st,today()))persist();
   var rs=aplicarRepetidos(st,today());if(rs.length)persist();
   try{var t=localStorage.getItem(TK);if(t)ctx.tab=t}catch(e){}
+  if(tab)ctx.tab=tab;
   initNotas();
   guiaInit();initGlobal();initPlan();initSemanas();initSueldo();initTarjeta();initFijos();initLogros();initAjustes(reemplazar,juntarDatos);initGuardado();initVoz();initFeriados();initCategorias();initRecibos();initAjustesPin();initPostal();
   marcarDiscreto();
@@ -421,5 +457,5 @@ ctx.persist=persist;ctx.renderAll=renderAll;ctx.go=go;ctx.syncInputs=syncInputs;
   if(d){var mig=necesitaMigrar(d);arrancar(migrar(d));if(mig)flush();setStatus('Se guarda en este dispositivo.');return}
   /* Primera vez: el libro cerrado. Al abrirlo, el prólogo y las tres preguntas del pacto. */
   function listo(st){arrancar(st);flush()}
-  abrirLibro({modo:'nuevo',estado:defaults(),listo:listo,alImportar:listo,alEjemplo:function(){listo(ejemplo())}});
+  abrirLibro({modo:'nuevo',estado:defaults(),listo:listo,alImportar:listo,alEjemplo:function(){listo(ejemplo())},alHerramienta:arrancarCon});
 })();

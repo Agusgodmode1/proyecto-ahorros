@@ -1281,3 +1281,49 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 /* (2.26) en el prólogo, el campo del ahorro y el deslizador miden 44 px de alto (se tocan con el dedo) */
 .lb-hojas .lb-monto.chico input{min-height:44px}
 .lb-hojas .lb-rango{min-height:44px}
+
+/* =====================================================================
+   Herramientas sueltas y «¿Qué querés hacer?» (2.26)
+   ===================================================================== */
+.herr-l{list-style:none;margin:0;padding:0;display:grid}
+.herr-l button{all:unset;box-sizing:border-box;width:100%;display:grid;grid-template-columns:34px minmax(0,1fr) 14px;align-items:center;gap:12px;min-height:60px;padding:10px 2px;border-bottom:1px solid var(--line);cursor:pointer;color:var(--ink);-webkit-tap-highlight-color:transparent}
+.herr-l li:last-child button{border-bottom:0}
+.herr-l button:focus-visible{outline:2px solid var(--azul);outline-offset:2px;border-radius:8px}
+.herr-l b{display:block;font:600 17px/1.25 var(--f-body)}
+.herr-l small{display:block;font:500 14px/1.3 var(--f-body);color:var(--muted);margin-top:2px}
+.herr-l i{font-style:normal;color:var(--oro-t);font-size:22px;line-height:1}
+.herr-ic{width:30px;height:30px;color:var(--ink)}
+/* el camino completo: la única acción naranja de la página */
+.lb-camino{all:unset;box-sizing:border-box;width:100%;display:grid;grid-template-columns:minmax(0,1fr) 20px;align-items:center;gap:12px;min-height:76px;margin:12px 0 18px;padding:16px 18px;border-radius:16px;background:var(--cta);color:var(--on-cta);cursor:pointer;box-shadow:0 3px 0 color-mix(in srgb,var(--cta) 55%,#3a1500);-webkit-tap-highlight-color:transparent}
+.lb-camino b{display:block;font:700 19px/1.2 var(--f-body)}
+.lb-camino small{display:block;font:500 15px/1.35 var(--f-body);margin-top:4px}
+.lb-camino i{font-style:normal;font-size:26px;line-height:1}
+.lb-camino:active{transform:translateY(2px);box-shadow:none}
+.lb-camino:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.lb-o{margin:0 0 2px;font:600 15px/1.35 var(--f-body);color:var(--muted)}
+/* la invitación (Hoy, Semanas y Logros sin pacto) */
+.v2 #inv-pacto{margin-top:var(--e4)}
+.v2 .inv-pacto{display:grid;gap:var(--e3)}
+.v2 .inv-pacto .cap-kick{margin:0}
+.v2 .inv-pacto h2{margin:0;font:600 clamp(28px,7.4vw,36px)/1.12 var(--f-libro);color:var(--ink)}
+.v2 .inv-p{margin:0;font-size:17px;line-height:1.5;color:var(--muted)}
+.v2 .inv-o{margin:var(--e3) 0 0;font:600 15px var(--f-body);color:var(--muted)}
+.v2 .hoja.sin-pacto main>section,.v2 .hoja.sin-pacto #cierre-aviso,.v2 .hoja.sin-pacto #countdown,.v2 .hoja.sin-pacto #hoy-hero,
+.v2 .hoja.sin-pacto #saldo-card,.v2 .hoja.sin-pacto #hero-chips{display:none!important}
+.v2 .hoja.no-pacto #hero-mini,.v2 .hoja.no-pacto #meta-alerta{display:none!important}
+@media (min-width:1100px){.v2 .hoja.sin-pacto[data-vista="plan"]{display:block}.v2 .hoja.sin-pacto #inv-pacto{max-width:640px}}
+/* el índice: las herramientas debajo de los capítulos */
+.ix-sec{margin:24px 0 2px;font:600 15px/1.3 var(--f-body);color:var(--oro-t)}
+.ix-herr{margin-bottom:8px}
+/* Sueldo sin nada cargado: «¿Cuánto cobrás por mes?» (o subir el recibo) */
+.v2 #p-sueldo.sd-vacio>#sueldo-hero,.v2 #p-sueldo.sd-vacio>#sueldo-pregunta,.v2 #p-sueldo.sd-vacio>.sdes{display:none!important}
+.v2 .sd-emp h2{margin:0}
+.v2 .sd-emp .note{margin:0}
+.v2 .sd-emp .emp-seg{flex-direction:column}
+.v2 .sd-emp .emp-seg button{min-height:46px}
+@media (min-width:600px){.v2 .sd-emp .emp-seg{flex-direction:row}}
+/* sin pacto, el encabezado no deja el lugar de lo que está escondido (es una grilla con filas fijas) */
+.v2 .hoja.sin-pacto .hero,.v2 .hoja.no-pacto[data-vista="otra"] .hero{row-gap:0}
+/* Sueldo sin nada cargado: una sola acción naranja («Calcular»); la del recibo queda como botón común */
+.v2 #p-sueldo.sd-vacio #sd-subir .btn.primary{background:transparent;color:var(--ink);border-color:var(--line-2);box-shadow:0 2px 0 var(--line-2)}
+.v2 .sd-emp .linklike{display:inline-flex;align-items:center;min-height:44px}

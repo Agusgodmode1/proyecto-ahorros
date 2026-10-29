@@ -1327,3 +1327,19 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 /* Sueldo sin nada cargado: una sola acción naranja («Calcular»); la del recibo queda como botón común */
 .v2 #p-sueldo.sd-vacio #sd-subir .btn.primary{background:transparent;color:var(--ink);border-color:var(--line-2);box-shadow:0 2px 0 var(--line-2)}
 .v2 .sd-emp .linklike{display:inline-flex;align-items:center;min-height:44px}
+
+/* =====================================================================
+   Horas extra: tu horario y cómo te las pagan (2.26)
+   ===================================================================== */
+.v2 .hx{display:grid;gap:var(--e3);padding-bottom:var(--e3);border-bottom:1px solid var(--line)}
+.v2 .hx-pide{margin:0;font-weight:700;color:var(--ink)}
+.v2 .hx-hor{display:flex;flex-wrap:wrap;align-items:center;gap:var(--e2) var(--e3)}
+.v2 .hx-l{font-weight:700;color:var(--ink)}
+.v2 .hx-c{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-weight:600}
+.v2 .hx-c input,.v2 .hx-c select{min-height:44px;font-size:16px;padding:0 8px;width:auto}
+.v2 .hx-pago{display:grid;gap:var(--e3)}
+.v2 .hx-pago h3{margin:var(--e2) 0 0}
+.v2 .hx-q .seg{flex-wrap:wrap}
+.v2 .hx-q .seg button{flex:1 1 auto;min-height:44px}
+.v2 .hx-otro{max-width:14em;margin-top:var(--e2)}
+.v2 #sd-horas.sin-horario #sec-rates,.v2 #sd-horas.sin-horario #card-horas{display:none!important}

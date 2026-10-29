@@ -4,6 +4,7 @@
    Con esas horas y las reglas de tu perfil se calculan los minutos extra de cada día.
    Si la planilla trae su propio bloque de horas extra por día, se compara y se avisa si no coincide. */
 import {extraPorHorario,tipoDeDia} from './horario.js';
+var SIN_HORARIO='Para contar las extras de entre semana necesito tu horario (en Horas extra).';
 import {pad} from './fechas.js';
 
 function limpio(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').trim().toLowerCase().replace(/\s+/g,' ')}
@@ -76,7 +77,9 @@ export function leerPlanilla(hojas,nombre,reglas,hoy){
           else if((r[f.col]!==undefined&&r[f.col]!==null)||(r[f.col+1]!==undefined&&r[f.col+1]!==null))avisos.push('El '+f.fecha+' no pude leer la entrada o la salida.');
           return;
         }
-        var tipo=tipoDeDia(f.fecha),x=extraPorHorario(reglas,e.hm,s.hm,tipo),d={fecha:f.fecha,llegada:e.hm,salida:s.hm,tipo:tipo,min:x.min,total:x.total};
+        var tipo=tipoDeDia(f.fecha,reglas.dias),x=extraPorHorario(reglas,e.hm,s.hm,tipo);
+        if(!x){if(avisos.indexOf(SIN_HORARIO)<0)avisos.push(SIN_HORARIO);return}
+        var d={fecha:f.fecha,llegada:e.hm,salida:s.hm,tipo:tipo,min:x.min,total:x.total};
         if(e.corregida||s.corregida)d.aviso='En la planilla la hora está mal escrita ('+(e.corregida?r[f.col]:r[f.col+1])+'); la leí como '+(e.corregida?e.hm:s.hm)+'.';
         if(extPorFecha[f.fecha]!==undefined){
           d.planilla=extPorFecha[f.fecha];

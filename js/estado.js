@@ -35,14 +35,21 @@ import {normIngresos} from './logica/ingresos.js';
         por semana (state.plan.ganancia {inicio: monto}). Quien ya usaba la app arranca sin nada (nada cambia).
    v23: una sola forma de cobrar, por mes (sueldo o factura). Quien cobraba cada 15 días, cada semana, por jornal o cuando
         vendía pasa a mensual (la regla de su perfil, o el 5.º día hábil). Su plata, su pacto (hasta su fecha), sus gastos,
-        su historial y lo que anotó que entró quedan igual. */
-export var VERSION_ESTADO=23;
+        su historial y lo que anotó que entró quedan igual.
+   v24: el horario de cada uno (perfil.horas.entrada, salida y dias 'lv' | 'ls'). Alguien nuevo arranca sin horario;
+        a quien ya usaba la app se le completan las reglas que tenía (las de siempre), así sus cuentas dan idéntico. */
+export var VERSION_ESTADO=24;
 
 function hoyISO(){return iso(new Date())}
 /* Feriados: por defecto solo cuentan los 5 no laborables (1/1, 1/5, 18/7, 25/8, 25/12).
    cobro.laborableHabil: los feriados laborables (Carnaval, Turismo, 12/10…) son días hábiles para el cobro.
    horas.feriadoLaborable: un feriado laborable trabajado se paga como día 'comun' o como 'feriado'. */
-export function perfilBase(){return {nombre:'',hecho:false,ingreso:{tipo:'uy',moneda:'UYU'},cobro:{tipo:'habil5',dia:30,laborableHabil:true},horas:Object.assign(horasPorDefecto(),{feriadoLaborable:'comun',preguntado:false}),recibosAgus:false}}
+/* (2.26) Horas extra de alguien nuevo: sin horario (lo pide Sueldo → Horas extra) y reglas comunes (la hora extra al doble,
+   desde el primer minuto, sin redondear). Las reglas de antes, que eran las de Agus, son el puesto «Agente de CRM». */
+export function horasNuevas(){return {activo:true,divisor:240,multSem:2,multFin:2,finDividido:false,redondeo:'no',umbral:0,jornada:0,mesCobro:'siguiente',entrada:'',salida:'',dias:'lv',feriadoLaborable:'comun',preguntado:false}}
+/* Las que tenía todo el mundo hasta la 2.25 (se conservan al migrar: nada cambia en las cuentas de nadie) */
+function horasDeAntes(){return Object.assign(horasPorDefecto(),{feriadoLaborable:'comun',preguntado:false,dias:'lv'})}
+export function perfilBase(){return {nombre:'',hecho:false,ingreso:{tipo:'uy',moneda:'UYU'},cobro:{tipo:'habil5',dia:30,laborableHabil:true},horas:horasNuevas(),recibosAgus:false}}
 /* descuentos: los del sueldo personalizado [{id,nombre,tipo:'pct'|'monto',valor}].
    ingresosMes: lo que cobraste cada mes con ingreso variable {'aaaa-mm': monto}. */
 function sueldoBase(){return {nominal:0,bonoFijo:0,hijos:0,conyuge:false,otros:0,bpc:6864,bpcAnio:new Date().getFullYear(),tarifaManual:null,diasLicencia:0,descuentos:[],ingresosMes:{}}}
@@ -102,6 +109,8 @@ export function ejemplo(hoy){
   var s=defaults(hoy),L=legado();
   s.ejemplo=true;
   s.perfil.hecho=true;
+  /* el ejemplo es el puesto de CRM: horario de 12 a 21 y sus reglas */
+  s.perfil.horas=horasDeAntes();s.perfil.puesto='crm';
   s.plan=L.plan;
   s.plan.cobro=fechaCobro(2026,10,s.perfil.cobro); /* 5.º día hábil de noviembre con la regla actual */
   s.sueldo.nominal=L.sueldo.nominal;
@@ -196,7 +205,7 @@ export function migrar(d){
   if(antes){
     /* v5: las reglas de horas pasan al perfil. Los datos de antes son de Agus. */
     var s=state.sueldo,p=state.perfil,hora=num(s.nominal)/240;
-    p.nombre='Agus';p.hecho=true;p.recibosAgus=true;
+    p.nombre='Agus';p.hecho=true;p.recibosAgus=true;p.horas=horasDeAntes();
     p.horas.redondeo=s.redondeo===false?'no':'media';
     /* Si había cambiado a mano el valor de las horas, se respeta */
     if(Math.abs(num(s.heCom)-r2(hora*2))>0.005||Math.abs(num(s.heEsp)-r2(hora))>0.005||Math.abs(num(s.bonoHora)-r2(hora*0.5))>0.005)
@@ -205,7 +214,7 @@ export function migrar(d){
     delete s.heCom;delete s.heEsp;delete s.bonoHora;delete s.redondeo;
   }else{
     var xp=obj(x.perfil);
-    state.perfil=Object.assign(perfilBase(),xp,{ingreso:Object.assign(perfilBase().ingreso,obj(xp.ingreso)),cobro:Object.assign(perfilBase().cobro,obj(xp.cobro)),horas:Object.assign(perfilBase().horas,obj(xp.horas))});
+    state.perfil=Object.assign(perfilBase(),xp,{ingreso:Object.assign(perfilBase().ingreso,obj(xp.ingreso)),cobro:Object.assign(perfilBase().cobro,obj(xp.cobro)),horas:Object.assign(vx<24?horasDeAntes():perfilBase().horas,obj(xp.horas))});
   }
   /* v10: hasta ahora todos cobraban sueldo en Uruguay, en pesos */
   if(!Array.isArray(state.sueldo.descuentos))state.sueldo.descuentos=[];
@@ -220,6 +229,8 @@ export function migrar(d){
   if(vx<16&&state.perfil.horas&&obj(obj(x.perfil).horas).preguntado===undefined)state.perfil.horas.preguntado=!!(state.perfil.hecho||state.perfil.recibosAgus||state.horas.length);
   /* Los datos que venían de los recibos de Agus son del puesto de CRM */
   if(state.perfil.recibosAgus&&!state.perfil.puesto)state.perfil.puesto='crm';
+  /* v24: los días de trabajo (de lunes a viernes, como se contaba hasta ahora) */
+  if(state.perfil.horas&&state.perfil.horas.dias!=='ls')state.perfil.horas.dias='lv';
   return state;
 }
 /* v7: los feriados laborables pasan a ser días comunes. Si la fecha de cobro guardada era la que daba

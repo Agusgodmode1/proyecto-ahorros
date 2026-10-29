@@ -81,8 +81,8 @@ function pintar(){
       h+='<div class="field"><span class="lab">¿Cuál es tu puesto?</span>'+seg('puesto',d.puesto,PUESTOS.map(function(x){return [x.id,x.nombre]}).concat([['otro','Otro (a medida)']]))
         +'<small>'+(P?esc(P.detalle)+' Ya cargué esas reglas; cambialas abajo si tu recibo dice otra cosa.':'Te dejo como sugerencia las reglas más comunes. Cambialas si tu recibo dice otra cosa.')+'</small></div>'
         +'<div class="grid2 wiz-grid">'
-        +campo('w-ent','Entrás a las','<input id="w-ent" type="time" value="'+esc(H.entrada||'12:00')+'">')
-        +campo('w-sal','Salís a las','<input id="w-sal" type="time" value="'+esc(H.salida||'21:00')+'">')
+        +campo('w-ent','Entrás a las','<input id="w-ent" type="time" value="'+esc(H.entrada||'')+'">')
+        +campo('w-sal','Salís a las','<input id="w-sal" type="time" value="'+esc(H.salida||'')+'">')
         +'</div>'
         +'<div class="grid2 wiz-grid">'
         +campo('w-div','Divisor de la hora normal','<input id="w-div" type="number" inputmode="numeric" min="1" step="1" value="'+H.divisor+'">','Hora normal = sueldo ÷ este número. 240 = 30 días de 8 horas.')
@@ -133,11 +133,13 @@ function leer(){
   if(paso===3&&d.horas.activo!==false&&$('#w-div')){
     var H=d.horas;
     H.divisor=num(v('w-div'))||240;H.multSem=num(v('w-msem'));H.multFin=num(v('w-mfin'));
-    if($('#w-ent'))H.entrada=v('w-ent')||'12:00';if($('#w-sal'))H.salida=v('w-sal')||'21:00';
-    /* La jornada sale del horario; el umbral es jornada + el mínimo de minutos extra */
-    var e=String(H.entrada).split(':'),sa=String(H.salida).split(':'),jor=(Number(sa[0])*60+Number(sa[1]))-(Number(e[0])*60+Number(e[1]));
-    if(jor<=0)jor+=1440;
-    H.jornada=jor;H.umbral=jor+Math.max(0,Math.round(num(v('w-min'))));
+    if($('#w-ent'))H.entrada=v('w-ent')||'';if($('#w-sal'))H.salida=v('w-sal')||'';
+    /* La jornada sale del horario; el umbral es jornada + el mínimo de minutos extra (sin horario, solo el mínimo) */
+    if(H.entrada&&H.salida){
+      var e=String(H.entrada).split(':'),sa=String(H.salida).split(':'),jor=(Number(sa[0])*60+Number(sa[1]))-(Number(e[0])*60+Number(e[1]));
+      if(jor<=0)jor+=1440;H.jornada=jor;
+    }
+    H.umbral=num(H.jornada)+Math.max(0,Math.round(num(v('w-min'))));
   }
   if(paso===4&&d.ingreso.tipo==='personalizado')document.querySelectorAll('#wiz-box [data-desc]').forEach(function(el){
     var x=d.descuentos[Number(el.getAttribute('data-desc'))];if(!x)return;

@@ -5,7 +5,7 @@ import {mesTrabajo,mins,pagoSem,tarifas,reglasHoras,extraDelDia,ingresoDe,mesIng
 import {ctx,$,today,liqNow,planNow,money,money2,usd,pctTxt,veces,fmtH,esc,fLarga,fMin,tile,row,cap,toast,armar} from './comun.js';
 import {renderResumen} from './plan.js';
 import {aguinaldo,salarioVacacional} from '../logica/aguinaldo.js';
-import {extraPorHorario,tipoDeDia,minimoExtra} from '../logica/horario.js';
+import {extraPorHorario,tipoDeDia,minimoExtra,tieneHorario,aplicarHorario,aplicarPago} from '../logica/horario.js';
 import {renderPlanilla,initPlanilla} from './planilla.js';
 import {revisarBPC} from '../logica/avisos.js';
 import {MES,DIA} from '../logica/fechas.js';
@@ -49,7 +49,7 @@ function renderEmpezar(vacio){
   var el=$('#sd-empezar');if(!el)return;
   $('#p-sueldo').classList.toggle('sd-vacio',vacio);
   el.hidden=!vacio;if(!vacio){el.innerHTML='';return}
-  if(el.innerHTML&&el.contains(document.activeElement))return; /* no se redibuja mientras escribís */
+  var ac=document.activeElement;if(el.innerHTML&&ac&&el.contains(ac)&&ac.matches('input,select'))return; /* no se redibuja mientras escribís */
   el.innerHTML='<h2>¿Cuánto cobrás por mes?</h2>'
     +'<p class="note">Con esto te digo cuánto te queda en mano y cuánto vale tu hora.</p>'
     +'<div class="field"><span class="lab" id="emp-tl">¿Qué cobrás?</span><div class="seg emp-seg" role="group" aria-labelledby="emp-tl">'+segEmp('tipo',EMP_TIPOS,emp.tipo)+'</div></div>'
@@ -77,6 +77,58 @@ function clicEmpezar(e){
   return false;
 }
 
+/* ---------- (2.26) Tu horario y cómo te pagan las extras: arriba de «Horas extra», a la vista ---------- */
+var DIAS_TRABAJO=[['lv','lunes a viernes'],['ls','lunes a sábado']];
+function pregHx(t,k,ops,val,suf){
+  var otro=!ops.some(function(o){return o[0]===val});
+  return '<div class="field hx-q"><span class="lab" id="hx-'+k+'-l">'+t+'</span><div class="seg" role="group" aria-labelledby="hx-'+k+'-l">'
+    +ops.map(function(o){return '<button type="button" data-hx-'+k+'="'+o[0]+'" aria-pressed="'+(o[0]===val)+'">'+o[1]+'</button>'}).join('')
+    +'<button type="button" data-hx-otro="'+k+'" aria-pressed="'+otro+'">Otro</button></div>'
+    +'<div class="money suf hx-otro"'+(otro?'':' hidden')+'><input id="hx-'+k+'" type="number" inputmode="decimal" min="0" step="any" value="'+(otro?String(val):'')+'" aria-label="'+t+'"><span>'+suf+'</span></div></div>';
+}
+function renderHorario(conHoras){
+  var el=$('#sd-horario'),sd=$('#sd-horas');if(!el)return;
+  var R=reglasHoras(ctx.state),hay=tieneHorario(R);
+  if(sd)sd.classList.toggle('sin-horario',conHoras&&!hay);
+  if(!conHoras){el.innerHTML='';return}
+  var ac=document.activeElement;if(el.innerHTML&&ac&&el.contains(ac)&&ac.matches('input,select'))return; /* no se redibuja mientras escribís */
+  var h=(hay?'':'<p class="hx-pide">Para calcular tus horas extra necesito tu horario.</p>')
+    +'<div class="hx-hor" role="group" aria-label="Tu horario"><span class="hx-l">Tu horario:</span>'
+    +'<label class="hx-c">entrás <input type="time" id="hx-ent" value="'+esc(R.entrada||'')+'"></label>'
+    +'<label class="hx-c">salís <input type="time" id="hx-sal" value="'+esc(R.salida||'')+'"></label>'
+    +'<label class="hx-c">de <select id="hx-dias">'+DIAS_TRABAJO.map(function(d){return '<option value="'+d[0]+'"'+((R.dias==='ls'?'ls':'lv')===d[0]?' selected':'')+'>'+d[1]+'</option>'}).join('')+'</select></label></div>'
+    +'<p class="err" id="hx-err" role="alert" hidden></p>';
+  if(!hay){el.innerHTML=h+'<div class="row-btns"><button class="btn primary" type="button" id="hx-guardar">Guardar mi horario</button></div>';return}
+  el.innerHTML=h+'<div class="hx-pago"><h3>Cómo te las pagan</h3>'
+    +pregHx('Entre semana, la hora extra vale','ms',[[1.5,'×1,5'],[2,'×2']],num(R.multSem),'veces tu hora')
+    +pregHx('Fin de semana y feriados','mf',[[1.5,'×1,5'],[2,'×2'],[2.5,'×2,5']],num(R.multFin),'veces tu hora')
+    +pregHx('Entre semana cuentan desde','de',[[0,'el primer minuto'],[15,'15 min'],[30,'30 min']],minimoExtra(R),'min en el día')
+    +'</div>';
+}
+function errHx(m){var e=$('#hx-err');if(e){e.textContent=m||'';e.hidden=!m}}
+function guardarHorario(avisar){
+  var r=aplicarHorario(ctx.state.perfil.horas,{entrada:$('#hx-ent').value,salida:$('#hx-sal').value,dias:$('#hx-dias').value});
+  if(!r.ok){errHx('Poné a qué hora entrás y a qué hora salís.');return}
+  errHx('');ctx.persist();
+  var H=ctx.state.perfil.horas;if(!$('#l-lleg').value)$('#l-lleg').value=H.entrada;if(!$('#l-sal').value)$('#l-sal').value=H.salida;
+  ctx.renderAll();
+  if(avisar)toast('Listo: tu horario es de '+ctx.state.perfil.horas.entrada+' a '+ctx.state.perfil.horas.salida);
+}
+function guardarPago(d){
+  var r=aplicarPago(ctx.state.perfil.horas,d);
+  if(!r.ok){errHx('Revisá ese número.');return}
+  if(ctx.state.sueldo.tarifaManual&&(d.multSem!==undefined||d.multFin!==undefined))ctx.state.sueldo.tarifaManual=null;
+  errHx('');ctx.persist();ctx.renderAll();
+}
+function clicHorario(e){
+  if(e.target.closest('#hx-guardar')){guardarHorario(true);return true}
+  var o=e.target.closest('[data-hx-otro]');
+  if(o){var g=o.parentNode,box=g.nextElementSibling;g.querySelectorAll('button').forEach(function(b){b.setAttribute('aria-pressed',String(b===o))});box.hidden=false;try{box.querySelector('input').focus()}catch(x){}return true}
+  var ks={ms:'multSem',mf:'multFin',de:'desde'};
+  for(var k in ks){var b=e.target.closest('[data-hx-'+k+']');if(b){var d={};d[ks[k]]=Number(b.getAttribute('data-hx-'+k));guardarPago(d);return true}}
+  return false;
+}
+
 var tipoSel='sem',confirmClear=false;
 var REDTXT={media:' y se pagan redondeados a la media hora',cuarto:' y se pagan redondeados al cuarto de hora',no:' y se pagan sin redondear'};
 
@@ -94,7 +146,7 @@ export function renderSueldo(){
   var fac=esFactura(state);
   mostrar('aguinaldo',uy);$('#card-control').hidden=!uy;mostrar('control',ing.tipo!=='variable');mostrar('factura',fac);mostrar('horas',conHoras);
   mostrar('recibo',!fac);var tr=$('#sd-recibo .sdes-t');if(tr)tr.textContent=ing.tipo==='variable'?'Lo que cobraste cada mes':ing.tipo==='personalizado'?'Tu recibo completo':'Recibo estimado completo';
-  renderPregunta(conHoras,ing.tipo);
+  renderPregunta(conHoras,ing.tipo);renderHorario(conHoras&&ing.tipo!=='variable');
   if(fac)renderFactura();
   ['s-otros','s-hijos','s-conyuge','s-bpc'].forEach(function(id){var f=$('#'+id).closest('.field');if(f)f.hidden=!uy});
   var fb=$('#s-bonofijo').closest('.field');if(fb)fb.hidden=ing.tipo==='variable';
@@ -142,7 +194,7 @@ export function renderSueldo(){
   $('#sec-rates').hidden=!conHoras;$('#card-horas').hidden=!conHoras;
   $('#s-tarifas').textContent=s.tarifaManual?'Usás valores cargados a mano: semana '+money2(t.heCom)+', descanso '+money2(t.heEsp)+', bono '+money2(t.bonoHora)+' por hora.'
     :(conHoras?'Salen de tu sueldo y tu perfil: hora normal '+money2(hn)+', extra de semana '+money2(t.heCom)+', finde o feriado '+money2(finH)+'.':'En tu perfil dice que no hacés horas extra.');
-  $('#horas-nota').innerHTML='Tu horario es de <b>'+esc(R.entrada||'12:00')+' a '+esc(R.salida||'21:00')+'</b>. Entre semana se suman los minutos que llegás antes y los que te quedás después (cuentan desde '+fMin(Math.max(0,num(R.umbral)-num(R.jornada)))+' en el día). Fin de semana y feriados no laborables: el turno entero.';
+  $('#horas-nota').innerHTML='Entre semana se suman los minutos que llegás antes y los que te quedás después de tu horario'+(minimoExtra(R)>0?' (cuentan desde '+fMin(minimoExtra(R))+' en el día)':'')+'. Fin de semana y feriados no laborables: el turno entero.';
   renderLog(mc,me,L);renderCtrl();renderAguinaldo();renderPlanilla();
   datosDesplegables(Lr,L0,conHoras,mc,me);
   /* La BPC cambia cada enero */
@@ -153,7 +205,7 @@ export function renderSueldo(){
 /* El dato clave de cada desplegable, en su título */
 function datosDesplegables(Lr,L0,conHoras,mc,me){
   var state=ctx.state,est=Lr.estimado||Lr;
-  if(conHoras)datoDe('horas',fMin(mc)+(me?' · '+fmtH(me/60)+' h de finde':'')+' · + '+money(Math.max(0,est.liquido-L0.liquido)));
+  if(conHoras)datoDe('horas',!tieneHorario(reglasHoras(state))?'falta tu horario':fMin(mc)+(me?' · '+fmtH(me/60)+' h de finde':'')+' · + '+money(Math.max(0,est.liquido-L0.liquido)));
   var mt=mesTrabajo(state),r=reciboDe(state,mt),mn=MESL[Number(mt.slice(5,7))-1];
   if(r){var c=compararRecibo(state,r),d=Math.abs(num(c.liquidoDif));datoDe('control',mn+': '+(c.liquidoDif===null||d<=5?'coincide ✓':'difiere '+money(d)))}
   else datoDe('control','falta el recibo de '+mn);
@@ -295,10 +347,10 @@ export function syncSueldo(){
   $('#s-nominal').value=s.nominal||'';$('#s-bonofijo').value=s.bonoFijo||'';
   $('#s-otros').value=s.otros||'';$('#s-hijos').value=s.hijos||'';$('#s-conyuge').checked=!!s.conyuge;$('#s-bpc').value=s.bpc||'';
   document.querySelectorAll('[data-tipo]').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-tipo')===tipoSel))});
-  if(!$('#l-fecha').value){$('#l-fecha').value=today();elegirTipo(tipoDeDia(today()))}
   var R=reglasHoras(ctx.state);
-  if(!$('#l-lleg').value)$('#l-lleg').value=R.entrada||'12:00';
-  if(!$('#l-sal').value)$('#l-sal').value=R.salida||'21:00';
+  if(!$('#l-fecha').value){$('#l-fecha').value=today();elegirTipo(tipoDeDia(today(),R.dias))}
+  if(!$('#l-lleg').value)$('#l-lleg').value=R.entrada||'';
+  if(!$('#l-sal').value)$('#l-sal').value=R.salida||'';
   horNota();
   syncRecibo();
 }
@@ -323,7 +375,7 @@ function horNota(){
   if(!x){el.textContent='Poné la hora de llegada y de salida.';b.disabled=true;b.textContent='Sumar';return}
   if(tipoSel==='fin'){el.innerHTML='Fin de semana o feriado: cuenta el turno entero, <b>'+fMin(x.min)+'</b>.';b.disabled=!x.min;b.textContent='Sumar '+fMin(x.min);return}
   var p=[];if(x.antes)p.push('llegaste '+fMin(x.antes)+' antes');if(x.despues)p.push('te quedaste '+fMin(x.despues)+' después');
-  if(!x.total){el.textContent='Tu horario es de '+(R.entrada||'12:00')+' a '+(R.salida||'21:00')+': así no suma extra.';b.disabled=true;b.textContent='Sumar';return}
+  if(!x.total){el.textContent='Tu horario es de '+R.entrada+' a '+R.salida+': así no suma extra.';b.disabled=true;b.textContent='Sumar';return}
   el.innerHTML=cap(p.join(' y '))+(x.cuenta?': suma <b>'+fMin(x.min)+'</b> de extra.':'. Son '+fMin(x.total)+' y cuentan desde '+fMin(minimoExtra(R))+' en el día: no suma.');
   b.disabled=!x.cuenta;b.textContent=x.cuenta?'Sumar '+fMin(x.min):'Sumar';
 }
@@ -334,12 +386,22 @@ export function initSueldo(){
   $('#p-sueldo').addEventListener('toggle',function(e){var d=e.target;if(!d.matches||!d.matches('[data-sdes]'))return;var a=abiertos();a[d.getAttribute('data-sdes')]=d.open?1:0;try{localStorage.setItem(KA,JSON.stringify(a))}catch(x){}},true);
   /* (2.26) «Calcular mi sueldo»: Enter en el monto o el día también calcula */
   $('#p-sueldo').addEventListener('keydown',function(e){if(e.key==='Enter'&&(e.target.id==='emp-nom'||e.target.id==='emp-dia')){e.preventDefault();var b=$('#emp-ok');if(b)b.click()}});
+  /* (2.26) tu horario y cómo te pagan: con horario, se guarda al cambiar; los «Otro» al escribir */
+  $('#p-sueldo').addEventListener('change',function(e){
+    var id=e.target.id;
+    if((id==='hx-ent'||id==='hx-sal'||id==='hx-dias')&&tieneHorario(reglasHoras(ctx.state))){guardarHorario(false);toast('Horario guardado');return}
+    if(id==='hx-ms'||id==='hx-mf'||id==='hx-de'){var d={};d[id==='hx-ms'?'multSem':id==='hx-mf'?'multFin':'desde']=Number(e.target.value);guardarPago(d)}
+  });
   $('#p-sueldo').addEventListener('click',function(e){
     if(clicEmpezar(e))return;
+    if(clicHorario(e))return;
     /* «Para afinarla»: abre el desplegable que hace falta */
     var dir=e.target.closest('[data-sdir]');if(dir){var d=$('#sd-'+dir.getAttribute('data-sdir'));if(d&&d.hidden&&dir.getAttribute('data-sdir')==='subir')d=$('#sd-control');if(d){d.open=true;try{d.scrollIntoView({block:'start',behavior:'smooth'})}catch(x){}}return}
     var hx=e.target.closest('[data-hx]');
-    if(hx){var p=ctx.state.perfil;p.horas=Object.assign({},p.horas,{preguntado:true,activo:hx.getAttribute('data-hx')==='si'});ctx.persist();ctx.renderAll();toast(p.horas.activo?'Listo: sumá tus horas extra en «Horas extra»':'Listo: sin horas extra');return}
+    if(hx){var p=ctx.state.perfil;p.horas=Object.assign({},p.horas,{preguntado:true,activo:hx.getAttribute('data-hx')==='si'});ctx.persist();ctx.renderAll();toast(p.horas.activo?'Listo: sumá tus horas extra en «Horas extra»':'Listo: sin horas extra');
+      /* (2.26) con extras, lo primero es tu horario: se abre «Horas extra» */
+      if(p.horas.activo){var dh=$('#sd-horas');if(dh){dh.open=true;try{dh.scrollIntoView({block:'start',behavior:'smooth'})}catch(x){}}}
+      return}
   });
   $('#bpc-aviso').addEventListener('click',function(e){
     if(e.target.id==='bpc-igual'){ctx.state.sueldo.bpcAnio=Number(today().slice(0,4));ctx.persist();renderSueldo()}
@@ -354,12 +416,12 @@ export function initSueldo(){
     if(m>0){addHoras(m);$('#l-h').value='';$('#l-m').value=''}
   });
   /* Por horario: el día y la hora de llegada y salida; la app calcula los minutos extra */
-  $('#l-fecha').addEventListener('change',function(){if(this.value){elegirTipo(tipoDeDia(this.value));horNota()}});
+  $('#l-fecha').addEventListener('change',function(){if(this.value){elegirTipo(tipoDeDia(this.value,reglasHoras(ctx.state).dias));horNota()}});
   ['l-lleg','l-sal'].forEach(function(id){$('#'+id).addEventListener('input',horNota)});
   $('#l-hor-add').addEventListener('click',function(){
     var x=calcHorario();if(!x||!x.min)return;
     addHoras(x.min);toast('Sumé '+fMin(x.min)+(tipoSel==='fin'?' de finde o feriado':' de extra'));
-    var R=reglasHoras(ctx.state);$('#l-lleg').value=R.entrada||'12:00';$('#l-sal').value=R.salida||'21:00';horNota();
+    var R=reglasHoras(ctx.state);$('#l-lleg').value=R.entrada||'';$('#l-sal').value=R.salida||'';horNota();
   });
   Object.keys(RID).forEach(function(k){$('#'+RID[k]).addEventListener('input',function(){ctx.state.recibo[k]=this.value;ctx.persist();renderCtrl()})});
   $('#r-clear').addEventListener('click',function(){ctx.state.recibo={};syncRecibo();ctx.persist();renderCtrl()});

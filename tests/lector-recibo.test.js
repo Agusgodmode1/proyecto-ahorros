@@ -1,5 +1,6 @@
 /* Lector de recibos, facturas, liquidación completa y precisión (2.12). Todos los documentos son INVENTADOS. */
 import {test} from 'node:test';
+import {puesto} from '../js/logica/puestos.js';
 import assert from 'node:assert/strict';
 import {leer,clasificar,tipoDocumento,deducirHoras,propuesta,confianza,aprenderConcepto,renglonesDeTexto,desglose} from '../js/logica/lector-recibo.js';
 import {leerFactura,liqFactura,sinIva,nuevaFactura,revisarCostos,esFactura} from '../js/logica/factura.js';
@@ -162,7 +163,7 @@ test('cobro con factura: te queda lo facturado sin IVA menos tus costos; el IVA 
 
 /* ---------- Feriados ×2,5 (regla nueva, sin cambiar nada si no está) ---------- */
 test('sin la regla de feriados, la liquidación completa es idéntica a la de sueldo.js; con ×2,5 suma la diferencia',function(){
-  var st=defaults('2026-09-01');st.plan.inicio='2026-09-01';st.plan.cobro='2026-09-07';
+  var st=defaults('2026-09-01');st.plan.inicio='2026-09-01';st.plan.cobro='2026-09-07';Object.assign(st.perfil.horas,puesto('crm').horas);
   st.sueldo.nominal=48000;st.horas=[{id:'h1',fecha:'2026-08-25',tipo:'fin',min:480},{id:'h2',fecha:'2026-08-29',tipo:'fin',min:300},{id:'h3',fecha:'2026-08-12',tipo:'sem',min:95}];
   usarFeriados(feriadosActivos(st.feriados),{laborableHabil:true,pagoLaborable:'comun'});
   assert.deepEqual(liqCompleta(st,true),liq(st,true));

@@ -1,6 +1,8 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {defaults,ejemplo,migrar} from '../js/estado.js';
+import {defaults,ejemplo,migrar,VERSION_ESTADO} from '../js/estado.js';
+import {puesto} from '../js/logica/puestos.js';
+import {extraPorHorario,tipoDeDia,tieneHorario} from '../js/logica/horario.js';
 import {liq,tarifas,mins,pagoSem,mesTrabajo,extraDelDia} from '../js/logica/sueldo.js';
 import {fechaCobro,nextCobro,cobroDesde} from '../js/logica/plan.js';
 import {logrosLista} from '../js/logica/logros.js';
@@ -96,8 +98,8 @@ test('las horas se cobran el mes siguiente o el mismo mes',function(){
   assert.equal(mesTrabajo(s),'2026-11');
 });
 
-test('extra del día según la presencia (umbral 9 h 15, jornada 9 h)',function(){
-  var s=defaults();
+test('extra del día según la presencia (umbral 9 h 15, jornada 9 h: el puesto de CRM)',function(){
+  var s=defaults();Object.assign(s.perfil.horas,puesto('crm').horas);
   assert.equal(extraDelDia(s,560),20);
   assert.equal(extraDelDia(s,555),15,'15 min justos ya cuentan (antes + después)');
   assert.equal(extraDelDia(s,554),0,'14 min no cuentan');
@@ -130,4 +132,31 @@ test('feriados 2026 y 2027 completos y editables',function(){
   assert.equal(bizRank('2026-11-02'),null,'con la regla vieja, el 2/11 no era hábil');
   usarFeriados(FERIADOS_UY);
   assert.equal(bizRank('2026-08-25'),null,'un no laborable nunca es hábil');
+});
+
+/* ---------- (2.26) El horario de cada uno ---------- */
+test('alguien nuevo no arranca con mi horario ni con mis reglas',function(){
+  var h=defaults('2026-10-29').perfil.horas;
+  assert.equal(h.entrada,'');assert.equal(h.salida,'');assert.equal(tieneHorario(h),false);
+  assert.notEqual(h.multFin,1.5);assert.equal(h.redondeo,'no');assert.equal(h.finDividido,false);
+  assert.equal(extraPorHorario(h,'11:45','21:15','sem'),null,'sin horario no se inventa uno');
+  /* mi perfil sigue disponible como puesto para quien lo quiera elegir */
+  var P=puesto('crm');assert.equal(P.nombre,'Agente de CRM (call center)');assert.equal(P.horas.entrada,'12:00');assert.equal(P.horas.salida,'21:00');
+});
+test('mis datos (de antes del horario) migran con mi horario y mis reglas: todo da idéntico',function(){
+  var s=migrar(agusV4());
+  assert.equal(s.v,VERSION_ESTADO);
+  var h=s.perfil.horas;
+  assert.equal(h.entrada,'12:00');assert.equal(h.salida,'21:00');assert.equal(h.dias,'lv');
+  assert.equal(h.multSem,2);assert.equal(h.multFin,1.5);assert.equal(h.finDividido,true);assert.equal(h.redondeo,'media');
+  assert.equal(h.umbral,555);assert.equal(h.jornada,540);
+  var L=liq(s,true);
+  assert.equal(Math.round(L.N*100)/100,50718.75);assert.equal(Math.round(L.liquido*100)/100,40777.88);
+  /* un estado v23 al que le faltaban campos de horas (los tomaba de las reglas de siempre) */
+  var v23=JSON.parse(JSON.stringify(s));v23.v=23;delete v23.perfil.horas.entrada;delete v23.perfil.horas.salida;delete v23.perfil.horas.umbral;delete v23.perfil.horas.jornada;delete v23.perfil.horas.dias;
+  var m=migrar(v23);
+  assert.equal(m.perfil.horas.entrada,'12:00');assert.equal(m.perfil.horas.umbral,555);assert.equal(m.perfil.horas.dias,'lv');
+  assert.deepEqual(liq(m,true),liq(s,true));
+  /* y el sábado sigue siendo fin de semana para mí */
+  assert.equal(tipoDeDia('2026-10-17',m.perfil.horas.dias),'fin');
 });

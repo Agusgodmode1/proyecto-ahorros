@@ -115,7 +115,7 @@ function renderHoy(pc){
   if(!(num(state.plan.monto)>0)){el.innerHTML='';return}
   var lista=state.gastos.filter(function(g){return g.fecha===t});
   if(!lista.length){
-    var vacio='<div class="card stack hoy tone-mint"><h2>Todavía no anotaste gastos</h2><p class="note">Tocá «+ Gasto» o el micrófono y decí «gasté 350 en un café».</p></div>';
+    var vacio='<div class="card stack hoy tone-mint"><h2>Todavía no anotaste gastos</h2></div>';
     el.innerHTML=chipsFrecuentes('h')+(!state.gastos.length&&!state.ejemplo?vacio:'');return;
   }
   el.innerHTML=chipsFrecuentes('h')+'<div class="card stack hoy tone-mint"><h2>Gastaste hoy</h2><ul class="list glist">'+lista.map(function(g){return itemGasto(g,'hoy')}).join('')+'</ul></div>';
@@ -172,7 +172,7 @@ export function renderCountdown(){
 function semanasHoy(pc,t){
   if(!pc.weeks.length)return '';
   var h='<section class="sem-hoy" aria-labelledby="sem-hoy-t"><h2 class="plan-h" id="sem-hoy-t">Semana por semana</h2>'
-    +'<p class="note">Lo que sobra de una semana pasa a la siguiente.</p><ul class="sem-l">';
+    +'<ul class="sem-l">';
   pc.weeks.forEach(function(w){
     var cur=t>=w.start&&t<=w.end,past=t>w.end,over=w.left<0;
     var rem=cur?diffDays(t,w.end)+1:w.days;
@@ -193,6 +193,8 @@ export function renderResumen(pc){
   /* (2.15) la página de Hoy se dibuja solo cuando se ve: así pasar a otro capítulo no la rehace cada vez */
   if(ctx.tab!=='resumen')return;
   renderCierre(pc);renderHoy(pc);renderEntradas();renderSuperv(pc);renderRitmo(pc);
+  /* (2.35) Semana por semana, justo debajo de «Hoy podés gastar»: cada semana con lo que te queda; tocarla abre su detalle. */
+  var sh=$('#sem-hoy');if(sh)sh.innerHTML=semanasHoy(pc,today());
   var sf=aniosSinFeriados(state,today()),fa=$('#fer-aviso');
   if(fa)fa.innerHTML=sf.length?'<div class="banner"><p><b>No tengo los feriados de '+sf.join(' y ')+'.</b> Sin ellos, el día de cobro puede salir mal. Actualizá la app o agregalos en Ajustes → Feriados.</p><button class="btn" type="button" data-goto="ajustes">Ir a Feriados</button></div>':'';
   var p=state.plan,t=today(),L=liqNow(true),fp=fijosPeriodo(state.fijos,p.inicio,p.cobro);
@@ -203,8 +205,6 @@ export function renderResumen(pc){
   var h=state.ejemplo?'<div class="banner"><p><b>Estás viendo datos de ejemplo.</b> Son de muestra: no son tuyos.</p><button class="btn" type="button" data-cero>Borrar el ejemplo y crear mi perfil</button></div>':'';
   /* fijos compartidos: quién te debe plata (nota al margen, con «Me pagaron») */
   var deudas=balanceHTML(true);if(deudas)h+='<div class="banner deudas">'+deudas+'</div>';
-  /* (2.34) Semana por semana, a la vista en Hoy: cada semana con lo que te queda; tocarla abre su detalle (capítulo II). */
-  h+=semanasHoy(pc,t);
   /* (2.26) Un solo desplegable, «Tu plan»: hasta que cobres y, si ya sé tu sueldo, cuando cobres. */
   h+=foldIni('plan','tone-mint','Tu plan',resto<0?'Te faltan '+money(-resto)+' para tu meta':'Te quedan '+money(resto)+' para gastar · '+esc(rango(p.inicio,p.cobro)));
   var fsub=fp.length?fp.map(function(o){return esc(o.f.nombre)+' ('+esc(fCorta(o.fecha))+')'}).join(', '):(state.fijos.length?'ninguno vence antes de cobrar':'<button class="linklike" type="button" data-goto="fijos">cargá tus fijos</button>');

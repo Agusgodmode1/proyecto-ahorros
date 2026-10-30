@@ -64,15 +64,15 @@ function flushPendiente(){if(timer)flush()}
 /* (2.33) Hoy es la pantalla principal; todo lo demás se abre desde la ruedita (Herramientas, ui/indice.js) y se vuelve con la cinta «Hoy».
    Ya no hay barra de capítulos, pie con flechas ni deslizar entre capítulos. */
 var TK='pa-tab';
-/* El encabezado de cada capítulo («capítulo II · semanas») */
+/* El rótulo de cada página («semanas», «sueldo»…; en Hoy, la fecha) */
 var PANELES={resumen:'#p-resumen',fijos:'#p-fijos',sueldo:'#p-sueldo',gastos:'#p-gastos',logros:'#p-logros',guardado:'#p-guardado',ajustes:'#p-ajustes'};
 function marcarCapitulos(){
   Object.keys(PANELES).concat(['semanas']).forEach(function(k){
     var el=$(k==='semanas'?'#p-semana':PANELES[k]),c=capituloDe(k);
-    if(el)el.setAttribute('data-cap',c?'capítulo '+c.n+' · '+c.t.toLowerCase():'fuera de los capítulos');
+    if(el)el.setAttribute('data-cap',c?c.t.toLowerCase():'ajustes');
   });
   var d=parse(today()),k=$('#cap-hoy');
-  if(k)k.textContent='capítulo I · '+DIAL[d.getDay()]+' '+d.getDate()+' de '+MESL[d.getMonth()];
+  if(k)k.textContent=DIAL[d.getDay()]+' '+d.getDate()+' de '+MESL[d.getMonth()];
 }
 function showPanels(){
   var tab=ctx.tab;marcarCapitulos();
@@ -123,7 +123,7 @@ function renderAll(){
 /* (2.26) La invitación a armar el pacto (Hoy, Semanas y Logros sin pacto), con las herramientas que andan sin él */
 function invitacionHTML(tab){
   var c=capituloDe(tab);
-  return '<section class="inv-pacto" aria-labelledby="inv-t">'+(c&&c.id!=='resumen'?'<p class="cap-kick">capítulo '+c.n+' · '+c.t.toLowerCase()+'</p>':'')
+  return '<section class="inv-pacto" aria-labelledby="inv-t">'+(c&&c.id!=='resumen'?'<p class="cap-kick">'+c.t.toLowerCase()+'</p>':'')
     +'<h2 id="inv-t">Para esto, armá tu pacto</h2>'
     +'<p class="inv-p">Son 3 preguntas: con cuánta plata empezás, cuánto querés guardar y qué día cobrás.</p>'
     +'<div class="row-btns"><button class="btn primary" type="button" data-pacto-armar>Armar mi pacto</button></div>'

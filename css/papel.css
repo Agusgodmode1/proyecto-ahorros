@@ -1369,7 +1369,7 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 @media (max-width:767px){.v2 body{padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))}}
 
 /* ---------- (2.34) Semana por semana, a la vista en Hoy ---------- */
-.v2 .sem-hoy{display:grid;gap:var(--e2);margin:var(--e5) 0 var(--e4)}
+.v2 .sem-hoy{display:grid;gap:var(--e2);margin:0}
 .v2 .sem-hoy .plan-h,.v2 .sem-hoy .note{margin:0}
 .v2 .sem-l{list-style:none;margin:0;padding:0}
 .v2 .sem-l li+li{border-top:1px solid var(--line)}

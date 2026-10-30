@@ -214,14 +214,15 @@ test('v23: quien cobraba cada 15 días, cada semana, por jornal o cuando vendía
   var d2=defaults('2026-10-26');d2.v=22;d2.perfil.cobro={tipo:'fijo',dia:10,laborableHabil:true,frecuencia:'mensual'};
   assert.deepEqual(migrar(d2).perfil.cobro,{tipo:'fijo',dia:10,laborableHabil:true});
 });
-test('v24 → v25: los sobres del mes arrancan con colchón del 10 % y sin sobre de compras; nada más cambia',function(){
+test('v24/v25 → v26: el reparto arranca parejo (sin colchón) y el sobre de compras se conserva; nada más cambia',function(){
   var d={v:24,plan:{monto:20000,modo:'monto',ahorro:5000,inicio:'2026-10-01',cobro:'2026-11-06'},gastos:[{id:'a',fecha:'2026-10-02',monto:300,nota:'boleto',cat:'Transporte'}],pacto:{sellado:'2026-10-01',numero:2}};
   var m=migrar(d);
   assert.equal(m.v,VERSION_ESTADO);
-  assert.equal(m.plan.colchon,10);assert.equal(m.plan.compras,0);
+  assert.equal(m.plan.reparto,'parejo');assert.equal(m.plan.compras,0);assert.equal(m.plan.colchon,undefined);
   assert.equal(m.plan.monto,20000);assert.equal(m.plan.ahorro,5000);
   assert.deepEqual(m.gastos,d.gastos);
-  var k=migrar({v:24,plan:{monto:1,inicio:'2026-10-01',cobro:'2026-11-06',colchon:0,compras:'2500'}});
-  assert.equal(k.plan.colchon,0,'si lo apagaste, sigue apagado');assert.equal(k.plan.compras,2500);
-  assert.equal(defaults().plan.colchon,10);
+  var k=migrar({v:25,plan:{monto:1,inicio:'2026-10-01',cobro:'2026-11-06',colchon:10,compras:'2500'}});
+  assert.equal(k.plan.reparto,'parejo');assert.equal(k.plan.colchon,undefined);assert.equal(k.plan.compras,2500);
+  assert.equal(migrar({v:26,plan:{reparto:'recomendado'}}).plan.reparto,'recomendado');
+  assert.equal(defaults().plan.reparto,'parejo');
 });

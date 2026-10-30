@@ -38,7 +38,7 @@ import {normIngresos} from './logica/ingresos.js';
         su historial y lo que anotó que entró quedan igual.
    v24: el horario de cada uno (perfil.horas.entrada, salida y dias 'lv' | 'ls'). Alguien nuevo arranca sin horario;
         a quien ya usaba la app se le completan las reglas que tenía (las de siempre), así sus cuentas dan idéntico. */
-export var VERSION_ESTADO=25;
+export var VERSION_ESTADO=26;
 
 function hoyISO(){return iso(new Date())}
 /* Feriados: por defecto solo cuentan los 5 no laborables (1/1, 1/5, 18/7, 25/8, 25/12).
@@ -60,7 +60,7 @@ export function defaults(hoy){
   return {
     v:VERSION_ESTADO,ejemplo:false,
     perfil:perfilBase(),
-    plan:{monto:0,modo:'monto',ahorro:0,pct:30,inicio:hoy,cobro:cobroDesde(hoy,{tipo:'habil5'}),minimo:null,sobrante:'siguiente',sobranteSemana:{},esperado:[],vistos:[],colchon:10,compras:0},
+    plan:{monto:0,modo:'monto',ahorro:0,pct:30,inicio:hoy,cobro:cobroDesde(hoy,{tipo:'habil5'}),minimo:null,sobrante:'siguiente',sobranteSemana:{},esperado:[],vistos:[],reparto:'parejo',compras:0},
     gastos:[],
     sueldo:sueldoBase(),
     extracto:{texto:'',formato:'auto',hormiga:400,cat:{},columnas:{},descartadas:{}}, /* columnas: por banco, qué columna es cada cosa (planillas); descartadas: avisos de Hoy que ya viste */
@@ -99,7 +99,7 @@ var EXCEL=[
 ];
 function legado(){
   return {
-    plan:{monto:36000,modo:'monto',ahorro:9000,pct:30,inicio:'2026-10-12',cobro:'2026-11-09',colchon:10,compras:3000},
+    plan:{monto:36000,modo:'monto',ahorro:9000,pct:30,inicio:'2026-10-12',cobro:'2026-11-09',reparto:'parejo',compras:3000},
     sueldo:{nominal:45000,bonoFijo:0,bonoHora:93.75,heCom:375,heEsp:187.5,hijos:0,conyuge:false,otros:0,bpc:6864,redondeo:true},
     horas:EXCEL.map(function(h){return Object.assign({},h)})
   };
@@ -187,8 +187,8 @@ export function migrar(d){
   if(state.plan.minimo===undefined)state.plan.minimo=null;
   if(state.plan.sobrante!=='ahorro')state.plan.sobrante='siguiente';
   state.plan.sobranteSemana=obj(state.plan.sobranteSemana);
-  /* v25: los sobres del mes (colchón de fin de mes y compras e imprevistos) */
-  state.plan.colchon=state.plan.colchon===undefined||state.plan.colchon===null?10:Math.max(0,Math.min(30,num(state.plan.colchon)));
+  /* v25-26: el reparto del mes (parejo o recomendado; el colchón de 2.39 se sacó) y el sobre de compras */
+  state.plan.reparto=state.plan.reparto==='recomendado'?'recomendado':'parejo';delete state.plan.colchon;
   state.plan.compras=Math.max(0,Math.round(num(state.plan.compras)));
   if(state.sueldo.diasLicencia===undefined)state.sueldo.diasLicencia=0;
   /* v9: la BPC guardada hasta ahora es la de 2026 */

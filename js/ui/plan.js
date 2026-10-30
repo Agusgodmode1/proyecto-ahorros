@@ -1,8 +1,8 @@
 /* Pestaña Plan: portada con "Hoy podés gastar", anotar un gasto, plan plegable, hasta que cobres, semanas y "cuando cobres". */
-import {gastosDelDia,COLCHON_OPC} from '../logica/sobres.js';
+import {gastosDelDia,pesoSemana,guiaReparto} from '../logica/sobres.js';
 import {parse,diffDays,bizRank,MESL,addDays,iso,DIA} from '../logica/fechas.js';
 import {num} from '../logica/util.js';
-import {fijosPeriodo,totalFijos,proximo,hoyPodes,planCalc} from '../logica/plan.js';
+import {fijosPeriodo,totalFijos,proximo,hoyPodes,planCalc,semanaDe} from '../logica/plan.js';
 import {disponible,fijosPagadosParte,maxAhorro,previaSaldo,ajustarSaldo,deshacerAjuste} from '../logica/saldo.js';
 import {balanceHTML} from './fijos.js';
 import {mesTrabajo,mins,reglasHoras} from '../logica/sueldo.js';
@@ -201,30 +201,42 @@ export function renderCountdown(){
 
 /* (2.34) Las semanas del plan en Hoy: «Semana 2 · 2 nov – 8 nov» y lo que te queda (o te pasaste / sobró).
    Las cuentas son las de siempre (pc.weeks); la semana de hoy va marcada y tocar una abre su página. */
-/* (2.39) Los sobres del mes: el colchón de fin de mes y las compras e imprevistos (la cuenta, en logica/sobres.js) */
+/* (2.40) «Consejos para ahorrar en el mes»: un desplegable al final de Hoy con la guía de cómo repartir la plata
+   semana a semana (en % y en pesos con tu plan), la elección Parejo / Optimizado y el sobre de compras e imprevistos.
+   La cuenta, en logica/sobres.js. */
 var sobAbiertos={};
-function sobresHoy(pc,t){
-  var S=pc.sobres;if(!S||!pc.weeks.length)return '';
-  var n=pc.weeks.length,ult=pc.weeks[n-1],enUlt=t>=ult.start,h='';
-  if(n>1){
-    var sub=S.pct>0?(enUlt?'ya está en esta semana':'se suma a la semana '+n+', desde el '+fCorta(ult.start)):'apagado';
-    h+='<li><details class="sob" data-sob="colchon"'+(sobAbiertos.colchon?' open':'')+'><summary><span class="sob-n"><b>Colchón de fin de mes</b><small>'+esc(sub)+'</small></span><b class="sob-v plata">'+(S.pct>0?money(S.colchon):'—')+'</b></summary>'
-      +'<div class="sob-in"><p class="note">Guardo una parte de tu plata para la última semana, así llegás tranquilo al cobro.</p>'
-      +'<div class="seg" role="group" aria-label="Cuánto va al colchón">'+COLCHON_OPC.map(function(v){return '<button type="button" data-colchon="'+v+'" aria-pressed="'+(Math.round(S.pct)===v)+'">'+v+' %'+'</button>'}).join('')+'</div></div></details></li>';
-  }
-  var C=S.compras,f=C>0?Math.max(0,Math.min(1,S.queda/C)):0;
-  h+='<li><details class="sob" data-sob="compras"'+(sobAbiertos.compras?' open':'')+'><summary><span class="sob-n"><b>Compras e imprevistos</b><small>'+(C>0?'te quedan '+money(S.queda)+' de '+money(C):'un regalo, el dentista, algo que se rompe')+'</small>'
+function consejosHoy(pc,t){
+  var S=pc.sobres||{},ws=pc.weeks,hay=ws.length>0,n,rec=S.reparto==='recomendado';
+  /* la guía es un mes de ejemplo de 4 semanas; el modo optimizado aplica lo mismo a tus semanas, según sus días */
+  var pcts=guiaReparto(4),fmt=function(x){return String(Math.round(x))+' %'};n=4;
+  var cols=pcts.map(function(x,i){
+    return '<li class="cj-c" style="flex-grow:'+x.toFixed(2)+'"><b>'+fmt(x)+'</b><i aria-hidden="true"></i><span>Semana '+(i+1)+'</span></li>';
+  }).join('');
+  var mid=n>2?pcts[1]:null,ult=pcts[n-1];
+  var tips='<ul class="cj-tips">'
+    +'<li><b>Semana 1 · '+fmt(pcts[0])+'</b> Arrancá liviano: después de cobrar es cuando más se gasta de más.</li>'
+    +(mid!==null?'<li><b>'+(n>3?'Semanas del medio':'Semana 2')+' · '+fmt(mid)+'</b> El momento para la compra que necesites.</li>':'')
+    +(n>1?'<li><b>Última semana · '+fmt(ult)+'</b> Tu colchón para llegar tranquilo al cobro.</li>':'')
+    +'</ul>';
+  var eleg=hay?'<div class="cj-eleg"><span class="sub-l" id="cj-eleg-l">Tu plan</span><div class="seg" role="group" aria-labelledby="cj-eleg-l">'
+    +'<button type="button" data-reparto="parejo" aria-pressed="'+!rec+'">Parejo</button><button type="button" data-reparto="recomendado" aria-pressed="'+rec+'">Optimizado</button></div>'
+    +'<p class="note">'+(rec?'Tus semanas siguen este reparto.':'Hoy cada semana tiene lo mismo. Con «Optimizado» siguen este reparto.')+'</p></div>':'';
+  var C=S.compras||0,f=C>0?Math.max(0,Math.min(1,S.queda/C)):0;
+  var sobre=hay?'<details class="sob" data-sob="compras"'+(sobAbiertos.compras?' open':'')+'><summary><span class="sob-n"><b>Sobre de compras e imprevistos</b><small>'+(C>0?'te quedan '+money(S.queda)+' de '+money(C):'un regalo, el dentista, algo que se rompe')+'</small>'
     +(C>0?'<span class="sob-bar" aria-hidden="true"><i style="transform:scaleX('+f.toFixed(3)+')"></i></span>':'')+'</span><b class="sob-v'+(C>0?' plata':' sob-armar')+'">'+(C>0?money(S.queda):'Armar')+'</b></summary>'
     +'<div class="sob-in"><p class="note">Lo que no es de todos los días sale de acá y no de la semana. Lo que no uses queda como ahorro.</p>'
     +'<form class="sob-f" data-sobf autocomplete="off"><div class="money"><span>$</span><input id="sob-monto" type="number" inputmode="numeric" min="0" step="100" value="'+(C||'')+'" placeholder="3000" aria-label="Plata para el sobre de compras"></div><button class="btn quiet" type="submit">Guardar</button></form>'
-    +(C>0?'<button class="btn quiet sob-g" type="button" data-sobgasto><span aria-hidden="true">+</span> Compra del sobre</button>':'')+'</div></details></li>';
-  return '<section class="sobres" aria-labelledby="sobres-t"><h2 class="plan-h" id="sobres-t">Tus sobres</h2><ul class="sob-l">'+h+'</ul></section>';
+    +(C>0?'<button class="btn quiet sob-g" type="button" data-sobgasto><span aria-hidden="true">+</span> Compra del sobre</button>':'')+'</div></details>':'';
+  var mas='<ul class="cj-tips cj-mas"><li><b>El día que cobrás</b> Separá primero lo que vas a ahorrar, así no se mezcla.</li><li><b>Cada domingo</b> Mirá cuánto te sobró y decidí si va a la semana que viene o al ahorro.</li></ul>';
+  return '<details class="consejos" data-sob="consejos"'+(sobAbiertos.consejos?' open':'')+'><summary><span class="cj-t">Consejos para ahorrar en el mes</span><span class="cj-s">cómo repartir tu plata semana a semana</span></summary>'
+    +'<div class="cj-in"><h3 class="cj-h">Cómo repartir tu mes</h3><p class="note cj-ej">Un mes de ejemplo, de 4 semanas. Si una semana es más corta, se ajusta por sus días.</p><ol class="cj-guia" aria-label="Reparto optimizado: '+pcts.map(function(x,i){return 'semana '+(i+1)+', '+fmt(x)}).join('; ')+'">'+cols+'</ol>'
+    +tips+eleg+sobre+mas+'</div></details>';
 }
 /* El día que empieza el pacto (y los 3 siguientes): separar el ahorro de verdad, mejor en UI */
 function avisoPasar(pc,t){
   var p=ctx.state.plan;
   if(!(pc.ahorro>0)||t<p.inicio||diffDays(p.inicio,t)>3||p.ahorroPasado===p.cobro)return '';
-  return '<div class="banner"><p><b>Separá tu ahorro hoy:</b> pasá '+money(pc.ahorro)+' a otra cuenta, mejor en UI (se ajusta con la inflación).</p><button class="btn" type="button" data-pasado>Ya lo pasé</button></div>';
+  return '<div class="banner"><p><b>Separá tu ahorro hoy:</b> pasá '+money(pc.ahorro)+' a otra cuenta, así no se mezcla.</p><button class="btn" type="button" data-pasado>Ya lo pasé</button></div>';
 }
 /* El último día de cada semana (y el siguiente): ¿lo que sobra va a la semana que viene o al ahorro? */
 function avisoRepaso(pc,t){
@@ -235,11 +247,12 @@ function avisoRepaso(pc,t){
     +'<div class="row-btns"><button class="btn" type="button" data-sobsem="'+w.start+'" data-val="siguiente">A la semana que viene</button><button class="btn" type="button" data-sobsem="'+w.start+'" data-val="ahorro">Al ahorro</button></div></div>';
 }
 function initSobres(){
-  var el=$('#sobres-hoy');if(!el)return;
+  var el=$('#consejos-hoy');if(!el)return;
   el.addEventListener('toggle',function(e){var d=e.target;if(d.matches&&d.matches('[data-sob]'))sobAbiertos[d.getAttribute('data-sob')]=d.open},true);
   el.addEventListener('click',function(e){
-    var c=e.target.closest('[data-colchon]');
-    if(c){var v=Number(c.getAttribute('data-colchon'));ctx.state.plan.colchon=v;ctx.persist();ctx.renderAll();toast(v?'Listo: '+v+' % para la última semana':'Listo: sin colchón');return}
+    var c=e.target.closest('[data-reparto]');
+    if(c){var v=c.getAttribute('data-reparto');if(ctx.state.plan.reparto===v)return;ctx.state.plan.reparto=v;ctx.persist();ctx.renderAll();
+      toastAccion(v==='recomendado'?'Listo: tus semanas van con el reparto optimizado':'Listo: cada semana tiene lo mismo','Deshacer',function(){ctx.state.plan.reparto=v==='recomendado'?'parejo':'recomendado';ctx.persist();ctx.renderAll()});return}
     if(e.target.closest('[data-sobgasto]')){abrirHojaGasto({titulo:'Compra del sobre',sobre:true});return}
   });
   el.addEventListener('submit',function(e){
@@ -320,7 +333,7 @@ export function renderResumen(pc){
   /* (2.35) Semana por semana, justo debajo de «Hoy podés gastar»: cada semana con lo que te queda; tocarla abre su detalle. */
   var sh=$('#sem-hoy');if(sh)sh.innerHTML=semanasHoy(pc,today());
   /* (2.39) los sobres del mes y dos recordatorios: separar el ahorro al cobrar y el cierre de cada semana */
-  var so=$('#sobres-hoy');if(so)so.innerHTML=sobresHoy(pc,today());
+  var so=$('#consejos-hoy');if(so)so.innerHTML=consejosHoy(pc,today());
   var pa=$('#pasar-aviso');if(pa)pa.innerHTML=avisoPasar(pc,today());
   var rp=$('#repaso-aviso');if(rp)rp.innerHTML=avisoRepaso(pc,today());
   var sf=aniosSinFeriados(state,today()),fa=$('#fer-aviso');

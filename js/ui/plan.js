@@ -167,6 +167,25 @@ export function renderCountdown(){
   el.setAttribute('aria-label',(d>0?d+' '+small+' para cobrar':(d===0?'Cobrás hoy':'Ya cobraste'))+', '+fLarga(state.plan.cobro));
 }
 
+/* (2.34) Las semanas del plan en Hoy: «Semana 2 · 2 nov – 8 nov» y lo que te queda (o te pasaste / sobró).
+   Las cuentas son las de siempre (pc.weeks); la semana de hoy va marcada y tocar una abre su página. */
+function semanasHoy(pc,t){
+  if(!pc.weeks.length)return '';
+  var h='<section class="sem-hoy" aria-labelledby="sem-hoy-t"><h2 class="plan-h" id="sem-hoy-t">Semana por semana</h2>'
+    +'<p class="note">Lo que sobra de una semana pasa a la siguiente.</p><ul class="sem-l">';
+  pc.weeks.forEach(function(w){
+    var cur=t>=w.start&&t<=w.end,past=t>w.end,over=w.left<0;
+    var rem=cur?diffDays(t,w.end)+1:w.days;
+    var lab=over?'te pasaste':past?'sobró':cur?'te quedan':'para gastar';
+    var sub=cur&&!over?money(Math.max(w.left,0)/Math.max(rem,1))+' por día':lab;
+    h+='<li><button type="button" class="sem-i'+(cur?' actual':'')+(past?' pasada':'')+'" data-goto="w'+w.i+'"'+(cur?' aria-current="true"':'')+'>'
+      +'<span class="sem-n"><b>Semana '+(w.i+1)+'</b><small>'+esc(rango(w.start,w.end))+'</small></span>'
+      +'<span class="sem-v"><b class="'+(over?'neg':cur||!past?'plata':'')+'">'+money(Math.abs(w.left))+'</b><small>'+esc(cur&&!over?lab+' · '+sub:lab)+'</small></span>'
+      +'<i class="sem-ir" aria-hidden="true">›</i></button></li>';
+  });
+  return h+'</ul></section>';
+}
+
 export function renderResumen(pc){
   var state=ctx.state;
   syncMontoCampo(pc);ahorroNote();heroChips(pc);renderAlertaMeta(pc);
@@ -184,8 +203,9 @@ export function renderResumen(pc){
   var h=state.ejemplo?'<div class="banner"><p><b>Estás viendo datos de ejemplo.</b> Son de muestra: no son tuyos.</p><button class="btn" type="button" data-cero>Borrar el ejemplo y crear mi perfil</button></div>':'';
   /* fijos compartidos: quién te debe plata (nota al margen, con «Me pagaron») */
   var deudas=balanceHTML(true);if(deudas)h+='<div class="banner deudas">'+deudas+'</div>';
-  /* (2.26) Un solo desplegable, «Tu plan»: hasta que cobres y, si ya sé tu sueldo, cuando cobres.
-     Semana por semana está en el capítulo II (acá, un enlace). */
+  /* (2.34) Semana por semana, a la vista en Hoy: cada semana con lo que te queda; tocarla abre su detalle (capítulo II). */
+  h+=semanasHoy(pc,t);
+  /* (2.26) Un solo desplegable, «Tu plan»: hasta que cobres y, si ya sé tu sueldo, cuando cobres. */
   h+=foldIni('plan','tone-mint','Tu plan',resto<0?'Te faltan '+money(-resto)+' para tu meta':'Te quedan '+money(resto)+' para gastar · '+esc(rango(p.inicio,p.cobro)));
   var fsub=fp.length?fp.map(function(o){return esc(o.f.nombre)+' ('+esc(fCorta(o.fecha))+')'}).join(', '):(state.fijos.length?'ninguno vence antes de cobrar':'<button class="linklike" type="button" data-goto="fijos">cargá tus fijos</button>');
   h+='<div class="receipt">'
@@ -196,12 +216,10 @@ export function renderResumen(pc){
   if(resto<0)h+='<p class="err" style="margin-top:0">No llegás a guardar todo: te faltan '+money(-resto)+'. Bajá el ahorro o revisá los gastos.</p>';
   h+='<div><div class="split-bar" role="img" aria-label="Fijos '+Math.round(pf)+'%, ahorro '+Math.round(pa)+'%, para gastar '+Math.round(pg)+'%"><i class="split-fix" style="width:'+pf+'%"></i><i class="split-save" style="width:'+pa+'%"></i><i class="split-spend" style="width:'+pg+'%"></i></div>';
   h+='<div class="split-key">'+(pend>0?'<span><i class="dot" style="background:var(--teal)"></i>Fijos, '+Math.round(pf)+'%</span>':'')+'<span><i class="dot" style="background:var(--sun)"></i>Guardás, '+Math.round(pa)+'%</span><span><i class="dot" style="background:var(--sky)"></i>Para gastar, '+Math.round(pg)+'%</span></div></div>';
-  var cw=pc.weeks.filter(function(w){return t>=w.start&&t<=w.end})[0];
   h+='<div class="tiles">'
     +tile('tone-sky','Por semana',money(pDia*7),money(pDia)+' por día')
     +tile('tone-coral','Gastaste',money(pc.spentInPlan),'de '+money(pc.gastar))
     +'</div>';
-  h+='<p class="plan-sem"><button class="linklike" type="button" data-goto="'+(cw?'w'+cw.i:'semanas')+'">Ver semana por semana ›</button></p>';
   var fuera=pc.spentAll-pc.spentInPlan;
   if(Math.round(fuera)>0)h+='<p class="note">Hay '+money(fuera)+' en gastos con fecha fuera del plan: no cuentan.</p>';
   /* Cuando cobres: solo si ya sé cuánto cobrás */

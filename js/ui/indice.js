@@ -1,5 +1,5 @@
 /* Herramientas (2.33; antes «el índice»): lo que se abre con la ruedita de Hoy. Todo lo que no es la pantalla principal vive acá:
-   Sueldo (con las horas extra), Tarjeta, Fijos, Semanas, Logros, Lo guardado, Ajustes y el prólogo (el pacto).
+   Sueldo (con las horas extra), Tarjeta, Fijos, Logros, Lo guardado, Ajustes y el prólogo (el pacto). Semanas está en Hoy.
    También busca gastos. ctx.abrirPrologo(pagina, editar) y ctx.cerrarLibro() los pone app.js. */
 import {hoyPodes,curWeek} from '../logica/plan.js';
 import {histStats} from '../logica/logros.js';
@@ -34,7 +34,7 @@ function renglon(ir,n,t,sub,pag,cls,actual){
     +'<span class="ix-n">'+n+'</span><span class="ix-t">'+esc(t)+(sub?'<small>'+sub+'</small>':'')+'</span><span class="ix-dots" aria-hidden="true"></span><span class="ix-p">'+pag+'</span><i class="ix-cinta" aria-hidden="true"></i></button></li>';
 }
 /* El orden del menú: primero lo que Agus usa más */
-var MENU=['sueldo','gastos','fijos','semanas','logros','guardado'];
+var MENU=['sueldo','gastos','fijos','logros','guardado'];
 export function abrirIndice(){
   var box=$('#indice-box'),el=$('#indice'),st=ctx.state,pc=planNow(),actual=capituloDe(ctx.tab),hay=tienePacto(st);
   var h='<div class="lb-cab"><span class="lb-cap">el libro del ahorro</span><button class="lb-link" type="button" data-ix="cerrar">Volver</button></div>'

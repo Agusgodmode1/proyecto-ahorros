@@ -1367,3 +1367,18 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 .ix-herr-l .ix-dots,.ix-herr-l .ix-p{display:none}
 /* abajo solo queda el micrófono: menos lugar reservado */
 @media (max-width:767px){.v2 body{padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))}}
+
+/* ---------- (2.34) Semana por semana, a la vista en Hoy ---------- */
+.v2 .sem-hoy{display:grid;gap:var(--e2);margin:var(--e5) 0 var(--e4)}
+.v2 .sem-hoy .plan-h,.v2 .sem-hoy .note{margin:0}
+.v2 .sem-l{list-style:none;margin:0;padding:0}
+.v2 .sem-l li+li{border-top:1px solid var(--line)}
+.v2 .sem-i{appearance:none;width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto 20px;align-items:center;gap:var(--e3);min-height:56px;padding:var(--e2) 0;background:none;border:0;color:var(--ink);text-align:left;font-family:inherit;cursor:pointer}
+.v2 .sem-i:active{transform:translateX(2px)}
+.v2 .sem-n,.v2 .sem-v{display:grid;gap:2px;min-width:0}
+.v2 .sem-v{text-align:right}
+.v2 .sem-n b{font-weight:700;font-size:16px}
+.v2 .sem-v b{font-family:var(--f-libro);font-weight:600;font-size:20px;line-height:1.1}
+.v2 .sem-i small{font-size:13px;color:var(--muted)}
+.v2 .sem-i.actual{box-shadow:inset 3px 0 0 var(--oro);padding-left:var(--e3)}
+.v2 .sem-ir{font-style:normal;font-size:22px;line-height:1;color:var(--oro-t);text-align:center}

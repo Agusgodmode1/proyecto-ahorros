@@ -169,7 +169,7 @@ var cmVisto=null,cmAnim=0;
 function viajeCometa(el,f,d,tot){
   var n=el.querySelector('.cd-n');cancelAnimationFrame(cmAnim);
   if(matchMedia('(prefers-reduced-motion: reduce)').matches){ponerCometa(el,f);return}
-  var dur=Math.max(900,Math.min(1800,600+f*1400)),t0=null,desdeN=d>0?Math.max(d,tot):null;
+  var dur=Math.max(900,Math.min(1800,600+f*1400)),t0=null,desdeN=d>0&&tot-d>=3?tot:null;
   var paso=function(ts){
     if(t0===null)t0=ts;var k=Math.min(1,(ts-t0)/dur),e=1-Math.pow(1-k,3);
     ponerCometa(el,f*e);
@@ -195,15 +195,7 @@ export function renderCountdown(){
   if(ctx.tab==='resumen'&&cmVisto!==clave){cmVisto=clave;ponerCometa(el,0);viajeCometa(el,f,d,tot)}
   else{ponerCometa(el,f);if(f>=.999)el.classList.add('cm-brilla')}
   if(d===0&&polvoDia!==t&&ctx.tab==='resumen'){polvoDia=t;setTimeout(function(){polvo(el.querySelector('.cd-v'),18,0)},250)}
-  el.setAttribute('aria-label',(d>0?d+' '+small+' para cobrar':(d===0?'Cobrás hoy':'Ya cobraste'))+', '+fLarga(state.plan.cobro)+'. Tocá para ver el camino.');
-}
-/* Tocar el recuadro del cobro repite el viaje */
-function initCamino(){
-  var el=$('#countdown');if(!el)return;
-  el.setAttribute('role','button');el.tabIndex=0;
-  var otra=function(){if(!el.querySelector('.cd-const svg'))return;el.classList.remove('cm-brilla');ponerCometa(el,0);viajeCometa(el,Number(el.dataset.f)||0,Number(el.dataset.d)||0,Number(el.dataset.tot)||0)};
-  el.addEventListener('click',otra);
-  el.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();otra()}});
+  el.setAttribute('aria-label',(d>0?d+' '+small+' para cobrar':(d===0?'Cobrás hoy':'Ya cobraste'))+', '+fLarga(state.plan.cobro)+'.');
 }
 
 /* (2.34) Las semanas del plan en Hoy: «Semana 2 · 2 nov – 8 nov» y lo que te queda (o te pasaste / sobró).
@@ -442,7 +434,7 @@ function confirmarSaldo(real){
   return true;
 }
 export function initPlan(){
-  initSemHoy();initCamino();
+  initSemHoy();
   var pr=$('#p-resumen');
   initSaldo();initEntradas();
   $('#meta-alerta').addEventListener('click',function(e){

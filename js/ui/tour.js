@@ -11,7 +11,7 @@ function hecho(){try{localStorage.setItem(KEY,'hecho')}catch(e){}}
 var PASOS=[
   {tab:'resumen',sel:'#hoy-hero .hh-n',t:'Hoy podés gastar',x:'Lo que podés gastar hoy sin tocar tu ahorro.'},
   {tab:'resumen',sel:'#gasto-abrir',t:'Anotá un gasto',x:'Tocá «+ Gasto»: cuánto y en qué. Nada más.'},
-  {tab:'resumen',sel:window.innerWidth<1100?'.fl-sig':'#pie',t:'Pasá de página',x:'Deslizá o tocá las flechas. La cinta de arriba es el índice.'},
+  {tab:'resumen',sel:'#herr-abrir',t:'Tus herramientas',x:'Sueldo, tarjeta, fijos y más están en la ruedita de arriba.'},
   {tab:'resumen',sel:'.mic',t:'O decilo',x:'Tocá el micrófono y decí «gasté 350 en un café». Siempre te pido confirmar.'}
 ];
 var i=0,corre=false;
@@ -28,7 +28,7 @@ function mostrar(dir){
   setTimeout(function(){
     var n=document.querySelector(p.sel);
     if(!visible(n)){i+=dir;if(i<0)i=0;if(i>=PASOS.length){cerrar();return}mostrar(dir);return}
-    if(!n.closest('.tabs')&&!n.closest('.mic')){try{n.scrollIntoView({block:'center'})}catch(e){}}
+    if(!n.closest('.mic')){try{n.scrollIntoView({block:'center'})}catch(e){}}
     pintar();
     setTimeout(ubicar,60);
   },90);

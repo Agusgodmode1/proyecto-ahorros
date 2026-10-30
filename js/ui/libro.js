@@ -4,7 +4,8 @@
    Los pagos fijos se cargan en Fijos; la plata apartada, en la letra chica del pacto (hojear, E.edit='qa').
    Modos:
    - 'nuevo': la primera vez. Tapa (con importar o ver el ejemplo) → apertura → «¿Qué querés hacer?» (2.26: el pacto o una
-     herramienta suelta, o.alHerramienta) → las páginas del prólogo → «Sellar el pacto». Con o.sinTapa (armar el pacto
+     herramienta suelta, o.alHerramienta) → las páginas del prólogo → «Sellar el pacto». En cada página hay un «Saltar»
+     (2.33, o.alSaltar(estado)): sin armar el pacto, la app abre directo el menú de Herramientas. Con o.sinTapa (armar el pacto
      después de usar una herramienta) arranca directo en la primera página, con «Ahora no» para volver.
    - 'ciclo': al cobrar. Solo las 3 preguntas y el pacto nuevo; o.antes(estado) cierra el ciclo justo antes de sellar.
    - 'hojear': ya hay datos. Las mismas páginas muestran tus valores de hoy, con «Cambiar» para corregirlos en el lugar.
@@ -172,7 +173,8 @@ function pagHTML(id){
   var conBrote=id==='q1'||id==='q2'||id==='q3';
   var cab='<div class="lb-cab'+(conBrote?' con-brote':'')+'"><span class="lb-cap">'+(ciclo?'pacto nuevo':id==='que'?'el libro del ahorro':id==='pacto'?'el pacto':'prólogo')+'</span>'
     +(conBrote?broteHTML(Math.min(broteVisto,3)):'')
-    +(hojear()||ciclo||o.sinTapa?'<button class="lb-link" type="button" data-lb="cerrar-libro">'+(ciclo||o.sinTapa?'Ahora no':'Ir a Hoy')+'</button>':conBrote?'<span></span>':'')+'</div>';
+    +(hojear()||ciclo||o.sinTapa?'<button class="lb-link" type="button" data-lb="cerrar-libro">'+(ciclo||o.sinTapa?'Ahora no':'Ir a Hoy')+'</button>'
+    :o.alSaltar?'<button class="lb-link" type="button" data-lb="saltar-herr" aria-label="Saltar el prólogo e ir a las herramientas">Saltar</button>':conBrote?'<span></span>':'')+'</div>';
   var atras=idx>0?'<button class="lb-btn chico" type="button" data-lb="atras" aria-label="Página anterior">‹ Atrás</button>'
     :(hojear()&&o.alTapa?'<button class="lb-btn chico" type="button" data-lb="atras" aria-label="Cerrar el libro: la tapa">‹ La tapa</button>':'');
   var sig='<button class="lb-btn si" type="button" data-lb="sig">'+(id==='p1'?(hojear()?'Pasar la página':'Empezar'):'Seguir')+'</button>';
@@ -553,7 +555,7 @@ function abrirHojas(pagina,dir){
 }
 
 /* opt: {modo:'nuevo'|'hojear'|'ciclo'|'tapa', estado, pagina, editar, dir,
-         listo(estado), alImportar(estado), alEjemplo(), alCerrar(dir), alGuardar(v), alApartado(), antes(estado)} */
+         listo(estado), alImportar(estado), alEjemplo(), alHerramienta(estado,id), alSaltar(estado), alCerrar(dir), alGuardar(v), alApartado(), antes(estado)} */
 export function abrirLibro(opt){
   o=opt;st=opt.estado;vista='portada';E={edit:null};
   aplicarFeriados(st);
@@ -615,6 +617,8 @@ export function initLibro(){
     if(a==='atras'){if(idx>0){E.edit=null;irA(idx-1,-1)}else if(hojear()&&o.alTapa)aLaTapa();return}
     if(a==='cambiar'){empezarEdicion(PAGS[idx]);return}
     if(a==='herr'){var hid=b.getAttribute('data-h');cerrarTodo(1);o.alHerramienta(st,hid);return}
+    /* (2.33) Saltar: sin armar el pacto, directo a las herramientas (el nombre, si ya lo escribiste, se guarda) */
+    if(a==='saltar-herr'){var nom=String(D.nombre||'').trim();if(nom&&st.perfil)st.perfil.nombre=nom.slice(0,30);cerrarTodo(1);o.alSaltar(st);return}
     if(a==='sug-monto'){D.pesos=b.getAttribute('data-val');var ip=q('#lb-pesos');if(ip)ip.value=D.pesos;error('');vivoQ1();return}
     if(a==='cambiar-ap'){empezarEdicion('qa');return}
     if(a==='ap-tipo'){var ft=Number(b.getAttribute('data-i'));if(D.ap[ft])D.ap[ft].tipo=b.getAttribute('data-t');redibujarAp();return}

@@ -1359,3 +1359,11 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 .v2 .aj-sub h2{font-size:var(--t4)}
 /* «Probar con uno de ejemplo» (Sueldo): enlace dentro de la nota, con 44 px para tocarlo */
 .v2 .lector>.note .linklike{display:inline-flex;align-items:center;min-height:44px}
+
+/* ---------- (2.33) Herramientas: sin barra de capítulos abajo ---------- */
+/* la cinta «Hoy» solo se ve fuera de Hoy (el display de arriba le ganaba al atributo hidden) */
+.v2 .indice-btn[hidden]{display:none}
+/* el menú no lleva número de página ni línea de puntos: título y una pista debajo */
+.ix-herr-l .ix-dots,.ix-herr-l .ix-p{display:none}
+/* abajo solo queda el micrófono: menos lugar reservado */
+@media (max-width:767px){.v2 body{padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))}}

@@ -16,14 +16,14 @@ import {registrarSW} from './pwa.js';
 import {initVoz} from './ui/voz.js';
 import {abrirPerfil,initPerfil,resumenPerfil} from './ui/perfil.js';
 import {abrirLibro,initLibro} from './ui/libro.js';
-import {copiaVisible,girar,empezar,terminar as terminarPase} from './ui/pase.js';
+import {copiaVisible,girar,terminar as terminarPase} from './ui/pase.js';
 import {introCapitulo,olvidarIntros} from './ui/intro.js';
-import {initIndice} from './ui/indice.js';
+import {initIndice,abrirIndice} from './ui/indice.js';
 import {initFlechas,actualizarFlechas} from './ui/flechas.js';
 import {initNotas,agruparNotas} from './ui/notas.js';
 import {renderGuardado,initGuardado} from './ui/guardado.js';
 import {initPostal} from './ui/postal.js';
-import {CAPITULOS,capituloDe,vecina,numeroDePagina,nombreDePagina} from './logica/capitulos.js';
+import {capituloDe} from './logica/capitulos.js';
 import {DIAL,MESL,parse} from './logica/fechas.js';
 import {initTour,iniciarTour,tourSiPendiente} from './ui/tour.js';
 import {aplicarFeriados,renderFeriados,initFeriados} from './ui/feriados.js';
@@ -60,18 +60,10 @@ async function flush(){
 /* Si la app pasa a segundo plano con cambios sin guardar, se guardan ya. */
 function flushPendiente(){if(timer)flush()}
 
-/* ---------- Pestañas ---------- */
-/* Capítulos: la barra de abajo son los lomos (marcapáginas) del libro, con su número romano */
+/* ---------- Páginas ---------- */
+/* (2.33) Hoy es la pantalla principal; todo lo demás se abre desde la ruedita (Herramientas, ui/indice.js) y se vuelve con la cinta «Hoy».
+   Ya no hay barra de capítulos, pie con flechas ni deslizar entre capítulos. */
 var TK='pa-tab';
-function renderTabs(pc){
-  var tab=ctx.tab,cw='w'+curWeek(pc,today()),h='',isW=/^w\d+$/.test(tab);
-  CAPITULOS.forEach(function(c){
-    var id=c.id==='semanas'?(isW?tab:cw):c.id;
-    var sel=c.id==='semanas'?isW:tab===c.id;
-    h+='<button class="tab lomo '+c.tono+'" role="tab" type="button" data-tab="'+id+'" aria-selected="'+sel+'" aria-label="Capítulo '+c.n+': '+c.t+'"><span class="lomo-n" aria-hidden="true">'+c.n+'</span><span class="lomo-t">'+(c.corto||c.t)+'</span></button>';
-  });
-  $('#tablist').innerHTML=h;
-}
 /* El encabezado de cada capítulo («capítulo II · semanas») */
 var PANELES={resumen:'#p-resumen',fijos:'#p-fijos',sueldo:'#p-sueldo',gastos:'#p-gastos',logros:'#p-logros',guardado:'#p-guardado',ajustes:'#p-ajustes'};
 function marcarCapitulos(){
@@ -81,14 +73,6 @@ function marcarCapitulos(){
   });
   var d=parse(today()),k=$('#cap-hoy');
   if(k)k.textContent='capítulo I · '+DIAL[d.getDay()]+' '+d.getDate()+' de '+MESL[d.getMonth()];
-}
-/* Pie de página: flecha a la página anterior, el folio y flecha a la siguiente (en las esquinas, donde llega el pulgar) */
-function renderPie(pc){
-  var el=$('#pie');if(!el)return;
-  var n=pc.weeks.length,cw=curWeek(pc,today()),ant=vecina(ctx.tab,-1,n,cw),sig=vecina(ctx.tab,1,n,cw);
-  el.innerHTML=(ant?'<button class="flecha ant" type="button" data-pie="'+ant+'" aria-label="Página anterior: '+nombreDePagina(ant)+'"><span aria-hidden="true">‹</span><small>'+nombreDePagina(ant)+'</small></button>':'<span class="flecha-v"></span>')
-    +'<span class="folio">— '+(numeroDePagina(ctx.tab,n)||'')+' —</span>'
-    +(sig?'<button class="flecha sig" type="button" data-pie="'+sig+'" aria-label="Página siguiente: '+nombreDePagina(sig)+'"><small>'+nombreDePagina(sig)+'</small><span aria-hidden="true">›</span></button>':'<span class="flecha-v"></span>');
 }
 function showPanels(){
   var tab=ctx.tab;marcarCapitulos();
@@ -119,7 +103,7 @@ function renderAll(){
   /* Con el perfil hecho, la explicación del encabezado ya no hace falta y deja lugar a lo importante */
   var hs=document.querySelector('.hero-sub');if(hs)hs.hidden=!!ctx.state.perfil.hecho;
   var st=ctx.state;document.documentElement.classList.toggle('en-uso',!st.ejemplo&&!!st.perfil.hecho&&(st.gastos.length+st.horas.length+st.hist.length)>3);
-  renderCountdown();renderTabs(pc);showPanels();renderAvisoRespaldo();renderResumen(pc);
+  renderCountdown();showPanels();renderAvisoRespaldo();renderResumen(pc);
   /* (2.15) cada capítulo se dibuja solo cuando se ve (pasar de página no rehace los que están ocultos) */
   if(ctx.tab==='resumen'){renderAvisoTarjeta();agruparNotas()}
   if(/^w\d+$/.test(ctx.tab))renderWeek(pc);
@@ -128,7 +112,8 @@ function renderAll(){
   if(ctx.tab==='fijos')renderFijos(pc);
   if(ctx.tab==='logros')renderLogros(pc);
   if(ctx.tab==='guardado')renderGuardado();
-  renderPie(pc);actualizarFlechas();
+  var vh=$('#volver-hoy');if(vh)vh.hidden=ctx.tab==='resumen';
+  actualizarFlechas();
   /* la introducción del capítulo: completa la primera vez, después en una línea */
   var capA=capituloDe(ctx.tab);if(capA&&capA.id!=="resumen")introCapitulo($(capA.id==="semanas"?"#p-semana":PANELES[capA.id]),capA.id);else if(ctx.tab==='ajustes')introCapitulo($('#p-ajustes'),'ajustes');
   if(ctx.tab==='ajustes'){renderAjustes(guardado);renderFeriados();renderAjustesPin();marcarSonido();
@@ -235,68 +220,6 @@ function entrada(){
   $('#app').animate([{opacity:0},{opacity:1}],{duration:320});
   hojaEl().animate([{transform:'perspective(1600px) rotateY(-8deg) scale(.985)',opacity:.4},{transform:'none',opacity:1}],{duration:480,easing:'cubic-bezier(.22,.7,.25,1)'});
 }
-/* Deslizar a los costados pasa la hoja: la hoja sigue al dedo (con su curva y su sombra) y debajo ya está la página que viene.
-   Al soltar manda la velocidad: un gesto rápido la pasa aunque hayas recorrido poco; si no llegó (~28 %), vuelve.
-   En los bordes del libro resiste. Desde campos, listas que se deslizan u hojas abiertas no se activa. */
-function initDeslizar(){
-  var x0=null,y0=0,modo=null,dx=0,W=1,dest=null,h=null,arr=null,antes=null,scroll0=0,muestras=[];
-  var NO='input,textarea,select,.guia-grid,.frec-b,.wkpick,.days,.tablist,.sugs,.seg,.lb-rango,[data-nodeslizar]';
-  function bloqueado(){var c=document.documentElement.classList;return c.contains('voz-abierta')||c.contains('hoja')}
-  /* sin página al lado (o hacia el prólogo): la hoja de verdad apenas gira y vuelve */
-  function resistir(p){
-    var ang=p<0?p*22:p*10,tx=p<0?p*W*.08:p*W*.4;
-    h.style.transform='perspective(1600px) translateX('+tx.toFixed(1)+'px) rotate3d(-.16,1,0,'+ang.toFixed(2)+'deg)';
-  }
-  function limpiar(){if(!h)return;h.style.transform='';h.classList.remove('hojeando')}
-  function irSinGiro(t){
-    ctx.tab=t;renderAll();
-    var m=document.querySelector('main');if(m&&m.getBoundingClientRect().top<0){try{window.scrollTo(0,0)}catch(e){}}
-  }
-  document.addEventListener('pointerdown',function(e){
-    var enPase=e.target.closest('.giro');if(enPase)terminarPase();
-    var enHoja=e.target.closest('#hoja')||enPase;
-    x0=(!ctx.state||!enHoja||e.target.closest(NO)||e.pointerType==='mouse'||bloqueado())?null:e.clientX;
-    y0=e.clientY;modo=null;dx=0;muestras=[];
-  },{passive:true});
-  document.addEventListener('pointermove',function(e){
-    if(x0===null)return;
-    dx=e.clientX-x0;var dy=e.clientY-y0;
-    muestras.push({x:e.clientX,t:performance.now()});if(muestras.length>8)muestras.shift();
-    if(!modo){
-      if(Math.abs(dx)<10&&Math.abs(dy)<10)return;
-      if(Math.abs(dy)>Math.abs(dx)*.8){x0=null;return}
-      h=hojaEl();W=Math.min(h.offsetWidth||1,window.innerWidth);
-      var pc=planNow();dest=vecina(ctx.tab,dx<0?1:-1,pc.weeks.length,curWeek(pc,today()));
-      if(dest&&dest!=='prologo'&&!quieto()){
-        antes=ctx.tab;scroll0=window.scrollY;
-        var o=prepararHoja(dx<0?1:-1,function(){irSinGiro(dest)});
-        o.volver=function(){irSinGiro(antes);try{window.scrollTo(0,scroll0)}catch(x){}};
-        if(window.innerWidth>=1100)W=o.caja.width;
-        arr=empezar(o);modo='hoja';
-      }else{modo='borde';h.classList.add('hojeando')}
-    }
-    if(modo==='hoja')arr.mover(dx);
-    else if(!quieto()){var p=Math.max(-1,Math.min(1,dx/W));if(!dest)p*=.18;resistir(p)}
-  },{passive:true});
-  function velocidad(){
-    var n=muestras.length;if(n<2||performance.now()-muestras[n-1].t>80)return 0; /* si te quedaste quieto antes de soltar, es lento */
-    var a=muestras[0],b=muestras[n-1];for(var i=0;i<n;i++)if(b.t-muestras[i].t<=100){a=muestras[i];break}
-    return (b.x-a.x)/Math.max(1,b.t-a.t);
-  }
-  function soltar(cancelado){
-    if(x0===null)return;x0=null;
-    var v=cancelado?0:velocidad(),hacia=dx<0?-1:1;
-    var pasa=!cancelado&&!!dest&&(Math.abs(dx)>W*.28||Math.abs(v)>.35&&v*hacia>0&&Math.abs(dx)>24);
-    if(modo==='hoja'){arr.soltar(pasa,v);arr=null;return}
-    if(modo!=='borde')return;
-    var desde=h.style.transform||'none';
-    if(pasa){limpiar();go(dest);return}
-    if(!quieto())h.animate([{transform:desde},{transform:'none'}],{duration:240,easing:'cubic-bezier(.3,.7,.3,1)'});
-    limpiar();
-  }
-  document.addEventListener('pointerup',function(){soltar(false)},{passive:true});
-  document.addEventListener('pointercancel',function(){soltar(true)},{passive:true});
-}
 function syncInputs(){syncPlan();syncSueldo();syncGastos()}
 
 /* Reemplaza todos los datos (importar un respaldo, volver a una copia, borrar el ejemplo).
@@ -341,16 +264,7 @@ function guiaInit(){
 
 /* ---------- Eventos globales ---------- */
 function initGlobal(){
-  $('#tablist').addEventListener('click',function(e){var b=e.target.closest('[data-tab]');if(b)go(b.getAttribute('data-tab'))});
-  $('#tablist').addEventListener('keydown',function(e){
-    if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;
-    var tabs=Array.prototype.slice.call(document.querySelectorAll('.tab')),i=tabs.indexOf(document.activeElement);
-    if(i<0)return;
-    var n=tabs[(i+(e.key==='ArrowRight'?1:tabs.length-1))%tabs.length];
-    go(n.getAttribute('data-tab'));
-    var nn=document.querySelector('.tab[aria-selected="true"]');if(nn)nn.focus();
-    e.preventDefault();
-  });
+  $('#volver-hoy').addEventListener('click',function(){go('resumen')});
   document.addEventListener('click',function(e){
     var g=e.target.closest('[data-goto]');if(g)go(g.getAttribute('data-goto'));
     /* Mi perfil, en el paso que corresponda */
@@ -383,7 +297,9 @@ function initGlobal(){
       var meta=ctx.state.meta,nuevo=defaults();nuevo.meta=meta;
       /* Perfil nuevo: el libro arranca de cero, con el prólogo y el pacto */
       abrirLibro({modo:'nuevo',estado:nuevo,listo:function(st){reemplazar(st,'antes de borrar los datos de ejemplo')},alCerrar:function(){renderAll()},
-        alHerramienta:function(st,id){var h=herramienta(id);reemplazar(st,'antes de borrar los datos de ejemplo',h&&h.tab).then(function(){setTimeout(function(){mostrarHerramienta(id)},120)})}});
+        alHerramienta:function(st,id){var h=herramienta(id);reemplazar(st,'antes de borrar los datos de ejemplo',h&&h.tab).then(function(){setTimeout(function(){mostrarHerramienta(id)},120)})},
+        /* (2.33) Saltar el prólogo: la app queda sin pacto y se abre el menú de Herramientas */
+        alSaltar:function(st){reemplazar(st,'antes de borrar los datos de ejemplo').then(function(){setTimeout(abrirIndice,350)})}});
     }
   });
   /* el volumen: se escucha la hoja al soltar el control */
@@ -430,12 +346,8 @@ function arrancar(st,tab){
 ctx.persist=persist;ctx.renderAll=renderAll;ctx.go=go;ctx.syncInputs=syncInputs;ctx.abrirPrologo=abrirPrologo;ctx.cerrarLibro=cerrarLibro;
 
 (async function boot(){
-  initPerfil();initTour();initPin();initLibro();initIndice();initDeslizar();
-  initFlechas({ir:function(d){go(d)},capitulos:function(){
-    if(!ctx.state)return {};
-    var pc=planNow(),n=pc.weeks.length,cw=curWeek(pc,today()),a=vecina(ctx.tab,-1,n,cw),s=vecina(ctx.tab,1,n,cw);
-    return {ant:a,sig:s,antNom:a==='prologo'?'el pacto':a&&nombreDePagina(a),sigNom:s&&nombreDePagina(s)};
-  }});
+  initPerfil();initTour();initPin();initLibro();initIndice();
+  initFlechas({ir:function(d){go(d)},capitulos:function(){return {}}});
   registrarSW(function(){return ctx.state?flush():null});
   pedirPersistencia().then(function(p){guardado.persistente=p});
   var d=await cargar();
@@ -447,5 +359,7 @@ ctx.persist=persist;ctx.renderAll=renderAll;ctx.go=go;ctx.syncInputs=syncInputs;
   if(d){var mig=necesitaMigrar(d);arrancar(migrar(d));if(mig)flush();setStatus('Se guarda en este dispositivo.');return}
   /* Primera vez: el libro cerrado. Al abrirlo, el prólogo y las tres preguntas del pacto. */
   function listo(st){arrancar(st);flush()}
-  abrirLibro({modo:'nuevo',estado:defaults(),listo:listo,alImportar:listo,alEjemplo:function(){listo(ejemplo())},alHerramienta:arrancarCon});
+  abrirLibro({modo:'nuevo',estado:defaults(),listo:listo,alImportar:listo,alEjemplo:function(){listo(ejemplo())},alHerramienta:arrancarCon,
+    /* (2.33) Saltar el prólogo: la app arranca sin pacto y se abre el menú de Herramientas */
+    alSaltar:function(st){listo(st);setTimeout(abrirIndice,350)}});
 })();

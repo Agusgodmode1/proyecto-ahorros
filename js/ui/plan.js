@@ -131,22 +131,52 @@ function initGasto(){
 var plegados={};/* tarjetas plegables abiertas, por id */
 function foldIni(id,tono,tit,sub){return '<details class="card fold '+tono+'" data-fold="'+id+'"'+(plegados[id]?' open':'')+'><summary><span class="fold-t">'+tit+'</span><span class="fold-s">'+sub+'</span></summary><div class="stack fold-b">'}
 /* Cuenta regresiva del cobro, con su propia tarjeta y una barra de 12 tramos */
-var estrellasVistas=null,polvoDia=null;
+var polvoDia=null;
 /* (2.15) Las 12 estrellitas como una constelación, igual que el bordado de la tapa: estrellas de cinco puntas
    sobre una onda suave; las encendidas se unen con un hilo dorado y la última (hoy) brilla un poco más. */
 function estrella(x,y,R){
   var p='';for(var k=0;k<10;k++){var a=(-90+k*36)*Math.PI/180,r=k%2?R*.42:R;p+=(k?'L':'M')+(x+r*Math.cos(a)).toFixed(1)+' '+(y+r*Math.sin(a)).toFixed(1)}
   return p+'Z';
 }
-function constelacion(on,desde){
-  var pts=[],i,h='';
-  for(i=0;i<12;i++)pts.push([12+i*276/11,19+8*Math.sin(i*.95+.4)]);
-  if(on>1)h+='<polyline class="hilo" points="'+pts.slice(0,on).map(function(q){return q[0].toFixed(1)+','+q[1].toFixed(1)}).join(' ')+'"/>';
-  for(i=0;i<12;i++){
-    var lit=i<on,hoy=lit&&i===on-1;
-    h+='<path class="st'+(lit?' on':'')+(hoy?' hoy':'')+(lit&&i>=desde?' nueva':'')+'"'+(lit&&i>=desde?' style="--i:'+(i-desde)+'"':'')+' d="'+estrella(pts[i][0],pts[i][1],hoy?8.5:lit?6.5:4.5)+'"/>';
-  }
-  return '<svg viewBox="0 0 300 38" preserveAspectRatio="xMidYMid meet">'+h+'</svg>';
+/* (2.38) El camino al cobro: una curva de estrellas que termina en el cobro (una estrella grande con su aro)
+   y un cometa que va por el camino según los días que pasaron. La primera vez que ves Hoy en el día
+   (y cada vez que tocás el recuadro) el cometa viaja desde el principio y el número cuenta hacia atrás. */
+var CM_X0=10,CM_X1=278,CM_N=11;
+function cmY(f){return 24+9*Math.sin(f*5.6+.5)}
+function cmPt(f){return [CM_X0+f*(CM_X1-CM_X0),cmY(f)]}
+function cmLinea(f0,f1){var o=[],n=Math.max(2,Math.ceil((f1-f0)*60));for(var k=0;k<=n;k++){var q=cmPt(f0+(f1-f0)*k/n);o.push(q[0].toFixed(1)+','+q[1].toFixed(1))}return o.join(' ')}
+function caminoSVG(){
+  var h='<defs><linearGradient id="cm-g" gradientUnits="userSpaceOnUse" x1="0" x2="0" y1="0" y2="0"><stop offset="0" stop-color="currentColor" stop-opacity="0"/><stop offset="1" stop-color="currentColor" stop-opacity=".9"/></linearGradient>'
+    +'<radialGradient id="cm-h"><stop offset="0" stop-color="#FFF8E6"/><stop offset=".35" stop-color="currentColor" stop-opacity=".85"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></radialGradient></defs>';
+  h+='<polyline class="cm-ruta" points="'+cmLinea(0,1)+'"/><polyline class="cm-hecho" points=""/>';
+  for(var i=0;i<CM_N;i++){var q=cmPt(i/CM_N);h+='<path class="cm-st" data-f="'+(i/CM_N).toFixed(3)+'" d="'+estrella(q[0],q[1],4.6)+'"/>'}
+  var m=cmPt(1);
+  h+='<g class="cm-meta"><circle cx="'+m[0].toFixed(1)+'" cy="'+m[1].toFixed(1)+'" r="11"/><path d="'+estrella(m[0],m[1],8)+'"/></g>';
+  h+='<polyline class="cm-cola" points="" stroke="url(#cm-g)"/><g class="cm-cabeza"><circle r="9" fill="url(#cm-h)"/><circle r="2.6" class="cm-nucleo"/></g>';
+  return '<svg viewBox="0 0 300 44" preserveAspectRatio="xMidYMid meet">'+h+'</svg>';
+}
+function ponerCometa(el,f){
+  var sv=el.querySelector('.cd-const svg');if(!sv)return;
+  f=Math.max(0,Math.min(1,f));var c=cmPt(f),c0=Math.max(0,f-.16);
+  sv.querySelector('.cm-hecho').setAttribute('points',f>0?cmLinea(0,f):'');
+  sv.querySelector('.cm-cola').setAttribute('points',f>0.005?cmLinea(c0,f):'');
+  var g=sv.querySelector('#cm-g');if(g){g.setAttribute('x1',cmPt(c0)[0].toFixed(1));g.setAttribute('x2',c[0].toFixed(1))}
+  sv.querySelector('.cm-cabeza').setAttribute('transform','translate('+c[0].toFixed(1)+' '+c[1].toFixed(1)+')');
+  sv.querySelectorAll('.cm-st').forEach(function(s){s.classList.toggle('on',Number(s.getAttribute('data-f'))<=f+.001)});
+  sv.classList.toggle('cm-llego',f>=.999);
+}
+var cmVisto=null,cmAnim=0;
+function viajeCometa(el,f,d,tot){
+  var n=el.querySelector('.cd-n');cancelAnimationFrame(cmAnim);
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){ponerCometa(el,f);return}
+  var dur=Math.max(900,Math.min(1800,600+f*1400)),t0=null,desdeN=d>0?Math.max(d,tot):null;
+  var paso=function(ts){
+    if(t0===null)t0=ts;var k=Math.min(1,(ts-t0)/dur),e=1-Math.pow(1-k,3);
+    ponerCometa(el,f*e);
+    if(n&&desdeN!==null)n.textContent=String(Math.round(desdeN+(d-desdeN)*e));
+    if(k<1)cmAnim=requestAnimationFrame(paso);else if(f>=.999)el.classList.add('cm-brilla');
+  };
+  cmAnim=requestAnimationFrame(paso);
 }
 export function renderCountdown(){
   var state=ctx.state,el=$('#countdown');if(!el)return;
@@ -155,17 +185,25 @@ export function renderCountdown(){
   else if(d===0){big='Hoy';small='cobrás';lab='Cobro'}
   else{big='Ya';small='cobraste';lab='Cobro'}
   var tot=diffDays(state.plan.inicio||t,state.plan.cobro),pas=diffDays(state.plan.inicio||t,t);
-  var on=tot>0?Math.max(0,Math.min(12,Math.round(12*pas/tot))):0,seg='';
-  if(d<=0)on=12;
-  /* 12 estrellitas que se van encendiendo; solo las que se encienden ahora tienen su brillo de entrada */
-  var desde=estrellasVistas===null?0:Math.min(estrellasVistas,on);estrellasVistas=on;
-  seg=constelacion(on,desde);
+  var f=d<=0?1:tot>0?Math.max(0,Math.min(1,pas/tot)):0;
   /* el color se calienta a medida que se acerca el cobro: lejos, oro pálido; cerca, dorado; los últimos 3 días, ámbar; el día, dorado con polvo de estrellas */
-  el.classList.remove('cd-lejos','cd-cerca','cd-ya','cd-hoy');
+  el.classList.remove('cd-lejos','cd-cerca','cd-ya','cd-hoy','cm-brilla');
   el.classList.add(d<=0?'cd-hoy':d<=3?'cd-ya':d<=7?'cd-cerca':'cd-lejos');
-  el.innerHTML='<span class="cd-l">'+lab+'</span><span class="cd-v"><span class="cd-n'+(d>0?'':' txt')+'">'+esc(big)+'</span><span class="cd-t">'+esc(small)+'</span></span><span class="cd-seg cd-const" aria-hidden="true">'+seg+'</span><span class="cd-d">'+esc(fLarga(state.plan.cobro))+'</span>';
+  el.innerHTML='<span class="cd-l">'+lab+'</span><span class="cd-v"><span class="cd-n'+(d>0?'':' txt')+'">'+esc(big)+'</span><span class="cd-t">'+esc(small)+'</span></span><span class="cd-seg cd-const" aria-hidden="true">'+caminoSVG()+'</span><span class="cd-d">'+esc(fLarga(state.plan.cobro))+'</span>';
+  el.dataset.f=f;el.dataset.d=d;el.dataset.tot=tot;
+  var clave=t+'|'+state.plan.cobro;
+  if(ctx.tab==='resumen'&&cmVisto!==clave){cmVisto=clave;ponerCometa(el,0);viajeCometa(el,f,d,tot)}
+  else{ponerCometa(el,f);if(f>=.999)el.classList.add('cm-brilla')}
   if(d===0&&polvoDia!==t&&ctx.tab==='resumen'){polvoDia=t;setTimeout(function(){polvo(el.querySelector('.cd-v'),18,0)},250)}
-  el.setAttribute('aria-label',(d>0?d+' '+small+' para cobrar':(d===0?'Cobrás hoy':'Ya cobraste'))+', '+fLarga(state.plan.cobro));
+  el.setAttribute('aria-label',(d>0?d+' '+small+' para cobrar':(d===0?'Cobrás hoy':'Ya cobraste'))+', '+fLarga(state.plan.cobro)+'. Tocá para ver el camino.');
+}
+/* Tocar el recuadro del cobro repite el viaje */
+function initCamino(){
+  var el=$('#countdown');if(!el)return;
+  el.setAttribute('role','button');el.tabIndex=0;
+  var otra=function(){if(!el.querySelector('.cd-const svg'))return;el.classList.remove('cm-brilla');ponerCometa(el,0);viajeCometa(el,Number(el.dataset.f)||0,Number(el.dataset.d)||0,Number(el.dataset.tot)||0)};
+  el.addEventListener('click',otra);
+  el.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();otra()}});
 }
 
 /* (2.34) Las semanas del plan en Hoy: «Semana 2 · 2 nov – 8 nov» y lo que te queda (o te pasaste / sobró).
@@ -404,7 +442,7 @@ function confirmarSaldo(real){
   return true;
 }
 export function initPlan(){
-  initSemHoy();
+  initSemHoy();initCamino();
   var pr=$('#p-resumen');
   initSaldo();initEntradas();
   $('#meta-alerta').addEventListener('click',function(e){

@@ -1462,3 +1462,27 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 }
 /* en Hoy alcanza con la fecha: el saludo queda para las otras páginas */
 .v2 .hoja[data-vista="plan"] .hero-hi{display:none}
+
+/* =====================================================================
+   2.38: el camino al cobro (un cometa que va por la curva de estrellas hasta el cobro)
+   ===================================================================== */
+.v2 #countdown{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.v2 #countdown:focus-visible{outline:2px solid var(--oro-t);outline-offset:3px}
+.v2 .cd-const svg{color:var(--cobro-c);max-height:48px}
+.v2 .cm-ruta{fill:none;stroke:color-mix(in srgb,var(--ink) 22%,transparent);stroke-width:1.2;stroke-dasharray:1.5 4;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.v2 .cm-hecho{fill:none;stroke:var(--cobro-c);stroke-width:1.4;stroke-opacity:.6;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.v2 .cm-cola{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.v2 .cm-st{fill:color-mix(in srgb,var(--ink) 18%,transparent);transition:fill .25s ease}
+.v2 .cm-st.on{fill:var(--cobro-c)}
+.v2 .cm-meta circle{fill:color-mix(in srgb,var(--cobro-c) 12%,transparent);stroke:var(--cobro-c);stroke-width:1.2;stroke-opacity:.7;vector-effect:non-scaling-stroke}
+.v2 .cm-meta path{fill:color-mix(in srgb,var(--cobro-c) 55%,transparent)}
+.v2 .cm-llego .cm-meta path{fill:var(--cobro-c)}
+.v2 .cm-cabeza circle:first-child{transform-box:fill-box;transform-origin:center;animation:cm-late 2.6s ease-in-out infinite}
+.v2 .cm-nucleo{fill:#FFF8E6}
+@keyframes cm-late{0%,100%{opacity:.75;transform:scale(.92)}50%{opacity:1;transform:scale(1.12)}}
+/* llegó el cobro: la meta respira */
+.v2 .cm-brilla .cm-meta{transform-box:fill-box;transform-origin:center;animation:cm-meta 2.4s ease-in-out infinite}
+@keyframes cm-meta{0%,100%{opacity:.85;transform:scale(1)}50%{opacity:1;transform:scale(1.12)}}
+/* los últimos 3 días, la meta ya brilla un poco */
+.v2 .cd.cd-ya .cm-meta circle{stroke-opacity:1;fill:color-mix(in srgb,var(--cobro-c) 22%,transparent)}
+@media (prefers-reduced-motion:reduce){.v2 .cm-cabeza circle:first-child,.v2 .cm-brilla .cm-meta{animation:none}}

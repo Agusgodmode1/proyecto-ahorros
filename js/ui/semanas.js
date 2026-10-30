@@ -23,6 +23,35 @@ export function editarGasto(id){
   abrirHojaGasto({gasto:g,fechas:w?diasDeSemana(w):null});
 }
 
+/* La tira de días de una semana (la página de la semana y Hoy la usan igual) */
+function tiraDias(w,state,t){
+  var ds=parse(w.start),dayAllow=w.budget/w.days,h='';
+  h+='<div class="days" style="grid-template-columns:repeat('+w.days+',minmax(0,1fr))" role="list" aria-label="Lo que gastaste cada día">';
+  for(var k=0;k<w.days;k++){
+    var d=addDays(ds,k),di=iso(d),sd=0;
+    state.gastos.forEach(function(g){if(g.fecha===di)sd+=g.monto});
+    var r=dayAllow>0?sd/dayAllow:(sd>0?2:0),est=sd<=0?'':r>1.0001?'mal':r>.8?'cerca':'bien';
+    var cls='day'+(di===t?' today':'')+(di>t?' fut':'')+(sd>0?' has':'')+(est==='mal'?' over':'');
+    h+='<div class="'+cls+'" role="listitem" aria-label="'+esc(DIAL[d.getDay()]+' '+d.getDate())+(sd>0?': '+money(sd)+(est==='mal'?', te pasaste':est==='cerca'?', cerca del límite':', bien'):(di>t?'':': sin gastos'))+'">'
+      +'<div class="w">'+DIA[d.getDay()]+'</div><div class="n">'+d.getDate()+'</div>'
+      +'<i class="db'+(est?' '+est:'')+'" style="--p:'+Math.min(100,Math.round(r*100))+'%"></i><div class="s">'+(sd>0?n0(sd):'')+'</div></div>';
+  }
+  h+='</div>';
+  return h;
+}
+/* (2.37) Una semana desplegada en Hoy: el dato del día, la tira de días, sus gastos y «+ Gasto en esta semana» */
+export function semanaEnHoy(pc,i){
+  var state=ctx.state,w=pc.weeks[i];if(!w)return '';
+  var t=today(),cur=t>=w.start&&t<=w.end,past=t>w.end,fut=t<w.start;
+  var rem=cur?diffDays(t,w.end)+1:w.days,perDay=Math.max(w.left,0)/Math.max(rem,1);
+  var items=state.gastos.filter(function(g){return g.fecha>=w.start&&g.fecha<=w.end}).sort(function(a,b){return a.fecha<b.fecha?1:a.fecha>b.fecha?-1:(a.id<b.id?1:-1)});
+  var h='<p class="sem-dato">'+(past?'Tenías <b>'+money(w.avail)+'</b>':'<b class="plata">'+money(perDay)+'</b> por día')+' · gastaste <b>'+money(w.spent)+'</b></p>';
+  h+=tiraDias(w,state,t);
+  if(items.length)h+='<ul class="list glist gl-1">'+items.map(renglonGasto).join('')+'</ul>';
+  if(!fut)h+='<button class="btn quiet sem-mas" type="button" data-gsem="'+i+'"><span aria-hidden="true">+</span> Gasto en esta semana</button>';
+  return h;
+}
+
 export function renderWeek(pc){
   var state=ctx.state,tab=ctx.tab,el=$('#p-semana');
   if(!/^w\d+$/.test(tab)){el.innerHTML='';return}
@@ -47,18 +76,7 @@ export function renderWeek(pc){
   h+='<div class="wk-dos">'+(past?'<span><small>Tenías</small><b>'+money(w.avail)+'</b></span>':'<span><small>Por día'+(cur?' hasta el '+DIAL[parse(w.end).getDay()]:'')+'</small><b class="plata">'+money(perDay)+'</b></span>')
     +'<span><small>Gastaste</small><b>'+money(w.spent)+'</b></span></div>';
   h+='<div class="bar fina'+(over?' over':'')+'" role="img" aria-label="Gastaste el '+Math.round(pct)+' % de lo que tenías"><i style="width:'+pct+'%"></i></div>';
-  /* la tira de días */
-  h+='<div class="days" style="grid-template-columns:repeat('+w.days+',minmax(0,1fr))" role="list" aria-label="Lo que gastaste cada día">';
-  for(var k=0;k<w.days;k++){
-    var d=addDays(ds,k),di=iso(d),sd=0;
-    state.gastos.forEach(function(g){if(g.fecha===di)sd+=g.monto});
-    var r=dayAllow>0?sd/dayAllow:(sd>0?2:0),est=sd<=0?'':r>1.0001?'mal':r>.8?'cerca':'bien';
-    var cls='day'+(di===t?' today':'')+(di>t?' fut':'')+(sd>0?' has':'')+(est==='mal'?' over':'');
-    h+='<div class="'+cls+'" role="listitem" aria-label="'+esc(DIAL[d.getDay()]+' '+d.getDate())+(sd>0?': '+money(sd)+(est==='mal'?', te pasaste':est==='cerca'?', cerca del límite':', bien'):(di>t?'':': sin gastos'))+'">'
-      +'<div class="w">'+DIA[d.getDay()]+'</div><div class="n">'+d.getDate()+'</div>'
-      +'<i class="db'+(est?' '+est:'')+'" style="--p:'+Math.min(100,Math.round(r*100))+'%"></i><div class="s">'+(sd>0?n0(sd):'')+'</div></div>';
-  }
-  h+='</div>';
+  h+=tiraDias(w,state,t);
   if(past&&!over&&w.left+(w.alAhorro||0)>0&&!ult){var so=sobranteDe(state,w);
     h+='<div class="field"><span class="sub-l">Lo que sobró de esta semana</span><div class="seg" role="group" aria-label="A dónde va lo que sobró"><button type="button" data-sobsem="'+w.start+'" data-val="siguiente" aria-pressed="'+(so!=='ahorro')+'">A la semana siguiente</button><button type="button" data-sobsem="'+w.start+'" data-val="ahorro" aria-pressed="'+(so==='ahorro')+'">Al ahorro</button></div></div>'}
   /* ¿De dónde sale? */
@@ -92,11 +110,13 @@ export function initSemanas(){
     if(s){var pl=ctx.state.plan;pl.sobranteSemana=Object.assign({},pl.sobranteSemana);pl.sobranteSemana[s.getAttribute('data-sobsem')]=s.getAttribute('data-val');ctx.persist();ctx.renderAll()}
   });
   p.addEventListener('toggle',function(e){var d=e.target;if(d.matches&&d.matches('[data-wkde]'))abiertoDe[d.getAttribute('data-wkde')]=d.open},true);
-  p.addEventListener('click',function(e){
+  var toques=function(e){
     var m=e.target.closest('[data-gsem]');
     if(m){var w=planNow().weeks[Number(m.getAttribute('data-gsem'))];if(!w)return;var f=diasDeSemana(w),t=today();
       abrirHojaGasto({titulo:'Gasto de la semana',fechas:f,fecha:f.some(function(x){return x[0]===t})?t:f[f.length-1][0]});return}
     var dg=e.target.closest('[data-delg]');if(dg){borrarGasto(dg.getAttribute('data-delg'));return}
     var eg=e.target.closest('[data-editg]');if(eg){editarGasto(eg.getAttribute('data-editg'));return}
-  });
+  };
+  p.addEventListener('click',toques);
+  var sh=$('#sem-hoy');if(sh)sh.addEventListener('click',toques);
 }

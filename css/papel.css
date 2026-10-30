@@ -41,48 +41,48 @@
 /* @noche (papel de noche: atenuado y cálido). Sigue al modo del teléfono; se fuerza desde Ajustes. */
 :root.v2[data-theme="dark"]{
   --bg:#070B24;
-  --page:#191C30; --page-2:#14172A; --canto:#3A4066; --surface:#20243C; --surface-2:#282D4A;
-  --ink:#F1E7D0; --muted:#C3C0D1; --line:rgba(241,231,208,.14); --line-2:rgba(241,231,208,.26);
-  --oro:#E2B65A; --oro-t:#E2B65A; --oro-cl:#F3D488;
-  --cta:#F08A4B; --on-cta:#191C30; --naranja-t:#F08A4B;
-  --cobro-lejos:#E8D6A4; --cobro-cerca:#E2B65A; --cobro-ya:#F2A243; --cobro-tinta:#B9A8FF;
-  --azul:#9DB4FF; --sel:#9DB4FF; --on-sel:#191C30;
-  --bien:#79C28A; --ojo:#E2A84A; --mal:#EE8A7A;
-  --sky:#9DB4FF; --sky-soft:#283053; --sky-ink:#C9D5FF;
-  --mint:#79C28A; --mint-soft:#22343A; --mint-ink:#B4E0BF;
+  --page:#10132A; --page-2:#0B0E22; --canto:#2C3256; --surface:#191D38; --surface-2:#222746;
+  --ink:#F5EDDE; --muted:#BEBCD1; --line:rgba(245,237,222,.11); --line-2:rgba(245,237,222,.22);
+  --oro:#EAC56B; --oro-t:#EAC56B; --oro-cl:#F7DD9C;
+  --cta:#F49B5E; --on-cta:#10132A; --naranja-t:#F49B5E;
+  --cobro-lejos:#EADBB0; --cobro-cerca:#EAC56B; --cobro-ya:#F4A84A; --cobro-tinta:#C4B5FF;
+  --azul:#A9BFFF; --sel:#A9BFFF; --on-sel:#10132A;
+  --bien:#84D6A3; --ojo:#ECB45A; --mal:#F3978B;
+  --sky:#A9BFFF; --sky-soft:#283053; --sky-ink:#C9D5FF;
+  --mint:#84D6A3; --mint-soft:#22343A; --mint-ink:#B4E0BF;
   --teal:#8FC7D9; --teal-soft:#213244; --teal-ink:#C4E3EC;
-  --grape:#E2B65A; --grape-soft:#353248; --grape-ink:#F3D488;
+  --grape:#EAC56B; --grape-soft:#353248; --grape-ink:#F3D488;
   --coral:#B9C3E8; --coral-soft:#2A2F4D; --coral-ink:#DCE2F6;
-  --sun:#E2B65A; --sun-soft:#353248; --sun-ink:#F3D488;
+  --sun:#EAC56B; --sun-soft:#353248; --sun-ink:#F3D488;
   --slate:#B9B6C8; --slate-soft:#252943; --slate-ink:#E2DFEC;
   --cat-sky:#3987e5; --cat-coral:#d95926; --cat-teal:#199e70; --cat-sun:#c98500; --cat-pink:#d55181; --cat-mint:#008300; --cat-grape:#9085e9; --cat-bad:#e66767; --cat-slate:#9AA3C2; --cat-muted:#8C8A99;
-  --bad:#EE8A7A; --bad-soft:#3D2738;
-  --hero:#191C30; --on-accent:#191C30; --on-sun:#191C30; --on-color:#F1E7D0;
-  --cobro:#E2B65A; --cuero:#070B24;
+  --bad:#F3978B; --bad-soft:#3D2738;
+  --hero:#10132A; --on-accent:#10132A; --on-sun:#10132A; --on-color:#F5EDDE;
+  --cobro:#EAC56B; --cuero:#070B24;
   --fibra:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85 .05' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 .95 0 0 0 0 .88 0 0 0 0 .75 0 0 0 .025 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23f)'/%3E%3C/svg%3E");
   color-scheme:dark;
 }
 @media (prefers-color-scheme: dark){
   :root.v2:not([data-theme="light"]){
     --bg:#070B24;
-    --page:#191C30; --page-2:#14172A; --canto:#3A4066; --surface:#20243C; --surface-2:#282D4A;
-    --ink:#F1E7D0; --muted:#C3C0D1; --line:rgba(241,231,208,.14); --line-2:rgba(241,231,208,.26);
-    --oro:#E2B65A; --oro-t:#E2B65A; --oro-cl:#F3D488;
-    --cta:#F08A4B; --on-cta:#191C30; --naranja-t:#F08A4B;
-    --cobro-lejos:#E8D6A4; --cobro-cerca:#E2B65A; --cobro-ya:#F2A243; --cobro-tinta:#B9A8FF;
-    --azul:#9DB4FF; --sel:#9DB4FF; --on-sel:#191C30;
-    --bien:#79C28A; --ojo:#E2A84A; --mal:#EE8A7A;
-    --sky:#9DB4FF; --sky-soft:#283053; --sky-ink:#C9D5FF;
-    --mint:#79C28A; --mint-soft:#22343A; --mint-ink:#B4E0BF;
+    --page:#10132A; --page-2:#0B0E22; --canto:#2C3256; --surface:#191D38; --surface-2:#222746;
+    --ink:#F5EDDE; --muted:#BEBCD1; --line:rgba(245,237,222,.11); --line-2:rgba(245,237,222,.22);
+    --oro:#EAC56B; --oro-t:#EAC56B; --oro-cl:#F7DD9C;
+    --cta:#F49B5E; --on-cta:#10132A; --naranja-t:#F49B5E;
+    --cobro-lejos:#EADBB0; --cobro-cerca:#EAC56B; --cobro-ya:#F4A84A; --cobro-tinta:#C4B5FF;
+    --azul:#A9BFFF; --sel:#A9BFFF; --on-sel:#10132A;
+    --bien:#84D6A3; --ojo:#ECB45A; --mal:#F3978B;
+    --sky:#A9BFFF; --sky-soft:#283053; --sky-ink:#C9D5FF;
+    --mint:#84D6A3; --mint-soft:#22343A; --mint-ink:#B4E0BF;
     --teal:#8FC7D9; --teal-soft:#213244; --teal-ink:#C4E3EC;
-    --grape:#E2B65A; --grape-soft:#353248; --grape-ink:#F3D488;
+    --grape:#EAC56B; --grape-soft:#353248; --grape-ink:#F3D488;
     --coral:#B9C3E8; --coral-soft:#2A2F4D; --coral-ink:#DCE2F6;
-    --sun:#E2B65A; --sun-soft:#353248; --sun-ink:#F3D488;
+    --sun:#EAC56B; --sun-soft:#353248; --sun-ink:#F3D488;
     --slate:#B9B6C8; --slate-soft:#252943; --slate-ink:#E2DFEC;
     --cat-sky:#3987e5; --cat-coral:#d95926; --cat-teal:#199e70; --cat-sun:#c98500; --cat-pink:#d55181; --cat-mint:#008300; --cat-grape:#9085e9; --cat-bad:#e66767; --cat-slate:#9AA3C2; --cat-muted:#8C8A99;
-    --bad:#EE8A7A; --bad-soft:#3D2738;
-    --hero:#191C30; --on-accent:#191C30; --on-sun:#191C30; --on-color:#F1E7D0;
-    --cobro:#E2B65A; --cuero:#070B24;
+    --bad:#F3978B; --bad-soft:#3D2738;
+    --hero:#10132A; --on-accent:#10132A; --on-sun:#10132A; --on-color:#F5EDDE;
+    --cobro:#EAC56B; --cuero:#070B24;
     --fibra:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85 .05' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 .95 0 0 0 0 .88 0 0 0 0 .75 0 0 0 .025 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23f)'/%3E%3C/svg%3E");
     color-scheme:dark;
   }
@@ -1418,3 +1418,47 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 .v2 .sem-ant>summary::after{content:"▸";display:inline-block;color:var(--oro-t);transition:transform .15s ease}
 .v2 .sem-ant[open]>summary::after{transform:rotate(90deg)}
 .v2 .sem-ant .sem-l{border-bottom:1px solid var(--line)}
+
+/* =====================================================================
+   2.37: la barra de los días, las semanas que se abren en Hoy y la noche más profunda
+   ===================================================================== */
+/* barra de los días: un tramo por día; el de hoy se vacía al gastar */
+.v2 .bdias{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:4px;margin-top:var(--e3)}
+.v2 .bd{display:grid;gap:4px;min-width:0}
+.v2 .bd>i{display:block;height:10px;border-radius:5px;background:var(--azul);transform-origin:left center;
+  box-shadow:0 0 0 0 transparent;position:relative}
+.v2 .bd{--pista:color-mix(in srgb,var(--ink) 10%,transparent)}
+.v2 .bd{background:linear-gradient(var(--pista),var(--pista)) top/100% 10px no-repeat;border-radius:5px}
+.v2 .bd.hoy>i{background:linear-gradient(90deg,color-mix(in srgb,var(--azul) 75%,var(--page)),var(--azul));box-shadow:0 0 12px -2px color-mix(in srgb,var(--azul) 55%,transparent)}
+.v2 .bd:not(.hoy)>i{background:color-mix(in srgb,var(--azul) 45%,transparent)}
+.v2 .bd.over{--pista:color-mix(in srgb,var(--mal) 35%,transparent)}
+.v2 .bd small{font:600 12px/1 var(--f-body);color:var(--muted);text-align:center;letter-spacing:0}
+.v2 .bd.hoy small{color:var(--oro-t);font-weight:700}
+.v2 .hoja .hoy-hero>.bar{display:none}
+/* las semanas en Hoy: tocar abre su detalle ahí mismo */
+.v2 .sem-l>li.abierta{background:color-mix(in srgb,var(--azul) 6%,transparent);border-radius:var(--r-m)}
+.v2 .sem-i .sem-ir{transition:transform .18s ease}
+.v2 .sem-i[aria-expanded="true"] .sem-ir{transform:rotate(90deg)}
+.v2 .sem-l>li.abierta>.sem-i{padding-left:var(--e3);padding-right:var(--e2)}
+.v2 .sem-det{display:grid;gap:var(--e3);padding:0 var(--e3) var(--e4)}
+.v2 .sem-det .sem-dato{margin:0;font-size:15px;color:var(--muted)}
+.v2 .sem-det .sem-dato b{color:var(--ink);font-weight:700}
+.v2 .sem-det .sem-dato b.plata{color:var(--azul)}
+.v2 .sem-det .days{margin:0}
+.v2 .sem-det .glist{margin:0}
+.v2 .sem-det .sem-mas{justify-self:start;min-height:44px}
+@media (prefers-reduced-motion:reduce){.v2 .sem-i .sem-ir{transition:none}}
+/* el número de hoy con un halo de su color; «Cobrás en» con uno violeta (en los dos papeles, apenas) */
+.v2 .hoja .hoy-hero{background:radial-gradient(120% 90% at 0% 0%,color-mix(in srgb,var(--azul) 12%,transparent),transparent 60%),color-mix(in srgb,var(--surface) 70%,transparent)}
+.v2 .hoja .cd{background:radial-gradient(90% 120% at 0% 100%,color-mix(in srgb,var(--cobro-tinta) 12%,transparent),transparent 65%),color-mix(in srgb,var(--surface) 70%,transparent)}
+/* papel de noche: recuadros con relieve (luz arriba, sombra abajo) en vez de una línea alrededor */
+:root.v2[data-theme="dark"] .hoja :is(.cd,.hoy-hero,.hchip,.card,.wk,.fin-cap),
+:root.v2[data-theme="dark"] .hoja #resumen-out>.fold{
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),inset 0 0 0 1px rgba(245,237,222,.06),0 14px 28px -18px rgba(0,0,0,.8)}
+@media (prefers-color-scheme: dark){
+  :root.v2:not([data-theme="light"]) .hoja :is(.cd,.hoy-hero,.hchip,.card,.wk,.fin-cap),
+  :root.v2:not([data-theme="light"]) .hoja #resumen-out>.fold{
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06),inset 0 0 0 1px rgba(245,237,222,.06),0 14px 28px -18px rgba(0,0,0,.8)}
+}
+/* en Hoy alcanza con la fecha: el saludo queda para las otras páginas */
+.v2 .hoja[data-vista="plan"] .hero-hi{display:none}

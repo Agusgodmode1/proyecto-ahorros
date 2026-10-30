@@ -1,5 +1,5 @@
 /* Pestaña Plan: portada con "Hoy podés gastar", anotar un gasto, plan plegable, hasta que cobres, semanas y "cuando cobres". */
-import {parse,diffDays,bizRank,MESL,addDays,iso} from '../logica/fechas.js';
+import {parse,diffDays,bizRank,MESL,addDays,iso,DIA} from '../logica/fechas.js';
 import {num} from '../logica/util.js';
 import {fijosPeriodo,totalFijos,proximo,hoyPodes,planCalc} from '../logica/plan.js';
 import {disponible,fijosPagadosParte,maxAhorro,previaSaldo,ajustarSaldo,deshacerAjuste} from '../logica/saldo.js';
@@ -12,7 +12,7 @@ import {aniosSinFeriados} from '../logica/avisos.js';
 import {ritmoDelMes,minimoDe} from '../logica/mes.js';
 import {sensibilidadDolar} from '../logica/recibos.js';
 import {formGasto,initFormsGasto,leerForm,avisoAnotado,guardarGasto,borrarGasto,itemGasto,chipsFrecuentes,anotarFrecuente,abrirHojaGasto,initHojaGasto} from './gastos.js';
-import {editarGasto,resetWeekSel} from './semanas.js';
+import {editarGasto,resetWeekSel,semanaEnHoy} from './semanas.js';
 import {cicloTerminado,resumenCiclo,cerrarCiclo} from '../logica/ciclo.js';
 import {abrirPostal} from './postal.js';
 import {abrirLibro,polvo} from './libro.js';
@@ -61,10 +61,11 @@ function heroChips(pc){
       h+='<span class="hh-s">'+(H.semanaQueda<0?'Esta semana te pasaste por '+money(-H.semanaQueda):'Te quedan '+money(H.semanaQueda)+' hasta el '+esc(fLarga(H.fin)))+(H.gastadoHoy>0?' · hoy gastaste '+money(H.gastadoHoy):'')+'</span>'
         +(pc.ajuste&&pc.ajuste.estado==='minimo'?'<span class="hh-s">El objetivo ya no se alcanza: esto cuida tu mínimo de '+money(pc.ajuste.minimo)+'.</span>':'')
         +(pc.ajuste&&pc.ajuste.estado==='nada'?'<span class="hh-s neg">Para tu mínimo faltan '+money(pc.ajuste.falta)+' aunque no gastes nada más.</span>':'')
-        +'<span class="bar'+(w.left<0?' over':'')+'" role="img" aria-label="Gastaste el '+Math.round(pct)+'% de la semana"><i style="width:'+pct+'%"></i></span>';
+        +barraDias(H);
     }else h+='<span class="hh-s">'+(t>=state.plan.cobro?'Llegó el cobro: empezá tu pacto nuevo acá abajo.':'Hoy está fuera de las fechas de tu plan.')+'</span>';
     el.innerHTML=h;
     contar(el.querySelector('.hh-n'),Math.abs(H.queda));
+    if(H.dentro)animarBarra(el,H);
   }
   heroMini(pc,H);
   /* Dos datos en la misma fila: cuánta plata tenés y cuánto guardás (el cobro tiene su propia tarjeta) */
@@ -169,25 +170,59 @@ export function renderCountdown(){
 
 /* (2.34) Las semanas del plan en Hoy: «Semana 2 · 2 nov – 8 nov» y lo que te queda (o te pasaste / sobró).
    Las cuentas son las de siempre (pc.weeks); la semana de hoy va marcada y tocar una abre su página. */
+var semAbierta=null;
 function semanasHoy(pc,t){
   if(!pc.weeks.length)return '';
+  /* (2.37) cada semana se despliega acá mismo, sin ir a otra página; la de hoy arranca abierta */
+  if(semAbierta===null){semAbierta=-1;pc.weeks.forEach(function(w){if(t>=w.start&&t<=w.end)semAbierta=w.i})}
   var pas='',act='';
   pc.weeks.forEach(function(w){
-    var cur=t>=w.start&&t<=w.end,past=t>w.end,over=w.left<0;
+    var cur=t>=w.start&&t<=w.end,past=t>w.end,over=w.left<0,ab=semAbierta===w.i;
     var rem=cur?diffDays(t,w.end)+1:w.days;
     var lab=over?'te pasaste':past?'sobró':cur?'te quedan':'para gastar';
     var sub=cur&&!over?money(Math.max(w.left,0)/Math.max(rem,1))+' por día':lab;
-    var li='<li><button type="button" class="sem-i'+(cur?' actual':'')+(past?' pasada':'')+'" data-goto="w'+w.i+'"'+(cur?' aria-current="true"':'')+'>'
+    var li='<li'+(ab?' class="abierta"':'')+'><button type="button" class="sem-i'+(cur?' actual':'')+(past?' pasada':'')+'" data-semab="'+w.i+'" aria-expanded="'+ab+'" aria-controls="sem-det-'+w.i+'"'+(cur?' aria-current="true"':'')+'>'
       +'<span class="sem-n"><b>Semana '+(w.i+1)+'</b><small>'+esc(rango(w.start,w.end))+'</small></span>'
       +'<span class="sem-v"><b class="'+(over?'neg':cur||!past?'plata':'')+'">'+money(Math.abs(w.left))+'</b><small>'+esc(cur&&!over?lab+' · '+sub:lab)+'</small></span>'
-      +'<i class="sem-ir" aria-hidden="true">›</i></button></li>';
+      +'<i class="sem-ir" aria-hidden="true">›</i></button>'
+      +'<div class="sem-det" id="sem-det-'+w.i+'"'+(ab?'':' hidden')+'>'+(ab?semanaEnHoy(pc,w.i):'')+'</div></li>';
     if(past)pas+=li;else act+=li;
   });
-  /* (2.36) las semanas que ya pasaron se pliegan: lo que importa es la de hoy y las que vienen */
-  var h='<section class="sem-hoy" aria-labelledby="sem-hoy-t"><h2 class="plan-h" id="sem-hoy-t">Semana por semana</h2>'
-    +(pas?'<details class="sem-ant"><summary>Anteriores</summary><ul class="sem-l">'+pas+'</ul></details>':'')
-    +'<ul class="sem-l">'+act;
-  return h+'</ul></section>';
+  var abiertaPasada=pc.weeks.some(function(w){return w.i===semAbierta&&t>w.end});
+  return '<section class="sem-hoy" aria-labelledby="sem-hoy-t"><h2 class="plan-h" id="sem-hoy-t">Semana por semana</h2>'
+    +(pas?'<details class="sem-ant"'+(abiertaPasada?' open':'')+'><summary>Anteriores</summary><ul class="sem-l">'+pas+'</ul></details>':'')
+    +'<ul class="sem-l">'+act+'</ul></section>';
+}
+/* Tocar una semana la abre o la cierra (una por vez) */
+function initSemHoy(){
+  var el=$('#sem-hoy');if(!el)return;
+  el.addEventListener('click',function(e){
+    var b=e.target.closest('[data-semab]');if(!b)return;
+    var i=Number(b.getAttribute('data-semab'));semAbierta=semAbierta===i?-1:i;
+    el.innerHTML=semanasHoy(planNow(),today());
+    var nb=el.querySelector('[data-semab="'+i+'"]');if(nb)nb.focus({preventScroll:true});
+  });
+}
+
+/* (2.37) La barra de los días: un tramo por día hasta el fin de la semana.
+   El de hoy se vacía a medida que gastás; los que vienen están llenos (cada uno vale lo mismo que hoy). */
+var barraAntes=null;
+function barraDias(H){
+  var A=H.porDia,n=Math.max(1,Math.min(7,H.dias||1)),hoyF=A>0?Math.max(0,Math.min(1,H.queda/A)):0;
+  var fut=n>1&&A>0?Math.max(0,Math.min(1,(H.semanaQueda-Math.max(H.queda,0))/((n-1)*A))):1;
+  var d0=parse(today()),h='';
+  for(var k=0;k<n;k++){
+    var d=addDays(d0,k),f=k===0?hoyF:fut;
+    h+='<span class="bd'+(k===0?' hoy':'')+(k===0&&H.queda<0?' over':'')+'"><i style="transform:scaleX('+f.toFixed(3)+')"></i><small>'+(k===0?'hoy':DIA[d.getDay()])+'</small></span>';
+  }
+  var lab='Hoy te quedan '+money(Math.max(0,H.queda))+' de '+money(Math.max(0,A))+(n>1?'; después, '+money(fut*A)+' por día hasta el '+fLarga(H.fin):'');
+  return '<span class="bdias" role="img" aria-label="'+esc(lab)+'" style="--n:'+n+'">'+h+'</span>';
+}
+function animarBarra(el,H){
+  var i=el.querySelector('.bd.hoy>i');if(!i)return;
+  var A=H.porDia,nuevo=A>0?Math.max(0,Math.min(1,H.queda/A)):0,desde=barraAntes===null?1:barraAntes;barraAntes=nuevo;
+  if(Math.abs(desde-nuevo)<.001||!i.animate||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  i.animate([{transform:'scaleX('+desde+')'},{transform:'scaleX('+nuevo+')'}],{duration:700,easing:'cubic-bezier(.2,.8,.2,1)'});
 }
 
 export function renderResumen(pc){
@@ -369,6 +404,7 @@ function confirmarSaldo(real){
   return true;
 }
 export function initPlan(){
+  initSemHoy();
   var pr=$('#p-resumen');
   initSaldo();initEntradas();
   $('#meta-alerta').addEventListener('click',function(e){

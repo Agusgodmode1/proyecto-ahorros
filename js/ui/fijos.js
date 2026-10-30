@@ -127,7 +127,7 @@ function renderBalance(){
 
 /* ---------- Con quién compartís ---------- */
 function renderGrupos(){
-  var state=ctx.state,gs=state.grupos||[],h='<div class="sec"><h2>Con quién compartís</h2><p class="note">Los nombres quedan solo en este teléfono.</p></div>';
+  var state=ctx.state,gs=state.grupos||[],h='<p class="note">Armá un grupo con quienes compartís gastos. Los nombres quedan solo en este teléfono.</p>';
   var ds=$('#dividir-s');if(ds)ds.textContent=gs.length?gs.map(function(g){return g.nombre}).join(', '):'en pareja, con amigos o en la casa';
   if(gEdit){$('#grupos-card').innerHTML=h+editorGrupo();pintarPorcentajes();return}
   if(gs.length)h+='<ul class="list glist-g">'+gs.map(function(g){
@@ -197,7 +197,7 @@ function pintarCompartido(){
   var r=form.rep,t=r?r.tipo:null,h='<div class="opciones" role="radiogroup" aria-label="Reparto de este fijo"><button type="button" role="radio" data-frep="" aria-checked="'+(!r)+'">Como el grupo ('+esc(tipoTxt((g.reparto||{}).tipo))+')</button>'
     +TIPOS.map(function(x){return '<button type="button" role="radio" data-frep="'+x[0]+'" aria-checked="'+(t===x[0])+'">'+esc(x[1])+'</button>'}).join('')+'</div>';
   if(r&&(t==='pct'||t==='montos'))h+=g.personas.map(function(p){var v=(r[t]||{})[p.id];return '<label class="ge-p"><span>'+esc(p.id===YO?'Vos':p.nombre)+'</span><div class="money"><span>'+(t==='pct'?'%':'$')+'</span><input type="number" inputmode="decimal" min="0" step="any" data-frepv="'+esc(p.id)+'" value="'+(v!=null?esc(v):'')+'"></div></label>'}).join('');
-  if(r&&t==='ingresos')h+='<p class="note">Usa lo que gana cada uno según el grupo («Editar» en Con quién compartís).</p>';
+  if(r&&t==='ingresos')h+='<p class="note">Usa lo que gana cada uno según el grupo («Editar» en Dividir con otros).</p>';
   $('#f-rep-in').innerHTML=h;$('#f-rep').open=!!r;
   pintarParte();
 }

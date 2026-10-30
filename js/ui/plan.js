@@ -70,7 +70,7 @@ function heroChips(pc){
   /* Dos datos en la misma fila: cuánta plata tenés y cuánto guardás (el cobro tiene su propia tarjeta) */
   $('#hero-chips').innerHTML=''
     +'<button class="hchip hc-saldo" type="button" id="saldo-abrir"><span>Tenés</span><b>'+money(Math.max(0,disponible(state,pc)))+'</b><small>actualizar</small></button>'
-    +'<button class="hchip hc-ahorro" type="button" id="ahorro-abrir"><span>Guardás este mes</span><b>'+money(pc.ahorro)+'</b><small>actualizar</small></button>'
+    +'<button class="hchip hc-ahorro" type="button" id="ahorro-abrir"><span>Guardás</span><b>'+money(pc.ahorro)+'</b><small>actualizar</small></button>'
     /* (2.17) la plata apartada: se ve, pero aparte de lo que podés usar */
     +(totalApartado(state)>0?'<button class="hc-ap" type="button" id="apartado-abrir">Además tenés <b>'+money(totalApartado(state))+'</b> apartados, que no se tocan<small>ver</small></button>':'');
 }
@@ -171,18 +171,22 @@ export function renderCountdown(){
    Las cuentas son las de siempre (pc.weeks); la semana de hoy va marcada y tocar una abre su página. */
 function semanasHoy(pc,t){
   if(!pc.weeks.length)return '';
-  var h='<section class="sem-hoy" aria-labelledby="sem-hoy-t"><h2 class="plan-h" id="sem-hoy-t">Semana por semana</h2>'
-    +'<ul class="sem-l">';
+  var pas='',act='';
   pc.weeks.forEach(function(w){
     var cur=t>=w.start&&t<=w.end,past=t>w.end,over=w.left<0;
     var rem=cur?diffDays(t,w.end)+1:w.days;
     var lab=over?'te pasaste':past?'sobró':cur?'te quedan':'para gastar';
     var sub=cur&&!over?money(Math.max(w.left,0)/Math.max(rem,1))+' por día':lab;
-    h+='<li><button type="button" class="sem-i'+(cur?' actual':'')+(past?' pasada':'')+'" data-goto="w'+w.i+'"'+(cur?' aria-current="true"':'')+'>'
+    var li='<li><button type="button" class="sem-i'+(cur?' actual':'')+(past?' pasada':'')+'" data-goto="w'+w.i+'"'+(cur?' aria-current="true"':'')+'>'
       +'<span class="sem-n"><b>Semana '+(w.i+1)+'</b><small>'+esc(rango(w.start,w.end))+'</small></span>'
       +'<span class="sem-v"><b class="'+(over?'neg':cur||!past?'plata':'')+'">'+money(Math.abs(w.left))+'</b><small>'+esc(cur&&!over?lab+' · '+sub:lab)+'</small></span>'
       +'<i class="sem-ir" aria-hidden="true">›</i></button></li>';
+    if(past)pas+=li;else act+=li;
   });
+  /* (2.36) las semanas que ya pasaron se pliegan: lo que importa es la de hoy y las que vienen */
+  var h='<section class="sem-hoy" aria-labelledby="sem-hoy-t"><h2 class="plan-h" id="sem-hoy-t">Semana por semana</h2>'
+    +(pas?'<details class="sem-ant"><summary>Anteriores</summary><ul class="sem-l">'+pas+'</ul></details>':'')
+    +'<ul class="sem-l">'+act;
   return h+'</ul></section>';
 }
 

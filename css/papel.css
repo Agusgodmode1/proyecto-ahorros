@@ -42,7 +42,7 @@
 :root.v2[data-theme="dark"]{
   --bg:#070B24;
   --page:#191C30; --page-2:#14172A; --canto:#3A4066; --surface:#20243C; --surface-2:#282D4A;
-  --ink:#F1E7D0; --muted:#B9B6C8; --line:rgba(241,231,208,.14); --line-2:rgba(241,231,208,.26);
+  --ink:#F1E7D0; --muted:#C3C0D1; --line:rgba(241,231,208,.14); --line-2:rgba(241,231,208,.26);
   --oro:#E2B65A; --oro-t:#E2B65A; --oro-cl:#F3D488;
   --cta:#F08A4B; --on-cta:#191C30; --naranja-t:#F08A4B;
   --cobro-lejos:#E8D6A4; --cobro-cerca:#E2B65A; --cobro-ya:#F2A243; --cobro-tinta:#B9A8FF;
@@ -59,14 +59,14 @@
   --bad:#EE8A7A; --bad-soft:#3D2738;
   --hero:#191C30; --on-accent:#191C30; --on-sun:#191C30; --on-color:#F1E7D0;
   --cobro:#E2B65A; --cuero:#070B24;
-  --fibra:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85 .05' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 .95 0 0 0 0 .88 0 0 0 0 .75 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23f)'/%3E%3C/svg%3E");
+  --fibra:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85 .05' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 .95 0 0 0 0 .88 0 0 0 0 .75 0 0 0 .025 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23f)'/%3E%3C/svg%3E");
   color-scheme:dark;
 }
 @media (prefers-color-scheme: dark){
   :root.v2:not([data-theme="light"]){
     --bg:#070B24;
     --page:#191C30; --page-2:#14172A; --canto:#3A4066; --surface:#20243C; --surface-2:#282D4A;
-    --ink:#F1E7D0; --muted:#B9B6C8; --line:rgba(241,231,208,.14); --line-2:rgba(241,231,208,.26);
+    --ink:#F1E7D0; --muted:#C3C0D1; --line:rgba(241,231,208,.14); --line-2:rgba(241,231,208,.26);
     --oro:#E2B65A; --oro-t:#E2B65A; --oro-cl:#F3D488;
     --cta:#F08A4B; --on-cta:#191C30; --naranja-t:#F08A4B;
     --cobro-lejos:#E8D6A4; --cobro-cerca:#E2B65A; --cobro-ya:#F2A243; --cobro-tinta:#B9A8FF;
@@ -83,7 +83,7 @@
     --bad:#EE8A7A; --bad-soft:#3D2738;
     --hero:#191C30; --on-accent:#191C30; --on-sun:#191C30; --on-color:#F1E7D0;
     --cobro:#E2B65A; --cuero:#070B24;
-    --fibra:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85 .05' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 .95 0 0 0 0 .88 0 0 0 0 .75 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23f)'/%3E%3C/svg%3E");
+    --fibra:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85 .05' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 .95 0 0 0 0 .88 0 0 0 0 .75 0 0 0 .025 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23f)'/%3E%3C/svg%3E");
     color-scheme:dark;
   }
 }
@@ -1382,3 +1382,39 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 .v2 .sem-i small{font-size:13px;color:var(--muted)}
 .v2 .sem-i.actual{box-shadow:inset 3px 0 0 var(--oro);padding-left:var(--e3)}
 .v2 .sem-ir{font-style:normal;font-size:22px;line-height:1;color:var(--oro-t);text-align:center}
+
+/* =====================================================================
+   Hoy en una sola pantalla y letra más pareja (2.36)
+   ===================================================================== */
+/* fila de arriba: la fecha a la izquierda, el ojo y la ruedita a la derecha */
+.v2 .hero>div:first-child{display:flex;align-items:center;gap:var(--e2);padding-right:0}
+.v2 .hero>div:first-child .hero-top{display:contents}
+.v2 #volver-hoy{order:-2}
+.v2 .hero>div:first-child .cap-kick{order:-1;flex:1;min-width:0;margin:0;font:600 14px/1.2 var(--f-body);letter-spacing:.02em}
+.v2 .hero{row-gap:var(--e2)}
+/* «Cobrás en»: la cifra y las estrellitas en la misma fila */
+.v2 .hoja .cd{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"l d" "v seg";align-items:center;column-gap:var(--e4);row-gap:0;padding:var(--e2) var(--e4) var(--e3)}
+.v2 .hoja .cd .cd-v{margin:0;gap:var(--e2)}
+.v2 .hoja .cd .cd-seg,.v2 .hoja .cd .cd-const{margin:0;align-self:center;width:100%}
+.v2 .hoja .cd .cd-n{font-size:clamp(48px,14vw,56px)}
+.v2 .hoja .cd .cd-n.txt{font-size:clamp(32px,9vw,40px)}
+.v2 .hoja .cd .cd-t{font-size:22px}
+/* «Hoy podés gastar» más bajo */
+.v2 .hoy-hero{padding:var(--e3) var(--e4);gap:var(--e1)}
+.v2 .hoja .hoy-hero .hh-n{font-size:clamp(40px,12vw,48px);line-height:1.05}
+.v2 .hoy-hero .hh-s{margin-top:0}
+.v2 .hoy-hero .bar{margin-top:var(--e2)}
+/* Tenés / Guardás: nombre y «actualizar» en la misma línea */
+.v2 .hero-chips{margin:0;gap:var(--e2)}
+.v2 .hchip{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;column-gap:var(--e2);padding:var(--e2) var(--e3)}
+.v2 .hchip b{grid-column:1/-1;grid-row:2;font-size:clamp(22px,6.4vw,26px)}
+.v2 .hchip span{grid-row:1;font-size:14px;letter-spacing:0}
+.v2 .hchip small{grid-row:1;font-size:13px}
+/* un solo tamaño para los títulos de bloque de Hoy */
+.v2 #p-resumen .plan-h,.v2 #p-resumen #hoy-out>h2,.v2 #p-resumen .fold-t{font-size:var(--t3);line-height:1.2}
+/* semanas: las que pasaron, plegadas */
+.v2 .sem-ant>summary{list-style:none;cursor:pointer;min-height:44px;display:flex;align-items:center;gap:var(--e2);color:var(--muted);font:600 14px var(--f-body)}
+.v2 .sem-ant>summary::-webkit-details-marker,.v2 .sem-ant>summary::before{display:none;content:none}
+.v2 .sem-ant>summary::after{content:"▸";display:inline-block;color:var(--oro-t);transition:transform .15s ease}
+.v2 .sem-ant[open]>summary::after{transform:rotate(90deg)}
+.v2 .sem-ant .sem-l{border-bottom:1px solid var(--line)}

@@ -1357,3 +1357,5 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 /* Ajustes → Respaldos: exportar, importar y copias, separados por una línea fina */
 .v2 .aj-sub+.aj-sub{border-top:1px solid var(--line);padding-top:var(--e4)}
 .v2 .aj-sub h2{font-size:var(--t4)}
+/* «Probar con uno de ejemplo» (Sueldo): enlace dentro de la nota, con 44 px para tocarlo */
+.v2 .lector>.note .linklike{display:inline-flex;align-items:center;min-height:44px}

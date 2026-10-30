@@ -1,6 +1,7 @@
 /* Herramientas (2.33; antes «el índice»): lo que se abre con la ruedita de Hoy. Todo lo que no es la pantalla principal vive acá:
    Sueldo (con las horas extra), Tarjeta, Fijos, Logros, Lo guardado, Ajustes y el prólogo (el pacto). Semanas está en Hoy.
    También busca gastos. ctx.abrirPrologo(pagina, editar) y ctx.cerrarLibro() los pone app.js. */
+import {gastosDelDia} from '../logica/sobres.js';
 import {hoyPodes,curWeek} from '../logica/plan.js';
 import {histStats} from '../logica/logros.js';
 import {resumenGuardado} from '../logica/guardado.js';
@@ -19,7 +20,7 @@ function pista(id,pc){
   /* (2.26) sin pacto, Hoy, Semanas y Logros todavía no tienen nada que mostrar */
   if(!tienePacto(st)&&(id==='resumen'||id==='semanas'||id==='logros'))return 'con tu pacto';
   try{
-    if(id==='resumen'){var H=hoyPodes(pc,st.gastos,t);return H.queda<0?'te pasaste '+money(-H.queda):'podés gastar '+money(H.queda)}
+    if(id==='resumen'){var H=hoyPodes(pc,gastosDelDia(st.gastos),t);return H.queda<0?'te pasaste '+money(-H.queda):'podés gastar '+money(H.queda)}
     if(id==='semanas')return pc.weeks.length?'semana '+(curWeek(pc,t)+1)+' de '+pc.weeks.length:'';
     if(id==='fijos')return st.fijos.length?st.fijos.length+(st.fijos.length===1?' fijo':' fijos'):'sin cargar';
     if(id==='sueldo'){var L=liqNow(true);return L.liquido>0?'horas extra · cobrás ≈ '+money(L.liquido):'sueldo y horas extra'}

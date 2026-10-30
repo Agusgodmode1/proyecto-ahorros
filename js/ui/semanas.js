@@ -29,7 +29,7 @@ function tiraDias(w,state,t){
   h+='<div class="days" style="grid-template-columns:repeat('+w.days+',minmax(0,1fr))" role="list" aria-label="Lo que gastaste cada día">';
   for(var k=0;k<w.days;k++){
     var d=addDays(ds,k),di=iso(d),sd=0;
-    state.gastos.forEach(function(g){if(g.fecha===di)sd+=g.monto});
+    state.gastos.forEach(function(g){if(g.fecha===di&&g.sobre!=='compras')sd+=g.monto});
     var r=dayAllow>0?sd/dayAllow:(sd>0?2:0),est=sd<=0?'':r>1.0001?'mal':r>.8?'cerca':'bien';
     var cls='day'+(di===t?' today':'')+(di>t?' fut':'')+(sd>0?' has':'')+(est==='mal'?' over':'');
     h+='<div class="'+cls+'" role="listitem" aria-label="'+esc(DIAL[d.getDay()]+' '+d.getDate())+(sd>0?': '+money(sd)+(est==='mal'?', te pasaste':est==='cerca'?', cerca del límite':', bien'):(di>t?'':': sin gastos'))+'">'

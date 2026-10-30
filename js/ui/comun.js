@@ -1,4 +1,5 @@
 /* Contexto compartido entre vistas y helpers de formato/HTML. */
+import {aplicarSobres} from '../logica/sobres.js';
 import {iso,parse,MES,DIA} from '../logica/fechas.js';
 import {planCalc} from '../logica/plan.js';
 import {ajustarPlan} from '../logica/mes.js';
@@ -11,7 +12,7 @@ export var ctx={state:null,tab:'resumen',booted:false,persist:function(){},rende
 
 export function today(){return iso(new Date())}
 /* El plan de siempre, ajustado: sobrantes al ahorro, lo que te pasaste repartido y el mínimo cuidado (logica/mes.js) */
-export function planNow(){return ajustarPlan(ctx.state,planCalc(ctx.state),today())}
+export function planNow(){return ajustarPlan(ctx.state,aplicarSobres(ctx.state,planCalc(ctx.state)),today())}
 /* Con extras: lo que vas a cobrar (el recibo real del mes si lo cargaste; si no, la estimación) */
 export function liqNow(conExtras){return conExtras?liqReal(ctx.state):liq(ctx.state,false)}
 /* El análisis del extracto. Cuando se carga la Tarjeta (ui/tarjeta-ver.js) pone acá el suyo, con el lector de

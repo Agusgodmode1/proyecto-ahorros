@@ -25,6 +25,9 @@ export function formGasto(p,o){
     +'<div class="field f-monto"><label for="'+p+'-monto" class="sub-l">¿Cuánto?</label><div class="money"><button type="button" class="mon-btn" data-mon aria-label="Cambiar moneda: ahora en '+(enUSD?'dólares':'pesos')+'">'+(enUSD?'US$':'$')+'</button><input id="'+p+'-monto" type="number" inputmode="decimal" min="0" step="any" required value="'+(g.id?esc(enUSD?g.usd:g.monto):'')+'"></div><small class="usd-nota" data-usdnota></small></div>'
     +'<div class="field f-cat"><label for="'+p+'-cat" class="sub-l">Categoría</label><select id="'+p+'-cat" data-sugerida="'+esc(cat)+'"'+(g.id?' data-tocada="1"':'')+'>'+opcionesCat(cat).map(function(c){return '<option'+(c===cat?' selected':'')+'>'+esc(c)+'</option>'}).join('')+'</select></div>'
     +'<div class="field f-nota"><label for="'+p+'-nota" class="sub-l">¿En qué?</label><input id="'+p+'-nota" type="text" maxlength="60" placeholder="almuerzo, boleto, súper" value="'+esc(g.nota||'')+'"></div>';
+  /* (2.39) ¿De qué plata sale? Solo si tenés sobre de compras (o el gasto ya era del sobre) */
+  if(p==='q'&&(num(ctx.state.plan.compras)>0||g.sobre)){var deS=g.id?g.sobre==='compras':!!o.sobre;
+    h+='<div class="field f-sobre"><span class="sub-l" id="'+p+'-sobre-l">¿De qué plata?</span><input type="hidden" id="'+p+'-sobre" value="'+(deS?'compras':'')+'"><div class="seg" role="group" aria-labelledby="'+p+'-sobre-l"><button type="button" data-sobreop="" aria-pressed="'+!deS+'">De la semana</button><button type="button" data-sobreop="compras" aria-pressed="'+deS+'">Del sobre de compras</button></div></div>';}
   if(o.fechas&&o.fechas.length)h+='<div class="field f-fecha"><label for="'+p+'-fecha" class="sub-l">¿Qué día?</label><select id="'+p+'-fecha">'+o.fechas.map(function(f){return '<option value="'+f[0]+'"'+(f[0]===(g.fecha||o.fecha)?' selected':'')+'>'+esc(f[1])+'</option>'}).join('')+'</select></div>';
   else h+='<input type="hidden" id="'+p+'-fecha" value="'+esc(g.fecha||o.fecha)+'">';
   h+='<div class="row-btns f-btn"><button class="btn primary" type="submit">'+esc(o.boton||(g.id?'Guardar cambios':'Anotar'))+'</button>'
@@ -69,6 +72,7 @@ export function leerForm(f){
   var m=num(q('monto').value);
   if(!(m>0)){q('monto').focus();return null}
   var sel=q('cat'),d={monto:Math.round(m*100)/100,nota:q('nota').value.trim().slice(0,60),cat:sel.value,sugerida:sugerir(q('nota').value),fecha:q('fecha').value};
+  var so=q('sobre');if(so&&so.value==='compras')d.sobre='compras';
   if(f.getAttribute('data-moneda')==='USD'){
     /* Un gasto que ya estaba en dólares conserva su cotización; uno nuevo usa la de hoy */
     var cot=num(f.getAttribute('data-cotiz'))||cotizacion(ctx.state);
@@ -98,8 +102,9 @@ export function guardarGasto(d,editId){
   var id=editId||uid();
   if(editId){
     st.gastos.forEach(function(g){if(g.id===editId){g.monto=d.monto;g.nota=d.nota;g.cat=d.cat;g.fecha=d.fecha;
-      if(d.usd){g.usd=d.usd;g.cotiz=d.cotiz}else{delete g.usd;delete g.cotiz}}});
-  }else{var g={id:id,fecha:d.fecha,monto:d.monto,nota:d.nota,cat:d.cat};if(d.usd){g.usd=d.usd;g.cotiz=d.cotiz}st.gastos.push(g)}
+      if(d.usd){g.usd=d.usd;g.cotiz=d.cotiz}else{delete g.usd;delete g.cotiz}
+      if(d.sobre)g.sobre=d.sobre;else delete g.sobre}});
+  }else{var g={id:id,fecha:d.fecha,monto:d.monto,nota:d.nota,cat:d.cat};if(d.usd){g.usd=d.usd;g.cotiz=d.cotiz}if(d.sobre)g.sobre=d.sobre;st.gastos.push(g)}
   ctx.persist();
   return id;
 }
@@ -149,7 +154,7 @@ export function renglonGasto(g){
   var c=catDe(g),d=parse(g.fecha),qué=g.nota?esc(g.nota):'<span class="muted">Sin detalle</span>';
   /* todo el renglón se toca para corregir; al lado, borrar */
   return '<li class="gl1"><button class="gl-e" type="button" data-editg="'+esc(g.id)+'" aria-label="Corregir: '+esc((g.nota||'sin detalle')+', '+DIA[d.getDay()]+' '+d.getDate()+', '+money(g.monto))+'">'
-    +'<i class="dot" style="background:'+catColor(c)+'"></i><span class="gl-q">'+qué+'</span><span class="gl-d">'+DIA[d.getDay()]+' '+d.getDate()+'</span>'
+    +'<i class="dot" style="background:'+catColor(c)+'"></i><span class="gl-q">'+qué+(g.sobre==='compras'?' <small class="gl-sob" title="del sobre de compras" aria-label="del sobre de compras">✦</small>':'')+'</span><span class="gl-d">'+DIA[d.getDay()]+' '+d.getDate()+'</span>'
     +'<b class="amt">'+money(g.monto)+'</b>'+LAPIZ+'</button>'
     +'<button class="gl-b" type="button" data-delg="'+esc(g.id)+'" aria-label="Borrar '+esc(g.nota||'el gasto')+'">'+TACHO+'</button></li>';
 }
@@ -171,7 +176,7 @@ export function abrirHojaGasto(o){
   hojaEdit=g?g.id:null;
   b.innerHTML='<div class="sheet-top"><h2 id="gs-t">'+esc(g?'Corregir el gasto':o.titulo||'Anotar un gasto')+'</h2><button class="btn quiet" type="button" id="gasto-x">Cerrar</button></div>'
     +(g?'':chipsFrecuentes('q'))
-    +formGasto('q',{fecha:g?g.fecha:o.fecha||fechas[0][0],fechas:fechas,gasto:g,boton:g?'Guardar cambios':'Anotar'});
+    +formGasto('q',{fecha:g?g.fecha:o.fecha||fechas[0][0],fechas:fechas,gasto:g,sobre:o.sobre,boton:g?'Guardar cambios':'Anotar'});
   s.hidden=false;document.documentElement.classList.add('hoja');
   /* En iPhone el teclado solo aparece si el foco se pone en el mismo toque (sin esperar) */
   var m=$('#q-monto');if(m)try{m.focus({preventScroll:true});if(g)m.select()}catch(e){m.focus()}
@@ -182,6 +187,7 @@ export function initHojaGasto(){
   initFormsGasto(s);
   s.addEventListener('click',function(e){
     if(e.target===s||e.target.closest('#gasto-x')||e.target.closest('[data-gcancel="q"]')){cerrarHojaGasto();return}
+    var so=e.target.closest('[data-sobreop]');if(so){var gr=so.parentNode,inp=$('#q-sobre');if(inp)inp.value=so.getAttribute('data-sobreop');[].forEach.call(gr.children,function(b){b.setAttribute('aria-pressed',String(b===so))});return}
     var fr=e.target.closest('[data-frec]');if(fr){var fe=$('#q-fecha');anotarFrecuente(Number(fr.getAttribute('data-frec')),fe?fe.value:today());cerrarHojaGasto();return}
   });
   s.addEventListener('submit',function(e){

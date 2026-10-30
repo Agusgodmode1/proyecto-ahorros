@@ -1,4 +1,5 @@
 /* Pestaña Plan: portada con "Hoy podés gastar", anotar un gasto, plan plegable, hasta que cobres, semanas y "cuando cobres". */
+import {gastosDelDia,COLCHON_OPC} from '../logica/sobres.js';
 import {parse,diffDays,bizRank,MESL,addDays,iso,DIA} from '../logica/fechas.js';
 import {num} from '../logica/util.js';
 import {fijosPeriodo,totalFijos,proximo,hoyPodes,planCalc} from '../logica/plan.js';
@@ -51,7 +52,7 @@ function heroMini(pc,H){
 }
 /* Portada: lo único grande es cuánto podés gastar hoy */
 function heroChips(pc){
-  var state=ctx.state,L=liqNow(true),t=today(),H=hoyPodes(pc,state.gastos,t),el=$('#hoy-hero');
+  var state=ctx.state,L=liqNow(true),t=today(),H=hoyPodes(pc,gastosDelDia(state.gastos),t),el=$('#hoy-hero');
   var sinPlan=!(num(state.plan.monto)>0);
   if(sinPlan)el.innerHTML='<span class="hh-l">Para saber cuánto podés gastar por día</span><span class="hh-s"><button class="linklike" type="button" id="hoy-empezar">armá tu plan</button>: cuánta plata tenés y cuánto querés guardar.</span>';
   else{
@@ -200,6 +201,60 @@ export function renderCountdown(){
 
 /* (2.34) Las semanas del plan en Hoy: «Semana 2 · 2 nov – 8 nov» y lo que te queda (o te pasaste / sobró).
    Las cuentas son las de siempre (pc.weeks); la semana de hoy va marcada y tocar una abre su página. */
+/* (2.39) Los sobres del mes: el colchón de fin de mes y las compras e imprevistos (la cuenta, en logica/sobres.js) */
+var sobAbiertos={};
+function sobresHoy(pc,t){
+  var S=pc.sobres;if(!S||!pc.weeks.length)return '';
+  var n=pc.weeks.length,ult=pc.weeks[n-1],enUlt=t>=ult.start,h='';
+  if(n>1){
+    var sub=S.pct>0?(enUlt?'ya está en esta semana':'se suma a la semana '+n+', desde el '+fCorta(ult.start)):'apagado';
+    h+='<li><details class="sob" data-sob="colchon"'+(sobAbiertos.colchon?' open':'')+'><summary><span class="sob-n"><b>Colchón de fin de mes</b><small>'+esc(sub)+'</small></span><b class="sob-v plata">'+(S.pct>0?money(S.colchon):'—')+'</b></summary>'
+      +'<div class="sob-in"><p class="note">Guardo una parte de tu plata para la última semana, así llegás tranquilo al cobro.</p>'
+      +'<div class="seg" role="group" aria-label="Cuánto va al colchón">'+COLCHON_OPC.map(function(v){return '<button type="button" data-colchon="'+v+'" aria-pressed="'+(Math.round(S.pct)===v)+'">'+v+' %'+'</button>'}).join('')+'</div></div></details></li>';
+  }
+  var C=S.compras,f=C>0?Math.max(0,Math.min(1,S.queda/C)):0;
+  h+='<li><details class="sob" data-sob="compras"'+(sobAbiertos.compras?' open':'')+'><summary><span class="sob-n"><b>Compras e imprevistos</b><small>'+(C>0?'te quedan '+money(S.queda)+' de '+money(C):'un regalo, el dentista, algo que se rompe')+'</small>'
+    +(C>0?'<span class="sob-bar" aria-hidden="true"><i style="transform:scaleX('+f.toFixed(3)+')"></i></span>':'')+'</span><b class="sob-v'+(C>0?' plata':' sob-armar')+'">'+(C>0?money(S.queda):'Armar')+'</b></summary>'
+    +'<div class="sob-in"><p class="note">Lo que no es de todos los días sale de acá y no de la semana. Lo que no uses queda como ahorro.</p>'
+    +'<form class="sob-f" data-sobf autocomplete="off"><div class="money"><span>$</span><input id="sob-monto" type="number" inputmode="numeric" min="0" step="100" value="'+(C||'')+'" placeholder="3000" aria-label="Plata para el sobre de compras"></div><button class="btn quiet" type="submit">Guardar</button></form>'
+    +(C>0?'<button class="btn quiet sob-g" type="button" data-sobgasto><span aria-hidden="true">+</span> Compra del sobre</button>':'')+'</div></details></li>';
+  return '<section class="sobres" aria-labelledby="sobres-t"><h2 class="plan-h" id="sobres-t">Tus sobres</h2><ul class="sob-l">'+h+'</ul></section>';
+}
+/* El día que empieza el pacto (y los 3 siguientes): separar el ahorro de verdad, mejor en UI */
+function avisoPasar(pc,t){
+  var p=ctx.state.plan;
+  if(!(pc.ahorro>0)||t<p.inicio||diffDays(p.inicio,t)>3||p.ahorroPasado===p.cobro)return '';
+  return '<div class="banner"><p><b>Separá tu ahorro hoy:</b> pasá '+money(pc.ahorro)+' a otra cuenta, mejor en UI (se ajusta con la inflación).</p><button class="btn" type="button" data-pasado>Ya lo pasé</button></div>';
+}
+/* El último día de cada semana (y el siguiente): ¿lo que sobra va a la semana que viene o al ahorro? */
+function avisoRepaso(pc,t){
+  var ay=iso(addDays(parse(t),-1)),ps=ctx.state.plan.sobranteSemana||{},n=pc.weeks.length,w=null;
+  pc.weeks.forEach(function(x,i){if(i<n-1&&(x.end===t||x.end===ay)&&x.left>0&&!ps[x.start])w=x});
+  if(!w)return '';
+  return '<div class="banner"><p><b>Cierre de la semana '+(w.i+1)+':</b> te '+(w.end===t?'van sobrando':'sobraron')+' '+money(w.left)+'. ¿A dónde van?</p>'
+    +'<div class="row-btns"><button class="btn" type="button" data-sobsem="'+w.start+'" data-val="siguiente">A la semana que viene</button><button class="btn" type="button" data-sobsem="'+w.start+'" data-val="ahorro">Al ahorro</button></div></div>';
+}
+function initSobres(){
+  var el=$('#sobres-hoy');if(!el)return;
+  el.addEventListener('toggle',function(e){var d=e.target;if(d.matches&&d.matches('[data-sob]'))sobAbiertos[d.getAttribute('data-sob')]=d.open},true);
+  el.addEventListener('click',function(e){
+    var c=e.target.closest('[data-colchon]');
+    if(c){var v=Number(c.getAttribute('data-colchon'));ctx.state.plan.colchon=v;ctx.persist();ctx.renderAll();toast(v?'Listo: '+v+' % para la última semana':'Listo: sin colchón');return}
+    if(e.target.closest('[data-sobgasto]')){abrirHojaGasto({titulo:'Compra del sobre',sobre:true});return}
+  });
+  el.addEventListener('submit',function(e){
+    if(!e.target.matches('[data-sobf]'))return;e.preventDefault();
+    var st=ctx.state,pc=planCalc(st),max=Math.max(0,Math.floor(pc.gastar)),v=Math.max(0,Math.round(num($('#sob-monto').value)));
+    var tope=v>max;if(tope)v=max;
+    st.plan.compras=v;ctx.persist();ctx.renderAll();
+    toast(tope?'El sobre no puede pasar tu plata para gastar: queda en '+money(v):v?'Listo: sobre de '+money(v):'Listo: sin sobre de compras');
+  });
+  var pr=$('#p-resumen');if(pr)pr.addEventListener('click',function(e){
+    if(!e.target.closest('[data-pasado]'))return;
+    ctx.state.plan.ahorroPasado=ctx.state.plan.cobro;ctx.persist();ctx.renderAll();toast('Bien: tu ahorro ya está aparte');
+  });
+}
+
 var semAbierta=null;
 function semanasHoy(pc,t){
   if(!pc.weeks.length)return '';
@@ -264,6 +319,10 @@ export function renderResumen(pc){
   renderCierre(pc);renderHoy(pc);renderEntradas();renderSuperv(pc);renderRitmo(pc);
   /* (2.35) Semana por semana, justo debajo de «Hoy podés gastar»: cada semana con lo que te queda; tocarla abre su detalle. */
   var sh=$('#sem-hoy');if(sh)sh.innerHTML=semanasHoy(pc,today());
+  /* (2.39) los sobres del mes y dos recordatorios: separar el ahorro al cobrar y el cierre de cada semana */
+  var so=$('#sobres-hoy');if(so)so.innerHTML=sobresHoy(pc,today());
+  var pa=$('#pasar-aviso');if(pa)pa.innerHTML=avisoPasar(pc,today());
+  var rp=$('#repaso-aviso');if(rp)rp.innerHTML=avisoRepaso(pc,today());
   var sf=aniosSinFeriados(state,today()),fa=$('#fer-aviso');
   if(fa)fa.innerHTML=sf.length?'<div class="banner"><p><b>No tengo los feriados de '+sf.join(' y ')+'.</b> Sin ellos, el día de cobro puede salir mal. Actualizá la app o agregalos en Ajustes → Feriados.</p><button class="btn" type="button" data-goto="ajustes">Ir a Feriados</button></div>':'';
   var p=state.plan,t=today(),L=liqNow(true),fp=fijosPeriodo(state.fijos,p.inicio,p.cobro);
@@ -434,7 +493,7 @@ function confirmarSaldo(real){
   return true;
 }
 export function initPlan(){
-  initSemHoy();
+  initSemHoy();initSobres();
   var pr=$('#p-resumen');
   initSaldo();initEntradas();
   $('#meta-alerta').addEventListener('click',function(e){

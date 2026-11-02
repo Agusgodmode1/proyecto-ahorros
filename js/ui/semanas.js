@@ -39,19 +39,6 @@ function tiraDias(w,state,t){
   h+='</div>';
   return h;
 }
-/* (2.37) Una semana desplegada en Hoy: el dato del día, la tira de días, sus gastos y «+ Gasto en esta semana» */
-export function semanaEnHoy(pc,i){
-  var state=ctx.state,w=pc.weeks[i];if(!w)return '';
-  var t=today(),cur=t>=w.start&&t<=w.end,past=t>w.end,fut=t<w.start;
-  var rem=cur?diffDays(t,w.end)+1:w.days,perDay=Math.max(w.left,0)/Math.max(rem,1);
-  var items=state.gastos.filter(function(g){return g.fecha>=w.start&&g.fecha<=w.end}).sort(function(a,b){return a.fecha<b.fecha?1:a.fecha>b.fecha?-1:(a.id<b.id?1:-1)});
-  var h='<p class="sem-dato">'+(past?'Tenías <b>'+money(w.avail)+'</b>':'<b class="plata">'+money(perDay)+'</b> por día')+' · gastaste <b>'+money(w.spent)+'</b></p>';
-  h+=tiraDias(w,state,t);
-  if(items.length)h+='<ul class="list glist gl-1">'+items.map(renglonGasto).join('')+'</ul>';
-  if(!fut)h+='<button class="btn quiet sem-mas" type="button" data-gsem="'+i+'"><span aria-hidden="true">+</span> Gasto en esta semana</button>';
-  return h;
-}
-
 export function renderWeek(pc){
   var state=ctx.state,tab=ctx.tab,el=$('#p-semana');
   if(!/^w\d+$/.test(tab)){el.innerHTML='';return}

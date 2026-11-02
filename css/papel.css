@@ -1536,7 +1536,7 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 .v2 .cj-tips{list-style:none;margin:0;padding:0;display:grid;gap:var(--e2)}
 .v2 .cj-tips li{font-size:15px;line-height:1.4;color:var(--ink)}
 .v2 .cj-tips b{display:block;font-size:14px;color:var(--oro-t)}
-.v2 .cj-mas{border-top:1px solid var(--line);padding-top:var(--e3)}
+.v2 .cj-mas{margin-top:calc(-1 * var(--e1))}
 .v2 .cj-eleg{display:grid;gap:var(--e2)}
 .v2 .cj-eleg .note{margin:0}
 .v2 .consejos .sob{border-top:1px solid var(--line)}
@@ -1553,7 +1553,7 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 .v2 .sem-rep{display:grid;grid-template-columns:1fr 1fr;padding:3px;gap:2px}
 .v2 .sem-rep button{min-height:44px;padding:0 var(--e2);font:600 15px var(--f-body)}
 .v2 .sem-c small.neg{color:var(--mal)}
-.v2 .sem-c[aria-selected="true"] small.neg{color:var(--on-sel);text-decoration:underline;text-decoration-color:var(--mal);text-decoration-thickness:2px}
+.v2 .sem-c[aria-current] small.neg{color:var(--on-sel);text-decoration:underline;text-decoration-color:var(--mal);text-decoration-thickness:2px}
 .v2 .sem-rep-n{margin:calc(-1 * var(--e1)) 0 0;font-size:13.5px;color:var(--muted)}
 .v2 .sem-car{display:flex;gap:var(--e2);overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scroll-padding-inline:var(--e2);
   padding:var(--e1) var(--e1) var(--e2);margin:0 calc(-1 * var(--e1));scrollbar-width:none;-webkit-overflow-scrolling:touch;
@@ -1570,9 +1570,9 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 .v2 .sem-c b.plata{color:var(--azul)}
 .v2 .sem-c b.neg{color:var(--mal)}
 .v2 .sem-c.pasada{background:transparent}
-.v2 .sem-c[aria-selected="true"]{background:var(--sel);border-color:var(--sel);color:var(--on-sel);box-shadow:inset 0 -3px 0 var(--oro),0 6px 16px -8px rgba(0,0,0,.45)}
-.v2 .sem-c[aria-selected="true"] small,.v2 .sem-c[aria-selected="true"] b,.v2 .sem-c[aria-selected="true"] b.plata{color:var(--on-sel)}
-.v2 .sem-c[aria-selected="true"] .sem-c-n i{background:color-mix(in srgb,var(--on-sel) 18%,transparent);color:var(--on-sel)}
+.v2 .sem-c[aria-current]{background:var(--sel);border-color:var(--sel);color:var(--on-sel);box-shadow:inset 0 -3px 0 var(--oro),0 6px 16px -8px rgba(0,0,0,.45)}
+.v2 .sem-c[aria-current] small,.v2 .sem-c[aria-current] b,.v2 .sem-c[aria-current] b.plata{color:var(--on-sel)}
+.v2 .sem-c[aria-current] .sem-c-n i{background:color-mix(in srgb,var(--on-sel) 18%,transparent);color:var(--on-sel)}
 .v2 .sem-c:focus-visible{outline:2px solid var(--oro);outline-offset:2px}
 .v2 .sem-hoy>.sem-det{padding:var(--e3) var(--e4) var(--e4);border-radius:var(--r-l);background:var(--surface);border:1px solid var(--line)}
 .v2 .sem-det-cab{display:flex;align-items:center;justify-content:space-between;gap:var(--e2);font:700 15px var(--f-body)}
@@ -1593,12 +1593,16 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
   box-shadow:0 24px 60px rgba(3,6,20,.7),inset 0 0 0 1px rgba(240,226,198,.07)}
 .v2 .hoja :is(.cd,.hoy-hero,.hchip,.card,.wk,.fin-cap),.v2 .hoja #resumen-out>.fold,.v2 .sem-hoy>.sem-det,.v2 .sem-c{
   box-shadow:inset 0 1px 0 rgba(255,236,200,.06),inset 0 0 0 1px rgba(240,226,198,.07),0 12px 24px -16px rgba(0,0,0,.75)}
-.v2 .sem-c.pasada:not([aria-selected="true"]){background:color-mix(in srgb,var(--surface) 50%,transparent)}
+.v2 .sem-c.pasada:not([aria-current]){background:color-mix(in srgb,var(--surface) 50%,transparent)}
 /* (2.42) la parte del mes de cada semana, como una pestañita arriba de la ficha */
 .v2 .sem-car{padding-top:var(--e3)}
 .v2 .sem-c{position:relative}
 .v2 .sem-c .sem-c-pct{position:absolute;top:calc(-1 * var(--e3));left:var(--e3);padding:2px 8px;border-radius:6px 6px 0 0;
   font:700 13px/1.2 var(--f-body);font-variant-numeric:lining-nums tabular-nums;background:var(--surface-2);color:var(--oro-t);box-shadow:inset 0 0 0 1px var(--line)}
-.v2 .sem-c[aria-selected="true"] .sem-c-pct{background:var(--sel);color:var(--on-sel);box-shadow:inset 0 -2px 0 var(--oro)}
+.v2 .sem-c[aria-current] .sem-c-pct{background:var(--sel);color:var(--on-sel);box-shadow:inset 0 -2px 0 var(--oro)}
 /* (2.43) la cinta es de seda borravino, como la de un libro viejo (el azul queda solo para la plata) */
 .v2 .indice-btn,.v2 :root[data-theme="dark"] .indice-btn{background:linear-gradient(90deg,#5E1E1E,#8E3530 45%,#5E1E1E)!important;color:#F3E2C4!important;box-shadow:0 4px 8px rgba(0,0,0,.45)}
+
+/* (2.44) Tus semanas sin panel de detalle: cada ficha abre su semana; resaltada, la de hoy */
+.v2 .sem-car>.sem-li{flex:0 0 clamp(124px,36vw,148px);scroll-snap-align:center;display:flex}
+.v2 .sem-li>.sem-c{flex:1 1 auto;width:100%}

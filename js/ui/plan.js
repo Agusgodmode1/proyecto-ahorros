@@ -13,7 +13,7 @@ import {aniosSinFeriados} from '../logica/avisos.js';
 import {ritmoDelMes,minimoDe} from '../logica/mes.js';
 import {sensibilidadDolar} from '../logica/recibos.js';
 import {formGasto,initFormsGasto,leerForm,avisoAnotado,guardarGasto,borrarGasto,itemGasto,chipsFrecuentes,anotarFrecuente,abrirHojaGasto,initHojaGasto} from './gastos.js';
-import {editarGasto,resetWeekSel,semanaEnHoy} from './semanas.js';
+import {editarGasto,resetWeekSel} from './semanas.js';
 import {cicloTerminado,resumenCiclo,cerrarCiclo} from '../logica/ciclo.js';
 import {abrirPostal} from './postal.js';
 import {abrirLibro,polvo} from './libro.js';
@@ -221,19 +221,22 @@ function consejosHoy(pc,t){
     +(mid!==null?'<li><b>'+(n>3?'Semanas del medio':'Semana 2')+' · '+fmt(mid)+'</b> El momento para la compra que necesites.</li>':'')
     +(n>1?'<li><b>Última semana · '+fmt(ult)+'</b> Tu colchón para llegar tranquilo al cobro.</li>':'')
     +'</ul>';
-  var eleg=hay?'<div class="cj-eleg"><span class="sub-l" id="cj-eleg-l">Tu plan</span><div class="seg" role="group" aria-labelledby="cj-eleg-l">'
-    +'<button type="button" data-reparto="parejo" aria-pressed="'+!rec+'">Parejo</button><button type="button" data-reparto="recomendado" aria-pressed="'+rec+'">Optimizado</button></div>'
-    +'<p class="note">'+(rec?'Tus semanas siguen este reparto.':'Hoy cada semana tiene lo mismo. Con «Optimizado» siguen este reparto.')+'</p></div>':'';
   var C=S.compras||0,f=C>0?Math.max(0,Math.min(1,S.queda/C)):0;
   var sobre=hay?'<details class="sob" data-sob="compras"'+(sobAbiertos.compras?' open':'')+'><summary><span class="sob-n"><b>Sobre de compras e imprevistos</b><small>'+(C>0?'te quedan '+money(S.queda)+' de '+money(C):'un regalo, el dentista, algo que se rompe')+'</small>'
     +(C>0?'<span class="sob-bar" aria-hidden="true"><i style="transform:scaleX('+f.toFixed(3)+')"></i></span>':'')+'</span><b class="sob-v'+(C>0?' plata':' sob-armar')+'">'+(C>0?money(S.queda):'Armar')+'</b></summary>'
     +'<div class="sob-in"><p class="note">Lo que no es de todos los días sale de acá y no de la semana. Lo que no uses queda como ahorro.</p>'
     +'<form class="sob-f" data-sobf autocomplete="off"><div class="money"><span>$</span><input id="sob-monto" type="number" inputmode="numeric" min="0" step="100" value="'+(C||'')+'" placeholder="3000" aria-label="Plata para el sobre de compras"></div><button class="btn quiet" type="submit">Guardar</button></form>'
     +(C>0?'<button class="btn quiet sob-g" type="button" data-sobgasto><span aria-hidden="true">+</span> Compra del sobre</button>':'')+'</div></details>':'';
-  var mas='<ul class="cj-tips cj-mas"><li><b>El día que cobrás</b> Separá primero lo que vas a ahorrar, así no se mezcla.</li><li><b>Cada domingo</b> Mirá cuánto te sobró y decidí si va a la semana que viene o al ahorro.</li></ul>';
+  var mas='<h3 class="cj-h">Más consejos</h3><ul class="cj-tips cj-mas">'
+    +'<li><b>El día que cobrás</b> Separá primero lo que vas a ahorrar, así no se mezcla.</li>'
+    +'<li><b>Los fijos, primero</b> Pagalos apenas cobrás: lo que queda es de verdad para gastar.</li>'
+    +'<li><b>Anotá al toque</b> Un gasto anotado en el momento no se olvida.</li>'
+    +'<li><b>Antes de una compra que no planeaste</b> Esperá un día. Si la seguís queriendo, comprala.</li>'
+    +'<li><b>Al súper, con lista</b> Y sin hambre: es donde más se va sin darte cuenta.</li>'
+    +'<li><b>Cada domingo</b> Mirá cuánto te sobró y decidí si va a la semana que viene o al ahorro.</li></ul>';
   return '<details class="consejos" data-sob="consejos"'+(sobAbiertos.consejos?' open':'')+'><summary><span class="cj-t">Consejos para ahorrar en el mes</span><span class="cj-s">cómo repartir tu plata semana a semana</span></summary>'
-    +'<div class="cj-in"><h3 class="cj-h">Cómo repartir tu mes</h3><p class="note cj-ej">Un mes de ejemplo, de 4 semanas. Si una semana es más corta, se ajusta por sus días.</p><ol class="cj-guia" aria-label="Reparto optimizado: '+pcts.map(function(x,i){return 'semana '+(i+1)+', '+fmt(x)}).join('; ')+'">'+cols+'</ol>'
-    +tips+eleg+sobre+mas+'</div></details>';
+    +'<div class="cj-in"><h3 class="cj-h">Cómo repartir tu mes</h3><p class="note cj-ej">Un mes de ejemplo, de 4 semanas. Lo elegís arriba, en «Tus semanas» (Optimizado).</p><ol class="cj-guia" aria-label="Reparto optimizado: '+pcts.map(function(x,i){return 'semana '+(i+1)+', '+fmt(x)}).join('; ')+'">'+cols+'</ol>'
+    +tips+sobre+mas+'</div></details>';
 }
 /* El día que empieza el pacto (y los 3 siguientes): separar el ahorro de verdad, mejor en UI */
 function avisoPasar(pc,t){
@@ -270,7 +273,6 @@ function initSobres(){
   });
 }
 
-var semAbierta=null;
 /* (2.41) Semana por semana como carrusel: una ficha por semana con lo que podés gastar;
    la elegida muestra su detalle debajo. Arriba, «Parejo / Optimizado» cambia el reparto (con Deshacer). */
 /* (2.42) qué parte del total para gastar le toca a cada semana; redondeado para que siempre sume 100 */
@@ -280,69 +282,54 @@ function porcentajes(ws){
   raw.map(function(x,i){return [x-base[i],i]}).sort(function(a,b){return b[0]-a[0]}).slice(0,falta).forEach(function(x){base[x[1]]++});
   return base;
 }
+function fechasSemana(w){return w.start===w.end?fCorta(w.start):rango(w.start,w.end)}
+/* (2.44) Cada ficha: lo que la semana tiene para gastar (así se ve el reparto) y cómo va. Tocarla abre esa semana. */
 function fichaSemana(w,t,pct){
-  var cur=t>=w.start&&t<=w.end,past=t>w.end,over=w.left<0,sel=semAbierta===w.i;
-  /* el número grande es lo que la semana tiene para gastar (así se ve el reparto parejo u optimizado); abajo, cómo va */
-  var rem=cur?diffDays(t,w.end)+1:w.days;
-  var lab=over?'te pasaste '+money(-w.left):past?'sobró '+money(w.left):cur?'te quedan '+money(w.left):money(w.avail/Math.max(1,w.days))+' por día';
-  var v=w.budget;
-  return '<button type="button" role="tab" class="sem-c'+(cur?' actual':'')+(past?' pasada':'')+'" data-semsel="'+w.i+'" aria-selected="'+sel+'" aria-controls="sem-det"'+(cur?' aria-current="date"':'')+'>'
-    +(pct!=null?'<span class="sem-c-pct" aria-label="'+pct+' por ciento del mes">'+pct+' %</span>':'')
-    +'<span class="sem-c-n">Semana '+(w.i+1)+(cur?' <i>hoy</i>':'')+'</span>'
-    +'<small>'+esc(rango(w.start,w.end))+'</small>'
-    +'<b class="'+(past?'':'plata')+'">'+money(v)+'</b>'
-    +'<small class="'+(over?'neg':'')+'">'+lab+'</small></button>';
+  var cur=t>=w.start&&t<=w.end,past=t>w.end,over=w.left<0;
+  var lab=over?'te pasaste '+money(-w.left):past?'sobró '+money(w.left):cur?'te quedan '+money(w.left):money(w.budget/Math.max(1,w.days))+' por día';
+  return '<button type="button" class="sem-c'+(cur?' actual':'')+(past?' pasada':'')+'" data-goto="w'+w.i+'"'+(cur?' aria-current="date"':'')
+    +' aria-label="Semana '+(w.i+1)+', '+esc(fechasSemana(w))+': '+money(w.budget)+' para gastar, '+lab+(pct!=null?', '+pct+' por ciento del mes':'')+'. Ver sus gastos">'
+    +(pct!=null?'<span class="sem-c-pct" aria-hidden="true">'+pct+' %</span>':'')
+    +'<span class="sem-c-n" aria-hidden="true">Semana '+(w.i+1)+(cur?' <i>hoy</i>':'')+'</span>'
+    +'<small aria-hidden="true">'+esc(fechasSemana(w))+'</small>'
+    +'<b class="'+(past?'':'plata')+'" aria-hidden="true">'+money(w.budget)+'</b>'
+    +'<small class="'+(over?'neg':'')+'" aria-hidden="true">'+lab+'</small></button>';
 }
 function semanasHoy(pc,t){
   if(!pc.weeks.length)return '';
-  if(semAbierta===null||!pc.weeks[semAbierta]){semAbierta=0;pc.weeks.forEach(function(w){if(t>=w.start&&t<=w.end)semAbierta=w.i});if(t>pc.weeks[pc.weeks.length-1].end)semAbierta=pc.weeks.length-1}
-  var rec=(pc.sobres&&pc.sobres.reparto)==='recomendado',w=pc.weeks[semAbierta];
-  var cur=t>=w.start&&t<=w.end,past=t>w.end,over=w.left<0;
-  var pill=over?'<span class="pill bad">te pasaste</span>':cur?'<span class="pill now">esta semana</span>':past?'<span class="pill ok">cumplida</span>':'<span class="pill">próxima</span>';
-  var seg=pc.weeks.length>1?'<div class="seg sem-rep" role="group" aria-label="Cómo se reparte tu plata entre las semanas">'
+  var rec=(pc.sobres&&pc.sobres.reparto)==='recomendado',varias=pc.weeks.length>1;
+  var seg=varias?'<div class="seg sem-rep" role="group" aria-label="Cómo se reparte tu plata entre las semanas">'
     +'<button type="button" data-reparto="parejo" aria-pressed="'+!rec+'">Parejo</button><button type="button" data-reparto="recomendado" aria-pressed="'+rec+'">Optimizado</button></div>':'';
+  var pp=varias?porcentajes(pc.weeks):[];
   return '<section class="sem-hoy" aria-labelledby="sem-hoy-t"><h2 class="plan-h" id="sem-hoy-t">Tus semanas</h2>'+seg
-    +(seg?'<p class="note sem-rep-n">'+(rec?'Menos al principio, más al final. El % es la parte del mes.':'Lo mismo por día. El % es la parte del mes.')+'</p>':'')
-    +'<div class="sem-car" role="tablist" aria-label="Elegir semana" data-nodeslizar>'+(function(){var pp=pc.weeks.length>1?porcentajes(pc.weeks):[];return pc.weeks.map(function(x,k){return fichaSemana(x,t,pc.weeks.length>1?pp[k]:null)}).join('')})()+'</div>'
-    +'<div class="sem-det" id="sem-det" role="tabpanel" aria-label="Semana '+(w.i+1)+'"><div class="sem-det-cab"><b>Semana '+(w.i+1)+' · '+esc(rango(w.start,w.end))+'</b>'+pill+'</div>'+semanaEnHoy(pc,w.i)+'</div></section>';
+    +(varias?'<p class="note sem-rep-n">'+(rec?'Menos al principio, más al final.':'Lo mismo por día.')+' Tocá una semana para ver sus gastos.</p>':'')
+    +'<div class="sem-car" role="list" aria-label="Tus semanas" data-nodeslizar>'+pc.weeks.map(function(x,k){return '<div class="sem-li" role="listitem">'+fichaSemana(x,t,varias?pp[k]:null)+'</div>'}).join('')+'</div></section>';
 }
 function quieto(){try{return matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){return false}}
-/* centra la ficha elegida en el carrusel sin mover la página */
+/* centra la semana de hoy en el carrusel sin mover la página */
 function centrarFicha(el,suave){
-  var car=el.querySelector('.sem-car'),f=car&&car.querySelector('[aria-selected="true"]');if(!f)return;
+  var car=el.querySelector('.sem-car'),f=car&&(car.querySelector('[aria-current]')||car.querySelector('.sem-c:not(.pasada)')||car.lastElementChild);if(!f)return;
   var x=f.offsetLeft-(car.clientWidth-f.offsetWidth)/2;
   try{car.scrollTo({left:Math.max(0,x),behavior:suave&&!quieto()?'smooth':'auto'})}catch(e){car.scrollLeft=Math.max(0,x)}
 }
-function redibujarSemanas(el,suave,antes){
+function redibujarSemanas(el,antes){
   var car=el.querySelector('.sem-car'),sl=car?car.scrollLeft:0;
   el.innerHTML=semanasHoy(planNow(),today());
   var nc=el.querySelector('.sem-car');if(nc)nc.scrollLeft=sl;
-  centrarFicha(el,suave);
-  if(quieto())return;
-  var d=el.querySelector('.sem-det');if(d&&d.animate)d.animate([{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'none'}],{duration:240,easing:'cubic-bezier(.2,.7,.2,1)'});
-  if(antes)el.querySelectorAll('.sem-c b').forEach(function(b,k){if(antes[k]!==b.textContent&&b.animate)b.animate([{opacity:.2,transform:'translateY(5px)'},{opacity:1,transform:'none'}],{duration:320,delay:k*30,easing:'cubic-bezier(.2,.7,.2,1)'})});
+  if(quieto()||!antes)return;
+  el.querySelectorAll('.sem-c b').forEach(function(b,k){if(antes[k]!==b.textContent&&b.animate)b.animate([{opacity:.2,transform:'translateY(5px)'},{opacity:1,transform:'none'}],{duration:320,delay:k*30,easing:'cubic-bezier(.2,.7,.2,1)'})});
 }
-/* Parejo / Optimizado: el mismo cambio que en «Consejos», con Deshacer */
+/* Parejo / Optimizado, con Deshacer */
 function cambiarReparto(v){
   if(ctx.state.plan.reparto===v||(!ctx.state.plan.reparto&&v==='parejo'))return;
   var el=$('#sem-hoy'),antes=el?[].map.call(el.querySelectorAll('.sem-c b'),function(b){return b.textContent}):null;
-  ctx.state.plan.reparto=v;ctx.persist();ctx.renderAll();if(el)redibujarSemanas(el,false,antes);
+  ctx.state.plan.reparto=v;ctx.persist();ctx.renderAll();if(el)redibujarSemanas(el,antes);
   toastAccion(v==='recomendado'?'Listo: semanas con reparto optimizado':'Listo: cada semana tiene lo mismo','Deshacer',function(){ctx.state.plan.reparto=v==='recomendado'?'parejo':'recomendado';ctx.persist();ctx.renderAll()});
 }
 function initSemHoy(){
   var el=$('#sem-hoy');if(!el)return;
   el.addEventListener('click',function(e){
-    var r=e.target.closest('[data-reparto]');if(r){cambiarReparto(r.getAttribute('data-reparto'));return}
-    var b=e.target.closest('[data-semsel]');if(!b)return;
-    var i=Number(b.getAttribute('data-semsel'));if(i===semAbierta)return;
-    semAbierta=i;redibujarSemanas(el,true);
-    var nb=el.querySelector('[data-semsel="'+i+'"]');if(nb)nb.focus({preventScroll:true});
-  });
-  /* flechas del teclado entre fichas */
-  el.addEventListener('keydown',function(e){
-    if(!e.target.closest('.sem-car')||(e.key!=='ArrowRight'&&e.key!=='ArrowLeft'))return;
-    var n=planNow().weeks.length,i=Math.max(0,Math.min(n-1,semAbierta+(e.key==='ArrowRight'?1:-1)));if(i===semAbierta)return;
-    e.preventDefault();semAbierta=i;redibujarSemanas(el,true);var nb=el.querySelector('[data-semsel="'+i+'"]');if(nb)nb.focus({preventScroll:true});
+    var r=e.target.closest('[data-reparto]');if(r)cambiarReparto(r.getAttribute('data-reparto'));
   });
 }
 
@@ -375,7 +362,7 @@ export function renderResumen(pc){
   if(ctx.tab!=='resumen')return;
   renderCierre(pc);renderHoy(pc);renderEntradas();renderSuperv(pc);renderRitmo(pc);
   /* (2.35) Semana por semana, justo debajo de «Hoy podés gastar»: cada semana con lo que te queda; tocarla abre su detalle. */
-  var sh=$('#sem-hoy');if(sh){var scl=sh.querySelector('.sem-car'),sl0=scl?scl.scrollLeft:null;sh.innerHTML=semanasHoy(pc,today());var nc=sh.querySelector('.sem-car');if(nc&&sl0!==null)nc.scrollLeft=sl0;else centrarFicha(sh,false)}
+  var sh=$('#sem-hoy');if(sh){var scl=sh.querySelector('.sem-car'),sl0=scl?scl.scrollLeft:null;sh.innerHTML=semanasHoy(pc,today());var nc=sh.querySelector('.sem-car');if(nc&&sl0)nc.scrollLeft=sl0;else centrarFicha(sh,false)}
   /* (2.39) los sobres del mes y dos recordatorios: separar el ahorro al cobrar y el cierre de cada semana */
   var so=$('#consejos-hoy');if(so)so.innerHTML=consejosHoy(pc,today());
   var pa=$('#pasar-aviso');if(pa)pa.innerHTML=avisoPasar(pc,today());

@@ -62,7 +62,11 @@ function heroChips(pc){
       +'<span class="hh-top"><span class="hh-l">'+(H.queda<0?'Hoy te pasaste por':'Hoy podés gastar')+'</span>'+(anota()?'<button class="gasto-btn" type="button" id="gasto-abrir" aria-label="Anotar un gasto"><span aria-hidden="true">+</span> Gasto</button>':'<button class="gasto-btn" type="button" id="tengo-abrir" aria-label="Actualizar cuánta plata tenés">Actualizar</button>')+'</span><b class="hh-n'+(H.queda<0?' neg':'')+'">'+grande(money(Math.abs(H.queda)))+'</b>';
     if(H.dentro){
       var w=pc.weeks[H.semana],pct=w.avail>0?Math.min(100,Math.max(0,w.spent/w.avail*100)):(w.spent>0?100:0);
-      h+='<span class="hh-s">'+(H.semanaQueda<0?'Esta semana te pasaste por '+money(-H.semanaQueda):'Te quedan '+money(H.semanaQueda)+' hasta el '+esc(fLarga(H.fin)))+(H.gastadoHoy>0?' · hoy gastaste '+money(H.gastadoHoy):'')+'</span>'
+      /* (2.47) si la semana termina con el cobro, «te quedan» repetiría el número de arriba */
+      var mismo=Math.round(H.semanaQueda)===Math.round(resto),sq=H.semanaQueda<0?'Esta semana te pasaste por '+money(-H.semanaQueda):mismo?'':'Esta semana te quedan '+money(H.semanaQueda)+' hasta el '+esc(fLarga(H.fin));
+      var hg=H.gastadoHoy>0?(sq?' · hoy':'Hoy')+' gastaste '+money(H.gastadoHoy):'';
+      if(sq||hg)h+='<span class="hh-s">'+sq+hg+'</span>';
+      h+=''
         +(pc.ajuste&&pc.ajuste.estado==='minimo'?'<span class="hh-s">El objetivo ya no se alcanza: esto cuida tu mínimo de '+money(pc.ajuste.minimo)+'.</span>':'')
         +(pc.ajuste&&pc.ajuste.estado==='nada'?'<span class="hh-s neg">Para tu mínimo faltan '+money(pc.ajuste.falta)+' aunque no gastes nada más.</span>':'')
         +barraDias(H);
@@ -138,6 +142,14 @@ function initGasto(){
   try{localStorage.removeItem('pa-simple')}catch(e){}
 }
 var plegados={};/* tarjetas plegables abiertas, por id */
+/* (2.47) Una barra con tres partes (fijos, guardás, para gastar) y su leyenda en columnas */
+function reparto(tit,total,partes){
+  var tot=Math.max(1,partes.reduce(function(x,o){return x+Math.max(0,o.v)},0));
+  return '<div class="tp"><p class="tp-tot"><span>'+tit+'</span><b>'+money(total)+'</b></p>'
+    +'<div class="tp-bar" role="img" aria-label="'+partes.map(function(o){return o.n+' '+Math.round(Math.max(0,o.v)/tot*100)+' por ciento'}).join(', ')+'">'
+    +partes.map(function(o){return o.v>0?'<i class="'+o.k+'" style="flex-grow:'+(o.v/tot).toFixed(4)+'"></i>':''}).join('')+'</div>'
+    +'<ul class="tp-key">'+partes.map(function(o){return '<li class="'+o.k+'"><span><i aria-hidden="true"></i>'+o.n+'</span><b>'+money(Math.max(0,o.v))+'</b><small>'+o.s+'</small></li>'}).join('')+'</ul></div>';
+}
 function foldIni(id,tono,tit,sub){return '<details class="card fold '+tono+'" data-fold="'+id+'"'+(plegados[id]?' open':'')+'><summary><span class="fold-t">'+tit+'</span><span class="fold-s">'+sub+'</span></summary><div class="stack fold-b">'}
 /* Cuenta regresiva del cobro, con su propia tarjeta y una barra de 12 tramos */
 var polvoDia=null;
@@ -379,40 +391,33 @@ export function renderResumen(pc){
   var h=state.ejemplo?'<div class="banner"><p><b>Estás viendo datos de ejemplo.</b> Son de muestra: no son tuyos.</p><button class="btn" type="button" data-cero>Borrar el ejemplo y crear mi perfil</button></div>':'';
   /* fijos compartidos: quién te debe plata (nota al margen, con «Me pagaron») */
   var deudas=balanceHTML(true);if(deudas)h+='<div class="banner deudas">'+deudas+'</div>';
-  /* (2.26) Un solo desplegable, «Tu plan»: hasta que cobres y, si ya sé tu sueldo, cuando cobres. */
-  h+=foldIni('plan','tone-mint','Tu plan',resto<0?'Te faltan '+money(-resto)+' para tu meta':'Te quedan '+money(resto)+' para gastar · '+esc(rango(p.inicio,p.cobro)));
-  var fsub=fp.length?fp.map(function(o){return esc(o.f.nombre)+' ('+esc(fCorta(o.fecha))+')'}).join(', '):(state.fijos.length?'ninguno vence antes de cobrar':'<button class="linklike" type="button" data-goto="fijos">cargá tus fijos</button>');
-  h+='<div class="receipt">'
-    +row('Plata que tenés ahora',money(disp),'','<button class="linklike" type="button" id="saldo-abrir2">actualizar</button>')
-    +row('Fijos que faltan pagar','− '+money(pend),'sub minus',pagF>0?'ya pagaste '+money(pagF)+(pend>0?'. Faltan: '+fsub:''):fsub)
-    +row('Lo que guardás','− '+money(pc.ahorro),'sub save','')
-    +row('Te queda para gastar',money(resto),'final')+'</div>';
-  if(resto<0)h+='<p class="err" style="margin-top:0">No llegás a guardar todo: te faltan '+money(-resto)+'. Bajá el ahorro o revisá los gastos.</p>';
-  h+='<div><div class="split-bar" role="img" aria-label="Fijos '+Math.round(pf)+'%, ahorro '+Math.round(pa)+'%, para gastar '+Math.round(pg)+'%"><i class="split-fix" style="width:'+pf+'%"></i><i class="split-save" style="width:'+pa+'%"></i><i class="split-spend" style="width:'+pg+'%"></i></div>';
-  h+='<div class="split-key">'+(pend>0?'<span><i class="dot" style="background:var(--teal)"></i>Fijos, '+Math.round(pf)+'%</span>':'')+'<span><i class="dot" style="background:var(--sun)"></i>Guardás, '+Math.round(pa)+'%</span><span><i class="dot" style="background:var(--sky)"></i>Para gastar, '+Math.round(pg)+'%</span></div></div>';
-  h+='<div class="tiles">'
-    +tile('tone-sky','Por semana',money(pDia*7),money(pDia)+' por día')
-    +tile('tone-coral','Gastaste',money(pc.spentInPlan),'de '+money(pc.gastar))
-    +'</div>';
+  /* (2.47) «Tu plan» de un vistazo: una barra con en qué se reparte tu plata (fijos, guardás, para gastar)
+     y, si sé tu cobro, la misma barra para cuando cobres. Las tres partes siempre suman el total. */
+  h+=foldIni('plan','tone-mint','Tu plan','en qué se reparte tu plata'+(L.liquido>0?' y cuando cobres':''));
+  var gas=Math.max(0,pc.gastar);
+  h+=reparto('Tu plata del pacto',pc.fijos+pc.ahorro+gas,[
+    {k:'f',n:'Fijos',v:pc.fijos,s:!state.fijos.length?'sin cargar':pend>0?'faltan '+money(pend):'todos pagos'},
+    {k:'a',n:'Guardás',v:pc.ahorro,s:pc.ahorro>0?'hasta el '+fCorta(p.cobro):'nada todavía'},
+    {k:'g',n:'Para gastar',v:gas,s:'gastaste '+money(pc.spentInPlan)}]);
+  if(resto<0)h+='<p class="err tp-n">Te pasaste '+money(-resto)+': no llegás a guardar todo.</p>';
   var fuera=pc.spentAll-pc.spentInPlan;
-  if(Math.round(fuera)>0)h+='<p class="note">Hay '+money(fuera)+' en gastos con fecha fuera del plan: no cuentan.</p>';
+  if(Math.round(fuera)>0)h+='<p class="note tp-n">'+money(fuera)+' en gastos fuera de las fechas del plan no cuentan.</p>';
+  h+='<div class="row-btns tp-ir">'+(state.fijos.length?'<button class="btn quiet" type="button" data-goto="fijos">Ver fijos</button>':'<button class="btn quiet" type="button" data-goto="fijos">Cargar fijos</button>')+'</div>';
   /* Cuando cobres: solo si ya sé cuánto cobrás */
   if(L.liquido>0){
     var nx=proximo(state,L);
     var AG=aguinaldo(state,t),conAg=AG.pago>=p.cobro&&AG.pago<nx.nc&&AG.liquido>0;
     if(conAg){nx=Object.assign({},nx,{libre:nx.libre+AG.liquido});nx.dia=nx.libre/nx.dias;nx.semana=nx.libre*7/nx.dias}
-    h+='<h3 class="plan-h">Cuando cobres</h3>'
-      +'<p class="lead">'+(nx.libre>=0?'El mes que viene, unos <b class="c-mint">'+money(nx.semana)+' por semana</b>.':'El mes que viene no te alcanza para la meta: te faltan <b class="neg">'+money(-nx.libre)+'</b>.')+'</p>';
-    h+='<div class="receipt">'
-      +row(L.real?'Tu cobro (según tu recibo)':'Tu cobro, estimado',money(L.liquido),'','<button class="linklike" type="button" data-goto="sueldo">ver</button>')
-      +row('Fijos del mes','− '+money(nx.fij),'sub minus','')
-      +(conAg?row('Aguinaldo de '+AG.nombre,'+ '+money(AG.liquido),'sub',''):'')
-      +(nx.ingresos>0?row('Otros cobros del mes','+ '+money(nx.ingresos),'sub',''):'')
-      +row('Lo que vas a guardar','− '+money(nx.meta),'sub save','')
-      +row('Libre para gastar',money(nx.libre),'final')+'</div>';
-    if(nx.metaPedida>nx.meta)h+='<p class="note">Tu meta de '+money(nx.metaPedida)+' no entra después de los fijos: uso '+money(nx.meta)+'.</p>';
+    var entra=L.liquido+(conAg?AG.liquido:0)+(nx.ingresos||0);
+    h+='<div class="tp-sep"></div>';
+    h+=reparto((L.real?'Cuando cobres':'Cuando cobres, estimado')+(conAg?' (con aguinaldo)':''),entra,[
+      {k:'f',n:'Fijos',v:nx.fij,s:'del mes'},
+      {k:'a',n:'Guardás',v:nx.meta,s:nx.metaPedida>nx.meta?'no entra '+money(nx.metaPedida):'tu meta'},
+      {k:'g',n:'Para gastar',v:Math.max(0,nx.libre),s:nx.libre>0?money(nx.semana)+' por semana':'no alcanza'}]);
+    if(nx.libre<0)h+='<p class="err tp-n">No te alcanza para la meta: faltan '+money(-nx.libre)+'.</p>';
     var sd=sensibilidadDolar(L);
-    if(sd)h+='<p class="note">Si el dólar se mueve un '+sd.pct+' %, lo libre cambia unos <b>'+money(sd.cambio)+'</b>.</p>';
+    if(sd)h+='<p class="note tp-n">Si el dólar se mueve un '+sd.pct+' %, lo libre cambia ≈ '+money(sd.cambio)+'.</p>';
+    h+='<div class="row-btns tp-ir"><button class="btn quiet" type="button" data-goto="sueldo">Ver tu cobro</button></div>';
   }
   h+='</div></details>';
   $('#resumen-out').innerHTML=h;

@@ -217,30 +217,27 @@ function consejosHoy(pc,t){
   var S=pc.sobres||{},ws=pc.weeks,hay=ws.length>0,n,rec=S.reparto==='recomendado';
   /* la guía es un mes de ejemplo de 4 semanas; el modo optimizado aplica lo mismo a tus semanas, según sus días */
   var pcts=guiaReparto(4),fmt=function(x){return String(Math.round(x))+' %'};n=4;
+  /* (2.46) cada barra con su porcentaje y una palabra: se entiende de un vistazo */
+  var pal=['liviano','compras','compras','colchón'];
   var cols=pcts.map(function(x,i){
-    return '<li class="cj-c" style="flex-grow:'+x.toFixed(2)+'"><b>'+fmt(x)+'</b><i aria-hidden="true"></i><span>Semana '+(i+1)+'</span></li>';
+    return '<li class="cj-c" style="flex-grow:'+x.toFixed(2)+'"><b>'+fmt(x)+'</b><i aria-hidden="true"></i><span>Sem. '+(i+1)+'</span><em>'+pal[i]+'</em></li>';
   }).join('');
-  var mid=n>2?pcts[1]:null,ult=pcts[n-1];
-  var tips='<ul class="cj-tips">'
-    +'<li><b>Semana 1 · '+fmt(pcts[0])+'</b> Arrancá liviano: después de cobrar es cuando más se gasta de más.</li>'
-    +(mid!==null?'<li><b>'+(n>3?'Semanas del medio':'Semana 2')+' · '+fmt(mid)+'</b> El momento para la compra que necesites.</li>':'')
-    +(n>1?'<li><b>Última semana · '+fmt(ult)+'</b> Tu colchón para llegar tranquilo al cobro.</li>':'')
-    +'</ul>';
+  var tips='';
   var C=S.compras||0,f=C>0?Math.max(0,Math.min(1,S.queda/C)):0;
   var sobre=hay&&anota()?'<details class="sob" data-sob="compras"'+(sobAbiertos.compras?' open':'')+'><summary><span class="sob-n"><b>Sobre de compras e imprevistos</b><small>'+(C>0?'te quedan '+money(S.queda)+' de '+money(C):'un regalo, el dentista, algo que se rompe')+'</small>'
     +(C>0?'<span class="sob-bar" aria-hidden="true"><i style="transform:scaleX('+f.toFixed(3)+')"></i></span>':'')+'</span><b class="sob-v'+(C>0?' plata':' sob-armar')+'">'+(C>0?money(S.queda):'Armar')+'</b></summary>'
     +'<div class="sob-in"><p class="note">Lo que no es de todos los días sale de acá y no de la semana. Lo que no uses queda como ahorro.</p>'
     +'<form class="sob-f" data-sobf autocomplete="off"><div class="money"><span>$</span><input id="sob-monto" type="number" inputmode="numeric" min="0" step="100" value="'+(C||'')+'" placeholder="3000" aria-label="Plata para el sobre de compras"></div><button class="btn quiet" type="submit">Guardar</button></form>'
     +(C>0?'<button class="btn quiet sob-g" type="button" data-sobgasto><span aria-hidden="true">+</span> Compra del sobre</button>':'')+'</div></details>':'';
-  var mas='<h3 class="cj-h">Más consejos</h3><ul class="cj-tips cj-mas">'
-    +'<li><b>El día que cobrás</b> Separá primero lo que vas a ahorrar, así no se mezcla.</li>'
-    +'<li><b>Los fijos, primero</b> Pagalos apenas cobrás: lo que queda es de verdad para gastar.</li>'
-    +(anota()?'<li><b>Anotá al toque</b> Un gasto anotado en el momento no se olvida.</li>':'<li><b>Actualizá cuando entrás</b> Poné lo que tenés y tu «por día» queda al día.</li>')
-    +'<li><b>Antes de una compra que no planeaste</b> Esperá un día. Si la seguís queriendo, comprala.</li>'
-    +'<li><b>Al súper, con lista</b> Y sin hambre: es donde más se va sin darte cuenta.</li>'
-    +'<li><b>Cada domingo</b> Mirá cuánto te sobró y decidí si va a la semana que viene o al ahorro.</li></ul>';
-  return '<details class="consejos" data-sob="consejos"'+(sobAbiertos.consejos?' open':'')+'><summary><span class="cj-t">Consejos para ahorrar en el mes</span><span class="cj-s">cómo repartir tu plata semana a semana</span></summary>'
-    +'<div class="cj-in"><h3 class="cj-h">Cómo repartir tu mes</h3><p class="note cj-ej">Un mes de ejemplo, de 4 semanas. Lo elegís arriba, en «Tus semanas» (Optimizado).</p><ol class="cj-guia" aria-label="Reparto optimizado: '+pcts.map(function(x,i){return 'semana '+(i+1)+', '+fmt(x)}).join('; ')+'">'+cols+'</ol>'
+  var mas='<ul class="cj-tips cj-cortos">'
+    +'<li><b>Al cobrar:</b> separá el ahorro.</li>'
+    +'<li><b>Primero</b> pagá los fijos.</li>'
+    +(anota()?'<li><b>Anotá</b> cada gasto al toque.</li>':'<li><b>Actualizá</b> cada vez que entrás.</li>')
+    +'<li><b>¿Compra no planeada?</b> Esperá un día.</li>'
+    +'<li><b>Al súper,</b> con lista.</li>'
+    +'<li><b>El domingo,</b> mirá cuánto sobró.</li></ul>';
+  return '<details class="consejos" data-sob="consejos"'+(sobAbiertos.consejos?' open':'')+'><summary><span class="cj-t">Consejos para ahorrar</span><span class="cj-s">el reparto del mes y 6 ideas rápidas</span></summary>'
+    +'<div class="cj-in"><h3 class="cj-h">Un mes optimizado</h3><ol class="cj-guia" aria-label="Reparto optimizado: '+pcts.map(function(x,i){return 'semana '+(i+1)+', '+fmt(x)}).join('; ')+'">'+cols+'</ol>'
     +tips+sobre+mas+'</div></details>';
 }
 /* El día que empieza el pacto (y los 3 siguientes): separar el ahorro de verdad, mejor en UI */

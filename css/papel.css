@@ -1610,3 +1610,10 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 /* (2.45) Con lo que tengo: sin micrófono (no se anotan gastos uno por uno) */
 .modo-saldo #mic{display:none!important}
 .modo-saldo .ix-buscar{display:none}
+
+/* (2.46) Consejos de un vistazo: una palabra por semana y un renglón por idea */
+.v2 .cj-c em{font:700 13px var(--f-body);font-style:normal;color:var(--oro-t)}
+.v2 .cj-cortos{gap:0}
+.v2 .cj-cortos li{padding:var(--e2) 0;border-top:1px solid var(--line);font-size:16px;line-height:1.35}
+.v2 .cj-cortos li:first-child{border-top:0}
+.v2 .cj-cortos b{display:inline;font-size:16px;color:var(--oro-t)}

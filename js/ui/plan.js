@@ -316,7 +316,7 @@ function semanasHoy(pc,t){
     +'<button type="button" data-reparto="parejo" aria-pressed="'+!rec+'">Parejo</button><button type="button" data-reparto="recomendado" aria-pressed="'+rec+'">Optimizado</button></div>':'';
   var pp=varias?porcentajes(pc.weeks):[];
   return '<section class="sem-hoy" aria-labelledby="sem-hoy-t"><h2 class="plan-h" id="sem-hoy-t">Tus semanas</h2>'+seg
-    +(varias?'<p class="note sem-rep-n">'+(rec?'Menos al principio, más al final.':'Lo mismo por día.')+' Tocá una semana para ver el detalle.</p>':'')
+    +(varias?'<p class="note sem-rep-n">'+(rec?'Menos al principio, más al final.':'Igual todos los días.')+' Tocá una para verla.</p>':'')
     +'<div class="sem-car" role="list" aria-label="Tus semanas" data-nodeslizar>'+pc.weeks.map(function(x,k){return '<div class="sem-li" role="listitem">'+fichaSemana(x,t,varias?pp[k]:null)+'</div>'}).join('')+'</div></section>';
 }
 function quieto(){try{return matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){return false}}

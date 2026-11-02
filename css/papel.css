@@ -14,76 +14,76 @@
   /* la tapa de tela (2.8): tela azul, galaxia, hilo dorado y el texto de la tapa (igual en los dos papeles) */
   --tela-1:#0A1440; --tela-2:#1238A6; --galaxia:#38B6FF; --violeta:#7C5CFF; --hilo:#E9CF8F; --tapa-tx:#D8DBF0; --tapa-oro:#EED596; --tapa-nota:#B4B8D8; --foil:#E9BC5C;
   --bg:#070B24;
-  --page:#2B241B; --page-2:#231D15; --canto:#5A4A35; --surface:#372E23; --surface-2:#423729;
-  --ink:#F0E2C6; --muted:#C2B090; --line:rgba(240,226,198,.13); --line-2:rgba(240,226,198,.24);
-  --oro:#E6BC66; --oro-t:#E6BC66; --oro-cl:#F3D592;
-  --cta:#EA955C; --on-cta:#22170D; --naranja-t:#F0A472;
+  --page:#16171E; --page-2:#111218; --canto:#3A3D4C; --surface:#1F212A; --surface-2:#282B36;
+  --ink:#F2ECDF; --muted:#ABA79E; --line:rgba(242,236,223,.09); --line-2:rgba(242,236,223,.18);
+  --oro:#D9B56C; --oro-t:#E3C27E; --oro-cl:#F1D99E;
+  --cta:#F2ECDF; --on-cta:#16171E; --naranja-t:#EAA96B;
   /* «Cobrás en» se calienta a medida que se acerca el cobro (2.10) */
-  --cobro-lejos:#D9C08A; --cobro-cerca:#E6BC66; --cobro-ya:#F0A472; --cobro-tinta:#CDB8FF;
-  --azul:#ACC4F6; --sel:#F0E2C6; --on-sel:#2B241B;
-  --bien:#96D298; --ojo:#E8B65C; --mal:#F09580;
+  --cobro-lejos:#CDB98A; --cobro-cerca:#E3C27E; --cobro-ya:#EFB980; --cobro-tinta:#EED291;
+  --azul:#7FD6C2; --sel:#F2ECDF; --on-sel:#16171E;
+  --bien:#E3C27E; --ojo:#EAA96B; --mal:#F2907F;
   /* los colores de siempre, con la paleta del libro */
-  --sky:#ACC4F6; --sky-soft:#33313F; --sky-ink:#CDDAF9;
-  --mint:#96D298; --mint-soft:#2F3A28; --mint-ink:#B8E2B9;
-  --teal:#A2C5DE; --teal-soft:#2E3940; --teal-ink:#C6DCEB;
-  --grape:#E6BC66; --grape-soft:#4A3B22; --grape-ink:#F3D592;
-  --coral:#A2C5DE; --coral-soft:#2E3940; --coral-ink:#C6DCEB;
-  --sun:#E6BC66; --sun-soft:#4A3B22; --sun-ink:#F3D592;
-  --slate:#C2B090; --slate-soft:#3B3326; --slate-ink:#E4D7BD;
+  --sky:#7FD6C2; --sky-soft:#1D3533; --sky-ink:#B4EADD;
+  --mint:#E3C27E; --mint-soft:#3A3224; --mint-ink:#F1D99E;
+  --teal:#A9B9D2; --teal-soft:#262C3A; --teal-ink:#CBD6E6;
+  --grape:#D9B56C; --grape-soft:#3A3224; --grape-ink:#F1D99E;
+  --coral:#A9B9D2; --coral-soft:#262C3A; --coral-ink:#CBD6E6;
+  --sun:#D9B56C; --sun-soft:#3A3224; --sun-ink:#F1D99E;
+  --slate:#ABA79E; --slate-soft:#2A2B33; --slate-ink:#DCD7CC;
   /* categorías en dibujos y puntos (2.13): paleta validada para daltonismo; los nombres son los colores que elegís */
   --cat-sky:#2a78d6; --cat-coral:#eb6834; --cat-teal:#1baf7a; --cat-sun:#eda100; --cat-pink:#e87ba4; --cat-mint:#008300; --cat-grape:#6250d6; --cat-bad:#e34948; --cat-slate:#68708C; --cat-muted:#9A968A;
-  --bad:#F09580; --bad-soft:#4A2A22;
-  --hero:#2B241B; --on-accent:#2B241B; --on-sun:#2B241B; --on-color:#F0E2C6;
-  --cobro:#E6BC66; --cuero:#0E1640;
-  --fibra:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85 .05' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 .95 0 0 0 0 .88 0 0 0 0 .75 0 0 0 .025 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23f)'/%3E%3C/svg%3E");
+  --bad:#F2907F; --bad-soft:#3E2526;
+  --hero:#16171E; --on-accent:#16171E; --on-sun:#16171E; --on-color:#F2ECDF;
+  --cobro:#D9B56C; --cuero:#0E1640;
+  --fibra:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85 .05' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 .92 0 0 0 0 .9 0 0 0 0 .86 0 0 0 .03 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23f)'/%3E%3C/svg%3E");
   color-scheme:dark;
 }
 /* @noche (papel de noche: atenuado y cálido). Sigue al modo del teléfono; se fuerza desde Ajustes. */
 :root.v2[data-theme="dark"]{
   --bg:#070B24;
-  --page:#2B241B; --page-2:#231D15; --canto:#5A4A35; --surface:#372E23; --surface-2:#423729;
-  --ink:#F0E2C6; --muted:#C2B090; --line:rgba(240,226,198,.13); --line-2:rgba(240,226,198,.24);
-  --oro:#E6BC66; --oro-t:#E6BC66; --oro-cl:#F3D592;
-  --cta:#EA955C; --on-cta:#22170D; --naranja-t:#F0A472;
-  --cobro-lejos:#D9C08A; --cobro-cerca:#E6BC66; --cobro-ya:#F0A472; --cobro-tinta:#CDB8FF;
-  --azul:#ACC4F6; --sel:#F0E2C6; --on-sel:#2B241B;
-  --bien:#96D298; --ojo:#E8B65C; --mal:#F09580;
-  --sky:#ACC4F6; --sky-soft:#33313F; --sky-ink:#CDDAF9;
-  --mint:#96D298; --mint-soft:#2F3A28; --mint-ink:#B8E2B9;
-  --teal:#A2C5DE; --teal-soft:#2E3940; --teal-ink:#C6DCEB;
-  --grape:#E6BC66; --grape-soft:#4A3B22; --grape-ink:#F3D592;
-  --coral:#A2C5DE; --coral-soft:#2E3940; --coral-ink:#C6DCEB;
-  --sun:#E6BC66; --sun-soft:#4A3B22; --sun-ink:#F3D592;
-  --slate:#C2B090; --slate-soft:#3B3326; --slate-ink:#E4D7BD;
+  --page:#16171E; --page-2:#111218; --canto:#3A3D4C; --surface:#1F212A; --surface-2:#282B36;
+  --ink:#F2ECDF; --muted:#ABA79E; --line:rgba(242,236,223,.09); --line-2:rgba(242,236,223,.18);
+  --oro:#D9B56C; --oro-t:#E3C27E; --oro-cl:#F1D99E;
+  --cta:#F2ECDF; --on-cta:#16171E; --naranja-t:#EAA96B;
+  --cobro-lejos:#CDB98A; --cobro-cerca:#E3C27E; --cobro-ya:#EFB980; --cobro-tinta:#EED291;
+  --azul:#7FD6C2; --sel:#F2ECDF; --on-sel:#16171E;
+  --bien:#E3C27E; --ojo:#EAA96B; --mal:#F2907F;
+  --sky:#7FD6C2; --sky-soft:#1D3533; --sky-ink:#B4EADD;
+  --mint:#E3C27E; --mint-soft:#3A3224; --mint-ink:#F1D99E;
+  --teal:#A9B9D2; --teal-soft:#262C3A; --teal-ink:#CBD6E6;
+  --grape:#D9B56C; --grape-soft:#3A3224; --grape-ink:#F1D99E;
+  --coral:#A9B9D2; --coral-soft:#262C3A; --coral-ink:#CBD6E6;
+  --sun:#D9B56C; --sun-soft:#3A3224; --sun-ink:#F1D99E;
+  --slate:#ABA79E; --slate-soft:#2A2B33; --slate-ink:#DCD7CC;
   --cat-sky:#3987e5; --cat-coral:#d95926; --cat-teal:#199e70; --cat-sun:#c98500; --cat-pink:#d55181; --cat-mint:#008300; --cat-grape:#9085e9; --cat-bad:#e66767; --cat-slate:#9AA3C2; --cat-muted:#8C8A99;
-  --bad:#F09580; --bad-soft:#4A2A22;
-  --hero:#2B241B; --on-accent:#2B241B; --on-sun:#2B241B; --on-color:#F0E2C6;
-  --cobro:#E6BC66; --cuero:#070B24;
-  --fibra:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85 .05' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 .95 0 0 0 0 .88 0 0 0 0 .75 0 0 0 .025 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23f)'/%3E%3C/svg%3E");
+  --bad:#F2907F; --bad-soft:#3E2526;
+  --hero:#16171E; --on-accent:#16171E; --on-sun:#16171E; --on-color:#F2ECDF;
+  --cobro:#D9B56C; --cuero:#070B24;
+  --fibra:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85 .05' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 .92 0 0 0 0 .9 0 0 0 0 .86 0 0 0 .03 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23f)'/%3E%3C/svg%3E");
   color-scheme:dark;
 }
 @media (prefers-color-scheme: dark){
   :root.v2:not([data-theme="light"]){
     --bg:#070B24;
-    --page:#2B241B; --page-2:#231D15; --canto:#5A4A35; --surface:#372E23; --surface-2:#423729;
-    --ink:#F0E2C6; --muted:#C2B090; --line:rgba(240,226,198,.13); --line-2:rgba(240,226,198,.24);
-    --oro:#E6BC66; --oro-t:#E6BC66; --oro-cl:#F3D592;
-    --cta:#EA955C; --on-cta:#22170D; --naranja-t:#F0A472;
-    --cobro-lejos:#D9C08A; --cobro-cerca:#E6BC66; --cobro-ya:#F0A472; --cobro-tinta:#CDB8FF;
-    --azul:#ACC4F6; --sel:#F0E2C6; --on-sel:#2B241B;
-    --bien:#96D298; --ojo:#E8B65C; --mal:#F09580;
-    --sky:#ACC4F6; --sky-soft:#33313F; --sky-ink:#CDDAF9;
-    --mint:#96D298; --mint-soft:#2F3A28; --mint-ink:#B8E2B9;
-    --teal:#A2C5DE; --teal-soft:#2E3940; --teal-ink:#C6DCEB;
-    --grape:#E6BC66; --grape-soft:#4A3B22; --grape-ink:#F3D592;
-    --coral:#A2C5DE; --coral-soft:#2E3940; --coral-ink:#C6DCEB;
-    --sun:#E6BC66; --sun-soft:#4A3B22; --sun-ink:#F3D592;
-    --slate:#C2B090; --slate-soft:#3B3326; --slate-ink:#E4D7BD;
+    --page:#16171E; --page-2:#111218; --canto:#3A3D4C; --surface:#1F212A; --surface-2:#282B36;
+    --ink:#F2ECDF; --muted:#ABA79E; --line:rgba(242,236,223,.09); --line-2:rgba(242,236,223,.18);
+    --oro:#D9B56C; --oro-t:#E3C27E; --oro-cl:#F1D99E;
+    --cta:#F2ECDF; --on-cta:#16171E; --naranja-t:#EAA96B;
+    --cobro-lejos:#CDB98A; --cobro-cerca:#E3C27E; --cobro-ya:#EFB980; --cobro-tinta:#EED291;
+    --azul:#7FD6C2; --sel:#F2ECDF; --on-sel:#16171E;
+    --bien:#E3C27E; --ojo:#EAA96B; --mal:#F2907F;
+    --sky:#7FD6C2; --sky-soft:#1D3533; --sky-ink:#B4EADD;
+    --mint:#E3C27E; --mint-soft:#3A3224; --mint-ink:#F1D99E;
+    --teal:#A9B9D2; --teal-soft:#262C3A; --teal-ink:#CBD6E6;
+    --grape:#D9B56C; --grape-soft:#3A3224; --grape-ink:#F1D99E;
+    --coral:#A9B9D2; --coral-soft:#262C3A; --coral-ink:#CBD6E6;
+    --sun:#D9B56C; --sun-soft:#3A3224; --sun-ink:#F1D99E;
+    --slate:#ABA79E; --slate-soft:#2A2B33; --slate-ink:#DCD7CC;
     --cat-sky:#3987e5; --cat-coral:#d95926; --cat-teal:#199e70; --cat-sun:#c98500; --cat-pink:#d55181; --cat-mint:#008300; --cat-grape:#9085e9; --cat-bad:#e66767; --cat-slate:#9AA3C2; --cat-muted:#8C8A99;
-    --bad:#F09580; --bad-soft:#4A2A22;
-    --hero:#2B241B; --on-accent:#2B241B; --on-sun:#2B241B; --on-color:#F0E2C6;
-    --cobro:#E6BC66; --cuero:#070B24;
-    --fibra:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85 .05' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 .95 0 0 0 0 .88 0 0 0 0 .75 0 0 0 .025 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23f)'/%3E%3C/svg%3E");
+    --bad:#F2907F; --bad-soft:#3E2526;
+    --hero:#16171E; --on-accent:#16171E; --on-sun:#16171E; --on-color:#F2ECDF;
+    --cobro:#D9B56C; --cuero:#070B24;
+    --fibra:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85 .05' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 .92 0 0 0 0 .9 0 0 0 0 .86 0 0 0 .03 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23f)'/%3E%3C/svg%3E");
     color-scheme:dark;
   }
 }
@@ -1641,3 +1641,50 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 .v2 .tp-ir{margin:0}
 .v2 .tp-ir .btn{min-height:44px}
 .v2 .tp-sep{height:1px;background:var(--line);margin:var(--e2) 0}
+
+
+/* ---------- Noche dorada (2.48, pedido de Agus): el único papel del libro ----------
+   Pensado como un libro art déco de noche: papel tinta (casi negro con un dejo azul, que conversa con el cosmos de afuera),
+   letra marfil, pan de oro para el tiempo, los títulos y lo que guardás, y jade para la plata que podés usar.
+   Pocos colores y cada uno con un solo trabajo: marfil = acción, jade = plata disponible, oro = tiempo y ahorro, coral = te pasaste.
+   Reemplaza los detalles de «a la luz de vela» (2.43). */
+:root.v2{--r-l:14px;--r-m:10px;--jade-glow:rgba(127,214,194,.10);--oro-glow:rgba(217,181,108,.10)}
+.v2 #app{
+  background:
+    var(--fibra),
+    radial-gradient(90% 40% at 50% -6%,rgba(217,181,108,.07),transparent 70%),
+    radial-gradient(130% 110% at 50% 40%,transparent 60%,rgba(0,0,0,.38) 100%),
+    linear-gradient(90deg,rgba(0,0,0,.42) 0,rgba(0,0,0,.12) 14px,transparent 34px),
+    var(--page)!important;
+  box-shadow:0 24px 60px rgba(2,4,14,.75),inset 0 0 0 1px rgba(217,181,108,.10),inset 0 0 0 6px var(--page),inset 0 0 0 7px rgba(217,181,108,.07)}
+/* recuadros: una línea finita de oro arriba, como el canto dorado de un libro */
+.v2 .hoja :is(.cd,.hoy-hero,.hchip,.card,.wk,.fin-cap),.v2 .hoja #resumen-out>.fold,.v2 #consejos-hoy>.consejos,.v2 .sem-c{
+  background:linear-gradient(180deg,rgba(255,255,255,.025),transparent 40%),var(--surface);
+  border:1px solid var(--line)!important;
+  box-shadow:inset 0 1px 0 rgba(217,181,108,.16),0 14px 28px -18px rgba(0,0,0,.9)!important}
+/* «Hoy podés gastar»: un brillo jade apenas; «Cobrás en»: uno dorado */
+.v2 .hoja .hoy-hero{background:radial-gradient(120% 80% at 0% 0%,var(--jade-glow),transparent 60%),var(--surface)!important}
+.v2 .hoja .cd{background:radial-gradient(100% 120% at 0% 100%,var(--oro-glow),transparent 65%),var(--surface)!important}
+.v2 .hoja .hoy-hero .hh-cobro{border-bottom-color:var(--line)!important}
+/* el botón de acción es marfil sobre tinta: uno solo por pantalla, se ve sin gritar */
+.v2 .btn.primary,.v2 .gasto-btn,.v2 .lb-btn.si{background:var(--cta)!important;border-color:var(--cta)!important;color:var(--on-cta)!important;
+  box-shadow:0 1px 0 rgba(255,255,255,.35) inset,0 2px 0 #8F7A4E,0 8px 18px -10px rgba(217,181,108,.5)!important}
+/* Tenés en jade, Guardás en oro */
+.v2 .hchip:first-child b{color:var(--azul)}
+.v2 .hchip:last-child b{color:var(--oro-t)}
+/* la cinta «Hoy»: seda verde jade oscuro con letra marfil */
+.v2 .indice-btn,.v2 :root[data-theme="dark"] .indice-btn{background:linear-gradient(90deg,#123A35,#1D5A51 45%,#123A35)!important;color:#F2ECDF!important;box-shadow:0 4px 10px rgba(0,0,0,.5)}
+/* notas al margen más livianas: menos caja, una línea dorada al costado */
+.v2 .banner{background:transparent!important;box-shadow:inset 2px 0 0 var(--oro)!important;border-radius:0!important;padding:var(--e2) 0 var(--e2) var(--e4)!important}
+.v2 .banner.alerta,.v2 .banner:has(.neg){box-shadow:inset 2px 0 0 var(--mal)!important}
+/* selector Parejo / Optimizado: lo elegido en marfil */
+.v2 .seg button[aria-pressed="true"]{background:var(--sel)!important;color:var(--on-sel)!important;border-color:var(--sel)!important;box-shadow:inset 0 -2px 0 var(--oro)!important}
+/* las fichas de las semanas: la de hoy en marfil con su canto de oro */
+.v2 .sem-c[aria-current]{background:var(--sel)!important;border-color:var(--sel)!important;box-shadow:inset 0 -3px 0 var(--oro),0 10px 22px -12px rgba(217,181,108,.45)!important}
+.v2 .sem-c.pasada:not([aria-current]){background:transparent!important;box-shadow:none!important}
+/* separadores de sección: hilo dorado que se desvanece */
+.v2 .sem-hoy{border-top:0!important;background:linear-gradient(90deg,transparent,rgba(217,181,108,.35),transparent) top/100% 1px no-repeat;padding-top:var(--e4)}
+.v2 .sem-hoy>.plan-h{border-top:0!important;padding-top:0!important;margin-top:0!important}
+.v2 .hoja #resumen-out>.fold{border-radius:var(--r-l)!important}
+.v2 #resumen-out>.banner,.v2 #p-resumen>div>.banner{margin-left:0!important}
+.v2 #p-resumen .banner .row-btns,.v2 #p-resumen .banner>.btn{margin-top:var(--e2)}

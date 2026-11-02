@@ -2,7 +2,7 @@
 import {curWeek} from './logica/plan.js';
 import {charNoPermitido,limpiarNumero} from './logica/util.js';
 import {migrar,cargar,guardar,pedirPersistencia,defaults,ejemplo,necesitaMigrar,guardarCopia,resumenDatos,borrarTodo} from './estado.js';
-import {ctx,$,today,planNow,ICON,discreto,setDiscreto,toast,toastAccion,money} from './ui/comun.js';
+import {ctx,$,today,planNow,anota,ICON,discreto,setDiscreto,toast,toastAccion,money} from './ui/comun.js';
 import {deshacerAjustePacto} from './logica/pacto.js';
 import {sonar,sonidoOn,setSonido,volumen,setVolumen} from './ui/sonido.js';
 import {renderCountdown,renderResumen,syncPlan,initPlan} from './ui/plan.js';
@@ -91,6 +91,7 @@ function showPanels(){
 
 /* ---------- Render general ---------- */
 function renderAll(){
+  document.documentElement.classList.toggle('modo-saldo',!anota());
   var pc=planNow();
   if(/^w\d+$/.test(ctx.tab)&&Number(ctx.tab.slice(1))>=pc.weeks.length)ctx.tab='resumen';
   try{localStorage.setItem(TK,ctx.tab)}catch(e){}
@@ -306,6 +307,10 @@ function initGlobal(){
   document.addEventListener('input',function(e){if(e.target.id==='aj-volumen'){setVolumen(Number(e.target.value)/100);e.target.style.setProperty('--v',e.target.value+'%')}});
   document.addEventListener('change',function(e){if(e.target.id==='aj-volumen')sonar('hoja',{dur:.45,fuerza:.55})});
   document.addEventListener('click',function(e){var so=e.target.closest('[data-sonido]');if(so){setSonido(so.getAttribute('data-sonido')==='1');marcarSonido();sonar('hoja');toast(sonidoOn()?'Sonido prendido':'Sin sonido')}});
+  /* (2.45) cómo llevás tus gastos: con lo que tenés (lo de siempre) o anotando cada uno */
+  document.addEventListener('click',function(e){var a=e.target.closest('[data-anotar]');if(!a)return;var v=a.getAttribute('data-anotar')==='1';if(anota()===v)return;
+    ctx.state.perfil.anotarGastos=v;persist();renderAll();marcarAnotar();
+    toastAccion(v?'Listo: anotás cada gasto con «+ Gasto»':'Listo: actualizás lo que tenés y yo calculo lo gastado','Deshacer',function(){ctx.state.perfil.anotarGastos=!v;persist();renderAll();marcarAnotar()})});
   document.addEventListener('click',function(e){var d=e.target.closest('[data-discreto]');if(d){setDiscreto(d.getAttribute('data-discreto')==='1');marcarDiscreto();renderAll()}});
   /* Modo discreto: un toque tapa o muestra todos los montos */
   $('#discreto').addEventListener('click',function(){setDiscreto(!discreto.on);marcarDiscreto();renderAll();toast(discreto.on?'Montos ocultos':'Montos visibles')});
@@ -320,6 +325,7 @@ function marcarSonido(){
   document.querySelectorAll('[data-sonido]').forEach(function(b){b.setAttribute('aria-pressed',String((b.getAttribute('data-sonido')==='1')===sonidoOn()))});
   var v=$('#aj-volumen');if(v){v.value=String(Math.round(volumen()*100));v.style.setProperty('--v',v.value+'%');$('#aj-vol-box').hidden=!sonidoOn()}
 }
+function marcarAnotar(){document.querySelectorAll('[data-anotar]').forEach(function(x){x.setAttribute('aria-pressed',String((x.getAttribute('data-anotar')==='1')===anota()))})}
 function marcarDiscreto(){
   var b=$('#discreto');b.setAttribute('aria-pressed',String(discreto.on));b.setAttribute('aria-label',discreto.on?'Mostrar los montos':'Ocultar los montos');
   document.documentElement.classList.toggle('discreto',discreto.on);
@@ -335,7 +341,7 @@ function arrancar(st,tab){
   if(tab)ctx.tab=tab;
   initNotas();
   guiaInit();initGlobal();initPlan();initSemanas();initSueldo();initTarjeta();initFijos();initLogros();initAjustes(reemplazar,juntarDatos);initGuardado();initVoz();initFeriados();initCategorias();initRecibos();initAjustesPin();initPostal();
-  marcarDiscreto();
+  marcarDiscreto();marcarAnotar();
   ctx.booted=true;
   $('#app').hidden=false;
   syncInputs();renderAll();precargarTarjeta();

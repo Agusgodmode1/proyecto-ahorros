@@ -1,6 +1,6 @@
 /* Tour guiado: globos paso a paso sobre la pantalla real. Se muestra la primera vez y se repite desde Ajustes.
    Lo que ya se vio queda en este aparato (localStorage pa-tour), no en los datos. */
-import {ctx,$} from './comun.js';
+import {ctx,$,anota} from './comun.js';
 
 var KEY='pa-tour';
 export function marcarTour(){try{localStorage.setItem(KEY,'pendiente')}catch(e){}}
@@ -8,12 +8,19 @@ export function tourPendiente(){try{return localStorage.getItem(KEY)==='pendient
 function hecho(){try{localStorage.setItem(KEY,'hecho')}catch(e){}}
 
 /* (2.30) Cuatro pasos: lo que se usa todos los días. El resto se descubre al hojear. */
-var PASOS=[
+var ANOTAR=[
   {tab:'resumen',sel:'#hoy-hero .hh-n',t:'Hoy podés gastar',x:'Lo que podés gastar hoy sin tocar tu ahorro.'},
   {tab:'resumen',sel:'#gasto-abrir',t:'Anotá un gasto',x:'Tocá «+ Gasto»: cuánto y en qué. Nada más.'},
   {tab:'resumen',sel:'#herr-abrir',t:'Tus herramientas',x:'Sueldo, tarjeta, fijos y más están en la ruedita de arriba.'},
   {tab:'resumen',sel:'.mic',t:'O decilo',x:'Tocá el micrófono y decí «gasté 350 en un café». Siempre te pido confirmar.'}
 ];
+/* (2.45) Con lo que tengo: tres pasos */
+var SALDO=[
+  {tab:'resumen',sel:'#hoy-hero .hh-n',t:'Hoy podés gastar',x:'Lo que podés gastar hoy sin tocar tu ahorro.'},
+  {tab:'resumen',sel:'#tengo-abrir',t:'Actualizá lo que tenés',x:'Cuando entres, poné cuánta plata tenés. Yo calculo lo gastado.'},
+  {tab:'resumen',sel:'#herr-abrir',t:'Tus herramientas',x:'Sueldo, tarjeta, fijos y más están en la ruedita de arriba.'}
+];
+var PASOS=ANOTAR;
 var i=0,corre=false;
 
 function el(){return $('#tour')}
@@ -23,7 +30,7 @@ function cerrar(){
 }
 function visible(n){if(!n)return false;var r=n.getBoundingClientRect();return r.width>0&&r.height>0}
 function mostrar(dir){
-  var p=PASOS[i];
+  PASOS=anota()?ANOTAR:SALDO;var p=PASOS[i];
   if(ctx.tab!==p.tab&&!(p.tab==='semanas'&&/^w\d+$/.test(ctx.tab)))ctx.go(p.tab);
   setTimeout(function(){
     var n=document.querySelector(p.sel);

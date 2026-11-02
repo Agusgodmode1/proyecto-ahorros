@@ -69,8 +69,44 @@ test('actualizar saldo: igual, negativo o ya cobrado no cambian nada',function()
   assert.equal(previaSaldo(s,null,'2026-10-15').tipo,'invalido');
   assert.equal(previaSaldo(s,100,'2026-11-09').tipo,'fuera');
   var antes=JSON.stringify(s);
-  ajustarSaldo(s,37000,'2026-10-15');ajustarSaldo(s,-5,'2026-10-15');
-  assert.equal(JSON.stringify(s),antes);
+  ajustarSaldo(s,-5,'2026-10-15');ajustarSaldo(s,100,'2026-11-09');
+  assert.equal(JSON.stringify(s),antes,'negativo o ya cobrado no tocan nada');
+  ajustarSaldo(s,37000,'2026-10-15');
+  assert.equal(s.gastos.length,1,'igual: ningún gasto nuevo');
+  assert.equal(s.plan.saldoFecha,'2026-10-15','igual: solo anota que hoy revisaste');
+});
+
+test('(2.45) lo gastado se reparte entre los días desde la última vez que actualizaste hasta ayer',function(){
+  var s=estado();
+  ajustarSaldo(s,36000,'2026-10-15');
+  assert.equal(s.plan.saldoFecha,'2026-10-15');
+  var r=ajustarSaldo(s,33001,'2026-10-18'); /* 2.999 en 3 días: el 15, el 16 y el 17 */
+  assert.equal(r.tipo,'gasto');
+  var gs=s.gastos.filter(function(g){return r.ids.indexOf(g.id)>=0});
+  assert.deepEqual(gs.map(function(g){return g.fecha}),['2026-10-15','2026-10-16','2026-10-17']);
+  assert.deepEqual(gs.map(function(g){return g.monto}),[999,999,1001],'las partes suman lo que falta');
+  assert.equal(disponible(s),33001);
+  deshacerAjuste(s,r);
+  assert.equal(disponible(s),36000,'deshacer saca todas las partes');
+  assert.equal(s.plan.saldoFecha,'2026-10-15','y vuelve la fecha de antes');
+});
+
+test('(2.45) si ya actualizaste hoy, lo nuevo cae hoy; nunca antes del inicio del plan',function(){
+  var s=estado();
+  ajustarSaldo(s,36000,'2026-10-15');
+  var r=ajustarSaldo(s,35500,'2026-10-15');
+  assert.equal(s.gastos.filter(function(g){return g.id===r.id})[0].fecha,'2026-10-15');
+  var t=estado();t.plan.saldoFecha='2026-10-01';
+  var q=ajustarSaldo(t,36000,'2026-10-14');
+  assert.deepEqual(t.gastos.filter(function(g){return q.ids.indexOf(g.id)>=0}).map(function(g){return g.fecha}),['2026-10-12','2026-10-13']);
+});
+
+test('(2.45) sin anotar gastos, después del primer día lo que falta es gasto (no cambia la plata del plan)',function(){
+  var s=estado();s.gastos=[];
+  assert.equal(previaSaldo(s,35000,'2026-10-12').tipo,'monto','el primer día corrige lo que tenías');
+  assert.equal(previaSaldo(s,35000,'2026-10-14').tipo,'gasto');
+  s.perfil.anotarGastos=true;
+  assert.equal(previaSaldo(s,35000,'2026-10-14').tipo,'monto','anotando cada gasto, como antes');
 });
 
 test('tope: un gasto nuevo no puede ser mayor que lo disponible',function(){

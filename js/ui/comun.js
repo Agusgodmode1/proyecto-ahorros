@@ -12,7 +12,10 @@ export var ctx={state:null,tab:'resumen',booted:false,persist:function(){},rende
 
 export function today(){return iso(new Date())}
 /* El plan de siempre, ajustado: sobrantes al ahorro, lo que te pasaste repartido y el mínimo cuidado (logica/mes.js) */
-export function planNow(){return ajustarPlan(ctx.state,aplicarSobres(ctx.state,planCalc(ctx.state)),today())}
+/* (2.45) sin anotar cada gasto no hay sobre de compras (no hay cómo sacar un gasto de ahí) */
+export function anota(){var p=ctx.state&&ctx.state.perfil;return !!(p&&p.anotarGastos)}
+function sinSobre(st){return anota()||!(st.plan&&st.plan.compras>0)?st:Object.assign({},st,{plan:Object.assign({},st.plan,{compras:0})})}
+export function planNow(){return ajustarPlan(ctx.state,aplicarSobres(sinSobre(ctx.state),planCalc(ctx.state)),today())}
 /* Con extras: lo que vas a cobrar (el recibo real del mes si lo cargaste; si no, la estimación) */
 export function liqNow(conExtras){return conExtras?liqReal(ctx.state):liq(ctx.state,false)}
 /* El análisis del extracto. Cuando se carga la Tarjeta (ui/tarjeta-ver.js) pone acá el suyo, con el lector de

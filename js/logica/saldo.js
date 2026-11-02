@@ -4,7 +4,9 @@
    - ajustarSaldo: vos decís cuánta plata tenés de verdad y la app anota la diferencia:
      si tenés menos, es un gasto "Ajuste de saldo" (cae el día anterior, así no te arruina el de hoy);
      si tenés más, se suma a lo que tenías (plata que te entró).
-   - topes: nunca un saldo negativo, y un gasto nuevo no puede ser mayor que lo disponible. */
+   - topes: nunca un saldo negativo, y un gasto nuevo no puede ser mayor que lo disponible.
+   - (2.45) Sin anotar cada gasto (lo de siempre desde 2.45): lo que falta se reparte en partes iguales entre los días
+     desde la última vez que actualizaste (`plan.saldoFecha`) hasta ayer; si ya actualizaste hoy, cae hoy. */
 import {num,uid} from './util.js';
 import {addDays,parse,iso} from './fechas.js';
 import {fijosPeriodo,cuentaEnPresupuesto,isPagado,pagoDe,montoDelPeriodo,parteDelPeriodo,planCalc} from './plan.js';
@@ -52,34 +54,54 @@ export function cabeGasto(state,monto){
 }
 /* Qué haría actualizar el saldo a `real`: {tipo:'igual'|'gasto'|'ingreso'|'monto'|'invalido'|'fuera', diff, disponible}.
    'monto' = todavía no anotaste gastos ni pagaste fijos: lo que decís pasa a ser la plata del plan (no hay nada que ajustar). */
+/* (2.45) ¿Anotás cada gasto? Si no (lo de siempre), la app funciona con lo que tenés. */
+export function anotaGastos(state){return !!(state.perfil&&state.perfil.anotarGastos)}
+/* Los días en que se reparte lo gastado: [desde, hasta] */
+export function diasDelAjuste(state,hoy){
+  var ini=state.plan.inicio,u=state.plan.saldoFecha,ayer=iso(addDays(parse(hoy),-1));
+  if(!u||u>=hoy||ayer<ini){var f=u&&u>=hoy?hoy:(ayer<ini?ini:ayer);if(f<ini)f=ini;return [f,f]}
+  return [u<ini?ini:u,ayer];
+}
+function partes(total,n){
+  var b=Math.floor(total/n),out=[],acc=0;
+  for(var k=0;k<n;k++){var v=k===n-1?r2(total-acc):b;out.push(v);acc+=v}
+  return out;
+}
 export function previaSaldo(state,real,hoy){
   var d=disponible(state);
   if(real===null||real===undefined||!isFinite(real)||real<0)return {tipo:'invalido',diff:0,disponible:d};
   if(hoy>=state.plan.cobro)return {tipo:'fuera',diff:0,disponible:d};
   var diff=r2(d-real);
   if(Math.abs(diff)<0.5)return {tipo:'igual',diff:0,disponible:d};
-  var sinMov=planCalc(state).spentInPlan===0&&fijosPagados(state)===0;
-  return {tipo:sinMov?'monto':(diff>0?'gasto':'ingreso'),diff:Math.abs(diff),disponible:d};
+  /* sin movimientos todavía: el primer día del plan, lo que decís pasa a ser la plata del plan */
+  var sinMov=planCalc(state).spentInPlan===0&&fijosPagados(state)===0&&(anotaGastos(state)||hoy<=state.plan.inicio);
+  var dd=diasDelAjuste(state,hoy);
+  return {tipo:sinMov?'monto':(diff>0?'gasto':'ingreso'),diff:Math.abs(diff),disponible:d,desde:dd[0],hasta:dd[1]};
 }
 /* Aplica el ajuste. Devuelve {tipo, diff, id?, montoAntes?} para poder deshacerlo. */
 export function ajustarSaldo(state,real,hoy){
-  var p=previaSaldo(state,real,hoy);
+  var p=previaSaldo(state,real,hoy),antesF=state.plan.saldoFecha;
+  if(p.tipo==='invalido'||p.tipo==='fuera')return {tipo:p.tipo,diff:0};
+  state.plan.saldoFecha=hoy;
   if(p.tipo==='gasto'){
-    var ayer=iso(addDays(parse(hoy),-1)),fecha=ayer<state.plan.inicio?state.plan.inicio:ayer;
-    if(fecha<state.plan.inicio)fecha=state.plan.inicio;
-    var g={id:uid(),fecha:fecha,monto:p.diff,nota:'Ajuste de saldo',cat:'Otros',src:'ajuste'};
-    state.gastos.push(g);
-    return {tipo:'gasto',diff:p.diff,id:g.id};
+    var a=parse(p.desde),n=Math.max(1,Math.round((parse(p.hasta)-a)/864e5)+1),ms=partes(p.diff,n),ids=[];
+    ms.forEach(function(m,k){
+      if(!(m>0))return;
+      var g={id:uid(),fecha:iso(addDays(a,k)),monto:m,nota:'Ajuste de saldo',cat:'Otros',src:'ajuste'};
+      state.gastos.push(g);ids.push(g.id);
+    });
+    return {tipo:'gasto',diff:p.diff,id:ids[0],ids:ids,desde:p.desde,hasta:p.hasta,fechaAntes:antesF};
   }
   if(p.tipo==='ingreso'||p.tipo==='monto'){
     var antes=num(state.plan.monto);
     state.plan.monto=p.tipo==='monto'?r2(real):r2(antes+p.diff);
-    return {tipo:p.tipo,diff:p.diff,montoAntes:antes};
+    return {tipo:p.tipo,diff:p.diff,montoAntes:antes,fechaAntes:antesF};
   }
-  return {tipo:p.tipo,diff:0};
+  return {tipo:p.tipo,diff:0,fechaAntes:antesF};
 }
 export function deshacerAjuste(state,r){
-  if(r.tipo==='gasto')state.gastos=state.gastos.filter(function(g){return g.id!==r.id});
+  if('fechaAntes' in r){if(r.fechaAntes===undefined)delete state.plan.saldoFecha;else state.plan.saldoFecha=r.fechaAntes}
+  if(r.tipo==='gasto'){var ids=r.ids||[r.id];state.gastos=state.gastos.filter(function(g){return ids.indexOf(g.id)<0})}
   else if(r.tipo==='ingreso'||r.tipo==='monto')state.plan.monto=r.montoAntes;
 }
 

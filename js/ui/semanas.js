@@ -1,6 +1,6 @@
 /* Pestaña Semanas: selector, "te quedan", los 7 días, anotar y borrar gastos. */
 import {parse,addDays,iso,diffDays,DIA,DIAL,MES} from '../logica/fechas.js';
-import {ctx,$,today,planNow,money,n0,esc,fLarga,rango,cap,toast,toastAccion} from './comun.js';
+import {anota,ctx,$,today,planNow,money,n0,esc,fLarga,rango,cap,toast,toastAccion} from './comun.js';
 import {sobranteDe} from '../logica/mes.js';
 import {semanaDe} from '../logica/plan.js';
 import {borrarGasto,renglonGasto,abrirHojaGasto,diasHasta} from './gastos.js';
@@ -79,6 +79,7 @@ export function renderWeek(pc){
 
   /* los gastos de la semana */
   var items=state.gastos.filter(function(g){return g.fecha>=w.start&&g.fecha<=w.end}).sort(function(a,b){return a.fecha<b.fecha?1:a.fecha>b.fecha?-1:(a.id<b.id?1:-1)});
+  if(!anota()){el.innerHTML=h;return} /* (2.45) con lo que tenés: sin lista de gastos */
   h+='<div class="card stack" id="g-card"><div class="sec-h"><h2>Gastos de la semana</h2></div>';
   if(!fut)h+='<button class="btn primary wk-mas" type="button" data-gsem="'+i+'"><span aria-hidden="true">+</span> Gasto en esta semana</button>';
   if(!items.length)h+='<div class="empty">'+(fut?'Esta semana todavía no empezó.':'Todavía no anotaste gastos esta semana. Cada gasto que anotes baja lo que te queda.')+'</div>';

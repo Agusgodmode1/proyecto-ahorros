@@ -7,7 +7,7 @@ import {disponible,fijosPagadosParte,maxAhorro,previaSaldo,ajustarSaldo,deshacer
 import {balanceHTML} from './fijos.js';
 import {mesTrabajo,mins,reglasHoras} from '../logica/sueldo.js';
 import {histStats,logrosLista} from '../logica/logros.js';
-import {ctx,$,today,liqNow,planNow,exAnalisis,money,esc,fCorta,fLarga,rango,fMin,cap,tile,hchip,row,toast,toastAccion} from './comun.js';
+import {ctx,$,today,liqNow,planNow,anota,exAnalisis,money,esc,fCorta,fLarga,rango,fMin,cap,tile,hchip,row,toast,toastAccion} from './comun.js';
 import {aguinaldo} from '../logica/aguinaldo.js';
 import {aniosSinFeriados} from '../logica/avisos.js';
 import {ritmoDelMes,minimoDe} from '../logica/mes.js';
@@ -59,7 +59,7 @@ function heroChips(pc){
     /* (2.41) arriba de todo, lo que te queda para gastar hasta el cobro (lo mismo que «Tu plan») */
     var resto=pc.gastar-pc.spentInPlan;
     var h='<span class="hh-cobro'+(resto<0?' neg':'')+'"><span>'+(resto<0?'Te pasaste del plan por':'Para gastar hasta el cobro')+'</span><b>'+money(Math.abs(resto))+'</b></span>'
-      +'<span class="hh-top"><span class="hh-l">'+(H.queda<0?'Hoy te pasaste por':'Hoy podés gastar')+'</span><button class="gasto-btn" type="button" id="gasto-abrir" aria-label="Anotar un gasto"><span aria-hidden="true">+</span> Gasto</button></span><b class="hh-n'+(H.queda<0?' neg':'')+'">'+grande(money(Math.abs(H.queda)))+'</b>';
+      +'<span class="hh-top"><span class="hh-l">'+(H.queda<0?'Hoy te pasaste por':'Hoy podés gastar')+'</span>'+(anota()?'<button class="gasto-btn" type="button" id="gasto-abrir" aria-label="Anotar un gasto"><span aria-hidden="true">+</span> Gasto</button>':'<button class="gasto-btn" type="button" id="tengo-abrir" aria-label="Actualizar cuánta plata tenés">Actualizar</button>')+'</span><b class="hh-n'+(H.queda<0?' neg':'')+'">'+grande(money(Math.abs(H.queda)))+'</b>';
     if(H.dentro){
       var w=pc.weeks[H.semana],pct=w.avail>0?Math.min(100,Math.max(0,w.spent/w.avail*100)):(w.spent>0?100:0);
       h+='<span class="hh-s">'+(H.semanaQueda<0?'Esta semana te pasaste por '+money(-H.semanaQueda):'Te quedan '+money(H.semanaQueda)+' hasta el '+esc(fLarga(H.fin)))+(H.gastadoHoy>0?' · hoy gastaste '+money(H.gastadoHoy):'')+'</span>'
@@ -74,10 +74,15 @@ function heroChips(pc){
   heroMini(pc,H);
   /* Dos datos en la misma fila: cuánta plata tenés y cuánto guardás (el cobro tiene su propia tarjeta) */
   $('#hero-chips').innerHTML=''
-    +'<button class="hchip hc-saldo" type="button" id="saldo-abrir"><span>Tenés</span><b>'+money(Math.max(0,disponible(state,pc)))+'</b><small>actualizar</small></button>'
+    +'<button class="hchip hc-saldo" type="button" id="saldo-abrir"><span>Tenés</span><b>'+money(Math.max(0,disponible(state,pc)))+'</b><small>'+(anota()?'actualizar':cuando(state.plan.saldoFecha,t))+'</small></button>'
     +'<button class="hchip hc-ahorro" type="button" id="ahorro-abrir"><span>Guardás</span><b>'+money(pc.ahorro)+'</b><small>actualizar</small></button>'
     /* (2.17) la plata apartada: se ve, pero aparte de lo que podés usar */
     +(totalApartado(state)>0?'<button class="hc-ap" type="button" id="apartado-abrir">Además tenés <b>'+money(totalApartado(state))+'</b> apartados, que no se tocan<small>ver</small></button>':'');
+}
+/* (2.45) cuándo actualizaste lo que tenés, para el «Tenés» */
+function cuando(f,t){
+  if(!f||f<ctx.state.plan.inicio)return 'actualizar';
+  var n=diffDays(f,t);return n<=0?'al día de hoy':n===1?'de ayer':'de hace '+n+' días';
 }
 /* Aviso grande cuando la meta de ahorro no se puede cumplir con la plata que tenés */
 function renderAlertaMeta(pc){
@@ -117,7 +122,7 @@ function pactoNuevo(){
 /* Debajo de la portada: los frecuentes de un toque y lo que gastaste hoy. Anotar se hace desde la hoja. */
 function renderHoy(pc){
   var state=ctx.state,t=today(),el=$('#hoy-out');if(!el)return;
-  if(!(num(state.plan.monto)>0)){el.innerHTML='';return}
+  if(!(num(state.plan.monto)>0)||!anota()){el.innerHTML='';return}
   var lista=state.gastos.filter(function(g){return g.fecha===t});
   if(!lista.length){
     var vacio='<div class="card stack hoy tone-mint"><h2>Todavía no anotaste gastos</h2></div>';
@@ -128,7 +133,7 @@ function renderHoy(pc){
 /* La hoja para anotar un gasto (ui/gastos.js): se abre desde el botón grande de la portada */
 function initGasto(){
   initHojaGasto();
-  $('#hoy-hero').addEventListener('click',function(e){if(e.target.closest('#gasto-abrir'))abrirHojaGasto()});
+  $('#hoy-hero').addEventListener('click',function(e){if(e.target.closest('#gasto-abrir'))abrirHojaGasto();if(e.target.closest('#tengo-abrir'))abrirSaldo()});
   /* (2.30) «Hoy en versión corta» se sacó: Hoy ya es corto. Se borra la preferencia vieja. */
   try{localStorage.removeItem('pa-simple')}catch(e){}
 }
@@ -222,7 +227,7 @@ function consejosHoy(pc,t){
     +(n>1?'<li><b>Última semana · '+fmt(ult)+'</b> Tu colchón para llegar tranquilo al cobro.</li>':'')
     +'</ul>';
   var C=S.compras||0,f=C>0?Math.max(0,Math.min(1,S.queda/C)):0;
-  var sobre=hay?'<details class="sob" data-sob="compras"'+(sobAbiertos.compras?' open':'')+'><summary><span class="sob-n"><b>Sobre de compras e imprevistos</b><small>'+(C>0?'te quedan '+money(S.queda)+' de '+money(C):'un regalo, el dentista, algo que se rompe')+'</small>'
+  var sobre=hay&&anota()?'<details class="sob" data-sob="compras"'+(sobAbiertos.compras?' open':'')+'><summary><span class="sob-n"><b>Sobre de compras e imprevistos</b><small>'+(C>0?'te quedan '+money(S.queda)+' de '+money(C):'un regalo, el dentista, algo que se rompe')+'</small>'
     +(C>0?'<span class="sob-bar" aria-hidden="true"><i style="transform:scaleX('+f.toFixed(3)+')"></i></span>':'')+'</span><b class="sob-v'+(C>0?' plata':' sob-armar')+'">'+(C>0?money(S.queda):'Armar')+'</b></summary>'
     +'<div class="sob-in"><p class="note">Lo que no es de todos los días sale de acá y no de la semana. Lo que no uses queda como ahorro.</p>'
     +'<form class="sob-f" data-sobf autocomplete="off"><div class="money"><span>$</span><input id="sob-monto" type="number" inputmode="numeric" min="0" step="100" value="'+(C||'')+'" placeholder="3000" aria-label="Plata para el sobre de compras"></div><button class="btn quiet" type="submit">Guardar</button></form>'
@@ -230,7 +235,7 @@ function consejosHoy(pc,t){
   var mas='<h3 class="cj-h">Más consejos</h3><ul class="cj-tips cj-mas">'
     +'<li><b>El día que cobrás</b> Separá primero lo que vas a ahorrar, así no se mezcla.</li>'
     +'<li><b>Los fijos, primero</b> Pagalos apenas cobrás: lo que queda es de verdad para gastar.</li>'
-    +'<li><b>Anotá al toque</b> Un gasto anotado en el momento no se olvida.</li>'
+    +(anota()?'<li><b>Anotá al toque</b> Un gasto anotado en el momento no se olvida.</li>':'<li><b>Actualizá cuando entrás</b> Poné lo que tenés y tu «por día» queda al día.</li>')
     +'<li><b>Antes de una compra que no planeaste</b> Esperá un día. Si la seguís queriendo, comprala.</li>'
     +'<li><b>Al súper, con lista</b> Y sin hambre: es donde más se va sin darte cuenta.</li>'
     +'<li><b>Cada domingo</b> Mirá cuánto te sobró y decidí si va a la semana que viene o al ahorro.</li></ul>';
@@ -302,7 +307,7 @@ function semanasHoy(pc,t){
     +'<button type="button" data-reparto="parejo" aria-pressed="'+!rec+'">Parejo</button><button type="button" data-reparto="recomendado" aria-pressed="'+rec+'">Optimizado</button></div>':'';
   var pp=varias?porcentajes(pc.weeks):[];
   return '<section class="sem-hoy" aria-labelledby="sem-hoy-t"><h2 class="plan-h" id="sem-hoy-t">Tus semanas</h2>'+seg
-    +(varias?'<p class="note sem-rep-n">'+(rec?'Menos al principio, más al final.':'Lo mismo por día.')+' Tocá una semana para ver sus gastos.</p>':'')
+    +(varias?'<p class="note sem-rep-n">'+(rec?'Menos al principio, más al final.':'Lo mismo por día.')+' Tocá una semana para ver el detalle.</p>':'')
     +'<div class="sem-car" role="list" aria-label="Tus semanas" data-nodeslizar>'+pc.weeks.map(function(x,k){return '<div class="sem-li" role="listitem">'+fichaSemana(x,t,varias?pp[k]:null)+'</div>'}).join('')+'</div></section>';
 }
 function quieto(){try{return matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){return false}}
@@ -496,7 +501,13 @@ function abrirMeta(){irAlPacto('ahorro')}
 function saldoPrev(){
   var st=ctx.state,i=$('#saldo-in'),pv=$('#saldo-prev');if(!i||!pv)return;
   var v=i.value,p=previaSaldo(st,v===''?null:num(v),today()),d=money(Math.max(0,p.disponible)),t;
-  if(v==='')t='Según lo que anotaste, tenés '+d+'. Poné lo que tenés de verdad y yo anoto la diferencia.';
+  var sa=!anota(),des=p.desde?(p.desde===p.hasta?(p.desde===today()?'hoy':'el '+fCorta(p.desde)):'entre el '+fCorta(p.desde)+' y el '+fCorta(p.hasta)):'';
+  if(sa&&v==='')t='La última vez tenías '+d+'. Poné lo que tenés ahora en la cuenta y en efectivo.';
+  else if(sa&&p.tipo==='gasto')t='Gastaste '+money(p.diff)+' ('+des+'). Se recalcula todo.';
+  else if(sa&&p.tipo==='igual')t='Es lo mismo que la última vez: no gastaste nada.';
+  else if(sa&&p.tipo==='monto')t='Tu plata pasa de '+d+' a '+money(num(v))+' y se recalcula todo.';
+  else if(sa&&p.tipo==='ingreso')t='Tenés '+money(p.diff)+' más: lo sumo a tu plata y se recalcula todo.';
+  else if(v==='')t='Según lo que anotaste, tenés '+d+'. Poné lo que tenés de verdad y yo anoto la diferencia.';
   else if(p.tipo==='invalido')t='Poné cuánta plata tenés. No puede ser negativa.';
   else if(p.tipo==='fuera')t='Ya cobraste: cerrá el mes en Logros para arrancar uno nuevo.';
   else if(p.tipo==='igual')t='Coincide con lo que tenés anotado ('+d+'). No hay nada para cambiar.';
@@ -509,8 +520,9 @@ function saldoPrev(){
    Después de cobrar (fuera del plan) se usa la tarjeta de siempre. */
 function abrirSaldo(){
   var c=$('#saldo-card'),i=$('#saldo-in');if(!c||!i)return;
-  if(today()<ctx.state.plan.cobro){irAlPacto('tenes');return}
-  ctx.go('resumen');c.hidden=false;i.value='';saldoPrev();
+  if(anota()&&today()<ctx.state.plan.cobro){irAlPacto('tenes');return}
+  /* (2.45) sin anotar gastos, es la acción de todos los días: se abre acá mismo */
+  if(ctx.tab!=='resumen')ctx.go('resumen');c.hidden=false;i.value='';saldoPrev();
   try{c.scrollIntoView({block:'center',behavior:'smooth'})}catch(er){}
   setTimeout(function(){i.focus()},250);
 }
@@ -528,10 +540,12 @@ function initSaldo(){
 /* Aplica un saldo nuevo y recalcula todo. Devuelve false si no había nada para cambiar. */
 function confirmarSaldo(real){
   var st=ctx.state,p=previaSaldo(st,real,today());
-  if(p.tipo==='invalido'||p.tipo==='fuera'||p.tipo==='igual')return false;
+  if(p.tipo==='invalido'||p.tipo==='fuera')return false;
+  if(p.tipo==='igual'&&anota())return false;
   var r=ajustarSaldo(st,real,today());
   ctx.persist();ctx.syncInputs();ctx.renderAll();
-  toastAccion(r.tipo==='gasto'?'Anoté '+money(r.diff)+' de ajuste de saldo':r.tipo==='ingreso'?'Sumé '+money(r.diff)+' a tu plata disponible':'Tu plata disponible quedó en '+money(real),'Deshacer',function(){
+  if(r.tipo==='igual'){toast('Listo: no gastaste nada desde la última vez');return true}
+  toastAccion(r.tipo==='gasto'?(anota()?'Anoté '+money(r.diff)+' de ajuste de saldo':'Listo: gastaste '+money(r.diff)+'. Ya recalculé tu día.'):r.tipo==='ingreso'?'Sumé '+money(r.diff)+' a tu plata disponible':'Tu plata disponible quedó en '+money(real),'Deshacer',function(){
     deshacerAjuste(ctx.state,r);ctx.persist();ctx.syncInputs();ctx.renderAll();
   });
   return true;

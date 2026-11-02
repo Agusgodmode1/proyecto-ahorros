@@ -68,7 +68,7 @@ document.documentElement.setAttribute('data-theme','dark');
       <label for="saldo-in" class="saldo-l">¿Cuánta plata tenés ahora?</label>
       <div class="money"><span>$</span><input id="saldo-in" type="number" inputmode="decimal" min="0" step="any" placeholder="lo que tenés en cuenta y en efectivo"></div>
       <p class="saldo-p" id="saldo-prev" aria-live="polite"></p>
-      <div class="row-btns"><button class="btn primary" type="submit">Actualizar saldo</button><button class="btn quiet" type="button" id="saldo-x">Cancelar</button></div>
+      <div class="row-btns"><button class="btn primary" type="submit">Actualizar</button><button class="btn quiet" type="button" id="saldo-x">Cancelar</button></div>
     </form>
     <div class="hero-chips" id="hero-chips"></div>
     <button class="mini" id="hero-mini" type="button" data-goto="resumen" aria-label="Ir al plan"></button>
@@ -454,6 +454,10 @@ document.documentElement.setAttribute('data-theme','dark');
       <div class="card stack">
         <div class="sec"><h2>Mi perfil</h2><p class="note" id="aj-perfil"></p></div>
         <div class="row-btns"><button class="btn primary" type="button" data-perfil="1">Editar mi perfil</button></div>
+      </div>
+      <div class="card stack" id="aj-anotar">
+        <div class="sec"><h2>Tus gastos</h2><p class="note">Actualizá lo que tenés y la app calcula lo gastado, o anotá cada gasto.</p></div>
+        <div class="seg" role="group" aria-label="Cómo llevás tus gastos"><button type="button" data-anotar="0">Con lo que tengo</button><button type="button" data-anotar="1">Anoto cada gasto</button></div>
       </div>
       <h3 class="aj-grupo" id="aj-g-ver">Sonido</h3>
       

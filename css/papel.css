@@ -1606,3 +1606,7 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 /* (2.44) Tus semanas sin panel de detalle: cada ficha abre su semana; resaltada, la de hoy */
 .v2 .sem-car>.sem-li{flex:0 0 clamp(124px,36vw,148px);scroll-snap-align:center;display:flex}
 .v2 .sem-li>.sem-c{flex:1 1 auto;width:100%}
+
+/* (2.45) Con lo que tengo: sin micrófono (no se anotan gastos uno por uno) */
+.modo-saldo #mic{display:none!important}
+.modo-saldo .ix-buscar{display:none}

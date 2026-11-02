@@ -134,7 +134,7 @@ export function renderAjustes(estadoGuardado){
 }
 /* ---------- Apariencia (sigue al teléfono por defecto; se guarda en este aparato) ---------- */
 var TEMA='pa-tema';
-export function aplicarTema(){document.documentElement.setAttribute('data-theme','light');try{localStorage.removeItem(TEMA)}catch(e){}}
+export function aplicarTema(){document.documentElement.setAttribute('data-theme','dark');try{localStorage.removeItem(TEMA)}catch(e){}}
 /* ---------- Copias automáticas ---------- */
 var copias=[],copiaArmada=null;
 export async function renderCopias(){

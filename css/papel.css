@@ -20,7 +20,7 @@
   --cta:#F2ECDF; --on-cta:#16171E; --naranja-t:#EAA96B;
   /* «Cobrás en» se calienta a medida que se acerca el cobro (2.10) */
   --cobro-lejos:#CDB98A; --cobro-cerca:#E3C27E; --cobro-ya:#EFB980; --cobro-tinta:#EED291;
-  --azul:#7FD6C2; --sel:#F2ECDF; --on-sel:#16171E;
+  --azul:#7FD6C2; --sel:#3A3428; --on-sel:#F2ECDF;
   --bien:#E3C27E; --ojo:#EAA96B; --mal:#F2907F;
   /* los colores de siempre, con la paleta del libro */
   --sky:#7FD6C2; --sky-soft:#1D3533; --sky-ink:#B4EADD;
@@ -46,7 +46,7 @@
   --oro:#D9B56C; --oro-t:#E3C27E; --oro-cl:#F1D99E;
   --cta:#F2ECDF; --on-cta:#16171E; --naranja-t:#EAA96B;
   --cobro-lejos:#CDB98A; --cobro-cerca:#E3C27E; --cobro-ya:#EFB980; --cobro-tinta:#EED291;
-  --azul:#7FD6C2; --sel:#F2ECDF; --on-sel:#16171E;
+  --azul:#7FD6C2; --sel:#3A3428; --on-sel:#F2ECDF;
   --bien:#E3C27E; --ojo:#EAA96B; --mal:#F2907F;
   --sky:#7FD6C2; --sky-soft:#1D3533; --sky-ink:#B4EADD;
   --mint:#E3C27E; --mint-soft:#3A3224; --mint-ink:#F1D99E;
@@ -70,7 +70,7 @@
     --oro:#D9B56C; --oro-t:#E3C27E; --oro-cl:#F1D99E;
     --cta:#F2ECDF; --on-cta:#16171E; --naranja-t:#EAA96B;
     --cobro-lejos:#CDB98A; --cobro-cerca:#E3C27E; --cobro-ya:#EFB980; --cobro-tinta:#EED291;
-    --azul:#7FD6C2; --sel:#F2ECDF; --on-sel:#16171E;
+    --azul:#7FD6C2; --sel:#3A3428; --on-sel:#F2ECDF;
     --bien:#E3C27E; --ojo:#EAA96B; --mal:#F2907F;
     --sky:#7FD6C2; --sky-soft:#1D3533; --sky-ink:#B4EADD;
     --mint:#E3C27E; --mint-soft:#3A3224; --mint-ink:#F1D99E;
@@ -1688,3 +1688,25 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 .v2 .hoja #resumen-out>.fold{border-radius:var(--r-l)!important}
 .v2 #resumen-out>.banner,.v2 #p-resumen>div>.banner{margin-left:0!important}
 .v2 #p-resumen .banner .row-btns,.v2 #p-resumen .banner>.btn{margin-top:var(--e2)}
+
+
+/* ---------- Lo elegido en latón (2.49, pedido de Agus) ----------
+   Antes lo elegido era una placa marfil que encandilaba sobre el papel oscuro. Ahora es un recuadro de latón:
+   el mismo papel teñido de oro (--sel #3A3428), letra marfil, un filo dorado finito alrededor y el canto de oro abajo.
+   Se distingue por el brillo del metal, no por el blanco. La plata sigue en jade y el tiempo en oro. */
+:root.v2{--sel-filo:rgba(217,181,108,.55);--sel-luz:linear-gradient(180deg,rgba(241,217,158,.10),rgba(241,217,158,0) 60%)}
+.v2 :is(.seg button[aria-pressed="true"],.wkp[aria-pressed="true"],.lb-dia[aria-pressed="true"],.opciones button[aria-checked="true"],.cal-d[aria-pressed="true"],.cat-ic button[aria-pressed="true"]){
+  background:var(--sel-luz),var(--sel)!important;color:var(--on-sel)!important;border-color:var(--sel-filo)!important;
+  box-shadow:inset 0 0 0 1px var(--sel-filo),inset 0 -2px 0 var(--oro)!important}
+.v2 .wkp[aria-pressed="true"] span{color:var(--oro-t)!important;opacity:1!important}
+.v2 .sem-c[aria-current]{background:var(--sel-luz),var(--sel)!important;border-color:var(--sel-filo)!important;color:var(--on-sel)!important;
+  box-shadow:inset 0 0 0 1px var(--sel-filo),inset 0 -3px 0 var(--oro),0 12px 26px -14px rgba(217,181,108,.35)!important}
+.v2 .sem-c[aria-current] b.plata{color:var(--azul)!important}
+.v2 .sem-c[aria-current] small{color:color-mix(in srgb,var(--on-sel) 78%,transparent)!important}
+.v2 .sem-c[aria-current] small.neg{color:var(--mal)!important;text-decoration:none!important}
+.v2 .sem-c[aria-current] .sem-c-n i{background:color-mix(in srgb,var(--oro) 26%,transparent)!important;color:var(--oro-cl)!important}
+.v2 .sem-c[aria-current] .sem-c-pct{background:var(--sel)!important;color:var(--oro-cl)!important;box-shadow:inset 0 0 0 1px var(--sel-filo),inset 0 -2px 0 var(--oro)!important}
+/* el día de hoy en la tira de la semana */
+.v2 .days .day.today{background:var(--sel-luz),var(--sel)!important;border-color:var(--sel-filo)!important;box-shadow:inset 0 0 0 1px var(--sel-filo),inset 0 -2px 0 var(--oro)!important}
+.v2 .days .day.today :is(.w,.n,.s){color:var(--on-sel)!important}
+.v2 .days .day.today .w{color:var(--oro-t)!important}

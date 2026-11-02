@@ -273,13 +273,21 @@ function initSobres(){
 var semAbierta=null;
 /* (2.41) Semana por semana como carrusel: una ficha por semana con lo que podés gastar;
    la elegida muestra su detalle debajo. Arriba, «Parejo / Optimizado» cambia el reparto (con Deshacer). */
-function fichaSemana(w,t){
+/* (2.42) qué parte del total para gastar le toca a cada semana; redondeado para que siempre sume 100 */
+function porcentajes(ws){
+  var tot=0;ws.forEach(function(w){tot+=Math.max(0,w.budget)});if(!(tot>0))return ws.map(function(){return 0});
+  var raw=ws.map(function(w){return Math.max(0,w.budget)/tot*100}),base=raw.map(Math.floor),falta=100-base.reduce(function(a,b){return a+b},0);
+  raw.map(function(x,i){return [x-base[i],i]}).sort(function(a,b){return b[0]-a[0]}).slice(0,falta).forEach(function(x){base[x[1]]++});
+  return base;
+}
+function fichaSemana(w,t,pct){
   var cur=t>=w.start&&t<=w.end,past=t>w.end,over=w.left<0,sel=semAbierta===w.i;
   /* el número grande es lo que la semana tiene para gastar (así se ve el reparto parejo u optimizado); abajo, cómo va */
   var rem=cur?diffDays(t,w.end)+1:w.days;
   var lab=over?'te pasaste '+money(-w.left):past?'sobró '+money(w.left):cur?'te quedan '+money(w.left):money(w.avail/Math.max(1,w.days))+' por día';
   var v=w.budget;
   return '<button type="button" role="tab" class="sem-c'+(cur?' actual':'')+(past?' pasada':'')+'" data-semsel="'+w.i+'" aria-selected="'+sel+'" aria-controls="sem-det"'+(cur?' aria-current="date"':'')+'>'
+    +(pct!=null?'<span class="sem-c-pct" aria-label="'+pct+' por ciento del mes">'+pct+' %</span>':'')
     +'<span class="sem-c-n">Semana '+(w.i+1)+(cur?' <i>hoy</i>':'')+'</span>'
     +'<small>'+esc(rango(w.start,w.end))+'</small>'
     +'<b class="'+(past?'':'plata')+'">'+money(v)+'</b>'
@@ -294,8 +302,8 @@ function semanasHoy(pc,t){
   var seg=pc.weeks.length>1?'<div class="seg sem-rep" role="group" aria-label="Cómo se reparte tu plata entre las semanas">'
     +'<button type="button" data-reparto="parejo" aria-pressed="'+!rec+'">Parejo</button><button type="button" data-reparto="recomendado" aria-pressed="'+rec+'">Optimizado</button></div>':'';
   return '<section class="sem-hoy" aria-labelledby="sem-hoy-t"><h2 class="plan-h" id="sem-hoy-t">Tus semanas</h2>'+seg
-    +(seg?'<p class="note sem-rep-n">'+(rec?'Optimizado: menos al principio, más al final.':'Parejo: cada semana tiene lo mismo por día.')+'</p>':'')
-    +'<div class="sem-car" role="tablist" aria-label="Elegir semana" data-nodeslizar>'+pc.weeks.map(function(x){return fichaSemana(x,t)}).join('')+'</div>'
+    +(seg?'<p class="note sem-rep-n">'+(rec?'Menos al principio, más al final. El % es la parte del mes.':'Lo mismo por día. El % es la parte del mes.')+'</p>':'')
+    +'<div class="sem-car" role="tablist" aria-label="Elegir semana" data-nodeslizar>'+(function(){var pp=pc.weeks.length>1?porcentajes(pc.weeks):[];return pc.weeks.map(function(x,k){return fichaSemana(x,t,pc.weeks.length>1?pp[k]:null)}).join('')})()+'</div>'
     +'<div class="sem-det" id="sem-det" role="tabpanel" aria-label="Semana '+(w.i+1)+'"><div class="sem-det-cab"><b>Semana '+(w.i+1)+' · '+esc(rango(w.start,w.end))+'</b>'+pill+'</div>'+semanaEnHoy(pc,w.i)+'</div></section>';
 }
 function quieto(){try{return matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){return false}}

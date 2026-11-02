@@ -11,14 +11,11 @@
 <meta name="apple-mobile-web-app-title" content="Ahorros">
 <meta name="application-name" content="Ahorros">
 <meta name="format-detection" content="telephone=no">
-<meta name="color-scheme" content="light dark">
+<meta name="color-scheme" content="light">
 <meta name="theme-color" content="#0E1640" id="meta-tema">
 <script>
-/* Tema: sigue al teléfono (papel claro o papel de noche). Se aplica antes de dibujar para que no parpadee. Se fuerza en Ajustes → Apariencia. */
-(function(){var t='auto';try{t=localStorage.getItem('pa-tema')||'auto'}catch(e){}
-var d=t==='auto'?matchMedia('(prefers-color-scheme: dark)').matches:t!=='claro';
-if(t!=='auto')document.documentElement.setAttribute('data-theme',d?'dark':'light');
-document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640')})();
+/* Tema (2.42): un solo papel, el de libro en penumbra. Sin claro ni noche. */
+document.documentElement.setAttribute('data-theme','light');
 </script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -390,7 +387,7 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
     <!-- AJUSTES Y RESPALDO -->
     <section id="p-ajustes" role="tabpanel" class="tone-sky stack" hidden>
       <div class="panel-head"><h2 class="ph-t">Ajustes</h2><p class="ph-s">Tu perfil, cómo se ve y tus respaldos. Tus datos viven solo en este teléfono.</p></div>
-      <nav class="aj-ind" aria-label="Partes de Ajustes" data-nodeslizar><button type="button" data-ajir="aj-g-libro">Tu libro</button><button type="button" data-ajir="aj-g-ver">Cómo se ve y suena</button><button type="button" data-ajir="aj-g-priv">Privacidad</button><button type="button" data-ajir="aj-g-plata">Plata y fechas</button><button type="button" data-ajir="aj-g-datos">Tus datos</button><button type="button" data-ajir="aj-g-app">Sobre la app</button></nav>
+      <nav class="aj-ind" aria-label="Partes de Ajustes" data-nodeslizar><button type="button" data-ajir="aj-g-libro">Tu libro</button><button type="button" data-ajir="aj-g-ver">Sonido</button><button type="button" data-ajir="aj-g-priv">Privacidad</button><button type="button" data-ajir="aj-g-plata">Plata y fechas</button><button type="button" data-ajir="aj-g-datos">Tus datos</button><button type="button" data-ajir="aj-g-app">Sobre la app</button></nav>
       <h3 class="aj-grupo" id="aj-g-libro">Tu libro</h3>
       <div class="card stack">
         <div class="sec"><h2>Tu pacto</h2><p class="note">Se cambia en el prólogo, pregunta por pregunta.</p></div>
@@ -458,15 +455,8 @@ document.getElementById('meta-tema').setAttribute('content',d?'#070B24':'#0E1640
         <div class="sec"><h2>Mi perfil</h2><p class="note" id="aj-perfil"></p></div>
         <div class="row-btns"><button class="btn primary" type="button" data-perfil="1">Editar mi perfil</button></div>
       </div>
-      <h3 class="aj-grupo" id="aj-g-ver">Cómo se ve y suena</h3>
-      <div class="card stack">
-        <div class="sec"><h2>Apariencia</h2><p class="note">Se guarda en este aparato.</p></div>
-        <div class="seg" role="group" aria-label="Tema" id="aj-tema">
-          <button type="button" data-tema="auto">Como el teléfono</button>
-          <button type="button" data-tema="claro">Papel claro</button>
-          <button type="button" data-tema="oscuro">Papel de noche</button>
-        </div>
-      </div>
+      <h3 class="aj-grupo" id="aj-g-ver">Sonido</h3>
+      
       <div class="card stack">
         <div class="sec"><h2>Sonido</h2><p class="note">El roce de la hoja, el sello y el broche, a volumen bajo.</p></div>
         <div class="seg" role="group" aria-label="Sonido"><button type="button" data-sonido="0">Sin sonido</button><button type="button" data-sonido="1">Con sonido</button></div>

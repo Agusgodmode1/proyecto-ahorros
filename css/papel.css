@@ -14,28 +14,28 @@
   /* la tapa de tela (2.8): tela azul, galaxia, hilo dorado y el texto de la tapa (igual en los dos papeles) */
   --tela-1:#0A1440; --tela-2:#1238A6; --galaxia:#38B6FF; --violeta:#7C5CFF; --hilo:#E9CF8F; --tapa-tx:#D8DBF0; --tapa-oro:#EED596; --tapa-nota:#B4B8D8; --foil:#E9BC5C;
   --bg:#0E1640;
-  --page:#F6ECD6; --page-2:#ECDFC3; --canto:#D2B98A; --surface:#FBF5E7; --surface-2:#EFE2C6;
-  --ink:#1C2440; --muted:#4A5170; --line:rgba(28,36,64,.16); --line-2:rgba(28,36,64,.28);
-  --oro:#A87A1F; --oro-t:#765616; --oro-cl:#D9B25A;
-  --cta:#E07A3C; --on-cta:#1C2440; --naranja-t:#8E4419;
+  --page:#DCCDAB; --page-2:#CFBE98; --canto:#B09669; --surface:#E6D9BA; --surface-2:#D7C7A2;
+  --ink:#231D14; --muted:#4E4330; --line:rgba(60,42,18,.18); --line-2:rgba(60,42,18,.30);
+  --oro:#7A5710; --oro-t:#5A400D; --oro-cl:#C99A3E;
+  --cta:#DB7539; --on-cta:#1C140A; --naranja-t:#73350F;
   /* «Cobrás en» se calienta a medida que se acerca el cobro (2.10) */
-  --cobro-lejos:#8A7034; --cobro-cerca:#A87A1F; --cobro-ya:#B4621A; --cobro-tinta:#5A3FC0;
-  --azul:#2A4FB8; --sel:#1C2440; --on-sel:#F6ECD6;
-  --bien:#326739; --ojo:#7E5415; --mal:#9E3C2C;
+  --cobro-lejos:#6A5726; --cobro-cerca:#7A5710; --cobro-ya:#874512; --cobro-tinta:#45309E;
+  --azul:#1D3B88; --sel:#231D14; --on-sel:#E9DCBD;
+  --bien:#245629; --ojo:#62400C; --mal:#86301C;
   /* los colores de siempre, con la paleta del libro */
-  --sky:#2A4FB8; --sky-soft:#E4DCCB; --sky-ink:#1C2F78;
-  --mint:#326739; --mint-soft:#DFDDB9; --mint-ink:#224A28;
-  --teal:#35567F; --teal-soft:#E1D9C3; --teal-ink:#223C5C;
-  --grape:#765616; --grape-soft:#EBD9AE; --grape-ink:#553D0D;
-  --coral:#35567F; --coral-soft:#E3DCCB; --coral-ink:#223C5C;
-  --sun:#765616; --sun-soft:#EED8A6; --sun-ink:#553D0D;
-  --slate:#4A5170; --slate-soft:#E6D8BB; --slate-ink:#2E3450;
+  --sky:#1D3B88; --sky-soft:#D2C7AE; --sky-ink:#15296A;
+  --mint:#245629; --mint-soft:#CFCDA6; --mint-ink:#1A3F1E;
+  --teal:#284565; --teal-soft:#D0C8B0; --teal-ink:#1C3350;
+  --grape:#5A400D; --grape-soft:#DAC79A; --grape-ink:#46310A;
+  --coral:#284565; --coral-soft:#D3CBB5; --coral-ink:#1C3350;
+  --sun:#5A400D; --sun-soft:#DDC795; --sun-ink:#46310A;
+  --slate:#4E4330; --slate-soft:#D5C7A8; --slate-ink:#352D1F;
   /* categorías en dibujos y puntos (2.13): paleta validada para daltonismo; los nombres son los colores que elegís */
   --cat-sky:#2a78d6; --cat-coral:#eb6834; --cat-teal:#1baf7a; --cat-sun:#eda100; --cat-pink:#e87ba4; --cat-mint:#008300; --cat-grape:#6250d6; --cat-bad:#e34948; --cat-slate:#68708C; --cat-muted:#9A968A;
-  --bad:#9E3C2C; --bad-soft:#F0D3BF;
-  --hero:#F3E6C8; --on-accent:#F3E6C8; --on-sun:#F3E6C8; --on-color:#1C2440;
-  --cobro:#A87A1F; --cuero:#0E1640;
-  --fibra:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85 .05' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .33 0 0 0 0 .15 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23f)'/%3E%3C/svg%3E");
+  --bad:#86301C; --bad-soft:#E0C2A9;
+  --hero:#E9DCBD; --on-accent:#E9DCBD; --on-sun:#E9DCBD; --on-color:#231D14;
+  --cobro:#7A5710; --cuero:#0E1640;
+  --fibra:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85 .05' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .33 0 0 0 0 .15 0 0 0 .13 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23f)'/%3E%3C/svg%3E");
   color-scheme:light;
 }
 /* @noche (papel de noche: atenuado y cálido). Sigue al modo del teléfono; se fuerza desde Ajustes. */
@@ -1002,7 +1002,7 @@ html{font-variation-settings:'SOFT' 100,'WONK' 0}
 .flechas .fl{position:fixed;top:calc(50% - 32px);width:44px;height:64px;padding:0;border:0;background:transparent;pointer-events:auto;cursor:pointer;
   display:grid;place-items:center;color:var(--oro-t,#8A6A1F);opacity:.9;transition:opacity .18s ease;-webkit-tap-highlight-color:transparent}
 .flechas .fl[hidden]{display:none}
-.flechas .fl::before{content:"";position:absolute;top:8px;bottom:8px;width:22px;background:color-mix(in srgb,var(--surface,#FBF5E7) 92%,transparent);
+.flechas .fl::before{content:"";position:absolute;top:8px;bottom:8px;width:22px;background:color-mix(in srgb,var(--surface,#E6D9BA) 92%,transparent);
   box-shadow:inset 0 0 0 1px var(--line-2,rgba(28,36,64,.28)),0 2px 6px rgba(0,0,0,.12)}
 .flechas .fl-ant{left:env(safe-area-inset-left,0px)}
 .flechas .fl-ant::before{left:0;border-radius:0 12px 12px 0}
@@ -1011,7 +1011,7 @@ html{font-variation-settings:'SOFT' 100,'WONK' 0}
 .flechas .fl span{position:relative;font:600 24px/1 var(--f-libro,Georgia,serif);margin-top:-2px}
 .flechas .fl-ant span{transform:translateX(-11px)}
 .flechas .fl-sig span{transform:translateX(11px)}
-.flechas .fl:active::before{background:var(--surface-2,#EFE2C6)}
+.flechas .fl:active::before{background:var(--surface-2,#D7C7A2)}
 .flechas .fl:focus-visible{outline:none}
 .flechas .fl:focus-visible::before{box-shadow:inset 0 0 0 2px var(--azul,#2A4FB8)}
 /* mientras bajás por la página, más tenues; con el teclado, una hoja o el índice abiertos, no están */
@@ -1577,3 +1577,25 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 .v2 .sem-hoy>.sem-det{padding:var(--e3) var(--e4) var(--e4);border-radius:var(--r-l);background:var(--surface);border:1px solid var(--line)}
 .v2 .sem-det-cab{display:flex;align-items:center;justify-content:space-between;gap:var(--e2);font:700 15px var(--f-body)}
 @media (prefers-reduced-motion:reduce){.v2 .sem-c{transition:none}.v2 .sem-c:active{transform:none}}
+
+/* ---------- Un solo papel (2.42, pedido de Agus): sin claro ni noche ----------
+   La página es papel de libro de verdad, en penumbra: tono hueso tostado (no blanco), tinta sepia,
+   bordes apenas quemados, sombra del lomo a la izquierda y alguna manchita de tiempo. Lo de afuera sigue siendo el cosmos. */
+.v2 #app{
+  background:
+    var(--fibra),
+    radial-gradient(160px 120px at 88% 6%,rgba(120,80,30,.07),transparent 70%),
+    radial-gradient(90px 70px at 12% 78%,rgba(120,80,30,.06),transparent 70%),
+    radial-gradient(130% 110% at 55% 45%,transparent 58%,rgba(92,62,24,.20) 100%),
+    linear-gradient(90deg,rgba(60,40,14,.22) 0,rgba(60,40,14,.06) 14px,transparent 34px),
+    var(--page)!important;
+  box-shadow:0 24px 60px rgba(3,6,20,.6),inset 22px 0 26px -20px rgba(60,40,10,.4),inset 0 0 0 1px rgba(92,62,24,.2)}
+.v2 .hoja :is(.cd,.hoy-hero,.hchip,.card,.wk,.fin-cap),.v2 .hoja #resumen-out>.fold,.v2 .sem-hoy>.sem-det,.v2 .sem-c{
+  box-shadow:inset 0 1px 0 rgba(255,250,235,.35),0 1px 0 rgba(92,62,24,.10),0 8px 18px -14px rgba(60,40,14,.55)}
+.v2 .sem-c.pasada:not([aria-selected="true"]){background:color-mix(in srgb,var(--surface) 45%,transparent)}
+/* (2.42) la parte del mes de cada semana, como una pestañita arriba de la ficha */
+.v2 .sem-car{padding-top:var(--e3)}
+.v2 .sem-c{position:relative}
+.v2 .sem-c .sem-c-pct{position:absolute;top:calc(-1 * var(--e3));left:var(--e3);padding:2px 8px;border-radius:6px 6px 0 0;
+  font:700 13px/1.2 var(--f-body);font-variant-numeric:lining-nums tabular-nums;background:var(--surface-2);color:var(--oro-t);box-shadow:inset 0 0 0 1px var(--line)}
+.v2 .sem-c[aria-selected="true"] .sem-c-pct{background:var(--sel);color:var(--on-sel);box-shadow:inset 0 -2px 0 var(--oro)}

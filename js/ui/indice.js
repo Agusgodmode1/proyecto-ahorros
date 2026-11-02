@@ -49,7 +49,7 @@ export function abrirIndice(){
     var on=!!actual&&actual.id===c.id;
     h+=renglon('data-ix-go="'+c.id+'"','·',c.t,pista(c.id,pc),'',c.tono,on);
   });
-  h+=renglon('data-ix-go="ajustes"','✦','Ajustes','perfil, apariencia y respaldo','','ix-aj',ctx.tab==='ajustes')+'</ol>'
+  h+=renglon('data-ix-go="ajustes"','✦','Ajustes','perfil, sonido y respaldo','','ix-aj',ctx.tab==='ajustes')+'</ol>'
     +'<div class="lb-acc ix-acc"><button class="lb-btn" type="button" data-ix="tapa">Cerrar el libro</button></div>';
   box.innerHTML=h;el.hidden=false;document.documentElement.classList.add('voz-abierta');
   if(!quieto())box.animate([{transform:'perspective(1400px) rotate3d(-.16,1,0,-30deg) translateX(-4%)',opacity:0},{transform:'perspective(1400px) rotate3d(-.16,1,0,1.5deg)',opacity:1,offset:.8},{transform:'none',opacity:1}],{duration:420,easing:'cubic-bezier(.3,.6,.2,1)'});

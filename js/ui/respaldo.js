@@ -134,13 +134,7 @@ export function renderAjustes(estadoGuardado){
 }
 /* ---------- Apariencia (sigue al teléfono por defecto; se guarda en este aparato) ---------- */
 var TEMA='pa-tema';
-function temaActual(){try{return localStorage.getItem(TEMA)||'auto'}catch(e){return 'auto'}}
-export function aplicarTema(t){
-  var html=document.documentElement,oscuro=t==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:t!=='claro';
-  if(t==='auto')html.removeAttribute('data-theme');else html.setAttribute('data-theme',oscuro?'dark':'light');
-  var m=document.getElementById('meta-tema');if(m)m.setAttribute('content',oscuro?'#070B24':'#0E1640');
-  document.querySelectorAll('[data-tema]').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-tema')===t))});
-}
+export function aplicarTema(){document.documentElement.setAttribute('data-theme','light');try{localStorage.removeItem(TEMA)}catch(e){}}
 /* ---------- Copias automáticas ---------- */
 var copias=[],copiaArmada=null;
 export async function renderCopias(){
@@ -164,13 +158,7 @@ export function initAjustes(reemplazar,juntarDatos){
     var n=actualizarFijosUSD(ctx.state,v);
     ctx.persist();ctx.renderAll();toast('Dólar guardado'+(n?': '+n+(n===1?' fijo actualizado':' fijos actualizados'):''));
   });
-  aplicarTema(temaActual());
-  $('#aj-tema').addEventListener('click',function(e){
-    var b=e.target.closest('[data-tema]');if(!b)return;
-    var t=b.getAttribute('data-tema');try{localStorage.setItem(TEMA,t)}catch(er){}
-    aplicarTema(t);
-  });
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(){if(temaActual()==='auto')aplicarTema('auto')});
+  aplicarTema();
   $('#aj-copias').addEventListener('click',function(e){
     var b=e.target.closest('[data-copia]');if(!b)return;
     var i=Number(b.getAttribute('data-copia'));

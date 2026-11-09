@@ -123,7 +123,7 @@ La app es un libro: tapa cósmica, prólogo (el pacto), índice, siete capítulo
 - Un velo oscuro (`.lb-velo`) va detrás del título y la frase para que el texto siempre se lea sobre la galaxia. Con «reducir movimiento», todo quieto.
 
 **Tapa y prólogo** (`ui/libro.js`, modos)
-- `nuevo`: la primera vez (o al borrar el ejemplo). Tapa (con importar o ver el ejemplo) → apertura (~2,5 s, saltable) → las 5 páginas → «Sellar el pacto» (sello de lacre, polvo de estrellas).
+- `nuevo`: la primera vez (o al borrar el ejemplo). Tapa (con importar o ver el ejemplo) → apertura (~2,5 s, saltable) → las 5 páginas → «Sellar el pacto» (sello de lacre, polvo de estrellas). El sello (2.50, pedido de Agus: el de antes tenía el brote corrido): `SELLO` en ui/libro.js, lacre granate con borde irregular (`feTurbulence`), un disco hundido, la orla con «pacto de ahorro» arriba y «✦ sellado ✦» abajo (las dos derechas, en Fraunces cursiva dorada) y una estrella de ocho puntas de oro justo en el centro (80, 80); ids con prefijo `lb-s-` (el sellito los cambia a `lb-c-`); cae con rotación de −6°.
 - `hojear`: ya hay datos. Cada pregunta muestra tu valor de hoy con «Cambiar»; «Guardar» pasa por `aplicarAjuste` (con «Deshacer») y reescribe el número. Se llega deslizando hacia atrás desde Hoy, desde el índice, desde Ajustes → «Ir al prólogo» o tocando «Tenés» / «Guardás» (abren la pregunta ya en «Cambiar»).
 - `ciclo`: el día de cobro, Hoy muestra «fin del capítulo» arriba (lo ahorrado = lo que no gastaste, la racha como quedaría) y «Empezar un pacto nuevo»: solo las 3 preguntas, total = lo que quedó + cobro estimado; `cerrarCiclo` cierra el mes justo antes de sellar.
 - `tapa`: «Cerrar el libro» (la apertura al revés, 1,7× más rápida); al tocar la tapa se abre en Hoy.

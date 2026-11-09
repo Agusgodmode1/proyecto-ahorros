@@ -38,17 +38,37 @@ function fLarga(s){var d=parse(s);return DIAL[d.getDay()]+' '+d.getDate()+' de '
 function tinta(t){var i=0;return t.split(' ').map(function(w){return '<span class="w" style="--i:'+(i++)+'">'+w+'</span>'}).join(' ')}
 
 var ORLA='<svg class="lb-orla" viewBox="0 0 120 14" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><path d="M2 7h46M72 7h46"/><path d="M60 1l6 6-6 6-6-6Z"/><circle cx="60" cy="7" r="1.6" fill="currentColor"/></svg>';
-/* Sello de lacre (naranja ladrillo, con el brote del ahorro grabado) */
+/* (2.50) Sello de lacre granate con pan de oro: borde de cera irregular, un disco hundido por el sello,
+   la leyenda «pacto de ahorro · sellado» en la orla y una estrella de ocho puntas al centro (el cosmos del libro).
+   Todo simétrico sobre el centro (80, 80), así nada queda corrido. Los ids llevan prefijo para poder repetirlo. */
 var SELLO='<svg class="lb-sello" viewBox="0 0 160 160" aria-hidden="true"><defs>'
-  +'<radialGradient id="lb-lacre" cx="38%" cy="32%" r="75%"><stop offset="0" stop-color="#F6A770"/><stop offset=".35" stop-color="#D9682A"/><stop offset=".8" stop-color="#9E3C1C"/><stop offset="1" stop-color="#6E2510"/></radialGradient></defs>'
-  +'<path fill="url(#lb-lacre)" d="M80 6c9 0 12 7 20 9s16-3 22 3 1 14 6 21 13 8 14 17-6 12-6 21 7 14 2 22-14 5-20 11-5 15-14 18-14-4-23-4-15 8-23 4-4-13-11-18-17-3-21-11 4-14 2-22-11-11-9-20 11-10 15-17 0-15 7-20 15 0 22-4S70 6 80 6Z"/>'
-  +'<circle cx="80" cy="80" r="46" fill="none" stroke="#5A1E0B" stroke-width="2.5" opacity=".5"/>'
-  +'<circle cx="80" cy="80" r="40" fill="none" stroke="#FFD9B8" stroke-width="1" opacity=".5"/>'
-  +'<g fill="none" stroke="#5A1E0B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity=".75"><path d="M80 106V70"/><path d="M80 84c-13 0-22-8-24-19 13 0 22 7 24 19Z"/><path d="M80 76c11 0 19-6 21-16-11 0-19 6-21 16Z"/><path d="M64 108h32"/></g>'
+  +'<radialGradient id="lb-s-cera" cx="36%" cy="30%" r="80%"><stop offset="0" stop-color="#C9545A"/><stop offset=".38" stop-color="#992B36"/><stop offset=".78" stop-color="#6A1724"/><stop offset="1" stop-color="#430B16"/></radialGradient>'
+  +'<radialGradient id="lb-s-hueco" cx="60%" cy="66%" r="75%"><stop offset="0" stop-color="#8C2431"/><stop offset=".7" stop-color="#6B1825"/><stop offset="1" stop-color="#4E0F1B"/></radialGradient>'
+  +'<linearGradient id="lb-s-oro" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FBE7B0"/><stop offset=".45" stop-color="#E2BE73"/><stop offset="1" stop-color="#A47C38"/></linearGradient>'
+  +'<filter id="lb-s-borde" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".045" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="9"/></filter>'
+  +'<path id="lb-s-orla" d="M41.5 80a38.5 38.5 0 0 1 77 0"/><path id="lb-s-orla2" d="M35.5 80a44.5 44.5 0 0 0 89 0"/>'
+  +'</defs>'
+  /* la cera: un charco irregular con dos gotas que se escurrieron */
+  +'<g filter="url(#lb-s-borde)"><circle cx="80" cy="80" r="66" fill="url(#lb-s-cera)"/><ellipse cx="127" cy="121" rx="6" ry="5" fill="#6A1724"/></g>'
+  /* el disco que dejó el sello, hundido: luz abajo a la derecha, sombra arriba a la izquierda */
+  +'<circle cx="80" cy="80" r="51" fill="url(#lb-s-hueco)"/>'
+  +'<circle cx="80" cy="80" r="51" fill="none" stroke="#2E0710" stroke-width="2.4" stroke-dasharray="130 191" stroke-dashoffset="-210" opacity=".55"/>'
+  +'<circle cx="80" cy="80" r="51.5" fill="none" stroke="#E58A88" stroke-width="1.6" stroke-dasharray="120 201" stroke-dashoffset="-30" opacity=".45"/>'
+  /* la orla con la leyenda */
+  +'<circle cx="80" cy="80" r="47" fill="none" stroke="url(#lb-s-oro)" stroke-width="1.1" opacity=".85"/>'
+  +'<circle cx="80" cy="80" r="33" fill="none" stroke="url(#lb-s-oro)" stroke-width="1.1" opacity=".85"/>'
+  +'<text fill="url(#lb-s-oro)" font-family="Fraunces, Georgia, serif" font-style="italic" font-weight="600" font-size="10.5"><textPath href="#lb-s-orla" startOffset="50%" text-anchor="middle" letter-spacing="1.4">pacto de ahorro</textPath></text>'
+  +'<text fill="url(#lb-s-oro)" font-family="Fraunces, Georgia, serif" font-style="italic" font-weight="600" font-size="10.5"><textPath href="#lb-s-orla2" startOffset="50%" text-anchor="middle" letter-spacing="1.4">✦ sellado ✦</textPath></text>'
+  /* la estrella de ocho puntas, centrada, con su relieve */
+  +'<path d="M80.00 63.00 L81.99 75.20 L87.78 72.22 L84.80 78.01 L97.00 80.00 L84.80 81.99 L87.78 87.78 L81.99 84.80 L80.00 97.00 L78.01 84.80 L72.22 87.78 L75.20 81.99 L63.00 80.00 L75.20 78.01 L72.22 72.22 L78.01 75.20Z" fill="#3A0A13" opacity=".55" transform="translate(.8 1.2)"/>'
+  +'<path d="M80.00 63.00 L81.99 75.20 L87.78 72.22 L84.80 78.01 L97.00 80.00 L84.80 81.99 L87.78 87.78 L81.99 84.80 L80.00 97.00 L78.01 84.80 L72.22 87.78 L75.20 81.99 L63.00 80.00 L75.20 78.01 L72.22 72.22 L78.01 75.20Z" fill="url(#lb-s-oro)" stroke="#7A5420" stroke-width=".6" stroke-linejoin="round"/>'
+  +'<circle cx="80" cy="80" r="2.6" fill="#FFF3D2"/>'
+  /* el brillo de la cera */
+  +'<ellipse cx="55" cy="40" rx="20" ry="9" fill="#FFFFFF" opacity=".13" transform="rotate(-32 55 40)"/>'
   +'</svg>';
 
 /* El sellito del ex libris: el mismo lacre, en chico */
-var SELLITO=SELLO.split('lb-lacre').join('lb-lacre-c').replace('class="lb-sello"','class="lb-sellito"');
+var SELLITO=SELLO.split('lb-s-').join('lb-c-').replace('class="lb-sello"','class="lb-sellito"');
 /* El brote que crece con cada respuesta: 0 tierra · 1 tallo · 2 primera hoja · 3 segunda hoja y yema · 4 flor · 5 la estrella que le cayó */
 var PETALOS=[0,60,120,180,240,300].map(function(a){return '<ellipse cx="32" cy="16.4" rx="3.1" ry="5.2" transform="rotate('+a+' 32 22)"/>'}).join('');
 function broteHTML(e){
@@ -487,10 +507,10 @@ function estampar(){
   s.classList.add('puesto');setTimeout(function(){sonar('sello')},300);
   if(quieto()){s.animate([{opacity:0},{opacity:1}],{duration:250});return 250}
   s.animate([
-    {opacity:0,transform:'scale(1.9) rotate(-20deg)',easing:'cubic-bezier(.55,0,.8,.3)'},
-    {opacity:1,transform:'scale(.9) rotate(-8deg)',offset:.62,easing:'ease-out'},
-    {opacity:1,transform:'scale(1.03) rotate(-8deg)',offset:.82},
-    {opacity:1,transform:'scale(1) rotate(-8deg)'}
+    {opacity:0,transform:'translateY(-18px) scale(1.7) rotate(-14deg)',easing:'cubic-bezier(.55,0,.8,.3)'},
+    {opacity:1,transform:'translateY(0) scale(.92) rotate(-6deg)',offset:.6,easing:'ease-out'},
+    {opacity:1,transform:'scale(1.03) rotate(-6deg)',offset:.8},
+    {opacity:1,transform:'scale(1) rotate(-6deg)'}
   ],{duration:520});
   pag.animate([{transform:'none'},{transform:'translate(1.5px,1px)'},{transform:'translate(-1.5px,-.5px)'},{transform:'translate(1px,0)'},{transform:'none'}],{duration:220,delay:320});
   polvo(firma,14,330);

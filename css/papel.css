@@ -1710,3 +1710,8 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 .v2 .days .day.today{background:var(--sel-luz),var(--sel)!important;border-color:var(--sel-filo)!important;box-shadow:inset 0 0 0 1px var(--sel-filo),inset 0 -2px 0 var(--oro)!important}
 .v2 .days .day.today :is(.w,.n,.s){color:var(--on-sel)!important}
 .v2 .days .day.today .w{color:var(--oro-t)!important}
+
+/* (2.50) El sello de lacre granate: centrado, con su sombra sobre el papel */
+.lb-sello{transform-origin:50% 50%;filter:drop-shadow(0 6px 8px rgba(0,0,0,.5)) drop-shadow(0 1px 1px rgba(0,0,0,.6))}
+.lb-sello.puesto{transform:rotate(-6deg)}
+.lb-sellito{transform:rotate(-6deg);filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))}

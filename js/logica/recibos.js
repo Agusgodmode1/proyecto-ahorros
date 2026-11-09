@@ -4,7 +4,7 @@
    state.plantillasRecibo = {empleador: {campo: 'texto de la etiqueta'}}: lo que corregiste en un PDF de ese empleador.
    El PDF nunca se guarda: solo los valores que confirmás. */
 import {num} from './util.js';
-import {mesTrabajo,pagoSem,reglasHoras,tarifas} from './sueldo.js';
+import {mesTrabajo,pagoSem,reglasHoras,tarifas,liquidar} from './sueldo.js';
 import {liqCompleta as liq} from './liquidacion.js';
 import {esFactura} from './factura.js';
 
@@ -213,12 +213,37 @@ export function asiTePagan(state,r){
   if(deRecibo&&hora>0&&(valor<hora*0.95||valor>hora*4.2)){deRecibo=false;valor=t.heCom}
   if(!deRecibo&&hora>0&&num(R.multSem)>0)valor=hora*num(R.multSem);
   var mult=hora>0?Math.round(valor/hora*4)/4:num(R.multSem);
-  var desc=[['BPS (jubilación)',r.aportes],['FONASA (salud)',r.fonasa],['IRPF',r.irpf],['Otros',r.otros]].filter(function(d){return num(d[1])>0}).map(function(d){
-    var m=enPesosRecibo(r,d[1]);return {nombre:d[0],monto:m,pct:hab>0?Math.round(m/hab*1000)/10:null};
-  });
-  /* (2.56.1) lo que no pude separar (por ejemplo, FONASA o IRPF sin leer) va junto, así los descuentos suman lo que falta */
-  var sum=desc.reduce(function(x,d){return x+d.monto},0),falta=hab>0&&liq>0?hab-liq-sum:0;
-  if(falta>50)desc.push({nombre:desc.length?'Resto de descuentos':'Descuentos',monto:Math.round(falta),pct:Math.round(falta/hab*1000)/10,resto:true});
+  var desc=descuentosDe(state,r,hab,liq);
   return {mes:r.mes,hora:Math.round(hora*100)/100,divisor:div,nominal:nom,extra:{valor:Math.round(valor*100)/100,mult:mult,deRecibo:deRecibo},
     fin:{mult:num(R.multFin)||null},descuentos:desc,haberes:hab,liquido:liq,enMano:hab>0&&liq>0?Math.round(liq/hab*1000)/10:null};
+}
+
+/* (2.57) Los descuentos de un recibo, renglón por renglón como en el papel: BPS, FONASA, FRL, IRPF y otros.
+   Lo que el recibo no deja leer se calcula con las reglas de Uruguay sobre lo que ganaste (est:true),
+   y la diferencia con lo que de verdad te descontaron va al IRPF calculado (o a «Otros»): siempre suman haberes − líquido. */
+export function descuentosDe(state,r,hab,liq){
+  if(!(hab>0))return [];
+  var s=state.sueldo||{},bpc=num(s.bpc)||6864;
+  var E=liquidar({nominal:hab,minCom:0,rateCom:0,minEsp:0,rateEsp:0,bono:0,bpc:bpc,hijos:num(s.hijos),conyuge:!!s.conyuge,otros:0});
+  function v(x){var n=enPesosRecibo(r,x);return n>0?n:null}
+  var bps=v(r.aportes),fon=v(r.fonasa),irpf=v(r.irpf),otros=v(r.otros),frl=null;
+  /* «otros» que es casi el FRL (0,1 %): es el FRL */
+  if(otros&&Math.abs(otros-E.frl)<=Math.max(5,E.frl*0.2)){frl=otros;otros=null}
+  var L=[
+    {k:'bps',nombre:'BPS',que:'tu jubilación',monto:bps||E.mont,est:!bps},
+    {k:'fonasa',nombre:'FONASA',que:'tu salud (la mutualista)',monto:fon||E.fon,est:!fon},
+    {k:'frl',nombre:'FRL',que:'fondo de reconversión laboral',monto:frl||E.frl,est:!frl},
+    {k:'irpf',nombre:'IRPF',que:'impuesto a la renta',monto:irpf!==null?irpf:E.irpf,est:irpf===null}
+  ];
+  if(otros)L.push({k:'otros',nombre:'Otros',que:'sindicato, préstamos u otros',monto:otros,est:false});
+  if(liq>0){
+    var T=hab-liq,S=L.reduce(function(x,d){return x+d.monto},0),dif=T-S;
+    if(Math.abs(dif)>50){
+      var aj=['irpf','fonasa'].map(function(k){return L.filter(function(d){return d.k===k})[0]}).filter(function(d){return d.est&&d.monto+dif>=0})[0];
+      if(aj)aj.monto+=dif;
+      else if(dif>0)L.push({k:'otros2',nombre:'Otros',que:'lo que no pude separar',monto:dif,est:true});
+    }
+  }
+  return L.map(function(d){var m=Math.round(d.monto);return {k:d.k,nombre:d.nombre,que:d.que,monto:m,pct:Math.round(m/hab*1000)/10,est:d.est}})
+    .filter(function(d){return d.monto>0||d.k==='irpf'});
 }

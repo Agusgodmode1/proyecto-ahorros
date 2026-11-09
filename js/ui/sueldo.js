@@ -173,23 +173,47 @@ function renderVeredicto(state){
 /* (2.53) «Así te pagan»: lo que la app aprendió de tu último recibo, siempre a la vista */
 function pctTx(v){return v===null||v===undefined?'':String(v).replace('.',',')+' %'}
 function vecesTx(m){var w={1.5:'una vez y media tu hora',2:'el doble de tu hora',2.5:'dos veces y media tu hora',3:'el triple de tu hora'};return w[m]||('×'+String(m).replace('.',',')+' tu hora')}
-/* (2.56) más simple de leer: cuánto te queda en mano (con una barra), lo que vale cada hora y cada descuento en una línea */
+/* (2.57) «Así te pagan», como un recibo de un vistazo: el anillo con lo que te queda en mano, lo que vale cada hora
+   y los descuentos uno por uno (BPS, FONASA, FRL, IRPF…) con su % y una barra en partes */
+var COL_DESC={bps:'var(--oro)',fonasa:'var(--teal)',frl:'var(--muted)',irpf:'var(--ojo)',otros:'var(--mal)',otros2:'var(--mal)'};
+function anillo(p){
+  var r=42,c=2*Math.PI*r,on=c*Math.max(0,Math.min(100,p))/100;
+  return '<svg class="asi-ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="'+r+'" class="asi-ring-bg"/><circle cx="50" cy="50" r="'+r+'" class="asi-ring-on" stroke-dasharray="'+on.toFixed(1)+' '+c.toFixed(1)+'" transform="rotate(-90 50 50)"/></svg>';
+}
+function multTx(m){return '×'+String(m).replace('.',',')}
 function renderAsi(state){
   var el=$('#sd-asi');if(!el)return;
   var ing=ingresoDe(state);if(esFactura(state)||ing.tipo==='variable'){el.innerHTML='';return}
   var A=asiTePagan(state);if(!A){el.innerHTML='';return}
-  var mn=MESL[Number(A.mes.slice(5,7))-1],R=reglasHoras(state),conH=R.activo!==false,pm=A.enMano?Math.max(0,Math.min(100,A.enMano)):null;
-  var h='<div class="card asi"><div class="asi-cab"><h3>Así te pagan</h3><span class="note">lo saqué de tu recibo de '+mn+'</span></div>';
-  if(pm!==null)h+='<div class="asi-mano"><p>De lo que ganás te queda en mano el <b>'+pctTx(A.enMano)+'</b></p>'
-    +'<div class="asi-bar" role="img" aria-label="En mano '+pctTx(A.enMano)+', descuentos '+pctTx(Math.round((100-A.enMano)*10)/10)+'"><i style="width:'+pm+'%"></i></div>'
-    +'<p class="asi-mn"><span>ganaste '+money(A.haberes)+'</span><span>cobraste <b>'+money(A.liquido)+'</b></span></p></div>';
-  h+='<div class="asi-horas"><div><span>Tu hora</span><b>'+money(A.hora)+'</b></div>';
+  var mn=MESL[Number(A.mes.slice(5,7))-1],R=reglasHoras(state),conH=R.activo!==false;
+  var D=A.descuentos,totD=D.reduce(function(x,d){return x+d.monto},0),pD=A.haberes>0?Math.round(totD/A.haberes*1000)/10:0,hayEst=D.some(function(d){return d.est});
+  var h='<div class="card asi"><div class="asi-cab"><h3>Así te pagan</h3><span class="note">tu recibo de '+mn+'</span></div>';
+  /* 1. lo que te queda en mano */
+  if(A.enMano)h+='<div class="asi-top"><div class="asi-anillo">'+anillo(A.enMano)+'<div class="asi-ring-t"><b>'+pctTx(A.enMano)+'</b><span>en mano</span></div></div>'
+    +'<dl class="asi-cuenta"><div><dt>Ganaste</dt><dd>'+money(A.haberes)+'</dd></div>'
+    +'<div><dt>Descuentos</dt><dd class="menos">− '+money(totD)+'</dd></div>'
+    +'<div class="fin"><dt>Cobraste</dt><dd>'+money(A.liquido)+'</dd></div></dl></div>';
+  /* 2. lo que vale cada hora */
+  h+='<div class="asi-sec"><p class="asi-t">Lo que vale tu hora</p><div class="asi-horas">'
+    +'<div><span>Normal</span><b>'+money(A.hora)+'</b><i class="asi-x">×1</i></div>';
   if(conH){
-    h+='<div><span>Hora extra</span><b>'+money(A.extra.valor)+'</b>'+(A.extra.mult?'<small>'+esc(vecesTx(A.extra.mult))+'</small>':'')+'</div>';
-    if(A.fin.mult)h+='<div><span>Finde y feriado</span><b>'+money(A.hora*A.fin.mult)+'</b><small>'+esc(vecesTx(A.fin.mult))+'</small></div>';
+    h+='<div><span>Extra</span><b>'+money(A.extra.valor)+'</b>'+(A.extra.mult?'<i class="asi-x">'+multTx(A.extra.mult)+'</i>':'')+'</div>';
+    if(A.fin.mult)h+='<div><span>Finde y feriado</span><b>'+money(A.hora*A.fin.mult)+'</b><i class="asi-x">'+multTx(A.fin.mult)+'</i></div>';
   }
-  h+='</div>';
-  if(A.descuentos.length)h+='<p class="asi-t">Te descuentan</p><ul class="asi-d">'+A.descuentos.map(function(d){return '<li><span>'+esc(d.nombre)+'</span><b>'+(d.pct!==null?pctTx(d.pct):'')+'</b><small>'+money(d.monto)+'</small></li>'}).join('')+'</ul>';
+  h+='</div><p class="note asi-pie">Tu hora = sueldo '+money(A.nominal)+' ÷ '+A.divisor+' h.</p></div>';
+  /* 3. los descuentos, uno por uno */
+  if(D.length){
+    h+='<div class="asi-sec"><p class="asi-t">Tus descuentos <b>'+pctTx(pD)+'</b></p>'
+      +'<div class="asi-seg" role="img" aria-label="Descuentos: '+D.map(function(d){return d.nombre+' '+pctTx(d.pct)}).join(', ')+'">'
+      +D.filter(function(d){return d.monto>0}).map(function(d){return '<i style="flex:'+d.monto+';background:'+COL_DESC[d.k]+'"></i>'}).join('')+'</div>'
+      +'<ul class="asi-d">'+D.map(function(d){
+        return '<li><i class="asi-dot" style="background:'+COL_DESC[d.k]+'"></i><span class="asi-n"><b>'+esc(d.nombre)+'</b><small>'+esc(d.que)+(d.est?' · <em>calculado</em>':'')+'</small></span>'
+          +'<span class="asi-v"><b>'+(d.monto>0?pctTx(d.pct):'0 %')+'</b><small>'+(d.monto>0?money(d.monto):'no pagás')+'</small></span></li>';
+      }).join('')
+      +'<li class="asi-tot"><span class="asi-n"><b>Total</b></span><span class="asi-v"><b>'+pctTx(pD)+'</b><small>'+money(totD)+'</small></span></li></ul>'
+      +(hayEst?'<p class="note asi-pie"><em>calculado</em>: no lo pude leer del recibo; lo saqué con las reglas de Uruguay y cierra con lo que cobraste.</p>':'')
+      +'</div>';
+  }
   el.innerHTML=h+'</div>';
 }
 export function renderSueldo(){

@@ -1803,3 +1803,52 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 .v2 .asi-d span{color:var(--ink)}
 .v2 .asi-d b{color:var(--ink);font:600 17px var(--f-libro);font-variant-numeric:lining-nums tabular-nums}
 .v2 .asi-d small{color:var(--muted);font-size:13px;text-align:right;font-variant-numeric:tabular-nums}
+
+/* ===== «Así te pagan» como recibo de un vistazo (2.57) ===== */
+.v2 .asi{gap:var(--e5)}
+.v2 .asi-top{display:grid;grid-template-columns:118px minmax(0,1fr);gap:var(--e4);align-items:center}
+.v2 .asi-anillo{position:relative;width:118px;height:118px}
+.v2 .asi-ring{width:100%;height:100%;display:block}
+.v2 .asi-ring circle{fill:none;stroke-width:9}
+.v2 .asi-ring-bg{stroke:color-mix(in srgb,var(--muted) 22%,transparent)}
+.v2 .asi-ring-on{stroke:var(--azul);stroke-linecap:round}
+.v2 .asi-ring-t{position:absolute;inset:0;display:grid;place-content:center;text-align:center;gap:0}
+.v2 .asi-ring-t b{font:600 24px/1 var(--f-libro);color:var(--azul);font-variant-numeric:lining-nums tabular-nums}
+.v2 .asi-ring-t span{font-size:12.5px;color:var(--muted);font-weight:600;margin-top:3px}
+.v2 .asi-cuenta{margin:0;display:grid;gap:6px}
+.v2 .asi-cuenta div{display:flex;justify-content:space-between;align-items:baseline;gap:var(--e2)}
+.v2 .asi-cuenta dt{color:var(--muted);font-size:14px}
+.v2 .asi-cuenta dd{margin:0;color:var(--ink);font:600 17px var(--f-libro);font-variant-numeric:lining-nums tabular-nums;white-space:nowrap}
+.v2 .asi-cuenta dd.menos{color:var(--muted)}
+.v2 .asi-cuenta .fin{border-top:1px solid var(--line);padding-top:6px}
+.v2 .asi-cuenta .fin dt{color:var(--ink);font-weight:700}
+.v2 .asi-cuenta .fin dd{color:var(--azul);font-size:22px}
+.v2 .asi-sec{display:grid;gap:var(--e3)}
+.v2 .asi .asi-t{margin:0;display:flex;justify-content:space-between;align-items:baseline;color:var(--oro-t);font-size:14px;font-weight:700}
+.v2 .asi .asi-t b{color:var(--ink);font:600 17px var(--f-libro);font-variant-numeric:lining-nums tabular-nums}
+.v2 .asi .asi-horas{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:var(--e2);border:0}
+.v2 .asi .asi-horas>div{position:relative;display:grid;gap:4px;padding:var(--e3);border:1px solid var(--line);border-radius:10px;background:color-mix(in srgb,var(--ink) 3%,transparent)}
+.v2 .asi .asi-horas>div+div{border-left:1px solid var(--line)}
+.v2 .asi .asi-horas span{color:var(--muted);font-size:13px;font-weight:600}
+.v2 .asi .asi-horas b{color:var(--ink);font:600 22px/1.1 var(--f-libro);font-variant-numeric:lining-nums tabular-nums}
+.v2 .asi-x{justify-self:start;font-style:normal;font-size:12.5px;font-weight:700;color:var(--oro-t);border:1px solid color-mix(in srgb,var(--oro) 45%,transparent);border-radius:999px;padding:1px 8px}
+.v2 .asi-pie{margin:0;font-size:13px}
+.v2 .asi-pie em,.v2 .asi-d em{font-style:normal;color:var(--oro-t)}
+.v2 .asi-seg{display:flex;gap:2px;height:12px;border-radius:999px;overflow:hidden}
+.v2 .asi-seg i{display:block;min-width:3px}
+.v2 .asi .asi-d{list-style:none;margin:0;padding:0;display:grid}
+.v2 .asi .asi-d li{display:grid;grid-template-columns:12px minmax(0,1fr) auto;column-gap:var(--e3);align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.v2 .asi .asi-d li:first-child{border-top:0}
+.v2 .asi-dot{width:10px;height:10px;border-radius:50%}
+.v2 .asi-n{display:grid;gap:1px;min-width:0}
+.v2 .asi-n b{color:var(--ink);font-size:16px;font-weight:700}
+.v2 .asi-n small{color:var(--muted);font-size:13px}
+.v2 .asi-v{display:grid;justify-items:end;gap:1px}
+.v2 .asi-v b{color:var(--ink);font:600 19px/1.1 var(--f-libro);font-variant-numeric:lining-nums tabular-nums}
+.v2 .asi-v small{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+.v2 .asi .asi-d li.asi-tot{grid-template-columns:12px minmax(0,1fr) auto;border-top:1px solid var(--line-2,var(--line))}
+.v2 .asi .asi-d li.asi-tot .asi-n{grid-column:2}
+.v2 .asi .asi-d li.asi-tot .asi-v b{color:var(--oro)}
+@media (max-width:360px){.v2 .asi-top{grid-template-columns:1fr;justify-items:center}.v2 .asi-cuenta{width:100%}}
+.v2 .asi .asi-d .asi-n small{text-align:left}
+.v2 .asi .asi-d .asi-v small{text-align:right}

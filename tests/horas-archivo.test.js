@@ -91,5 +91,8 @@ test('hora extra absurda: se descarta y los descuentos suman', async function(){
   var A=asi(st);
   assert.equal(A.extra.deRecibo,false);assert.equal(A.extra.valor,400);assert.equal(A.extra.mult,2);
   var tot=A.descuentos.reduce(function(x,y){return x+y.monto},0);assert.equal(tot,10000);
-  assert.equal(A.descuentos[A.descuentos.length-1].nombre,'Resto de descuentos');
+  var by={};A.descuentos.forEach(function(d){by[d.k]=d});
+  assert.equal(by.bps.monto,7500);assert.equal(by.bps.est,false);
+  assert.equal(by.fonasa.monto,2250);assert.equal(by.fonasa.pct,4.5);assert.equal(by.fonasa.est,true);
+  assert.equal(by.frl.monto,50);assert.equal(by.irpf.monto,200);assert.equal(by.irpf.est,true);
 });

@@ -30,9 +30,9 @@ export function lectorHTML(){
 /* (2.14) «Subí tu recibo de sueldo», arriba de todo en Sueldo: lo lee, muestra cómo te pagan y pregunta lo que no está claro */
 export function subirHTML(hayEsteMes){
   if(S)return '<div class="sec"><h2>Así te pagan</h2><p class="note">Revisá que esté bien: si corregís un renglón, lo recuerdo.</p></div>'+propuestaHTML();
-  /* (2.53) con algún recibo guardado, la caja se achica: solo para subir uno más nuevo */
-  return '<div class="sec"><h2>'+(hayEsteMes?'¿Tenés un recibo más nuevo?':'Subí tu recibo de sueldo')+'</h2><p class="note">'
-    +(hayEsteMes?'Subilo y actualizo cómo te pagan.':'El más nuevo que tengas: aprendo cómo te pagan y te digo si te pagaron bien.')+'</p></div>'+entradaHTML();
+  /* (2.56) con un recibo ya alcanza: subir otro queda plegado */
+  if(hayEsteMes)return '<details class="sub-d sd-otro"'+(pegar?' open':'')+'><summary>Subir otro recibo</summary><div class="stack" style="margin-top:12px"><p class="note">Si cambió tu sueldo, subí el más nuevo y actualizo todo.</p>'+entradaHTML()+'</div></details>';
+  return '<div class="sec"><h2>Subí tu recibo de sueldo</h2><p class="note">Uno solo alcanza: saco tu sueldo, cuánto vale tu hora extra y tus descuentos.</p></div>'+entradaHTML();
 }
 function entradaHTML(){
   return '<div class="lector stack"><div class="row-btns"><label class="btn primary filebtn">Leer un PDF<input type="file" class="sr-only" accept="application/pdf,.pdf" id="lec-pdf"></label>'

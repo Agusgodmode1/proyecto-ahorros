@@ -392,7 +392,7 @@ export function renderResumen(pc){
   /* (2.39) los sobres del mes y dos recordatorios: separar el ahorro al cobrar y el cierre de cada semana */
   var so=$('#consejos-hoy');if(so)so.innerHTML=consejosHoy(pc,today());
   var pa=$('#pasar-aviso');if(pa)pa.innerHTML=avisoPasar(pc,today());
-  var ra=$('#recibo-aviso');if(ra)ra.innerHTML=avisoRecibo(ctx.state,today());
+  /* (2.56) ya no se pide el recibo de cada mes: alcanza con uno */var ra=$('#recibo-aviso');if(ra)ra.innerHTML='';
   var rp=$('#repaso-aviso');if(rp)rp.innerHTML=avisoRepaso(pc,today());
   var sf=aniosSinFeriados(state,today()),fa=$('#fer-aviso');
   if(fa)fa.innerHTML=sf.length?'<div class="banner"><p><b>No tengo los feriados de '+sf.join(' y ')+'.</b> Sin ellos, el día de cobro puede salir mal. Actualizá la app o agregalos en Ajustes → Feriados.</p><button class="btn" type="button" data-goto="ajustes">Ir a Feriados</button></div>':'';

@@ -1778,3 +1778,28 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 .v2 .asi-t{margin:0;font:600 14px var(--f-body);color:var(--muted)}
 .v2 .asi-m{margin:0;color:var(--muted)}
 .v2 .asi-m b{color:var(--oro-t)}
+
+/* ===== Sueldo simple (2.56): «Vas a cobrar $ 0» sin recibo y «Así te pagan» de un vistazo ===== */
+.v2 .sd-cero .pay-big{color:var(--muted)}
+.v2 .sd-cero .row-btns{margin-top:var(--e2)}
+.v2 .asi{gap:var(--e4)}
+.v2 .asi-mano{display:grid;gap:var(--e2)}
+.v2 .asi-mano p{margin:0;color:var(--ink);font-size:16px}
+.v2 .asi-mano p b{color:var(--azul);font:600 22px var(--f-libro);font-variant-numeric:lining-nums tabular-nums}
+.v2 .asi-bar{height:12px;border-radius:999px;background:color-mix(in srgb,var(--muted) 22%,transparent);overflow:hidden}
+.v2 .asi-bar i{display:block;height:100%;border-radius:999px;background:var(--azul)}
+.v2 .asi-mano .asi-mn{display:flex;justify-content:space-between;gap:var(--e3);flex-wrap:wrap;color:var(--muted);font-size:14px}
+.v2 .asi-mano .asi-mn b{color:var(--ink);font:600 15px var(--f-body)}
+.v2 .asi-horas{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.v2 .asi-horas>div{display:grid;gap:2px;align-content:start;padding:var(--e3) var(--e2)}
+.v2 .asi-horas>div+div{border-left:1px solid var(--line)}
+.v2 .asi-horas span{color:var(--muted);font-size:13px;font-weight:600}
+.v2 .asi-horas b{color:var(--ink);font:600 20px var(--f-libro);font-variant-numeric:lining-nums tabular-nums}
+.v2 .asi-horas small{color:var(--oro-t);font-size:12.5px;line-height:1.25}
+.v2 .asi-t{margin:0;color:var(--muted);font-size:14px;font-weight:600}
+.v2 .asi-d{list-style:none;margin:0;padding:0;display:grid}
+.v2 .asi-d li{display:grid;grid-template-columns:minmax(0,1fr) auto 76px;column-gap:var(--e3);align-items:baseline;padding:var(--e2) 0;border-top:1px solid var(--line)}
+.v2 .asi-d li:first-child{border-top:0}
+.v2 .asi-d span{color:var(--ink)}
+.v2 .asi-d b{color:var(--ink);font:600 17px var(--f-libro);font-variant-numeric:lining-nums tabular-nums}
+.v2 .asi-d small{color:var(--muted);font-size:13px;text-align:right;font-variant-numeric:tabular-nums}

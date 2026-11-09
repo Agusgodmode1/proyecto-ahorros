@@ -4,7 +4,7 @@
    state.plantillasRecibo = {empleador: {campo: 'texto de la etiqueta'}}: lo que corregiste en un PDF de ese empleador.
    El PDF nunca se guarda: solo los valores que confirmás. */
 import {num} from './util.js';
-import {mesTrabajo,pagoSem,reglasHoras} from './sueldo.js';
+import {mesTrabajo,pagoSem,reglasHoras,tarifas} from './sueldo.js';
 import {liqCompleta as liq} from './liquidacion.js';
 import {esFactura} from './factura.js';
 
@@ -178,9 +178,30 @@ export function estadoDelMes(state,mes){
 export var TOLERANCIA=300;
 export function veredicto(state,r){
   if(!r)return null;
-  var c=compararRecibo(estadoDelMes(state,r.mes),r);
+  /* (2.53) si no cargaste las horas extra de ese mes pero el recibo trae cuántas te pagaron, se usan esas:
+     así se controla lo que sí se puede (el valor de la hora y los descuentos) y no da «de más» por las horas que faltan */
+  var st=estadoDelMes(state,r.mes),usoRecibo=false;
+  var tiene=(state.horas||[]).some(function(h){return String(h.fecha).slice(0,7)===r.mes});
+  if(!tiene&&num(r.horasCant)>0&&reglasHoras(state).activo!==false){st=Object.assign({},st,{horas:[{id:'recibo',fecha:r.mes+'-15',tipo:'sem',min:Math.round(num(r.horasCant)*60)}]});usoRecibo=true}
+  var c=compararRecibo(st,r);
   var filas=c.filas.filter(function(f){return f.estado==='revisar'&&f.campo!=='liquido'});
-  if(c.liquidoDif===null)return {mes:r.mes,tipo:'sin',dif:0,filas:filas,explica:null,exacto:false,comp:c};
+  if(c.liquidoDif===null)return {mes:r.mes,tipo:'sin',dif:0,filas:filas,explica:null,exacto:false,comp:c,usoRecibo:usoRecibo};
   var a=Math.abs(c.liquidoDif);
-  return {mes:r.mes,tipo:a<=TOLERANCIA?'bien':c.liquidoDif<0?'menos':'mas',dif:c.liquidoDif,filas:filas,explica:c.explica,exacto:a<=5,comp:c};
+  return {mes:r.mes,tipo:a<=TOLERANCIA?'bien':c.liquidoDif<0?'menos':'mas',dif:c.liquidoDif,filas:filas,explica:c.explica,exacto:a<=5,comp:c,usoRecibo:usoRecibo};
+}
+
+/* ---------- (2.53) «Así te pagan»: lo que la app sabe de cómo te pagan, a partir de tu último recibo ----------
+   Devuelve null sin recibo; si no: {mes, hora, divisor, extra:{valor, mult, deRecibo}, fin:{mult}, descuentos:[{nombre, monto, pct}],
+   haberes, liquido, enMano (pct de lo que ganás que te queda)} */
+export function asiTePagan(state,r){
+  r=r||ultimoRecibo(state);if(!r)return null;
+  var R=reglasHoras(state),t=tarifas(state),nom=enPesosRecibo(r,r.nominal)||num(state.sueldo.nominal),div=num(R.divisor)||240;
+  var hora=nom>0?nom/div:t.hora,hab=enPesosRecibo(r,r.haberes)||0,liq=enPesosRecibo(r,r.liquido)||0;
+  var hc=num(r.horasCant),hm=enPesosRecibo(r,r.horasMonto),deRecibo=hc>0&&hm>0,valor=deRecibo?hm/hc:t.heCom;
+  var mult=hora>0?Math.round(valor/hora*4)/4:num(R.multSem);
+  var desc=[['BPS (jubilación)',r.aportes],['FONASA (salud)',r.fonasa],['IRPF',r.irpf],['Otros',r.otros]].filter(function(d){return num(d[1])>0}).map(function(d){
+    var m=enPesosRecibo(r,d[1]);return {nombre:d[0],monto:m,pct:hab>0?Math.round(m/hab*1000)/10:null};
+  });
+  return {mes:r.mes,hora:Math.round(hora*100)/100,divisor:div,nominal:nom,extra:{valor:Math.round(valor*100)/100,mult:mult,deRecibo:deRecibo},
+    fin:{mult:num(R.multFin)||null},descuentos:desc,haberes:hab,liquido:liq,enMano:hab>0&&liq>0?Math.round(liq/hab*1000)/10:null};
 }

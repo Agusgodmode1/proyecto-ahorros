@@ -10,7 +10,7 @@ import {renderPlanilla,initPlanilla} from './planilla.js';
 import {revisarBPC} from '../logica/avisos.js';
 import {MES,DIA} from '../logica/fechas.js';
 import {precision} from '../logica/precision.js';
-import {reciboDe,compararRecibo,ultimoRecibo,veredicto,enPesosRecibo} from '../logica/recibos.js';
+import {reciboDe,compararRecibo,ultimoRecibo,veredicto,enPesosRecibo,asiTePagan} from '../logica/recibos.js';
 import {esFactura} from '../logica/factura.js';
 import {renderFactura,initFactura} from './factura.js';
 import {formaCobroTxt} from './perfil.js';
@@ -134,7 +134,8 @@ var REDTXT={media:' y se pagan redondeados a la media hora',cuarto:' y se pagan 
 
 /* ---------- (2.51) Las dos pestañas: «Este mes» y «¿Te pagaron bien?» ---------- */
 var KT='pa-sd-tab';
-function tabActual(){try{return sessionStorage.getItem(KT)||'mes'}catch(e){return 'mes'}}
+/* sin ningún recibo guardado, se arranca por «Tu recibo»: es lo primero que hay que hacer */
+function tabActual(){var d=(ctx.state.recibos||[]).length?'mes':'control';try{return sessionStorage.getItem(KT)||d}catch(e){return d}}
 export function ponerTab(t){
   try{sessionStorage.setItem(KT,t)}catch(e){}
   var p=$('#p-sueldo');if(p)p.setAttribute('data-sdtab',t);
@@ -166,12 +167,27 @@ function renderVeredicto(state){
   if(v.filas.length)h+='<ul class="vd-l">'+v.filas.map(function(f){var hc=f.campo==='horasCant';return '<li><span>'+esc(f.concepto)+'</span><b>'+(hc?String(Math.round(f.recibo*100)/100).replace('.',',')+' h':money(f.recibo))+'</b><small>esperaba '+(hc?String(Math.round(f.calculado*100)/100).replace('.',',')+' h':money(f.calculado))+'</small></li>'}).join('')+'</ul>';
   if(v.tipo!=='bien'&&v.explica)h+='<p class="note">Lo que más lo explica: <b>'+esc(v.explica.concepto)+'</b>.</p>';
   /* si en el recibo hay horas extra pero no cargaste ninguna de ese mes, lo más probable es que falten tus horas */
-  var hc=v.comp.filas.filter(function(f){return f.campo==='horasCant'||f.campo==='horasMonto'})[0];
-  if(hc&&hc.calculado<=0&&hc.recibo>0)h+='<p class="note">No cargaste horas extra de '+mn+': si las sumás, comparo mejor.</p>';
+  if(v.usoRecibo)h+='<p class="note">No cargaste tus horas de '+mn+': usé las '+String(r.horasCant).replace('.',',')+' h extra que dice el recibo.</p>';
+  el.innerHTML=h+'</div>';
+}
+/* (2.53) «Así te pagan»: lo que la app aprendió de tu último recibo, siempre a la vista */
+function pctTx(v){return v===null||v===undefined?'':String(v).replace('.',',')+' %'}
+function renderAsi(state){
+  var el=$('#sd-asi');if(!el)return;
+  var ing=ingresoDe(state);if(esFactura(state)||ing.tipo==='variable'){el.innerHTML='';return}
+  var A=asiTePagan(state);if(!A){el.innerHTML='';return}
+  var mn=MESL[Number(A.mes.slice(5,7))-1],R=reglasHoras(state),conH=R.activo!==false;
+  var h='<div class="card asi"><div class="asi-cab"><h3>Así te pagan</h3><span class="note">según tu recibo de '+mn+'</span></div><ul class="asi-l">'
+    +'<li><span>Tu hora normal</span><b>'+money2(A.hora)+'</b><small>sueldo '+money(A.nominal)+' ÷ '+A.divisor+' h</small></li>';
+  if(conH)h+='<li><span>Hora extra entre semana</span><b>'+money2(A.extra.valor)+'</b><small>'+(A.extra.mult?'×'+String(A.extra.mult).replace('.',',')+' tu hora':'')+(A.extra.deRecibo?' · sale de tu recibo':' · según tus reglas')+'</small></li>'
+    +(A.fin.mult?'<li><span>Fin de semana y feriado</span><b>×'+String(A.fin.mult).replace('.',',')+'</b><small>'+money2(A.hora*A.fin.mult)+' la hora</small></li>':'');
+  h+='</ul>';
+  if(A.descuentos.length)h+='<p class="asi-t">Te descuentan</p><ul class="asi-l asi-d">'+A.descuentos.map(function(d){return '<li><span>'+esc(d.nombre)+'</span><b>'+(d.pct!==null?pctTx(d.pct):money(d.monto))+'</b><small>'+money(d.monto)+'</small></li>'}).join('')+'</ul>';
+  if(A.enMano)h+='<p class="asi-m">Te queda en mano el <b>'+pctTx(A.enMano)+'</b> de lo que ganás.</p>';
   el.innerHTML=h+'</div>';
 }
 export function renderSueldo(){
-  ponerTab(tabActual());renderVeredicto(ctx.state);
+  ponerTab(tabActual());renderVeredicto(ctx.state);renderAsi(ctx.state);
   /* Lr: lo que vas a cobrar (el recibo, si lo cargaste); L: la estimación, para el desglose */
   var state=ctx.state,s=state.sueldo,Lr=liqNow(true),L=Lr.estimado||Lr,L0=liqNow(false),mc=mins(state,'sem'),me=mins(state,'fin');
   var bpc=num(s.bpc)||6864,nom=num(s.nominal),t=tarifas(state),R=reglasHoras(state),hn=t.hora,finH=t.heEsp+t.bonoHora,conHoras=R.activo!==false;

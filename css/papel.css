@@ -1763,3 +1763,18 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 /* (2.52) El aviso de versión nueva va por encima de todo (antes la tapa o el menú lo tapaban) */
 .upd{z-index:90!important;background:var(--surface-2)!important;color:var(--ink)!important;border:1px solid var(--sel-filo,rgba(217,181,108,.5));box-shadow:0 10px 30px rgba(0,0,0,.6)!important}
 .upd .btn{background:var(--cta)!important;color:var(--on-cta)!important;min-height:44px}
+
+/* (2.53) «Así te pagan»: lo que la app aprendió de tu recibo */
+.v2 .asi{display:grid;gap:var(--e3)}
+.v2 .asi-cab{display:grid;gap:2px}
+.v2 .asi-cab h3{margin:0;font:600 var(--t4,22px)/1.15 var(--f-libro);color:var(--oro)}
+.v2 .asi-l{list-style:none;margin:0;padding:0;display:grid}
+.v2 .asi-l li{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:var(--e3);padding:var(--e2) 0;border-top:1px solid var(--line)}
+.v2 .asi-l li:first-child{border-top:0}
+.v2 .asi-l span{color:var(--ink)}
+.v2 .asi-l b{color:var(--azul);font:600 18px var(--f-libro);font-variant-numeric:lining-nums tabular-nums;text-align:right}
+.v2 .asi-d b{color:var(--ink)}
+.v2 .asi-l small{grid-column:1/-1;color:var(--muted);font-size:13px}
+.v2 .asi-t{margin:0;font:600 14px var(--f-body);color:var(--muted)}
+.v2 .asi-m{margin:0;color:var(--muted)}
+.v2 .asi-m b{color:var(--oro-t)}

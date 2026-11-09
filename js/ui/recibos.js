@@ -75,7 +75,7 @@ export function renderRecibos(){
   var st=ctx.state,l=(st.recibos||[]).slice().sort(function(a,b){return a.mes<b.mes?1:-1}),mt=mesTrabajo(st);
   /* (2.14) con sueldo en Uruguay (o personalizado), el lector va arriba de todo: «Subí tu recibo de sueldo» */
   var ing=st.perfil&&st.perfil.ingreso||{},arriba=!ing.factura&&ing.tipo!=='variable',sub=$('#sd-subir');
-  if(sub){sub.hidden=!arriba;if(arriba)sub.innerHTML=subirHTML(l.some(function(r){return r.mes===mt}))}
+  if(sub){sub.hidden=!arriba;if(arriba)sub.innerHTML=subirHTML(l.length>0)}
   var h='';
   if(edit)h+=formRecibo();
   else if(arriba){} /* (2.51) «Subí tu recibo» está justo arriba, con «Cargar a mano» */

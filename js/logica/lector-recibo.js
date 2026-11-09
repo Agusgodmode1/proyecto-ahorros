@@ -140,6 +140,9 @@ export function revisarCampos(c){
   });
   var nom=num(c.nominal);
   if(nom>0&&(nom<1000||(hab>0&&(nom<hab*0.3||nom>hab*1.02)))){dudas.push('No encontré bien tu sueldo básico ('+nom+').');c.nominal=null}
+  /* (2.56.1) la hora extra tiene que valer entre 1 y 4 veces tu hora (sueldo ÷ 240 a ÷ 192): si no, la cantidad está mal leída */
+  var hc=num(c.horasCant),hm=num(c.horasMonto),nb=num(c.nominal);
+  if(hc>0&&hm>0&&nb>0){var vh=hm/hc;if(hc>200||vh<nb/240*0.95||vh>nb/192*4){dudas.push('No leí bien la cantidad de horas extra ('+hc+').');c.horasCant=null}}
   return dudas;
 }
 

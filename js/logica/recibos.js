@@ -208,11 +208,17 @@ export function asiTePagan(state,r){
   r=r||ultimoRecibo(state);if(!r||reciboRaro(r))return null;
   var R=reglasHoras(state),t=tarifas(state),nom=enPesosRecibo(r,r.nominal)||num(state.sueldo.nominal),div=num(R.divisor)||240;
   var hora=nom>0?nom/div:t.hora,hab=enPesosRecibo(r,r.haberes)||0,liq=enPesosRecibo(r,r.liquido)||0;
-  var hc=num(r.horasCant),hm=enPesosRecibo(r,r.horasMonto),deRecibo=hc>0&&hm>0,valor=deRecibo?hm/hc:t.heCom;
+  var hc=num(r.horasCant),hm=enPesosRecibo(r,r.horasMonto),deRecibo=hc>0&&hm>0&&hc<=200,valor=deRecibo?hm/hc:t.heCom;
+  /* (2.56.1) una hora extra que no vale entre 1 y 4 veces tu hora está mal leída: se usan tus reglas */
+  if(deRecibo&&hora>0&&(valor<hora*0.95||valor>hora*4.2)){deRecibo=false;valor=t.heCom}
+  if(!deRecibo&&hora>0&&num(R.multSem)>0)valor=hora*num(R.multSem);
   var mult=hora>0?Math.round(valor/hora*4)/4:num(R.multSem);
   var desc=[['BPS (jubilación)',r.aportes],['FONASA (salud)',r.fonasa],['IRPF',r.irpf],['Otros',r.otros]].filter(function(d){return num(d[1])>0}).map(function(d){
     var m=enPesosRecibo(r,d[1]);return {nombre:d[0],monto:m,pct:hab>0?Math.round(m/hab*1000)/10:null};
   });
+  /* (2.56.1) lo que no pude separar (por ejemplo, FONASA o IRPF sin leer) va junto, así los descuentos suman lo que falta */
+  var sum=desc.reduce(function(x,d){return x+d.monto},0),falta=hab>0&&liq>0?hab-liq-sum:0;
+  if(falta>50)desc.push({nombre:desc.length?'Resto de descuentos':'Descuentos',monto:Math.round(falta),pct:Math.round(falta/hab*1000)/10,resto:true});
   return {mes:r.mes,hora:Math.round(hora*100)/100,divisor:div,nominal:nom,extra:{valor:Math.round(valor*100)/100,mult:mult,deRecibo:deRecibo},
     fin:{mult:num(R.multFin)||null},descuentos:desc,haberes:hab,liquido:liq,enMano:hab>0&&liq>0?Math.round(liq/hab*1000)/10:null};
 }

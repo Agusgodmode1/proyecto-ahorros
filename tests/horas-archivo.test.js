@@ -80,3 +80,16 @@ test('(2.55) sin horario, la planilla sugiere el tuyo: lo que más se repite, a 
   assert.equal(r.dias.length,0);assert.equal(r.sinHorario,true);
   assert.deepEqual(r.horarioProbable,{entrada:'12:00',salida:'21:00',dias:'lv'});
 });
+
+/* (2.56.1) una hora extra mal leída no se muestra: se usan tus reglas, y los descuentos sin leer van en «Resto» */
+import {revisarCampos as rc2} from '../js/logica/lector-recibo.js';
+test('hora extra absurda: se descarta y los descuentos suman', async function(){
+  var {asiTePagan:asi}=await import('../js/logica/recibos.js');
+  var c={nominal:48000,haberes:50000,liquido:40000,aportes:7500,horasCant:350,horasMonto:2100};
+  var d=rc2(c);assert.equal(c.horasCant,null);assert.ok(d.length);
+  var st={perfil:{ingreso:{tipo:'uy'},horas:{multSem:2,multFin:1.5,divisor:240,entrada:'09:00',salida:'18:00'}},sueldo:{nominal:48000},horas:[],recibos:[{id:'r',mes:'2026-10',nominal:48000,haberes:50000,liquido:40000,aportes:7500,horasCant:350,horasMonto:2100}]};
+  var A=asi(st);
+  assert.equal(A.extra.deRecibo,false);assert.equal(A.extra.valor,400);assert.equal(A.extra.mult,2);
+  var tot=A.descuentos.reduce(function(x,y){return x+y.monto},0);assert.equal(tot,10000);
+  assert.equal(A.descuentos[A.descuentos.length-1].nombre,'Resto de descuentos');
+});

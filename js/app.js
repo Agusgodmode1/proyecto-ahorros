@@ -12,7 +12,7 @@ import {renderGastos,syncGastos,initTarjeta,renderAvisoTarjeta,precargarTarjeta}
 import {renderFijos,initFijos} from './ui/fijos.js';
 import {renderLogros,evalLogros,initLogros} from './ui/logros.js';
 import {renderAjustes,renderAvisoRespaldo,initAjustes,renderCopias,exportar} from './ui/respaldo.js';
-import {registrarSW} from './pwa.js';
+import {registrarSW,buscarVersion} from './pwa.js';
 import {initVoz} from './ui/voz.js';
 import {abrirPerfil,initPerfil,resumenPerfil} from './ui/perfil.js';
 import {abrirLibro,initLibro} from './ui/libro.js';
@@ -355,6 +355,10 @@ ctx.persist=persist;ctx.renderAll=renderAll;ctx.go=go;ctx.syncInputs=syncInputs;
   initPerfil();initTour();initPin();initLibro();initIndice();
   initFlechas({ir:function(d){go(d)},capitulos:function(){return {}}});
   registrarSW(function(){return ctx.state?flush():null});
+  /* (2.52) Ajustes → Sobre la app → «Buscar una versión nueva» */
+  var bv=document.getElementById('aj-version');
+  if(bv)bv.addEventListener('click',async function(){bv.disabled=true;bv.textContent='Buscando…';var r=await buscarVersion();bv.disabled=false;bv.textContent='Buscar una versión nueva';
+    toast(r==='nueva'?'Hay una versión nueva: tocá «Actualizar» arriba':r==='al-dia'?'Ya tenés la última versión':'No pude buscar: revisá la conexión')});
   pedirPersistencia().then(function(p){guardado.persistente=p});
   var d=await cargar();
   /* Antes de pasar los datos a la forma nueva, se guarda una copia tal cual estaban */

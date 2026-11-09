@@ -51,6 +51,8 @@ export function abrirIndice(){
   });
   h+=renglon('data-ix-go="ajustes"','✦','Ajustes','perfil, sonido y respaldo','','ix-aj',ctx.tab==='ajustes')+'</ol>'
     +'<div class="lb-acc ix-acc"><button class="lb-btn" type="button" data-ix="tapa">Cerrar el libro</button></div>';
+  /* (2.52) si quedaba algo del cierre anterior (una animación a medio terminar), se descarta: si no, el menú quedaba invisible */
+  vez++;limpiar(box);
   box.innerHTML=h;el.hidden=false;document.documentElement.classList.add('voz-abierta');
   if(!quieto())box.animate([{transform:'perspective(1400px) rotate3d(-.16,1,0,-30deg) translateX(-4%)',opacity:0},{transform:'perspective(1400px) rotate3d(-.16,1,0,1.5deg)',opacity:1,offset:.8},{transform:'none',opacity:1}],{duration:420,easing:'cubic-bezier(.3,.6,.2,1)'});
   var b=box.querySelector('[aria-current]')||box.querySelector('[data-ix="cerrar"]');try{b.focus({preventScroll:true})}catch(e){}
@@ -66,12 +68,18 @@ function buscar(q){
     +r.lista.map(function(g,i){return '<li><button type="button" data-ixg="'+i+'"><span class="ix-rf">'+esc(fCorta(g.fecha))+'</span><span class="ix-rn">'+esc(g.nota||'Sin detalle')+(g.cat?'<small>'+esc(nombreDe(ctx.state,g.cat))+'</small>':'')+'</span><b>'+money(g.monto)+'</b></button></li>'}).join('')+'</ul>'
     :'<p class="ix-res-t">No encontré gastos con «'+esc(q.trim())+'».</p>';
 }
+/* (2.52) cada apertura tiene su número: un cierre viejo que termina tarde no esconde el menú recién abierto */
+var vez=0,cerrando=false;
+function limpiar(box){try{box.getAnimations().forEach(function(a){a.onfinish=null;a.cancel()})}catch(e){}}
 function cerrarIndice(fn){
-  var el=$('#indice'),box=$('#indice-box');
+  var el=$('#indice'),box=$('#indice-box'),mia=vez;
+  if(cerrando&&!fn)return;
   document.documentElement.classList.remove('voz-abierta');
-  var fin=function(){el.hidden=true;if(fn)fn()};
+  var fin=function(){cerrando=false;limpiar(box);if(mia===vez)el.hidden=true;if(fn)fn()};
   if(el.hidden){fin();return}
-  if(quieto())fin();else box.animate([{opacity:1},{opacity:0,transform:'translateX(-4%)'}],{duration:200,fill:'forwards'}).onfinish=fin;
+  if(quieto()){fin();return}
+  cerrando=true;limpiar(box);
+  box.animate([{opacity:1},{opacity:0,transform:'translateX(-4%)'}],{duration:200,fill:'forwards'}).onfinish=fin;
 }
 
 /* Desde «Tenés» o «Guardás» de Hoy: la página de esa pregunta del prólogo, ya lista para cambiar */
@@ -79,7 +87,7 @@ export function irAlPacto(campo){ctx.abrirPrologo(campo==='ahorro'?'q2':'q1',cam
 
 export function initIndice(){
   var el=$('#indice');
-  $('#herr-abrir').addEventListener('click',abrirIndice);
+  $('#herr-abrir').addEventListener('click',function(){cerrando=false;abrirIndice()});
   el.addEventListener('click',function(e){
     if(e.target===el){cerrarIndice();return}
     var gs=e.target.closest('[data-ixg]');if(gs){var gg=encontrados[Number(gs.getAttribute('data-ixg'))];if(gg)cerrarIndice(function(){abrirHojaGasto({gasto:gg})});return}

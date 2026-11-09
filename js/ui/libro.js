@@ -550,7 +550,8 @@ function cerrarTodo(dir){
     girar({padre:h,caja:caja,frente:f,sentido:1,z:3,alFinal:function(){h.classList.remove('lb-transp');fin()}});
     return;
   }
-  h.animate([{opacity:1},{opacity:0}],{duration:280,fill:'forwards'}).onfinish=fin;
+  /* (2.52) al terminar se borra la animación: si quedaba «pegada», el prólogo se abría invisible la vez siguiente */
+  var an=h.animate([{opacity:1},{opacity:0}],{duration:280,fill:'forwards'});an.onfinish=function(){fin();an.cancel()};
 }
 /* Desde la primera página del prólogo hacia atrás: el libro se cierra y queda la tapa */
 function aLaTapa(){
@@ -607,7 +608,7 @@ export function initLibro(){
     if(fueArrastre())return; /* arrastrar el dedo sobre la tapa mueve la luz, no abre */
     vista='abriendo';
     var luego=function(){vista='hojas';if(o.modo==='tapa'){cerrarTodo();if(o.listo)o.listo();return}abrirHojas()};
-    if(quieto()){m.animate([{opacity:1},{opacity:0}],{duration:250,fill:'forwards'}).onfinish=luego;return}
+    if(quieto()){var an=m.animate([{opacity:1},{opacity:0}],{duration:250,fill:'forwards'});an.onfinish=function(){luego();an.cancel()};return}
     moverLibro(m,luego);
   }
   m.addEventListener('click',function(e){

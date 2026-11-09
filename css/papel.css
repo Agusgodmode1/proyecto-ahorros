@@ -1759,3 +1759,7 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 .v2 #sd-veredicto .vd{grid-template-columns:minmax(0,1fr)!important}
 .v2 #sd-veredicto .vd>*{grid-column:1/-1!important;min-width:0}
 .v2 #sd-veredicto .vd>.cd-l{order:-1}
+
+/* (2.52) El aviso de versión nueva va por encima de todo (antes la tapa o el menú lo tapaban) */
+.upd{z-index:90!important;background:var(--surface-2)!important;color:var(--ink)!important;border:1px solid var(--sel-filo,rgba(217,181,108,.5));box-shadow:0 10px 30px rgba(0,0,0,.6)!important}
+.upd .btn{background:var(--cta)!important;color:var(--on-cta)!important;min-height:44px}

@@ -4,7 +4,7 @@
    state.plantillasRecibo = {empleador: {campo: 'texto de la etiqueta'}}: lo que corregiste en un PDF de ese empleador.
    El PDF nunca se guarda: solo los valores que confirmás. */
 import {num} from './util.js';
-import {mesTrabajo,pagoSem} from './sueldo.js';
+import {mesTrabajo,pagoSem,reglasHoras} from './sueldo.js';
 import {liqCompleta as liq} from './liquidacion.js';
 import {esFactura} from './factura.js';
 
@@ -160,4 +160,27 @@ export function sensibilidadDolar(L){
   var usd=L.moneda==='USD'||(L.recibo&&L.recibo.moneda==='USD');
   if(!usd||L.sinCotizacion)return null;
   return {pct:5,cambio:Math.round(L.liquido*0.05)};
+}
+
+/* ---------- (2.51) ¿Te pagaron bien? de un vistazo ----------
+   El recibo más nuevo que cargaste. */
+export function ultimoRecibo(state){
+  var l=(state.recibos||[]).slice().sort(function(a,b){return a.mes<b.mes?1:a.mes>b.mes?-1:0});return l[0]||null;
+}
+/* El estado como si el cobro fuera el de ese mes trabajado: así un recibo viejo se compara con las horas de SU mes */
+export function estadoDelMes(state,mes){
+  var y=Number(mes.slice(0,4)),m=Number(mes.slice(5,7)),atras=reglasHoras(state).mesCobro==='mismo'?0:1;
+  var d=new Date(y,m-1+atras,5,12),c=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-05';
+  return Object.assign({},state,{plan:Object.assign({},state.plan,{cobro:c})});
+}
+/* El veredicto: 'bien' (diferencia de hasta $300, lo que mueve el bono o un redondeo), 'menos', 'mas' o 'sin' (falta el líquido).
+   Trae solo los renglones para revisar y el que más explica la diferencia. */
+export var TOLERANCIA=300;
+export function veredicto(state,r){
+  if(!r)return null;
+  var c=compararRecibo(estadoDelMes(state,r.mes),r);
+  var filas=c.filas.filter(function(f){return f.estado==='revisar'&&f.campo!=='liquido'});
+  if(c.liquidoDif===null)return {mes:r.mes,tipo:'sin',dif:0,filas:filas,explica:null,exacto:false,comp:c};
+  var a=Math.abs(c.liquidoDif);
+  return {mes:r.mes,tipo:a<=TOLERANCIA?'bien':c.liquidoDif<0?'menos':'mas',dif:c.liquidoDif,filas:filas,explica:c.explica,exacto:a<=5,comp:c};
 }

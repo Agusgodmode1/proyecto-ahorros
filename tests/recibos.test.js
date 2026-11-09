@@ -1,6 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {parseMonto,montosDe,renglones,leerRecibo,aprenderPlantilla,liqReal,compararRecibo,sensibilidadDolar,reciboDe} from '../js/logica/recibos.js';
+import {parseMonto,montosDe,renglones,leerRecibo,aprenderPlantilla,liqReal,compararRecibo,sensibilidadDolar,reciboDe,ultimoRecibo,estadoDelMes,veredicto} from '../js/logica/recibos.js';
+import {mesTrabajo} from '../js/logica/sueldo.js';
 import {ejemplo,defaults,migrar,VERSION_ESTADO} from '../js/estado.js';
 import {liq} from '../js/logica/sueldo.js';
 import {aguinaldo} from '../js/logica/aguinaldo.js';
@@ -120,4 +121,22 @@ test('v12 → v13: suma recibos y plantillas vacíos',function(){
   var s=defaults();s.v=12;delete s.recibos;delete s.plantillasRecibo;
   var m=migrar(s);
   assert.equal(m.v,VERSION_ESTADO);assert.deepEqual(m.recibos,[]);assert.deepEqual(m.plantillasRecibo,{});
+});
+
+test('(2.51) veredicto: compara el recibo con las horas de SU mes y dice bien, de menos o de más',function(){
+  var s=ejemplo();s.recibos=[];
+  var mt=mesTrabajo(s),y=Number(mt.slice(0,4)),m=Number(mt.slice(5,7)),ant=(m===1?(y-1)+'-12':y+'-'+String(m-1).padStart(2,'0'));
+  var sm=estadoDelMes(s,ant);
+  assert.equal(mesTrabajo(sm),ant,'el estado del mes cobra ese mes');
+  assert.equal(s.plan.cobro===sm.plan.cobro,false,'no toca el estado de verdad');
+  var est=liq(sm,true);
+  assert.equal(veredicto(s,{mes:ant,moneda:'UYU',haberes:est.N,liquido:est.liquido}).tipo,'bien');
+  var v=veredicto(s,{mes:ant,moneda:'UYU',haberes:est.N-2000,liquido:est.liquido-1500});
+  assert.equal(v.tipo,'menos');cerca(v.dif,-1500);
+  assert.ok(v.filas.some(function(f){return f.campo==='haberes'}),'trae el renglón para revisar');
+  assert.equal(veredicto(s,{mes:ant,moneda:'UYU',haberes:est.N,liquido:est.liquido+900}).tipo,'mas');
+  assert.equal(veredicto(s,{mes:ant,moneda:'UYU',haberes:est.N}).tipo,'sin');
+  s.recibos=[{id:'a',mes:'2026-08',liquido:1},{id:'b',mes:'2026-09',liquido:2},{id:'c',mes:'2026-07',liquido:3}];
+  assert.equal(ultimoRecibo(s).id,'b');
+  assert.equal(veredicto(s,null),null);
 });

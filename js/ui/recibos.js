@@ -2,7 +2,7 @@
    El PDF nunca sale del teléfono ni se guarda: solo los valores que confirmás. */
 import {num,uid} from '../logica/util.js';
 import {MESL} from '../logica/fechas.js';
-import {CAMPOS,leerRecibo,renglones,aprenderPlantilla,compararRecibo,enPesosRecibo} from '../logica/recibos.js';
+import {estadoDelMes,CAMPOS,leerRecibo,renglones,aprenderPlantilla,compararRecibo,enPesosRecibo} from '../logica/recibos.js';
 import {mesTrabajo,ingresoDe} from '../logica/sueldo.js';
 import {cotizacion} from '../logica/monedas.js';
 import {ctx,$,money,usd,esc,cap,toast,armar} from './comun.js';
@@ -58,7 +58,7 @@ function leerForm(){
 
 /* ---------- Comparación ---------- */
 function comparacion(r){
-  var c=compararRecibo(ctx.state,r),EST={igual:['ok','igual'],cerca:['ex','cerca'],revisar:['bad','revisar']};
+  var c=compararRecibo(estadoDelMes(ctx.state,r.mes),r),EST={igual:['ok','igual'],cerca:['ex','cerca'],revisar:['bad','revisar']};
   var h='<div class="scroll"><table style="min-width:420px"><thead><tr><th>Concepto</th><th class="r">Calculado</th><th class="r">Recibo</th><th></th></tr></thead><tbody>'
     +c.filas.map(function(f){var e=EST[f.estado],h1=f.campo==='horasCant';
       return '<tr><td>'+esc(f.concepto)+'</td><td class="r">'+(h1?String(Math.round(f.calculado*100)/100).replace('.',','):money(f.calculado))+'</td><td class="r">'+(h1?String(f.recibo).replace('.',','):money(f.recibo))+'</td><td><span class="pill '+e[0]+'">'+e[1]+'</span></td></tr>'}).join('')
@@ -78,7 +78,7 @@ export function renderRecibos(){
   if(sub){sub.hidden=!arriba;if(arriba)sub.innerHTML=subirHTML(l.some(function(r){return r.mes===mt}))}
   var h='';
   if(edit)h+=formRecibo();
-  else if(arriba)h+='<p class="note">Para sumar un recibo, usá <b>«Subí tu recibo de sueldo»</b>, arriba de todo, o <button class="linklike" type="button" data-reca="manual">cargalo a mano</button>.</p>';
+  else if(arriba){} /* (2.51) «Subí tu recibo» está justo arriba, con «Cargar a mano» */
   else h+=lectorHTML();
   if(l.length)h+='<ul class="list rec-lista">'+l.map(function(r){
     var abiertoEste=abierto===r.id;
@@ -94,6 +94,7 @@ export function renderRecibos(){
 function aMano(){
   edit={datos:{mes:mesTrabajo(ctx.state),moneda:ingresoDe(ctx.state).moneda},fuente:'manual'};
   var d=$('#sd-control');if(d)d.open=true;
+  try{sessionStorage.setItem('pa-sd-tab','control')}catch(x){}var ps=$('#p-sueldo');if(ps)ps.setAttribute('data-sdtab','control');
   renderRecibos();var f=$('#rec-form');if(f)try{f.scrollIntoView({block:'start',behavior:'smooth'})}catch(e){}
   var m=$('#rec-nominal');if(m)try{m.focus({preventScroll:true})}catch(e){}
 }

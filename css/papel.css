@@ -1715,3 +1715,47 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 .lb-sello{transform-origin:50% 50%;filter:drop-shadow(0 6px 8px rgba(0,0,0,.5)) drop-shadow(0 1px 1px rgba(0,0,0,.6))}
 .lb-sello.puesto{transform:rotate(-6deg)}
 .lb-sellito{transform:rotate(-6deg);filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))}
+
+/* ---------- Sueldo en dos pestañas (2.51, pedido de Agus) ---------- */
+.v2 .sd-tabs{display:grid;grid-template-columns:1fr 1fr}
+.v2 .sd-tabs[hidden]{display:none}
+.v2 #p-sueldo[data-sdtab="mes"] [data-sdpar="control"],.v2 #p-sueldo[data-sdtab="control"] [data-sdpar="mes"]{display:none!important}
+/* Horas extra y «¿Te pagaron bien?» ya no se pliegan: son el corazón de cada pestaña */
+.v2 #p-sueldo .sd-fija>summary{display:none}
+.v2 #p-sueldo .sd-fija>.sdes-in{padding-top:0}
+.v2 .sd-hx-cab{display:grid;gap:4px}
+.v2 .sd-hx-cab h3{margin:0;font:600 var(--t4,22px)/1.15 var(--f-libro);color:var(--oro)}
+.v2 .sd-hx-tot{margin:0;color:var(--muted);font-size:15px}
+.v2 .sd-hx-tot b{color:var(--ink)}
+.v2 .sd-hx-pl{color:var(--azul);font-weight:700;white-space:nowrap}
+/* el calendario del mes: 7 columnas, cada día un botón de 44 px */
+.v2 .hxc{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.v2 .hxc-w{text-align:center;font:600 12px var(--f-body);color:var(--muted);padding-bottom:2px}
+.v2 .hxc-d{min-height:46px;display:grid;place-items:center;align-content:center;gap:1px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--ink);padding:2px 0;font:inherit;cursor:pointer}
+.v2 .hxc-d b{font:600 14px var(--f-body);font-variant-numeric:lining-nums tabular-nums}
+.v2 .hxc-d small{font-size:10.5px;line-height:1;min-height:11px;font-weight:700}
+.v2 .hxc-d.sem{background:color-mix(in srgb,var(--azul) 14%,transparent);border-color:color-mix(in srgb,var(--azul) 40%,transparent)}
+.v2 .hxc-d.sem small{color:var(--azul)}
+.v2 .hxc-d.fin{background:color-mix(in srgb,var(--oro) 16%,transparent);border-color:color-mix(in srgb,var(--oro) 45%,transparent)}
+.v2 .hxc-d.fin small{color:var(--oro-cl)}
+.v2 .hxc-d.hoy{box-shadow:inset 0 0 0 1px var(--sel-filo),inset 0 -2px 0 var(--oro)}
+.v2 .hxc-d.futuro{opacity:.45}
+/* el veredicto del último recibo */
+.v2 .vd{display:grid;gap:var(--e2)}
+.v2 .vd-t{font:600 clamp(26px,7.5vw,32px)/1.1 var(--f-libro);color:var(--ink);text-wrap:balance}
+.v2 .vd-bien .vd-t{color:var(--oro)}
+.v2 .vd-menos .vd-t{color:var(--mal)}
+.v2 .vd-mas .vd-t{color:var(--azul)}
+.v2 .vd-bien{box-shadow:inset 0 2px 0 var(--oro),0 14px 28px -18px rgba(0,0,0,.9)!important}
+.v2 .vd-menos{box-shadow:inset 0 2px 0 var(--mal),0 14px 28px -18px rgba(0,0,0,.9)!important}
+.v2 .vd-n{margin:0;color:var(--muted)}
+.v2 .vd-n b{color:var(--ink)}
+.v2 .vd-l{list-style:none;margin:0;padding:0;display:grid}
+.v2 .vd-l li{display:grid;grid-template-columns:1fr auto;column-gap:var(--e3);padding:var(--e2) 0;border-top:1px solid var(--line)}
+.v2 .vd-l b{color:var(--mal);font-variant-numeric:lining-nums tabular-nums}
+.v2 .vd-l small{grid-column:2;text-align:right;color:var(--muted);font-size:13px}
+/* el saludo de arriba no suma fuera de Hoy */
+.v2 #saludo{visibility:hidden}
+.v2 #sd-veredicto .vd{grid-template-columns:minmax(0,1fr)!important}
+.v2 #sd-veredicto .vd>*{grid-column:1/-1!important;min-width:0}
+.v2 #sd-veredicto .vd>.cd-l{order:-1}

@@ -5,7 +5,10 @@ import {num} from '../logica/util.js';
 import {fijosPeriodo,totalFijos,proximo,hoyPodes,planCalc,semanaDe} from '../logica/plan.js';
 import {disponible,fijosPagadosParte,maxAhorro,previaSaldo,ajustarSaldo,deshacerAjuste} from '../logica/saldo.js';
 import {balanceHTML} from './fijos.js';
-import {mesTrabajo,mins,reglasHoras} from '../logica/sueldo.js';
+import {mesTrabajo,mins,reglasHoras,ingresoDe} from '../logica/sueldo.js';
+import {reciboDe} from '../logica/recibos.js';
+import {esFactura} from '../logica/factura.js';
+import {tieneHorario} from '../logica/horario.js';
 import {histStats,logrosLista} from '../logica/logros.js';
 import {ctx,$,today,liqNow,planNow,anota,exAnalisis,money,esc,fCorta,fLarga,rango,fMin,cap,tile,hchip,row,toast,toastAccion} from './comun.js';
 import {aguinaldo} from '../logica/aguinaldo.js';
@@ -142,6 +145,15 @@ function initGasto(){
   try{localStorage.removeItem('pa-simple')}catch(e){}
 }
 var plegados={};/* tarjetas plegables abiertas, por id */
+/* (2.51) Los primeros 7 días después de cobrar, si falta el recibo de lo que te pagaron: «¿Llegó tu recibo?» */
+function avisoRecibo(state,t){
+  var ing=ingresoDe(state);if(esFactura(state)||ing.tipo==='variable'||!(state.pacto&&state.pacto.sellado))return '';
+  var ini=state.plan.inicio;if(!ini||t<ini||diffDays(ini,t)>7)return '';
+  var mt=mesTrabajo(state),y=Number(mt.slice(0,4)),m=Number(mt.slice(5,7)),pagado=m===1?(y-1)+'-12':y+'-'+String(m-1).padStart(2,'0');
+  if(reciboDe(state,pagado))return '';
+  try{if(localStorage.getItem('pa-recibo-no')===pagado)return ''}catch(e){}
+  return '<div class="banner"><p><b>¿Llegó tu recibo de '+MESL[Number(pagado.slice(5,7))-1]+'?</b> Subilo y te digo si te pagaron bien.</p><div class="row-btns"><button class="btn" type="button" data-sdtab-ir="control">Subir recibo</button><button class="btn quiet" type="button" data-recibo-no="'+pagado+'">Ahora no</button></div></div>';
+}
 /* (2.47) Una barra con tres partes (fijos, guardás, para gastar) y su leyenda en columnas */
 function reparto(tit,total,partes){
   var tot=Math.max(1,partes.reduce(function(x,o){return x+Math.max(0,o.v)},0));
@@ -380,6 +392,7 @@ export function renderResumen(pc){
   /* (2.39) los sobres del mes y dos recordatorios: separar el ahorro al cobrar y el cierre de cada semana */
   var so=$('#consejos-hoy');if(so)so.innerHTML=consejosHoy(pc,today());
   var pa=$('#pasar-aviso');if(pa)pa.innerHTML=avisoPasar(pc,today());
+  var ra=$('#recibo-aviso');if(ra)ra.innerHTML=avisoRecibo(ctx.state,today());
   var rp=$('#repaso-aviso');if(rp)rp.innerHTML=avisoRepaso(pc,today());
   var sf=aniosSinFeriados(state,today()),fa=$('#fer-aviso');
   if(fa)fa.innerHTML=sf.length?'<div class="banner"><p><b>No tengo los feriados de '+sf.join(' y ')+'.</b> Sin ellos, el día de cobro puede salir mal. Actualizá la app o agregalos en Ajustes → Feriados.</p><button class="btn" type="button" data-goto="ajustes">Ir a Feriados</button></div>':'';
@@ -417,6 +430,9 @@ export function renderResumen(pc){
     if(nx.libre<0)h+='<p class="err tp-n">No te alcanza para la meta: faltan '+money(-nx.libre)+'.</p>';
     var sd=sensibilidadDolar(L);
     if(sd)h+='<p class="note tp-n">Si el dólar se mueve un '+sd.pct+' %, lo libre cambia ≈ '+money(sd.cambio)+'.</p>';
+    /* (2.51) lo que llevás de horas extra este mes (ya está dentro de lo que vas a cobrar) */
+    var Rh=reglasHoras(state);
+    if(Rh.activo!==false&&tieneHorario(Rh)){var ext=(L.estimado||L).liquido-liqNow(false).liquido;if(ext>0)h+='<p class="note tp-n">Este mes llevás <b>+ '+money(ext)+'</b> de horas extra.</p>'}
     h+='<div class="row-btns tp-ir"><button class="btn quiet" type="button" data-goto="sueldo">Ver tu cobro</button></div>';
   }
   h+='</div></details>';

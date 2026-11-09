@@ -85,6 +85,7 @@ document.documentElement.setAttribute('data-theme','dark');
       <div id="pasar-aviso"></div>
       <div id="repaso-aviso"></div>
       <div id="resp-aviso"></div>
+      <div id="recibo-aviso"></div>
       <div id="entradas"></div>
       <div id="superv"></div>
       <div id="ritmo-aviso"></div>
@@ -224,19 +225,25 @@ document.documentElement.setAttribute('data-theme','dark');
       <div id="ej-banner"></div>
       <div id="bpc-aviso"></div>
       <div class="card stack sd-emp" id="sd-empezar" hidden></div>
-      <div id="sueldo-hero"></div>
       <div id="sueldo-pregunta"></div>
-      <div class="card stack sd-subir" id="sd-subir" hidden></div>
-      <details class="card sdes" data-sdes="horas" id="sd-horas">
+      <!-- (2.51) Dos pestañas: «Este mes» (lo que vas a cobrar y tus horas) y «¿Te pagaron bien?» (tu último recibo) -->
+      <div class="seg sd-tabs" id="sd-tabs" role="tablist" aria-label="Partes de tu sueldo"><button type="button" role="tab" data-sdtab="mes" aria-selected="true">Este mes</button><button type="button" role="tab" data-sdtab="control" aria-selected="false">¿Te pagaron bien?</button></div>
+      <div id="sueldo-hero" data-sdpar="mes"></div>
+      <div id="sd-veredicto" data-sdpar="control"></div>
+      <div class="card stack sd-subir" id="sd-subir" data-sdpar="control" hidden></div>
+      <details class="card sdes sd-fija" id="sd-horas" data-sdpar="mes" open>
         <summary><span class="sdes-t">Horas extra</span><span class="sdes-d" id="sd-horas-d"></span></summary>
         <div class="stack sdes-in">
-          <div class="hx" id="sd-horario"></div>
-          <div class="sec" id="sec-rates"><h3>Cuánto vale cada hora</h3><div id="sueldo-rates"></div></div>
+          <div class="sd-hx-cab"><h3 id="sd-hx-t">Tus horas extra</h3><p class="sd-hx-tot" id="sd-hx-tot"></p></div>
+          <div id="sd-hx-cal"></div>
+          <details class="sub-d" id="sd-config"><summary>Tu horario y cómo te pagan</summary><div class="stack" style="margin-top:12px">
+            <div class="hx" id="sd-horario"></div>
+            <div class="sec" id="sec-rates"><h3>Cuánto vale cada hora</h3><div id="sueldo-rates"></div></div>
+          </div></details>
         <div class="tiempo stack" id="card-horas">
-          <div class="sec"><h3>Sumá tus horas extra</h3>
-            <p class="note" id="horas-nota"></p></div>
           <div id="planilla-box" class="stack pl-box"></div>
-          <div class="pl-o"><span>o cargá un día</span></div>
+          <details class="sub-d" id="sd-amano"><summary>Sumar a mano</summary><div class="stack" style="margin-top:12px">
+          <p class="note" id="horas-nota"></p>
           <div class="grid2">
             <div class="field">
               <label for="l-fecha">¿Qué día?</label>
@@ -281,16 +288,17 @@ document.documentElement.setAttribute('data-theme','dark');
               </div>
             </div>
           </details>
-          <div id="log-out" class="stack"></div>
+          </div></details>
+          <details class="sub-d" id="sd-lista"><summary>Lista de días</summary><div id="log-out" class="stack" style="margin-top:12px"></div></details>
         </div>
 
         </div>
       </details>
-      <details class="card sdes" data-sdes="control" id="sd-control">
+      <details class="card sdes sd-fija" id="sd-control" data-sdpar="control" open>
         <summary><span class="sdes-t">¿Te pagaron bien?</span><span class="sdes-d" id="sd-control-d"></span></summary>
         <div class="stack sdes-in">
         <div class="stack" id="card-recibos">
-          <div class="sec"><h3>Tus recibos</h3><p class="note">El recibo de cada mes manda sobre lo calculado y te muestro qué explica la diferencia.</p></div>
+          <div class="sec"><h3>Tus recibos</h3><p class="note">Mes a mes. Lo que dice el recibo manda sobre lo calculado.</p></div>
           <div id="recibos-out" class="stack"></div>
         </div>
 
@@ -313,13 +321,13 @@ document.documentElement.setAttribute('data-theme','dark');
         </div></details>
         </div>
       </details>
-      <details class="card sdes" data-sdes="recibo" id="sd-recibo">
+      <details class="card sdes" data-sdes="recibo" id="sd-recibo" data-sdpar="mes">
         <summary><span class="sdes-t">Recibo estimado completo</span><span class="sdes-d" id="sd-recibo-d"></span></summary>
         <div class="stack sdes-in">
           <div class="out" id="sueldo-out"></div>
         </div>
       </details>
-      <details class="card sdes" data-sdes="factura" id="sd-factura" hidden>
+      <details class="card sdes" data-sdes="factura" id="sd-factura" data-sdpar="mes" hidden>
         <summary><span class="sdes-t">Tus facturas y costos</span><span class="sdes-d" id="sd-factura-d"></span></summary>
         <div class="stack sdes-in">
           <div class="stack" id="factura-out"></div>

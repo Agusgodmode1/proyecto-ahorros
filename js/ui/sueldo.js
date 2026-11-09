@@ -2,7 +2,7 @@
 import {parse,MESL} from '../logica/fechas.js';
 import {num,uid} from '../logica/util.js';
 import {mesTrabajo,mins,pagoSem,tarifas,reglasHoras,extraDelDia,ingresoDe,mesIngreso} from '../logica/sueldo.js';
-import {ctx,$,today,liqNow,planNow,money,money2,usd,pctTxt,veces,fmtH,esc,fLarga,fMin,tile,row,cap,toast,armar,abrirDetalle} from './comun.js';
+import {ctx,$,today,liqNow,planNow,money,money2,usd,pctTxt,veces,fmtH,esc,fLarga,fMin,tile,row,cap,toast,toastAccion,armar,abrirDetalle} from './comun.js';
 import {renderResumen} from './plan.js';
 import {aguinaldo,salarioVacacional} from '../logica/aguinaldo.js';
 import {extraPorHorario,tipoDeDia,minimoExtra,tieneHorario,aplicarHorario,aplicarPago} from '../logica/horario.js';
@@ -161,6 +161,8 @@ function renderVeredicto(state){
   var r=ultimoRecibo(state),v=veredicto(state,r);
   if(!v){el.innerHTML='<div class="card vd vd-vacio"><span class="cd-l">¿Te pagaron bien?</span><b class="vd-t">Subí tu último recibo</b><p class="note">Lo comparo con tus horas y tu sueldo, renglón por renglón.</p></div>';return}
   var mn=MESL[Number(v.mes.slice(5,7))-1],liqR=enPesosRecibo(r,r.liquido),esp=liqR-v.dif;
+  /* (2.54) un recibo mal leído no da veredicto: se pide borrarlo y subirlo de nuevo */
+  if(v.tipo==='raro'){el.innerHTML='<div class="card vd vd-menos"><span class="cd-l">Tu recibo de '+mn+'</span><b class="vd-t">Lo leí mal</b><p class="note">No tiene sentido: '+esc(v.motivo)+'. Borralo y subilo de nuevo, o cargalo a mano.</p><div class="row-btns"><button class="btn" type="button" data-recborrar="'+esc(r.id)+'">Borrar este recibo</button></div></div>';return}
   var tit=v.tipo==='bien'?'Te pagaron bien':v.tipo==='menos'?'Te pagaron '+money(-v.dif)+' de menos':v.tipo==='mas'?'Te pagaron '+money(v.dif)+' de más':'Falta el líquido del recibo';
   var h='<div class="card vd vd-'+v.tipo+'"><span class="cd-l">Tu recibo de '+mn+'</span><b class="vd-t">'+tit+'</b>';
   if(v.tipo!=='sin')h+='<p class="vd-n">Cobraste <b>'+money(liqR)+'</b> · esperaba '+money(esp)+(v.tipo==='bien'&&!v.exacto?' (diferencia chica: el bono o un redondeo)':'')+'</p>';
@@ -255,6 +257,8 @@ export function renderSueldo(){
   renderLog(mc,me,L);renderCtrl();renderAguinaldo();renderPlanilla();
   datosDesplegables(Lr,L0,conHoras,mc,me);
   renderHorasMes(Lr,L0,mc,me);
+  /* (2.54) un sueldo absurdo (por ejemplo, mal leído de un recibo) se avisa arriba de todo */
+  if(nom>0&&nom<5000){$('#bpc-aviso').innerHTML='<div class="banner alerta"><p><b>Tu sueldo quedó en '+money(nom)+'.</b> Parece mal leído de un recibo: poné tu sueldo nominal (antes de descuentos, sin extras).</p><div class="row-btns"><button class="btn" type="button" id="nom-arreglar">Corregirlo</button></div></div>';return}
   /* La BPC cambia cada enero */
   var y=today().slice(0,4);
   $('#bpc-aviso').innerHTML=revisarBPC(state,today())?'<div class="banner"><p><b>¿Cambió la BPC?</b> Estamos en '+y+' y estás usando la de '+esc(String(s.bpcAnio))+' ('+money(bpc)+'). Cada enero el BPS publica un valor nuevo, y cambia los tramos del IRPF.</p><div class="row-btns"><button class="btn" type="button" id="bpc-ir">Cargar la nueva</button><button class="btn quiet" type="button" id="bpc-igual">Sigue igual</button></div></div>':'';
@@ -489,7 +493,15 @@ export function initSueldo(){
       if(p.horas.activo){var dh=$('#sd-horas');if(dh){dh.open=true;try{dh.scrollIntoView({block:'start',behavior:'smooth'})}catch(x){}}}
       return}
   });
+  /* (2.54) borrar un recibo mal leído (con Deshacer) */
+  $('#p-sueldo').addEventListener('click',function(e){
+    var b=e.target.closest('[data-recborrar]');if(!b)return;
+    var id=b.getAttribute('data-recborrar'),st=ctx.state,antes=(st.recibos||[]).slice();
+    st.recibos=antes.filter(function(x){return x.id!==id});ctx.persist();ctx.renderAll();
+    toastAccion('Borré el recibo','Deshacer',function(){ctx.state.recibos=antes;ctx.persist();ctx.renderAll()});
+  });
   $('#bpc-aviso').addEventListener('click',function(e){
+    if(e.target.id==='nom-arreglar'){ponerTab('mes');var i=$('#s-nominal');abrirDetalle(i);try{i.scrollIntoView({block:'center'})}catch(er){}i.focus();i.select();return}
     if(e.target.id==='bpc-igual'){ctx.state.sueldo.bpcAnio=Number(today().slice(0,4));ctx.persist();renderSueldo()}
     if(e.target.id==='bpc-ir'){abrirDetalle($('#s-bpc'));var i=$('#s-bpc');try{i.scrollIntoView({block:'center'})}catch(er){}i.focus();i.select()}
   });

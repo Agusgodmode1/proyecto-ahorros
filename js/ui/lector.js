@@ -100,6 +100,8 @@ function propuestaHTML(){
     var enc=propuesta(L,hx,moneyR).map(function(x){return esc(x.texto)}).join(', ');
     h+='<p class="lec-enc"><b>Encontré:</b> '+(enc||'no reconocí los valores principales')+'.</p>';
   }
+  /* (2.54) lo que no tenía sentido y no se va a usar */
+  if(L.dudas&&L.dudas.length)h+='<div class="callout tone-coral"><b>Esto no lo pude leer bien</b><ul class="lect">'+L.dudas.map(function(d){return '<li>'+esc(d)+'</li>'}).join('')+'</ul><p class="note">No lo uso. Corregí el renglón de arriba o cargalo a mano.</p></div>';
   h+='<p class="note">'+(L.cuadra?'<span class="ok-t">✓ La cuenta cierra:</span> lo que ganás − lo que te descuentan = lo que te queda.':'<span class="ojo-t">Ojo:</span> lo que ganás ('+money(L.totales.haberes)+') − los descuentos ('+money(L.totales.descuentos)+') no da lo que cobrás ('+money(L.totales.liquido)+'). Revisá los renglones.')+'</p>'
     +'<div class="field"><label for="lec-mes" class="sub-l">Es el recibo de</label><input id="lec-mes" type="month" value="'+esc(S.mes)+'"></div>'
     +'<details class="lec-ren"><summary>Ver los '+L.renglones.length+' renglones y corregir</summary><ul class="list">'
@@ -132,8 +134,10 @@ function guardar(enPerfil){
   st.recibos=(st.recibos||[]).filter(function(x){return x.mes!==mes});st.recibos.push(r);
   if(enPerfil){
     var H=S.H,h=st.perfil.horas=Object.assign({},st.perfil.horas);
-    if(c.nominal)st.sueldo.nominal=c.nominal;
-    if(H&&H.valorHora&&S.resp.mult){var bas=num(c.nominal)||0;h.multSem=S.resp.mult;if(bas>0)h.divisor=Math.round(bas*S.resp.mult/H.valorHora);h.activo=true}
+    /* (2.54) el sueldo del perfil solo se pisa con un básico que tenga sentido */
+    var nomOk=num(c.nominal)>=1000&&(!(num(c.haberes)>0)||num(c.nominal)>=num(c.haberes)*0.3);
+    if(nomOk)st.sueldo.nominal=c.nominal;
+    if(nomOk&&H&&H.valorHora&&S.resp.mult){var bas=num(c.nominal)||0;h.multSem=S.resp.mult;if(bas>0)h.divisor=Math.round(bas*S.resp.mult/H.valorHora);h.activo=true}
     if(H){h.umbral=num(h.jornada||540)+num(S.resp.minutos);h.redondeo=S.resp.redondeo;if(S.resp.feriado)h.multFeriado=num(S.resp.feriado);else delete h.multFeriado}
     h.preguntado=true;
     st.sueldo.tarifaManual=null;

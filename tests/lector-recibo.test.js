@@ -2,7 +2,7 @@
 import {test} from 'node:test';
 import {puesto} from '../js/logica/puestos.js';
 import assert from 'node:assert/strict';
-import {leer,clasificar,tipoDocumento,deducirHoras,propuesta,confianza,aprenderConcepto,renglonesDeTexto,desglose} from '../js/logica/lector-recibo.js';
+import {leer,clasificar,tipoDocumento,deducirHoras,propuesta,confianza,aprenderConcepto,renglonesDeTexto,desglose,revisarCampos} from '../js/logica/lector-recibo.js';
 import {leerFactura,liqFactura,sinIva,nuevaFactura,revisarCostos,esFactura} from '../js/logica/factura.js';
 import {liqCompleta,minutosFeriado} from '../js/logica/liquidacion.js';
 import {liq} from '../js/logica/sueldo.js';
@@ -197,4 +197,33 @@ test('el desglose de cómo te pagan: lo que ganás, lo que te descuentan (con su
   assert.equal(d.hora,187.5);assert.equal(d.mult,2);
   var s=gananSuman(d);assert.equal(s,52500,'lo que ganás suma el total de haberes');
   function gananSuman(x){return Math.round(x.gana.reduce(function(t,g){return t+g.monto},0)*100)/100}
+});
+
+/* (2.54) Recibo en dos columnas (haberes a la izquierda, descuentos a la derecha): en el PDF quedan en el mismo renglón. INVENTADO. */
+var DOS_COL=renglonesDeTexto(`EMPRESA INVENTADA S.A.     RUT: 21.000000.0019
+Recibo de sueldo - Octubre 2026
+Concepto            Cant.   Importe        Concepto            Importe
+Sueldo básico        30    45.000,00       Montepío 15%       7.875,00
+Horas extras         10     3.750,00       FONASA 4,5%        2.362,50
+Feriado trabajado     8     3.750,00       IRPF               1.234,56
+Total haberes              52.500,00       Total descuentos  11.472,06
+Líquido a cobrar           41.027,94`);
+
+test('(2.54) dos columnas en el mismo renglón: cada concepto con su importe',function(){
+  var L=leer(DOS_COL,{});
+  assert.equal(L.campos.nominal,45000);
+  assert.equal(L.campos.aportes,7875);assert.equal(L.campos.fonasa,2362.5);assert.equal(L.campos.irpf,1234.56);
+  assert.equal(L.campos.haberes,52500);assert.equal(L.campos.liquido,41027.94);
+  assert.equal(L.campos.horasCant,10);assert.equal(L.campos.horasMonto,3750);
+  assert.equal(L.cuadra,true);assert.deepEqual(L.dudas,[]);
+});
+
+test('(2.54) lo que no tiene sentido no se usa: sueldo de $391, IRPF mayor que lo cobrado, haberes menores que el líquido',function(){
+  var c={nominal:391,haberes:7099,aportes:8844,fonasa:2400,irpf:58959,otros:null,liquido:47404};
+  var d=revisarCampos(c);
+  assert.equal(c.nominal,null,'el sueldo raro no pisa tu perfil');
+  assert.equal(c.irpf,null);
+  assert.ok(c.haberes>c.liquido,'los haberes salen de los aportes (15 %)');
+  assert.equal(Math.round(c.haberes),58960);
+  assert.ok(d.length>=3);
 });

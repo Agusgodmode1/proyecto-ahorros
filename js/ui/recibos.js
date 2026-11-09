@@ -2,7 +2,7 @@
    El PDF nunca sale del teléfono ni se guarda: solo los valores que confirmás. */
 import {num,uid} from '../logica/util.js';
 import {MESL} from '../logica/fechas.js';
-import {estadoDelMes,CAMPOS,leerRecibo,renglones,aprenderPlantilla,compararRecibo,enPesosRecibo} from '../logica/recibos.js';
+import {reciboRaro,estadoDelMes,CAMPOS,leerRecibo,renglones,aprenderPlantilla,compararRecibo,enPesosRecibo} from '../logica/recibos.js';
 import {mesTrabajo,ingresoDe} from '../logica/sueldo.js';
 import {cotizacion} from '../logica/monedas.js';
 import {ctx,$,money,usd,esc,cap,toast,armar} from './comun.js';
@@ -82,7 +82,7 @@ export function renderRecibos(){
   else h+=lectorHTML();
   if(l.length)h+='<ul class="list rec-lista">'+l.map(function(r){
     var abiertoEste=abierto===r.id;
-    return '<li><div class="rec-fila"><span class="what"><b>'+esc(mesTxt(r.mes))+(r.mes===mt?' · este cobro':'')+'</b><span class="src">Líquido '+fmt(r,r.liquido)+(r.moneda==='USD'?' = '+money(enPesosRecibo(r,r.liquido)):'')+(r.fuente==='pdf'?' · del PDF':'')+'</span></span>'
+    return '<li><div class="rec-fila"><span class="what"><b>'+esc(mesTxt(r.mes))+(r.mes===mt?' · este cobro':'')+'</b><span class="src">Líquido '+fmt(r,r.liquido)+(r.moneda==='USD'?' = '+money(enPesosRecibo(r,r.liquido)):'')+(r.fuente==='pdf'?' · del PDF':'')+(reciboRaro(r)?' · <b class="neg">mal leído</b>':'')+'</span></span>'
       +'<span class="cat-btns"><button class="btn quiet sm" type="button" data-recver="'+esc(r.id)+'">'+(abiertoEste?'Cerrar':'Comparar')+'</button><button class="btn quiet sm" type="button" data-receditar="'+esc(r.id)+'">Editar</button><button class="btn quiet sm" type="button" data-recdel="'+esc(r.id)+'">Borrar</button></span></div>'
       +(abiertoEste?comparacion(r):'')+'</li>';
   }).join('')+'</ul>';

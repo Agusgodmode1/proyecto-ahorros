@@ -60,10 +60,35 @@ export function tipoDocumento(lineas){
   return r?'recibo':'otro';
 }
 
+/* (2.54) Muchos recibos tienen dos columnas (haberes a la izquierda y descuentos a la derecha): en el PDF quedan en el
+   mismo renglón, como «Sueldo básico 30 45.000,00  Montepío 15% 7.875,00». Se parte el renglón donde empieza otro
+   concepto, siempre que cada pedazo tenga su propio importe (un número con centavos o miles). */
+var PLATA=/\d{1,3}(?:[.,]\d{3})+(?:[.,]\d{1,2})?|\d+[.,]\d{2}\b/;
+var GLOB=CONCEPTOS.map(function(c){return new RegExp(c[3].source,'g')});
+export function partirRenglon(l){
+  var t=sinTildes(l),ms=[];
+  GLOB.forEach(function(re){re.lastIndex=0;var m;while((m=re.exec(t))){ms.push({a:m.index,b:m.index+m[0].length});if(!m[0].length)re.lastIndex++}});
+  ms.sort(function(x,y){return x.a-y.a||y.b-x.b});
+  var cortes=[],fin=-1;ms.forEach(function(m){if(m.a>=fin){cortes.push(m.a);fin=m.b}});
+  if(cortes.length<2)return [String(l)];
+  var trozos=[];
+  for(var k=0;k<cortes.length;k++)trozos.push(String(l).slice(k===0?0:cortes[k],k+1<cortes.length?cortes[k+1]:undefined));
+  /* un pedazo sin importe propio se junta con el que sigue (es la cantidad o el detalle del mismo concepto) */
+  var out=[];
+  for(var j=0;j<trozos.length;j++){
+    var tz=trozos[j];
+    while(!PLATA.test(sinTildes(tz).replace(FECHA,' '))&&j+1<trozos.length){j++;tz+=trozos[j]}
+    if(!PLATA.test(sinTildes(tz).replace(FECHA,' '))&&out.length){out[out.length-1]+=tz;continue}
+    out.push(tz);
+  }
+  return out;
+}
+
 /* Clasifica los renglones. aprendido = {etiqueta: id} (lo que corregiste para ese empleador) */
 export function clasificar(lineas,aprendido){
   var out=[];aprendido=aprendido||{};
-  lineas.forEach(function(l,i){
+  var partes=[];lineas.forEach(function(l){partirRenglon(l).forEach(function(p){partes.push(p)})});
+  partes.forEach(function(l,i){
     /* los años de las fechas («octubre 2026», «09/2026») no son importes */
     var n=sinTildes(l).replace(FECHA,' '),ns=montosDe(n);
     if(!ns.length||ENCABEZADO.test(n.trim()))return;
@@ -95,7 +120,27 @@ export function leer(lineas,plantillas){
   var campos={nominal:bas?bas.importe:null,haberes:haberes||null,aportes:bps?bps.importe:null,fonasa:fon?fon.importe:null,irpf:irpf?irpf.importe:null,
     otros:descuentos>conocidos+0.005?Math.round((descuentos-conocidos)*100)/100:null,liquido:liquido||null,
     horasCant:hx&&hx.cantidad?hx.cantidad:null,horasMonto:hx?hx.importe:null};
-  return {tipo:tipoDocumento(lineas),empleador:emp,mes:mesDe(lineas),renglones:R,totales:{haberes:haberes,descuentos:descuentos,liquido:liquido},cuadra:cuadra,campos:campos,sinTexto:lineas.join('').replace(/\s/g,'').length<20};
+  var dudas=revisarCampos(campos);
+  if(dudas.length){haberes=campos.haberes||haberes;cuadra=campos.haberes&&campos.liquido?Math.abs(haberes-descuentos-liquido)<=2:false}
+  return {tipo:tipoDocumento(lineas),empleador:emp,mes:mesDe(lineas),renglones:R,totales:{haberes:haberes,descuentos:descuentos,liquido:liquido},cuadra:cuadra,campos:campos,dudas:dudas,sinTexto:lineas.join('').replace(/\s/g,'').length<20};
+}
+
+/* (2.54) Controles de sentido común (los descuentos de ley en Uruguay: BPS 15 %, FONASA 3–8 %, IRPF menos de un tercio).
+   Lo que no tiene sentido se deja vacío (nunca se inventa) y se avisa. Cambia campos en el lugar; devuelve las dudas. */
+export function revisarCampos(c){
+  var dudas=[],liq=num(c.liquido),hab=num(c.haberes);
+  if(liq>0&&hab>0&&hab<liq){
+    var d=(num(c.aportes)+num(c.fonasa)+num(c.irpf)+num(c.otros)),porBps=num(c.aportes)>0?Math.round(num(c.aportes)/0.15*100)/100:0;
+    dudas.push('El total de haberes que leí ('+hab+') es menor que lo que cobraste.');
+    c.haberes=porBps>liq?porBps:(d>0&&d<liq?Math.round((liq+d)*100)/100:null);hab=num(c.haberes);
+  }
+  var base=hab>0?hab:liq*1.4;
+  [['aportes',0.3,'el aporte jubilatorio'],['fonasa',0.12,'FONASA'],['irpf',0.35,'el IRPF'],['otros',0.6,'otros descuentos']].forEach(function(x){
+    var v=num(c[x[0]]);if(v>0&&base>0&&v>base*x[1]){dudas.push('No leí bien '+x[2]+' ('+v+').');c[x[0]]=null}
+  });
+  var nom=num(c.nominal);
+  if(nom>0&&(nom<1000||(hab>0&&(nom<hab*0.3||nom>hab*1.02)))){dudas.push('No encontré bien tu sueldo básico ('+nom+').');c.nominal=null}
+  return dudas;
 }
 
 /* Cuánto vale tu hora extra y cómo te la pagan.

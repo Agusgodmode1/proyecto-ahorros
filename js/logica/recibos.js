@@ -121,7 +121,7 @@ export function reciboDe(state,mes){var l=state.recibos||[];for(var i=0;i<l.leng
 export function liqReal(state){
   var est=liq(state,true);if(esFactura(state))return est;
   var r=reciboDe(state,mesTrabajo(state));
-  if(!r||!(num(r.liquido)>0))return est;
+  if(!r||!(num(r.liquido)>0)||reciboRaro(r))return est;
   var hab=num(r.haberes)>0?enPesosRecibo(r,r.haberes):est.N;
   return Object.assign({},est,{N:hab,liquido:enPesosRecibo(r,r.liquido),real:true,recibo:r,estimado:est});
 }
@@ -176,8 +176,19 @@ export function estadoDelMes(state,mes){
 /* El veredicto: 'bien' (diferencia de hasta $300, lo que mueve el bono o un redondeo), 'menos', 'mas' o 'sin' (falta el líquido).
    Trae solo los renglones para revisar y el que más explica la diferencia. */
 export var TOLERANCIA=300;
+/* (2.54) ¿El recibo guardado tiene sentido? Devuelve el motivo si parece mal leído, o null */
+export function reciboRaro(r){
+  if(!r)return null;
+  var h=enPesosRecibo(r,r.haberes),l=enPesosRecibo(r,r.liquido),base=h>0?h:l*1.4;
+  if(h>0&&l>0&&h<l*0.98)return 'el total de haberes es menor que lo que cobraste';
+  if(num(r.irpf)>0&&base>0&&enPesosRecibo(r,r.irpf)>base*0.35)return 'el IRPF es demasiado alto';
+  if(num(r.aportes)>0&&base>0&&enPesosRecibo(r,r.aportes)>base*0.3)return 'el aporte jubilatorio es demasiado alto';
+  if(num(r.nominal)>0&&h>0&&(enPesosRecibo(r,r.nominal)<h*0.3||enPesosRecibo(r,r.nominal)<1000))return 'el sueldo básico es demasiado bajo';
+  return null;
+}
 export function veredicto(state,r){
   if(!r)return null;
+  var raro=reciboRaro(r);if(raro)return {mes:r.mes,tipo:'raro',motivo:raro,dif:0,filas:[],explica:null,exacto:false,comp:{filas:[]},usoRecibo:false};
   /* (2.53) si no cargaste las horas extra de ese mes pero el recibo trae cuántas te pagaron, se usan esas:
      así se controla lo que sí se puede (el valor de la hora y los descuentos) y no da «de más» por las horas que faltan */
   var st=estadoDelMes(state,r.mes),usoRecibo=false;
@@ -194,7 +205,7 @@ export function veredicto(state,r){
    Devuelve null sin recibo; si no: {mes, hora, divisor, extra:{valor, mult, deRecibo}, fin:{mult}, descuentos:[{nombre, monto, pct}],
    haberes, liquido, enMano (pct de lo que ganás que te queda)} */
 export function asiTePagan(state,r){
-  r=r||ultimoRecibo(state);if(!r)return null;
+  r=r||ultimoRecibo(state);if(!r||reciboRaro(r))return null;
   var R=reglasHoras(state),t=tarifas(state),nom=enPesosRecibo(r,r.nominal)||num(state.sueldo.nominal),div=num(R.divisor)||240;
   var hora=nom>0?nom/div:t.hora,hab=enPesosRecibo(r,r.haberes)||0,liq=enPesosRecibo(r,r.liquido)||0;
   var hc=num(r.horasCant),hm=enPesosRecibo(r,r.horasMonto),deRecibo=hc>0&&hm>0,valor=deRecibo?hm/hc:t.heCom;

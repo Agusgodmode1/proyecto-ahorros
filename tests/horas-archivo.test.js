@@ -1,7 +1,8 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {fechaDe,celdasDe,diasDeFilas} from '../js/logica/horas-archivo.js';
-import {asiTePagan,ultimoRecibo,veredicto,estadoDelMes} from '../js/logica/recibos.js';
+import {asiTePagan,ultimoRecibo,veredicto,estadoDelMes,reciboRaro,liqReal} from '../js/logica/recibos.js';
+import {mesTrabajo} from '../js/logica/sueldo.js';
 import {liq} from '../js/logica/sueldo.js';
 import {ejemplo} from '../js/estado.js';
 
@@ -60,4 +61,15 @@ test('(2.53) sin horas cargadas de ese mes, el veredicto usa las horas que dice 
   var v=veredicto(s,{mes:'2026-09',moneda:'UYU',haberes:est.N,liquido:est.liquido,horasCant:6,horasMonto:est.extraCom});
   assert.equal(v.usoRecibo,true);
   assert.equal(v.tipo,'bien','con las 6 h del recibo da bien, no «de más»');
+});
+
+test('(2.54) un recibo mal leído no da veredicto ni cambia lo que vas a cobrar',function(){
+  var s=ejemplo();
+  var malo={id:'m',mes:mesTrabajo(s),moneda:'UYU',nominal:391,haberes:7099,aportes:8844,irpf:58959,liquido:47404};
+  assert.ok(reciboRaro(malo));
+  s.recibos=[malo];
+  assert.equal(veredicto(s,malo).tipo,'raro');
+  assert.equal(asiTePagan(s),null);
+  assert.equal(liqReal(s).real,undefined,'sigue la estimación');
+  assert.equal(reciboRaro({haberes:52500,aportes:7875,irpf:1234,nominal:45000,liquido:41000}),null);
 });

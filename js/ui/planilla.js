@@ -7,7 +7,8 @@ import {diasDeFilas,celdasDe} from '../logica/horas-archivo.js';
 import {reglasHoras,mesTrabajo} from '../logica/sueldo.js';
 import {MESL} from '../logica/fechas.js';
 import {uid} from '../logica/util.js';
-import {ctx,$,today,esc,fMin,fLarga,toast} from './comun.js';
+import {ctx,$,today,esc,fMin,fLarga,toast,toastAccion} from './comun.js';
+import {aplicarHorario} from '../logica/horario.js';
 
 /* (2.53) generico: días leídos de un archivo con otro formato (otra planilla, un PDF o un texto) */
 var hojas=null,quien=null,alcance='mes',res=null,error='',generico=null;
@@ -16,6 +17,8 @@ function nombreMes(k){return MESL[Number(k.slice(5,7))-1]}
 function resumenDias(todos){
   var mt=mesTrabajo(ctx.state),h='';
   var dias=alcance==='mes'?todos.filter(function(d){return d.fecha.slice(0,7)===mt}):todos;
+  /* (2.55) si el archivo es de otro mes, se muestra lo que trae en lugar de «no encontré nada» */
+  if(!dias.length&&todos.length&&alcance==='mes'){alcance='todo';dias=todos}
   var conExtra=dias.filter(function(d){return d.min>0}),sem=0,fin=0;
   conExtra.forEach(function(d){if(d.tipo==='fin')fin+=d.min;else sem+=d.min});
   var avisos=dias.filter(function(d){return d.aviso});
@@ -72,6 +75,15 @@ export function initPlanilla(){
         }
         if(filas){
           var g=diasDeFilas(filas,R,today());
+          /* (2.55) sin horario: se toma el que más se repite en el archivo (con aviso y «Deshacer») */
+          if(g.sinHorario&&!g.dias.length&&g.horarioProbable){
+            var H=ctx.state.perfil.horas,antesH=JSON.parse(JSON.stringify(H||{})),hp=g.horarioProbable;
+            if(aplicarHorario(H,hp).ok){
+              H.activo=true;H.preguntado=true;ctx.persist();
+              toastAccion('Tomé tu horario de la planilla: de '+hp.entrada+' a '+hp.salida+(hp.dias==='ls'?', de lunes a sábado':''),'Cambiar',function(){var cf=$('#sd-config');if(cf){cf.open=true;try{cf.scrollIntoView({block:'start',behavior:'smooth'})}catch(x){}}});
+              g=diasDeFilas(filas,reglasHoras(ctx.state),today());
+            }else ctx.state.perfil.horas=antesH;
+          }
           if(g.sinHorario&&!g.dias.length)throw new Error('Primero contame tu horario (en «Tu horario y cómo te pagan»): sin eso no sé cuáles son extras.');
           if(!g.dias.length)throw new Error('No encontré días con fecha, entrada y salida en este archivo.');
           generico=g;

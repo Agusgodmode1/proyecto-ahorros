@@ -214,3 +214,19 @@ export function aprenderConcepto(plantillas,empleador,renglon,id){
 }
 /* Texto pegado (o escrito) → renglones */
 export function renglonesDeTexto(t){return String(t||'').replace(/\r/g,'').split('\n').map(function(l){return l.replace(/\t+/g,'  ').trim()}).filter(Boolean)}
+
+/* (2.55) Lo demás que se puede sacar del recibo para completar tu perfil solo:
+   - FONASA: la tasa de ley es 3 % (hasta 2,5 BPC) o 4,5 %; +1,5 % si tenés hijos a cargo y +2 % por cónyuge sin cobertura.
+     Si la tasa del recibo encaja con una de esas combinaciones, se sabe; si no, null (no se toca).
+   - Descuentos fijos de todos los meses (sindicato, préstamo, seguro, retención): su suma.
+   Devuelve {hijos:true|false|null, conyuge:true|false|null, otrosFijos} */
+export function ajustesDelRecibo(lectura,bpc){
+  var c=lectura.campos,hab=num(c.haberes),fon=num(c.fonasa),out={hijos:null,conyuge:null,otrosFijos:0};
+  if(hab>0&&fon>0){
+    var tasa=fon/hab*100,base=hab>2.5*(num(bpc)||6864)?4.5:3,extra=tasa-base;
+    [[0,false,false],[1.5,true,false],[2,false,true],[3.5,true,true]].forEach(function(o){if(Math.abs(extra-o[0])<0.35){out.hijos=o[1];out.conyuge=o[2]}});
+  }
+  lectura.renglones.forEach(function(r){if(/^(sindicato|prestamo|seguroVida|retencion)$/.test(r.id))out.otrosFijos+=r.importe});
+  out.otrosFijos=Math.round(out.otrosFijos*100)/100;
+  return out;
+}

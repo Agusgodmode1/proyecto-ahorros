@@ -5,12 +5,12 @@
    Las cuentas son puras (logica/lector-recibo.js). El PDF nunca se guarda. */
 import {num,uid} from '../logica/util.js';
 import {MESL} from '../logica/fechas.js';
-import {leer,deducirHoras,propuesta,desglose,aprenderConcepto,renglonesDeTexto,tipoDocumento,CONCEPTOS} from '../logica/lector-recibo.js';
+import {leer,deducirHoras,propuesta,desglose,aprenderConcepto,renglonesDeTexto,tipoDocumento,CONCEPTOS,confianza,ajustesDelRecibo} from '../logica/lector-recibo.js';
 import {mesTrabajo,reglasHoras,ingresoDe} from '../logica/sueldo.js';
 import {precision} from '../logica/precision.js';
 import {liqReal} from '../logica/recibos.js';
 import {esFactura} from '../logica/factura.js';
-import {ctx,$,money,money2,esc,cap,toast} from './comun.js';
+import {ctx,$,money,money2,esc,cap,toast,toastAccion} from './comun.js';
 
 /* Documentos INVENTADOS para probar sin datos propios */
 export var EJ_RECIBO='Panadería La Espiga S.R.L.   RUT: 21.555666.0017\nRECIBO DE SUELDO - Setiembre 2026\nFuncionario: Ejemplo Ejemplar\nConcepto                 Cant.     Haberes     Descuentos\nSueldo básico            30        42.000,00\nHoras extras comunes      6,00      2.100,00\nPresentismo                         1.500,00\nMontepío 15%                                     6.840,00\nFONASA 4,5%                                      2.052,00\nFRL 0,1%                                            45,60\nIRPF                                               820,00\nTotal haberes                       45.600,00\nTotal descuentos                                 9.757,60\nLíquido a cobrar                    35.842,40';
@@ -53,9 +53,15 @@ export function procesar(lineas,fuente){
   var L=leer(lineas,st.plantillasRecibo);
   if(L.sinTexto||!L.renglones.length){S=null;toast(L.sinTexto?'Ese PDF es una imagen: no tiene texto. Probá pegando el texto o cargalo a mano.':'No reconocí renglones de un recibo. Cargalo a mano.');ctx.renderAll();return}
   var R=reglasHoras(st),H=deducirHoras(L,R);
-  S={lineas:lineas,fuente:fuente,L:L,H:H,cambios:{},mes:L.mes||mesTrabajo(st),
+  /* (2.55) si el recibo no dice el mes, es el último que cobraste (el mes anterior al que estás trabajando) */
+  var mt=mesTrabajo(st),y=Number(mt.slice(0,4)),m=Number(mt.slice(5,7)),pagado=m===1?(y-1)+'-12':y+'-'+String(m-1).padStart(2,'0');
+  S={lineas:lineas,fuente:fuente,L:L,H:H,cambios:{},mes:L.mes||pagado,
      resp:{mult:H&&H.mult?H.mult:null,minutos:Math.max(0,num(R.umbral)-num(R.jornada)),redondeo:R.redondeo||'media',feriado:H&&H.feriado&&H.feriado.mult!==num(R.multFin)?H.feriado.mult:null}};
-  pegar=false;ctx.renderAll();
+  pegar=false;
+  /* (2.55) si la lectura es clara (la cuenta cierra, no hay dudas y las horas extra no tienen dos explicaciones), se usa sola:
+     un solo paso, con «Deshacer». Si algo no cierra, se muestra para revisar. */
+  if(confianza(L)==='alta'&&!(L.dudas&&L.dudas.length)&&(!H||!H.mult||H.seguro)){guardar(true);return}
+  ctx.renderAll();
   var el=$('#lec-prop');if(el)try{el.scrollIntoView({block:'start',behavior:'smooth'})}catch(e){}
 }
 /* Re-lee con lo que corregiste (sin guardar todavía lo aprendido) */
@@ -126,6 +132,7 @@ function propuestaHTML(){
 /* ---------- Guardar ---------- */
 function guardar(enPerfil){
   var st=ctx.state,pl=releer(),L=S.L,c=L.campos,mes=($('#lec-mes')||{}).value||S.mes;
+  var antes=JSON.parse(JSON.stringify({sueldo:st.sueldo,horas:st.perfil.horas,recibos:st.recibos||[],plantillas:st.plantillasRecibo||{}}));
   if(!/^\d{4}-\d{2}$/.test(mes)){toast('Elegí de qué mes es el recibo');return}
   if(!(num(c.liquido)>0)){toast('No encontré el líquido: cargalo a mano');return}
   st.plantillasRecibo=pl;
@@ -141,13 +148,19 @@ function guardar(enPerfil){
     if(H){h.umbral=num(h.jornada||540)+num(S.resp.minutos);h.redondeo=S.resp.redondeo;if(S.resp.feriado)h.multFeriado=num(S.resp.feriado);else delete h.multFeriado}
     h.preguntado=true;
     st.sueldo.tarifaManual=null;
+    /* (2.55) lo demás: hijos o cónyuge (por FONASA) y los descuentos fijos de todos los meses */
+    var A=ajustesDelRecibo(L,st.sueldo.bpc);
+    if(A.hijos!==null){st.sueldo.hijos=A.hijos?Math.max(1,num(st.sueldo.hijos)):0;st.sueldo.conyuge=A.conyuge}
+    if(nomOk)st.sueldo.otros=A.otrosFijos;
   }
   S=null;
   /* (2.53) se ve enseguida lo que aprendió: pestaña «Tu recibo», arriba de todo */
   try{sessionStorage.setItem('pa-sd-tab','control')}catch(x){}
   ctx.persist();ctx.renderAll();
   var a=$('#sd-veredicto');if(a)try{a.scrollIntoView({block:'start',behavior:'smooth'})}catch(x){}
-  toast('Guardé el recibo de '+MESL[Number(mes.slice(5,7))-1]+' de '+mes.slice(0,4)+(enPerfil?' y actualicé tu perfil':'')+'. Ahora cobrás ≈ '+money(liqReal(st).liquido));
+  toastAccion('Listo: leí tu recibo de '+MESL[Number(mes.slice(5,7))-1]+(enPerfil?' y completé tu sueldo':'')+'. Ahora cobrás ≈ '+money(liqReal(st).liquido),'Deshacer',function(){
+    var s2=ctx.state;s2.sueldo=antes.sueldo;s2.perfil.horas=antes.horas;s2.recibos=antes.recibos;s2.plantillasRecibo=antes.plantillas;ctx.persist();ctx.renderAll();
+  });
 }
 
 export function initLector(){

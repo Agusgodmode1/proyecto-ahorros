@@ -2,7 +2,7 @@
 import {test} from 'node:test';
 import {puesto} from '../js/logica/puestos.js';
 import assert from 'node:assert/strict';
-import {leer,clasificar,tipoDocumento,deducirHoras,propuesta,confianza,aprenderConcepto,renglonesDeTexto,desglose,revisarCampos} from '../js/logica/lector-recibo.js';
+import {leer,clasificar,tipoDocumento,deducirHoras,propuesta,confianza,aprenderConcepto,renglonesDeTexto,desglose,revisarCampos,ajustesDelRecibo} from '../js/logica/lector-recibo.js';
 import {leerFactura,liqFactura,sinIva,nuevaFactura,revisarCostos,esFactura} from '../js/logica/factura.js';
 import {liqCompleta,minutosFeriado} from '../js/logica/liquidacion.js';
 import {liq} from '../js/logica/sueldo.js';
@@ -226,4 +226,16 @@ test('(2.54) lo que no tiene sentido no se usa: sueldo de $391, IRPF mayor que l
   assert.ok(c.haberes>c.liquido,'los haberes salen de los aportes (15 %)');
   assert.equal(Math.round(c.haberes),58960);
   assert.ok(d.length>=3);
+});
+
+test('(2.55) del recibo sale si tenés hijos o cónyuge (por la tasa de FONASA) y los descuentos fijos',function(){
+  var L=leer(DOS_COL,{});
+  var A=ajustesDelRecibo(L,6864);
+  assert.equal(A.hijos,false);assert.equal(A.conyuge,false,'FONASA 4,5 %: sin hijos ni cónyuge');
+  var L2=leer(COLUMNAS,{});
+  assert.equal(ajustesDelRecibo(L2,6864).otrosFijos,450,'la cuota sindical');
+  var con={campos:{haberes:52500,fonasa:52500*0.06},renglones:[]};
+  assert.equal(ajustesDelRecibo(con,6864).hijos,true);
+  var raro={campos:{haberes:52500,fonasa:52500*0.052},renglones:[]};
+  assert.equal(ajustesDelRecibo(raro,6864).hijos,null,'si no encaja, no se toca');
 });

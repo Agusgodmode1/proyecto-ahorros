@@ -22,7 +22,7 @@ export function celdasDe(linea){return String(linea).split(/[;\t|]|\s+/).map(fun
 /* filas: [[celda…]…]. reglas = perfil.horas. hoy: los días futuros no cuentan.
    Devuelve {dias:[{fecha,llegada,salida,tipo,min,total}], sinHorario:bool} */
 export function diasDeFilas(filas,reglas,hoy){
-  var anio=Number(String(hoy||'').slice(0,4))||new Date().getFullYear(),dias={},sinHorario=false;
+  var anio=Number(String(hoy||'').slice(0,4))||new Date().getFullYear(),dias={},sinHorario=false,pares=[],sabados={};
   (filas||[]).forEach(function(r){
     var fecha=null,horas=[];
     (r||[]).forEach(function(c){
@@ -31,9 +31,17 @@ export function diasDeFilas(filas,reglas,hoy){
       var h=horaDe(c);if(h&&horas.length<2)horas.push(h.hm);
     });
     if(!fecha||horas.length<2||(hoy&&fecha>hoy))return;
+    var dw=new Date(fecha+'T12:00:00').getDay();if(dw>=1&&dw<=5)pares.push(horas);if(dw===6)sabados[fecha]=1;
     var tipo=tipoDeDia(fecha,reglas.dias),x=extraPorHorario(reglas,horas[0],horas[1],tipo);
     if(!x){sinHorario=true;return}
     dias[fecha]={fecha:fecha,llegada:horas[0],salida:horas[1],tipo:tipo,min:x.min,total:x.total};
   });
-  return {dias:Object.keys(dias).sort().map(function(k){return dias[k]}),sinHorario:sinHorario};
+  return {dias:Object.keys(dias).sort().map(function(k){return dias[k]}),sinHorario:sinHorario,horarioProbable:horarioProbable(pares,Object.keys(sabados).length)};
+}
+/* (2.55) Tu horario más probable: la entrada y la salida que más se repiten de lunes a viernes, redondeadas a la media hora.
+   Con 3 días o más; de lunes a sábado si trabajaste 3 sábados o más. */
+export function horarioProbable(pares,nSab){
+  if(!pares||pares.length<3)return null;
+  function moda(k){var c={},mejor=null;pares.forEach(function(p){var t=p[k].split(':'),m=Math.round((+t[0]*60+ +t[1])/30)*30%1440,h=pad(Math.floor(m/60))+':'+pad(m%60);c[h]=(c[h]||0)+1;if(!mejor||c[h]>c[mejor])mejor=h});return mejor}
+  return {entrada:moda(0),salida:moda(1),dias:nSab>=3?'ls':'lv'};
 }

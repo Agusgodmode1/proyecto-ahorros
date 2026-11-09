@@ -73,3 +73,10 @@ test('(2.54) un recibo mal leído no da veredicto ni cambia lo que vas a cobrar'
   assert.equal(liqReal(s).real,undefined,'sigue la estimación');
   assert.equal(reciboRaro({haberes:52500,aportes:7875,irpf:1234,nominal:45000,liquido:41000}),null);
 });
+
+test('(2.55) sin horario, la planilla sugiere el tuyo: lo que más se repite, a la media hora',function(){
+  var filas=[['02/11/2026','11:55','21:05'],['03/11/2026','12:02','21:20'],['04/11/2026','12:00','21:00'],['05/11/2026','12:10','20:58']];
+  var r=diasDeFilas(filas,{activo:true,dias:'lv'},'2026-11-30');
+  assert.equal(r.dias.length,0);assert.equal(r.sinHorario,true);
+  assert.deepEqual(r.horarioProbable,{entrada:'12:00',salida:'21:00',dias:'lv'});
+});

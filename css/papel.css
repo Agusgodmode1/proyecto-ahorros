@@ -1891,3 +1891,13 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 @media (max-width:360px){.v2 .an-ley button{grid-template-columns:12px minmax(0,1fr) auto 34px;gap:6px;font-size:14px;padding:4px 2px}}
 /* (2.58.15) Página de la semana en pantallas angostas: el título baja de renglón en vez de encimarse con la etiqueta «esta semana». */
 @media (max-width:360px){.v2 .wk-cab{flex-wrap:wrap}.v2 .wk-cab h2{white-space:normal}}
+/* (2.58.16) iPhone chico (320 px): en Hoy los montos de «Tu plan» se partían al medio («$ 14.72 / 4»), «Guardás» se encimaba con «actualizar» y el «20 %» de la guía bajaba de renglón. */
+@media (max-width:360px){
+  .v2 .tp-key li{padding:0 6px}
+  .v2 .tp-key b{font-size:16px;overflow-wrap:normal;white-space:nowrap}
+  .v2 .tp-key span{font-size:12px;gap:4px}
+  .v2 .hchip{padding:var(--e2);column-gap:4px}
+  .v2 .hchip span{font-size:13px}
+  .v2 .hchip small{font-size:12px}
+  .v2 .cj-c b{font-size:16px;white-space:nowrap}
+}

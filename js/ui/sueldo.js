@@ -360,7 +360,7 @@ function renderAguinaldo(){
   var h='<div class="sec-h"><h2>Aguinaldo de '+A.nombre+'</h2><span class="note">antes del '+Number(fp[2])+' de '+A.nombre+'</span></div>'
     +'<div class="ag-n"><b>'+money(A.liquido)+'</b><span>en mano, más o menos</span></div>'
     +'<details><summary>Cómo se calcula</summary><div class="receipt" style="margin-top:10px">'
-    +A.meses.map(function(x){return row(MESC[Number(x.k.slice(5,7))-1]+' '+x.k.slice(0,4),money(x.nominal),'sub',x.fuente==='cierre'?'del mes cerrado':x.fuente==='actual'?'este mes, con tus extras':'estimado con tu sueldo')}).join('')
+    +A.meses.map(function(x){return row(MESC[Number(x.k.slice(5,7))-1]+' '+x.k.slice(0,4),money(x.nominal),'sub',x.fuente==='cierre'?'del mes cerrado':x.fuente==='actual'?'este mes, con tus extras':x.fuente==='recibo'?'de tu recibo':'estimado con tu sueldo')}).join('')
     +row('Total del semestre',money(A.total),'tot')
     +row('Aguinaldo (÷ 12)',money(A.bruto))
     +row('Aportes (jubilación, FONASA y FRL)','− '+money(A.aportes.total),'sub minus')
@@ -564,7 +564,14 @@ export function initSueldo(){
     var di=e.target.closest('[data-ingdel]');
     if(di){if(!armar(di))return;var k=di.getAttribute('data-ingdel'),im=Object.assign({},state.sueldo.ingresosMes);delete im[k];state.sueldo.ingresosMes=im;ctx.persist();ctx.renderAll();return}
     var dh=e.target.closest('[data-delh]');
-    if(dh){var hid=dh.getAttribute('data-delh');state.horas=state.horas.filter(function(x){return x.id!==hid});ctx.persist();renderSueldo();renderResumen(planNow());return}
+    if(dh){
+      /* (2.58.8) borrar un día ofrece «Deshacer», como los gastos */
+      var hid=dh.getAttribute('data-delh'),antesH=state.horas.slice(),qH=antesH.filter(function(x){return x.id===hid})[0];
+      state.horas=antesH.filter(function(x){return x.id!==hid});ctx.persist();renderSueldo();renderResumen(planNow());
+      if(qH)toastAccion('Borré las horas del '+fLarga(qH.fecha),'Deshacer',function(){
+        if(!ctx.state.horas.some(function(x){return x.id===hid})){ctx.state.horas.push(qH);ctx.persist();renderSueldo();renderResumen(planNow())}
+      });
+      return}
     if(e.target.id==='log-clear'){confirmClear=true;renderSueldo();return}
     if(e.target.id==='log-clear-no'){confirmClear=false;renderSueldo();return}
     if(e.target.id==='log-clear-yes'){confirmClear=false;state.horas=[];ctx.persist();renderSueldo();renderResumen(planNow())}

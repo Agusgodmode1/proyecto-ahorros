@@ -1877,3 +1877,6 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 /* Herramientas: la página donde estás va en oro (el jade es solo para la plata) */
 .v2 .ix-list li.actual .ix-t,.v2 .ix-list [aria-current] .ix-t{color:var(--oro)}
 .v2 .ix-list li.actual .ix-t small,.v2 .ix-list [aria-current] .ix-t small{color:var(--muted)}
+
+/* (2.58.8) «Días cargados»: la lista se ve entera. Con 4 días o más, la caja de 320 px cortaba el último renglón por la mitad (ya está dentro de un desplegable). */
+.v2 .logbox{max-height:none;overflow:visible}

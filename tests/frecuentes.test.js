@@ -32,3 +32,9 @@ test('dólares: el gasto guarda pesos, dólares y la cotización de ese día',as
   assert.equal(st.fijos[0].monto,410,'los fijos en dólares siguen la cotización nueva');
   assert.equal(st.fijos[1].monto,1800,'los fijos en pesos no cambian');
 });
+
+test('frecuentes: los ajustes de saldo no se ofrecen «con un toque»',function(){
+  var g=[{fecha:'2026-11-12',monto:1000,nota:'Ajuste de saldo',src:'ajuste'},{fecha:'2026-11-12',monto:500,nota:'Ajuste de saldo',src:'ajuste'},
+    {fecha:'2026-11-10',monto:60,nota:'Boleto'},{fecha:'2026-11-11',monto:60,nota:'Boleto'}];
+  assert.deepEqual(frecuentes(g,'2026-11-13').map(function(x){return x.nota}),['Boleto']);
+});

@@ -7,7 +7,8 @@ export function frecuentes(gastos,hoy,max){
   max=max||4;
   var desde=iso(addDays(parse(hoy),-60)),g={};
   (gastos||[]).forEach(function(x){
-    if(!x||!x.nota||x.fecha<desde||x.fecha>hoy)return;
+    /* (2.58.14) los ajustes de saldo los escribe la app al «Actualizar»: no son un gasto que vos repitas */
+    if(!x||!x.nota||x.src==='ajuste'||x.fecha<desde||x.fecha>hoy)return;
     var k=claveVoz(x.nota);if(!k)return;
     var o=g[k]||(g[k]={n:0,ult:null,montos:{}});
     o.n++;

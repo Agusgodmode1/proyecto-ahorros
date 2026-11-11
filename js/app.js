@@ -15,7 +15,7 @@ import {renderAjustes,renderAvisoRespaldo,initAjustes,renderCopias,exportar} fro
 import {registrarSW,buscarVersion} from './pwa.js';
 import {initVoz} from './ui/voz.js';
 import {abrirPerfil,initPerfil,resumenPerfil} from './ui/perfil.js';
-import {abrirLibro,initLibro} from './ui/libro.js';
+import {abrirLibro,initLibro,redibujarPrologo} from './ui/libro.js';
 import {copiaVisible,girar,terminar as terminarPase} from './ui/pase.js';
 import {introCapitulo,olvidarIntros} from './ui/intro.js';
 import {initIndice,abrirIndice} from './ui/indice.js';
@@ -191,7 +191,7 @@ function abrirPrologo(pagina,editar,dir){
   abrirLibro({modo:'hojear',estado:ctx.state,pagina:pagina,editar:editar,dir:dir||1,
     alGuardar:function(v){
       persist();syncInputs();renderAll();
-      toastAccion('Listo: ≈ '+money(v.porDia)+' por día hasta que cobres','Deshacer',function(){deshacerAjustePacto(ctx.state,v.deshacer);persist();syncInputs();renderAll()});
+      toastAccion('Listo: ≈ '+money(v.porDia)+' por día hasta que cobres','Deshacer',function(){deshacerAjustePacto(ctx.state,v.deshacer);persist();syncInputs();renderAll();redibujarPrologo()});
     },
     alApartado:function(){persist();syncInputs();renderAll()},
     alCerrar:function(){if(ctx.tab!=='resumen'){ctx.tab='resumen';renderAll()}},

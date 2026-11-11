@@ -599,6 +599,8 @@ export function abrirLibro(opt){
   }
 }
 /* ¿Está abierto el libro (tapa o prólogo)? */
+/* (2.58.4) Si el prólogo está abierto y sin nada a medio editar, vuelve a escribir la página que se ve (después de un «Deshacer», mostraba el valor viejo) */
+export function redibujarPrologo(){var h=$('#lb-hojas');if(h&&!h.hidden&&E&&!E.edit)irA(idx,0)}
 export function libroAbierto(){var h=$('#lb-hojas'),m=$('#libro');return (h&&!h.hidden)||(m&&!m.hidden)}
 
 export function initLibro(){

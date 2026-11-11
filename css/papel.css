@@ -290,6 +290,8 @@
 .v2 .st-n{font-family:var(--f-libro)!important}
 /* El polvo de estrellas también sale del aviso de un logro */
 .v2 .toast{overflow:visible}
+/* (2.58.4) El aviso va por encima del prólogo (z-index 61): al guardar un cambio del pacto, «Deshacer» quedaba tapado por la página y no se veía ni se podía tocar. */
+.v2 .toast{z-index:70}
 .v2 .toast .lb-chispa{position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:#FFD27A;box-shadow:0 0 8px #FFB13D;pointer-events:none}
 
 /* Tarjeta: las categorías viven acá */

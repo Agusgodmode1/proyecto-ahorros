@@ -76,7 +76,8 @@ export function initPlanilla(){
         if(filas){
           var g=diasDeFilas(filas,R,today());
           /* (2.55) sin horario: se toma el que más se repite en el archivo (con aviso y «Deshacer») */
-          if(g.sinHorario&&!g.dias.length&&g.horarioProbable){
+          /* (2.58.7) también si el archivo trae algún sábado o domingo (que cuenta sin horario): si no, los días de semana se perdían sin aviso */
+          if(g.sinHorario&&g.horarioProbable){
             var H=ctx.state.perfil.horas,antesH=JSON.parse(JSON.stringify(H||{})),hp=g.horarioProbable;
             if(aplicarHorario(H,hp).ok){
               H.activo=true;H.preguntado=true;ctx.persist();

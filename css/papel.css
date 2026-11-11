@@ -1882,3 +1882,5 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 .v2 .logbox{max-height:none;overflow:visible}
 /* (2.58.10) los colores de una categoría se tocan con el dedo: 44 px (medían 34) */
 .v2 .cat-col .sw{width:44px;height:44px}
+/* (2.58.12) El campo del PIN en Ajustes (type=password) no entraba en la regla de los campos: quedaba aplastado, de 24 px de alto. */
+.v2 input[type=password]{width:100%;max-width:12em;min-height:50px;padding:10px 12px;font:600 20px/1.3 var(--f-body);letter-spacing:.3em;background:color-mix(in srgb,var(--surface) 80%,transparent);color:var(--ink);border:1px solid var(--line);border-bottom:2px solid var(--line-2);border-radius:var(--r-s) var(--r-s) 2px 2px}

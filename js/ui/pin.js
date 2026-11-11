@@ -19,7 +19,7 @@ function pintar(msg){
   if(modo==='olvido'){
     box.innerHTML='<h1 id="pin-t">¿Olvidaste el PIN?</h1>'
       +'<p class="welcome-sub">Como la app no tiene cuentas, nadie puede recuperarlo: la única salida es <b>borrar todos los datos de este teléfono</b>.</p>'
-      +'<p class="note">Si tenés un respaldo (el archivo de "Llevar mis datos a otro aparato" o de "Exportar mis datos"), después de borrar elegí <b>Importar mis datos</b> y lo traés de vuelta.</p>'
+      +'<p class="note">Si tenés un respaldo (el archivo de «Llevar mis datos» o de «Exportar mis datos»), después de borrar tocá <b>Ya tenía datos: importarlos</b> en la tapa y lo traés de vuelta.</p>'
       +'<div class="stack" style="gap:10px"><button class="btn danger" type="button" data-pin="borrar">'+(armadoBorrar?'¿Seguro? Se borra todo lo de este teléfono':'Borrar los datos de este teléfono')+'</button>'
       +'<button class="btn quiet" type="button" data-pin="volver">Volver</button></div>';
     return;

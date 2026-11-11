@@ -1901,3 +1901,5 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
   .v2 .hchip small{font-size:12px}
   .v2 .cj-c b{font-size:16px;white-space:nowrap}
 }
+/* (2.58.17) «¿Leí mal las columnas?» (Tarjeta) medía 23 px de alto: ahora se toca con el dedo. */
+.v2 .gas-stat .linklike{display:flex;width:fit-content;align-items:center;min-height:44px}

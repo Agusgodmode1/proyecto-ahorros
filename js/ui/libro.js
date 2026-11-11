@@ -661,6 +661,8 @@ export function initLibro(){
       if(!v.ok){var k=Object.keys(v.errores)[0];irA(PAGS.indexOf(k==='total'||k==='apartado'?'q1':k==='ahorro'?'q2':'q3'),-1);return}
       var t=estampar();
       $('#lb-acc-pacto').innerHTML='';
+      /* (2.58.17) con el pacto ya sellado, «Saltar» no tiene sentido: queda solo «Ir a la página de hoy» */
+      var sal=q('[data-lb="saltar-herr"]');if(sal)sal.hidden=true;
       setTimeout(function(){
         var s=$('#lb-sellado');s.textContent='Pacto sellado el '+fLarga(st.pacto.sellado)+'.';s.classList.add('ver');
         caeEstrella();

@@ -21,7 +21,7 @@ var SALDO=[
   {tab:'resumen',sel:'#herr-abrir',t:'Tus herramientas',x:'Sueldo, tarjeta, fijos y más están en la ruedita de arriba.'}
 ];
 var PASOS=ANOTAR;
-var i=0,corre=false;
+var i=0,corre=false,reint=null;
 
 function el(){return $('#tour')}
 function cerrar(){
@@ -34,7 +34,8 @@ function mostrar(dir){
   if(ctx.tab!==p.tab&&!(p.tab==='semanas'&&/^w\d+$/.test(ctx.tab)))ctx.go(p.tab);
   setTimeout(function(){
     var n=document.querySelector(p.sel);
-    if(!visible(n)){i+=dir;if(i<0)i=0;if(i>=PASOS.length){cerrar();return}mostrar(dir);return}
+    /* si el paso no está en pantalla, se saltea; yendo hacia atrás, al llegar al principio se vuelve a buscar hacia adelante (si no, quedaba dando vueltas) */
+    if(!visible(n)){if(dir<0&&i<=0)dir=1;i+=dir;if(i<0)i=0;if(i>=PASOS.length){cerrar();return}mostrar(dir);return}
     if(!n.closest('.mic')){try{n.scrollIntoView({block:'center'})}catch(e){}}
     pintar();
     setTimeout(ubicar,60);
@@ -77,6 +78,7 @@ export function initTour(){
 export function tourSiPendiente(){
   if(corre||!tourPendiente()||!ctx.booted)return;
   var tapa=['#wiz','#pin','#libro','#lb-hojas','#indice'].some(function(s){var x=$(s);return x&&!x.hidden});
-  if(tapa)return;
+  /* el prólogo todavía se está cerrando (o hay algo encima): se prueba de nuevo en un rato, así arranca solo */
+  if(tapa){clearTimeout(reint);reint=setTimeout(tourSiPendiente,900);return}
   setTimeout(function(){if(!corre&&tourPendiente())iniciarTour()},700);
 }

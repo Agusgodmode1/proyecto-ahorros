@@ -13,7 +13,8 @@ import {borrarGasto,renglonGasto,abrirHojaGasto,diasHasta} from './gastos.js';
    - Los gastos en renglones de una línea; «¿De dónde sale?» explica el presupuesto. */
 var abiertoDe={};
 export function resetWeekSel(){}
-function rangoLargo(a,b){var x=parse(a),y=parse(b),g='\u2009–\u2009';return x.getMonth()===y.getMonth()?x.getDate()+g+y.getDate()+' '+MES[y.getMonth()]:x.getDate()+' '+MES[x.getMonth()]+g+y.getDate()+' '+MES[y.getMonth()]}
+function rangoLargo(a,b){var x=parse(a),y=parse(b),g='\u2009–\u2009';if(a===b)return x.getDate()+' '+MES[x.getMonth()]; /* (2.58.15) una semana de un solo día: una sola fecha */
+  return x.getMonth()===y.getMonth()?x.getDate()+g+y.getDate()+' '+MES[y.getMonth()]:x.getDate()+' '+MES[x.getMonth()]+g+y.getDate()+' '+MES[y.getMonth()]}
 /* Los días que se pueden elegir al anotar o corregir un gasto de esta semana */
 function diasDeSemana(w){var d=diasHasta(w.start,w.end);return d.length?d:[[w.start,cap(fLarga(w.start))]]}
 /* Corregir un gasto (desde Hoy o desde una semana): la hoja con el gasto cargado */
@@ -45,13 +46,15 @@ export function renderWeek(pc){
   var i=Number(tab.slice(1)),w=pc.weeks[i];if(!w)return;
   var t=today(),cur=t>=w.start&&t<=w.end,past=t>w.end,fut=t<w.start;
   var rem=cur?diffDays(t,w.end)+1:w.days;
-  var perDay=past?null:Math.max(w.left,0)/Math.max(rem,1);
+  /* (2.58.15) Una semana que todavía no empezó muestra su parte del plan, igual que su ficha en Hoy.
+     Antes sumaba lo que sobraría de las anteriores si no gastaras nada: dos números distintos para la misma semana. */
+  var perDay=past?null:fut?w.budget/Math.max(w.days,1):Math.max(w.left,0)/Math.max(rem,1);
   var pct=w.avail>0?Math.min(100,Math.max(0,w.spent/w.avail*100)):(w.spent>0?100:0);
   var over=w.left<0,dayAllow=w.budget/w.days,ult=i===pc.weeks.length-1;
   var ds=parse(w.start);
   var h='<div class="panel-head"><h2 class="ph-t">Semanas</h2><p class="ph-s">Cada semana tiene su presupuesto: lo que sobra pasa a la siguiente.</p></div>';
   h+='<div class="wkpick" role="group" aria-label="Elegir semana">';
-  pc.weeks.forEach(function(x){h+='<button type="button" class="wkp" data-goto="w'+x.i+'" aria-pressed="'+(x.i===i)+'"><b>Semana '+(x.i+1)+'</b><span>'+esc(rango(x.start,x.end))+'</span></button>'});
+  pc.weeks.forEach(function(x){h+='<button type="button" class="wkp" data-goto="w'+x.i+'" aria-pressed="'+(x.i===i)+'"><b>Semana '+(x.i+1)+'</b><span>'+esc(x.start===x.end?rangoLargo(x.start,x.end):rango(x.start,x.end))+'</span></button>'});
   h+='</div>';
 
   var pill=over?'<span class="pill bad">Te pasaste</span>':cur?'<span class="pill now">esta semana</span>':past?'<span class="pill ok">cumplida</span>':'<span class="pill">próxima</span>';
@@ -59,7 +62,7 @@ export function renderWeek(pc){
   /* La semana después de una que se pasó: cuánto bajó el día */
   var rc=pc.ajuste&&pc.ajuste.recalculo;
   if(cur&&rc&&rc.semana===i-1)h+='<p class="wk-aviso">La semana pasada te pasaste '+money(rc.deficit)+'; el resto baja a '+money(perDay)+' por día.</p>';
-  h+='<div class="wk-big"><span class="wk-bl">'+(over?'Te pasaste por':past?'Te sobró':'Te quedan')+'</span><span class="wk-bv'+(over?' neg':'')+'">'+money(Math.abs(w.left))+'</span></div>';
+  h+='<div class="wk-big"><span class="wk-bl">'+(fut&&!over?'Para gastar':over?'Te pasaste por':past?'Te sobró':'Te quedan')+'</span><span class="wk-bv'+(over?' neg':'')+'">'+money(fut&&!over?w.budget:Math.abs(w.left))+'</span></div>';
   h+='<div class="wk-dos">'+(past?'<span><small>Tenías</small><b>'+money(w.avail)+'</b></span>':'<span><small>Por día'+(cur?' hasta el '+DIAL[parse(w.end).getDay()]:'')+'</small><b class="plata">'+money(perDay)+'</b></span>')
     +'<span><small>Gastaste</small><b>'+money(w.spent)+'</b></span></div>';
   h+='<div class="bar fina'+(over?' over':'')+'" role="img" aria-label="Gastaste el '+Math.round(pct)+' % de lo que tenías"><i style="width:'+pct+'%"></i></div>';
@@ -72,7 +75,7 @@ export function renderWeek(pc){
   else if(past)sub=w.alAhorro?'La semana terminó. Lo que sobró ('+money(w.alAhorro)+') fue al ahorro.':'La semana terminó. Lo que sobró pasó a la siguiente.';
   else sub='Si repartís parejo, podés gastar '+money(perDay)+' por día.';
   h+='<details class="wk-de" data-wkde="'+i+'"'+(abiertoDe[i]?' open':'')+'><summary>¿De dónde sale?</summary><div class="wk-de-in">'
-    +'<p>Esta semana tenías <b>'+money(w.avail)+'</b>'+(Math.round(w.carry)!==0?': '+money(w.budget)+' de su parte del plan '+(w.carry<0?'menos ':'más ')+money(Math.abs(w.carry))+(w.carry<0?' que te pasaste':' que sobró')+' de la semana anterior':', su parte del plan')+'.</p>'
+    +(fut&&!over?'<p>Su parte del plan es <b>'+money(w.budget)+'</b>. Lo que sobre de las semanas anteriores se suma.</p>':'<p>Esta semana tenías <b>'+money(w.avail)+'</b>'+(Math.round(w.carry)!==0?': '+money(w.budget)+' de su parte del plan '+(w.carry<0?'menos ':'más ')+money(Math.abs(w.carry))+(w.carry<0?' que te pasaste':' que sobró')+' de la semana anterior':', su parte del plan')+'.</p>')
     +'<p>'+sub+' Cada día alcanza para <b>'+money(dayAllow)+'</b>.</p>'
     +'<p class="wk-ley"><span><i class="db bien"></i>bien</span><span><i class="db cerca"></i>cerca del límite</span><span><i class="db mal"></i>te pasaste</span></p></div></details>';
   h+='</div>';

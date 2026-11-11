@@ -1,6 +1,9 @@
 /* Arranque, pestañas y render general. */
 import {curWeek} from './logica/plan.js';
 import {charNoPermitido,limpiarNumero} from './logica/util.js';
+import {elegirLibro,ultimoLibro,recordarLibro,directo,setDirecto,pedirEstante,estantePedido} from './ui/estante.js';
+import {libroValido,respaldoCompleto} from './logica/libros.js';
+import {usarLibro,leerLibro} from './estado.js';
 import {migrar,cargar,guardar,pedirPersistencia,defaults,ejemplo,necesitaMigrar,guardarCopia,resumenDatos,borrarTodo} from './estado.js';
 import {ctx,$,today,planNow,anota,ICON,discreto,setDiscreto,toast,toastAccion,money} from './ui/comun.js';
 import {deshacerAjustePacto} from './logica/pacto.js';
@@ -292,7 +295,7 @@ function initGlobal(){
     if(e.target.closest('#cero-si')){
       borrando=true;clearTimeout(timer);timer=null;
       var bs=e.target.closest('#cero-si');bs.disabled=true;bs.textContent='Borrando…';
-      borrarTodo(['pa-tema','pa-sonido','pa-volumen']).then(function(){location.reload()});
+      borrarTodo(['pa-tema','pa-sonido','pa-volumen','pa-pin','pa-libro','pa-directo']).then(function(){location.reload()});
       return;
     }
     /* Borrar los datos de ejemplo y crear el perfil (dos toques) */
@@ -383,6 +386,34 @@ function arrancar(st,tab){
 }
 ctx.persist=persist;ctx.renderAll=renderAll;ctx.go=go;ctx.syncInputs=syncInputs;ctx.abrirPrologo=abrirPrologo;ctx.cerrarLibro=cerrarLibro;
 
+/* ---------- La estantería (2.60) ---------- */
+/* La tapa se abre sola a los 2,5 s si nadie la tocó */
+function abrirSola(){setTimeout(function(){var m=$('#libro'),b=m&&!m.hidden&&m.querySelector('[data-lb="abrir"]');if(b&&$('#lb-hojas').hidden)b.click()},2500)}
+/* Volver a la estantería: se guarda lo pendiente y la app arranca de nuevo mostrando los lomos */
+async function aEstante(){
+  try{if(ctx.state)await flush()}catch(e){}
+  pedirEstante();
+  var fin=function(){location.reload()};
+  try{document.body.animate([{opacity:1},{opacity:0}],{duration:260,fill:'forwards'}).onfinish=fin}catch(e){fin()}
+}
+ctx.aEstante=aEstante;
+var estanteListo=false;
+function initEstante(){
+  if(estanteListo)return;estanteListo=true;
+  function marcar(){document.querySelectorAll('[data-directo]').forEach(function(x){x.setAttribute('aria-pressed',String((x.getAttribute('data-directo')==='1')===directo()))})}
+  marcar();
+  document.addEventListener('click',async function(e){
+    if(e.target.closest('[data-estante]')){aEstante();return}
+    var d=e.target.closest('[data-directo]');
+    if(d){setDirecto(d.getAttribute('data-directo')==='1');marcar();toast(directo()?'Listo: la app abre directo tu último libro':'Listo: al abrir vas a ver la estantería');return}
+    if(e.target.closest('#aj-completo')){
+      await flush();
+      var R=respaldoCompleto({solo:await leerLibro('solo'),duo:await leerLibro('duo')}),txt=JSON.stringify(R),nom='proyecto-ahorros-completo-'+today()+'.json';
+      var u=URL.createObjectURL(new Blob([txt],{type:'application/json'})),a=document.createElement('a');a.href=u;a.download=nom;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},4000);
+      toast('Respaldo completo descargado: '+Object.keys(R.libros).length+(Object.keys(R.libros).length===1?' libro':' libros'));
+    }
+  });
+}
 (async function boot(){
   initPerfil();initTour();initPin();initLibro();initIndice();
   initFlechas({ir:function(d){go(d)},capitulos:function(){return {}}});
@@ -392,13 +423,27 @@ ctx.persist=persist;ctx.renderAll=renderAll;ctx.go=go;ctx.syncInputs=syncInputs;
   if(bv)bv.addEventListener('click',async function(){bv.disabled=true;bv.textContent='Buscando…';var r=await buscarVersion();bv.disabled=false;bv.textContent='Buscar una versión nueva';
     toast(r==='nueva'?'Hay una versión nueva: tocá «Actualizar» arriba':r==='al-dia'?'Ya tenés la última versión':'No pude buscar: revisá la conexión')});
   pedirPersistencia().then(function(p){guardado.persistente=p});
+  /* (2.60) La estantería: primero se elige el libro (o se abre directo el último, si así lo pediste en Ajustes) */
+  var porEstante=estantePedido()||!directo()||!ultimoLibro();
+  var libro=porEstante?await elegirLibro():libroValido(ultimoLibro());
+  recordarLibro(libro);usarLibro(libro);document.documentElement.setAttribute('data-libro',libro);
+  initEstante();
+  if(libro==='duo'){
+    /* El Pacto de los Dos todavía no tiene páginas: su tapa y un aviso. Sus datos ya van aparte. */
+    if(pinActivo())await pedirPin();
+    abrirLibro({modo:'tapa',sinCierre:true,estado:defaults(),listo:function(){$('#duo-app').hidden=false}});
+    abrirSola();return;
+  }
   var d=await cargar();
   /* Antes de pasar los datos a la forma nueva, se guarda una copia tal cual estaban */
   if(necesitaMigrar(d))await guardarCopia(d,'antes de actualizar la app');
   /* Con PIN, primero el PIN: los datos no se muestran hasta ponerlo bien */
   if(d&&pinActivo())await pedirPin();
   /* Ya migrados, se guardan enseguida: así la copia «antes de actualizar» se hace una sola vez */
-  if(d){var mig=necesitaMigrar(d);arrancar(migrar(d));if(mig)flush();setStatus('Se guarda en este dispositivo.');return}
+  if(d){var mig=necesitaMigrar(d);arrancar(migrar(d));if(mig)flush();setStatus('Se guarda en este dispositivo.');
+    /* recién sacado del estante: se ve la tapa unos segundos y se abre sola (tocarla lo adelanta) */
+    if(porEstante){abrirLibro({modo:'tapa',sinCierre:true,estado:ctx.state,listo:function(){ctx.tab='resumen';renderAll();window.scrollTo(0,0);entrada()}});abrirSola()}
+    return}
   /* Primera vez: el libro cerrado. Al abrirlo, el prólogo y las tres preguntas del pacto. */
   function listo(st){arrancar(st);flush()}
   abrirLibro({modo:'nuevo',estado:defaults(),listo:listo,alImportar:listo,alEjemplo:function(){listo(ejemplo())},alHerramienta:arrancarCon,

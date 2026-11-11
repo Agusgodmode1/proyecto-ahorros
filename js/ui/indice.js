@@ -50,7 +50,7 @@ export function abrirIndice(){
     h+=renglon('data-ix-go="'+c.id+'"','·',c.t,pista(c.id,pc),'',c.tono,on);
   });
   h+=renglon('data-ix-go="ajustes"','✦','Ajustes','perfil, sonido y respaldo','','ix-aj',ctx.tab==='ajustes')+'</ol>'
-    +'<div class="lb-acc ix-acc"><button class="lb-btn" type="button" data-ix="tapa">Cerrar el libro</button></div>';
+    +'<div class="lb-acc ix-acc"><button class="lb-btn" type="button" data-ix="tapa">Cerrar el libro</button><button class="lb-link ix-estante" type="button" data-ix="estante">Cambiar de libro</button></div>';
   /* (2.52) si quedaba algo del cierre anterior (una animación a medio terminar), se descarta: si no, el menú quedaba invisible */
   vez++;limpiar(box);
   box.innerHTML=h;el.hidden=false;document.documentElement.classList.add('voz-abierta');
@@ -97,6 +97,7 @@ export function initIndice(){
     if(a==='cerrar')cerrarIndice();
     if(a==='prologo')cerrarIndice(function(){ctx.abrirPrologo('p1')});
     if(a==='tapa')cerrarIndice(function(){ctx.cerrarLibro()});
+    if(a==='estante')ctx.aEstante();
   });
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!el.hidden)cerrarIndice()});
   el.addEventListener('input',function(e){if(e.target.id==='ix-q')buscar(e.target.value)});

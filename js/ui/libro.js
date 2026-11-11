@@ -27,9 +27,13 @@ import {listaHerrHTML} from './herramientas.js';
 import {$,today,money,usd,esc,toastAccion,ctx} from './comun.js';
 import {sonar} from './sonido.js';
 import {girar,terminar as terminarPase} from './pase.js';
+import {libroDe} from '../logica/libros.js';
+import {libroEnUso} from '../estado.js';
 import {costuraHTML,bordadoHTML,tituloHTML,guardasHTML,montarTapa,soltarTapa,tapaQuieta,fueArrastre,avivar} from './tapa.js';
 
 export var TITULO='El Libro del Ahorro';
+/* (2.60) lo que dice la tapa según el libro de la estantería */
+var LB={get chico(){return libroDe(libroEnUso()).chico},get grande(){return libroDe(libroEnUso()).grande},get frase(){return libroDe(libroEnUso()).frase}};
 var T=22; /* grosor del libro en px (igual que --lb-t) */
 function quieto(){try{return matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){return false}}
 function fLarga(s){var d=parse(s);return DIAL[d.getDay()]+' '+d.getDate()+' de '+MESL[d.getMonth()]}
@@ -87,7 +91,7 @@ var ESTRELLA='<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 0l2.6 7.4
 function htmlPortada(opciones){
   var hojas='';for(var i=0;i<3;i++)hojas+='<div class="lb-hoja"><i></i><i></i></div>';
   return '<button class="lb-link lb-saltar" type="button" data-lb="saltar" hidden>Saltar</button>'
-    +'<div class="lb-escena"><div class="lb-cam"><div class="lb-gira"><div class="lb-libro" role="button" tabindex="0" aria-label="Abrir el libro" data-lb="abrir">'
+    +'<button class="lb-link lb-estante" type="button" data-lb="estante">‹ Estantería</button><div class="lb-escena"><div class="lb-cam"><div class="lb-gira"><div class="lb-libro" role="button" tabindex="0" aria-label="Abrir el libro" data-lb="abrir">'
     +'<div class="lb-sombra"></div><div class="lb-contra"></div><div class="lb-bloque"></div>'
     +'<div class="lb-canto lb-canto-d"></div><div class="lb-canto lb-canto-a"></div>'+hojas
     +'<div class="lb-lomo"></div>'
@@ -100,7 +104,7 @@ function htmlPortada(opciones){
     +'<i class="lb-capa" data-k="6"><i class="lb-astros a"></i><i class="lb-fugaz"></i></i>'
     +'<i class="lb-trama"></i><i class="lb-velo"></i>'+costuraHTML()
     +'<div class="lb-tapa-in"><div class="lb-bordado-w" data-k="8">'+bordadoHTML()+'</div>'
-    +'<div class="lb-tit-w" data-k="11"><h1 class="lb-tit"><small>el libro del</small>'+tituloHTML()+'<span class="sr-only">Ahorro</span></h1><p class="lb-lema">Para que guardes algo, por más mínimo que sea</p></div></div></div>'
+    +'<div class="lb-tit-w" data-k="11"><h1 class="lb-tit"><small>'+LB.chico+'</small>'+tituloHTML().replace(/>Ahorro</g,'>'+LB.grande+'<')+'<span class="sr-only">'+LB.grande+'</span></h1><p class="lb-lema">'+LB.frase+'</p></div></div></div>'
     +'<div class="lb-tapa-d">'+guardasHTML()+'</div></div>'
     +'<div class="lb-broche"><b></b></div>'
     +'</div></div></div></div>'
@@ -594,7 +598,7 @@ export function abrirLibro(opt){
   if(o.alEjemplo)montarImportador($('#lb-import'),function(e){cerrarTodo();o.alImportar(e)},'Usar estos datos');
   /* «Cerrar el libro»: la tapa se cierra (la apertura al revés) y queda esperando un toque */
   if(o.modo==='tapa'){
-    if(quieto())m.animate([{opacity:0},{opacity:1}],{duration:250});
+    if(quieto()||o.sinCierre)m.animate([{opacity:0},{opacity:1}],{duration:o.sinCierre&&!quieto()?420:250}); /* (2.60) recién sacado del estante: la tapa aparece ya cerrada */
     else{vista='cerrando';moverLibro(m,function(){vista='portada'},true)}
   }
 }
@@ -652,6 +656,7 @@ export function initLibro(){
     if(a==='atajo'){D.ahorro=b.getAttribute('data-val');q('#lb-ahorro').value=D.ahorro;vivoQ2(false);return}
     if(a==='mes'){var d=new Date(D.mes[0],D.mes[1]+Number(b.getAttribute('data-d')),1,12);D.mes=[d.getFullYear(),d.getMonth()];pintarCal();return}
     if(a==='dia'){D.cobro=b.getAttribute('data-f');error('');pintarCal();return}
+    if(a==='estante'){ctx.aEstante();return}
     if(a==='cerrar-libro'){cerrarTodo(1);if(o.alCerrar)o.alCerrar(1);return}
     if(a==='sellar'){
       var v=validarPacto(st,datos(),today());

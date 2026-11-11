@@ -30,6 +30,13 @@ document.documentElement.setAttribute('data-theme','dark');
 <body>
 <div class="sbar" aria-hidden="true"></div>
 <div class="upd" id="upd" role="status" hidden><span>Hay una versión nueva</span><button class="btn primary" type="button">Actualizar</button></div>
+<div class="lb-mesa estante" id="estante" hidden role="dialog" aria-modal="true" aria-label="La estantería: elegí tu libro"></div>
+<div class="lb-mesa duo-app" id="duo-app" hidden>
+  <div class="duo-hoja"><span class="lb-cap">el pacto de los dos</span><h1>Este libro se está escribiendo</h1>
+  <p>Acá vas a llevar los gastos compartidos con otra persona: quién pagó, cuánto le toca a cada uno y cómo quedan a mano. Llega en la próxima versión.</p>
+  <p class="duo-nota">Sus datos van aparte: nada de El Libro del Ahorro entra acá.</p>
+  <button class="lb-btn" type="button" data-estante>Volver a la estantería</button></div>
+</div>
 <div class="lb-mesa" id="libro" hidden role="dialog" aria-modal="true" aria-label="El Libro del Ahorro"></div>
 <div class="indice" id="indice" hidden role="dialog" aria-modal="true" aria-labelledby="ix-t"><div class="indice-pag" id="indice-box"></div></div>
 <div class="lb-hojas" id="lb-hojas" hidden role="dialog" aria-modal="true" aria-label="Prólogo del Libro del Ahorro"></div>
@@ -394,6 +401,12 @@ document.documentElement.setAttribute('data-theme','dark');
       <div class="panel-head"><h2 class="ph-t">Ajustes</h2><p class="ph-s">Tu perfil, cómo se ve y tus respaldos. Tus datos viven solo en este teléfono.</p></div>
       <nav class="aj-ind" aria-label="Partes de Ajustes" data-nodeslizar><button type="button" data-ajir="aj-g-libro">Tu libro</button><button type="button" data-ajir="aj-g-ver">Sonido</button><button type="button" data-ajir="aj-g-priv">Privacidad</button><button type="button" data-ajir="aj-g-plata">Plata y fechas</button><button type="button" data-ajir="aj-g-datos">Tus datos</button><button type="button" data-ajir="aj-g-app">Sobre la app</button></nav>
       <h3 class="aj-grupo" id="aj-g-libro">Tu libro</h3>
+      <div class="card stack" id="aj-libros">
+        <div class="sec"><h2>Tus libros</h2><p class="note">Cada libro guarda lo suyo en este teléfono. Al abrir la app elegís cuál.</p></div>
+        <div class="row-btns"><button class="btn" type="button" data-estante>Cambiar de libro</button></div>
+        <div class="field"><span class="sub-l" id="aj-directo-l">Al abrir la app</span><div class="seg" role="group" aria-labelledby="aj-directo-l"><button type="button" data-directo="0">Mostrar la estantería</button><button type="button" data-directo="1">Abrir directo mi último libro</button></div></div>
+        <div class="row-btns"><button class="btn quiet" type="button" id="aj-completo">Respaldo completo (los dos libros)</button></div>
+      </div>
       <div class="card stack">
         <div class="sec"><h2>Tu pacto</h2><p class="note">Se cambia en el prólogo, pregunta por pregunta.</p></div>
         <div class="row-btns"><button class="btn primary" type="button" id="aj-prologo">Ir al prólogo</button><button class="btn" type="button" id="aj-tour">Ver el tour otra vez</button></div>

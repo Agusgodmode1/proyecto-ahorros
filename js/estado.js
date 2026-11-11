@@ -12,6 +12,7 @@ import {pactoBase,pactoDesdePlan,normApartado} from './logica/pacto.js';
 import {normEsperado} from './logica/supervivencia.js';
 import {normIngresos} from './logica/ingresos.js';
 import {parejaVacia} from './logica/pareja.js';
+import {claves,libroValido,parteDelRespaldo} from './logica/libros.js';
 
 /* Subí este número cuando cambie la forma del estado y agregá el paso en migrar().
    v1–v3: archivo HTML · v4: voz y meta · v5: perfil propio y feriados editables · v6: sincronización
@@ -39,7 +40,7 @@ import {parejaVacia} from './logica/pareja.js';
         su historial y lo que anotó que entró quedan igual.
    v24: el horario de cada uno (perfil.horas.entrada, salida y dias 'lv' | 'ls'). Alguien nuevo arranca sin horario;
         a quien ya usaba la app se le completan las reglas que tenía (las de siempre), así sus cuentas dan idéntico. */
-export var VERSION_ESTADO=27;
+export var VERSION_ESTADO=28; /* v28 (2.60): la estantería; los datos no cambian de forma */
 
 function hoyISO(){return iso(new Date())}
 /* Feriados: por defecto solo cuentan los 5 no laborables (1/1, 1/5, 18/7, 25/8, 25/12).
@@ -279,6 +280,8 @@ export function leerRespaldo(texto){
   try{o=JSON.parse(String(texto||'').replace(/^﻿/,'').trim())}
   catch(e){return {ok:false,error:'No es un respaldo válido: el texto no está completo o no es JSON.'}}
   if(!o||typeof o!=='object'||Array.isArray(o))return {ok:false,error:'No es un respaldo válido.'};
+  /* (2.60) un respaldo completo trae los dos libros: cada libro toma solo lo suyo */
+  var parte=parteDelRespaldo(o,LIBRO);if(parte.error)return {ok:false,error:parte.error};o=parte.datos;
   var datos=o,exportado=null;
   if(o.app!==undefined||o.datos!==undefined){
     if(o.app!=='proyecto-ahorros')return {ok:false,error:'Este archivo no es de Proyecto Ahorros.'};
@@ -302,6 +305,12 @@ export function diasSinRespaldo(state,hoy){
 
 /* ---------- Guardado: un solo documento en IndexedDB ---------- */
 var DB='proyecto-ahorros',STORE='estado',KEY='principal',LS='proyecto-ahorros-v1',dbP=null;
+/* (2.60) Cada libro de la estantería tiene su lugar: usarLibro() elige con cuál trabajan cargar(), guardar() y las copias */
+var LIBRO='solo',COPIAS='copias';
+export function usarLibro(id){LIBRO=libroValido(id);var c=claves(LIBRO);KEY=c.estado;LS=c.ls;COPIAS=c.copias;return LIBRO}
+export function libroEnUso(){return LIBRO}
+/* lo guardado de otro libro, sin cambiar de libro (para el respaldo completo) */
+export async function leerLibro(id){try{return await leerClave(claves(id).estado)}catch(e){return null}}
 function abrir(){
   return new Promise(function(ok,mal){
     if(typeof indexedDB==='undefined'){mal(new Error('Sin IndexedDB'));return}
@@ -316,9 +325,9 @@ function abrir(){
    menos las preferencias del aparato que se pasen en «conservar» (tema, sonido…). */
 export async function borrarTodo(conservar){
   conservar=conservar||[];
-  if(dbP){try{(await dbP).close()}catch(e){}dbP=null}
-  try{await new Promise(function(ok){var q=indexedDB.deleteDatabase(DB);q.onsuccess=q.onerror=q.onblocked=function(){ok()}})}catch(e){}
-  try{Object.keys(localStorage).forEach(function(k){if(/^pa-|^proyecto-ahorros/.test(k)&&conservar.indexOf(k)<0)localStorage.removeItem(k)})}catch(e){}
+  /* (2.60) borra lo de ESTE libro (estado y copias); el otro libro de la estantería no se toca */
+  try{await conDB(function(db){return new Promise(function(ok,mal){var tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).delete(KEY);tx.objectStore(STORE).delete(COPIAS);tx.oncomplete=function(){ok()};tx.onerror=tx.onabort=function(){mal(tx.error)}})})}catch(e){}
+  try{localStorage.removeItem(LS);Object.keys(localStorage).forEach(function(k){if(/^pa-/.test(k)&&conservar.indexOf(k)<0)localStorage.removeItem(k)})}catch(e){}
 }
 /* iOS a veces cierra la conexión con la app en segundo plano: si falla, se reabre una vez. */
 async function conDB(fn){
@@ -356,7 +365,7 @@ export async function guardar(o){
 /* ---------- Copias automáticas ----------
    Antes de actualizar la forma de los datos (migrar), de importar un respaldo o de reemplazar todo,
    se guarda una copia de lo que había. Quedan las 3 más nuevas, en este teléfono. */
-var COPIAS='copias',MAX_COPIAS=3;
+var MAX_COPIAS=3;
 export function agregarCopia(lista,datos,motivo,ahora){
   var l=Array.isArray(lista)?lista.slice():[];
   l.unshift({fecha:(ahora||new Date()).toISOString(),motivo:motivo||'',v:(datos&&datos.v)||1,datos:JSON.parse(JSON.stringify(datos))});

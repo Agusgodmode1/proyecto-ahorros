@@ -1880,3 +1880,5 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 
 /* (2.58.8) «Días cargados»: la lista se ve entera. Con 4 días o más, la caja de 320 px cortaba el último renglón por la mitad (ya está dentro de un desplegable). */
 .v2 .logbox{max-height:none;overflow:visible}
+/* (2.58.10) los colores de una categoría se tocan con el dedo: 44 px (medían 34) */
+.v2 .cat-col .sw{width:44px;height:44px}

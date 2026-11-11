@@ -2,13 +2,15 @@
 import {icono,nombreIcono} from './iconos.js';
 import * as C from '../logica/categorias.js';
 import {ctx,$,esc,toast,colorCat} from './comun.js';
+/* (2.58.10) cada color con su nombre, para el lector de pantalla (antes los diez se llamaban «Color») */
+var NOMBRE_COLOR={'var(--coral)':'Naranja','var(--mint)':'Verde','var(--sun)':'Amarillo','var(--sky)':'Azul','var(--grape)':'Violeta','var(--pink)':'Rosa','var(--teal)':'Verde agua','var(--slate)':'Gris azulado','var(--bad)':'Rojo','var(--muted)':'Gris'};
 
 var abierta=null,borrando=null,error='';
 
 function editor(c){
   var n=C.cuantosGastos(ctx.state,c.nombre),esOtros=c===C.otros(ctx.state);
   var h='<div class="cat-ed stack"><div class="field"><label class="sub-l" for="cat-n">Nombre</label><input id="cat-n" type="text" maxlength="30" value="'+esc(c.nombre)+'"></div>'
-    +'<div class="field"><span class="sub-l">Color</span><div class="cat-col" role="group" aria-label="Color">'+C.COLORES.map(function(x){return '<button type="button" class="sw" data-catcol="'+x+'" style="background:'+colorCat(x)+'" aria-pressed="'+(x===c.color)+'" aria-label="Color"></button>'}).join('')+'</div></div>'
+    +'<div class="field"><span class="sub-l">Color</span><div class="cat-col" role="group" aria-label="Color">'+C.COLORES.map(function(x){return '<button type="button" class="sw" data-catcol="'+x+'" style="background:'+colorCat(x)+'" aria-pressed="'+(x===c.color)+'" aria-label="'+(NOMBRE_COLOR[x]||'Color')+'"></button>'}).join('')+'</div></div>'
     +'<div class="field"><span class="sub-l">Ícono</span><div class="cat-ic" role="group" aria-label="Ícono">'+C.ICONOS.map(function(x){return '<button type="button" data-catic="'+esc(x)+'" aria-pressed="'+(x===c.icono)+'" aria-label="Ícono: '+esc(nombreIcono(x))+'">'+icono(x)+'</button>'}).join('')+'</div></div>'
     +'<div class="row-btns"><button class="btn primary" type="button" data-cata="guardar">Guardar</button>'
     +(esOtros?'':'<button class="btn" type="button" data-cata="ocultar">'+(c.oculta?'Mostrar al anotar':'Ocultar al anotar')+'</button>')

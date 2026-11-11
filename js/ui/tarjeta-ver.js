@@ -9,7 +9,7 @@ import {leerMovimientos,analizarMovimientos,filasATexto,firma} from '../logica/b
 import {detectar,textos,avisoHoy as elegirAviso,principales,porDiaDelMes,nivelDia,ritmoContraPlan,anillo} from '../logica/detector.js';
 import {cruzar,hormigas} from '../logica/control.js';
 import {nombresVisibles,nombreDe,colorDe} from '../logica/categorias.js';
-import {ctx,$,today,planNow,money,esc,fCorta,cap,titulo,tile,toast,exHook,colorCat} from './comun.js';
+import {ctx,$,today,planNow,money,esc,fCorta,cap,titulo,tile,toast,exHook,colorCat,anota} from './comun.js';
 import {catDe} from './gastos.js';
 import {anilloHTML,calendarioHTML,diaHTML,porDondeHTML,ticketHTML,mesAMesSVG,ritmoSVG,lectura,fechaCorta} from './graficos.js';
 
@@ -83,7 +83,7 @@ export function render(){
   var H=x.H,P=principales(H,3),pd=planDia(),rit=H.filter(function(hh){return hh.tipo==='ritmo'})[0];
   /* (2.15) un índice para no perderse en una página larga */
   var ind=[['tj-ritmo','Ritmo',pd>0],['tj-pdv','Por dónde',P.length],['tj-an','Categorías',1],['tj-cals','Calendario',1],['tj-subs','Suscripciones',H.some(function(hh){return hh.tipo==='subs'})],
-    ['tj-todo','Encontré',H.length>P.length],['tj-rit','Mes a mes',1],['control-card','Control',1],['tj-com','Comercios',1]].filter(function(z){return z[2]});
+    ['tj-todo','Encontré',H.length>P.length],['tj-rit','Mes a mes',1],['control-card','Control',anota()],['tj-com','Comercios',1]].filter(function(z){return z[2]});
   h+='<nav class="tj-ind" aria-label="Partes de la Tarjeta" data-nodeslizar>'+ind.map(function(z){return '<button type="button" data-tjir="'+z[0]+'">'+z[1]+'</button>'}).join('')+'</nav>';
   /* (2.15) «a este ritmo», aparte: es el resumen de todo */
   if(pd>0)h+='<div class="tj-ritmo'+(rit?' mal':'')+'" id="tj-ritmo"><p class="tj-ritmo-t">A este ritmo</p><p>Gastás <b>'+money(A.porDia)+'</b> por día y tu plan da <b>'+money(pd)+'</b>'
@@ -121,7 +121,8 @@ export function render(){
     +(A.meses.length>1?'<div class="sec"><h2>Mes a mes</h2><p class="note">Lo que gastaste cada mes del extracto.</p></div>'+mesAMesSVG(A.meses,money):'')+'</section>';
 
   /* Lo que anotaste vs. el extracto */
-  h+=controlHTML(A,nom);
+  /* (2.58.9) «Con lo que tengo» no anota gastos: ahí «Agregar» restaba de nuevo plata que ya estaba descontada al actualizar (y «Tenés» dejaba de ser lo que dijiste) */
+  if(anota())h+=controlHTML(A,nom);else faltan=[];
 
   /* Más detalle: comercios (acá se corrige la categoría), días, hormiga, grandes */
   h+=detalleHTML(x,nom,pd);

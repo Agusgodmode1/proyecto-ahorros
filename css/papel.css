@@ -1266,6 +1266,9 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 
 /* (2.26) en el prólogo, el campo del ahorro y el deslizador miden 44 px de alto (se tocan con el dedo) */
 .lb-hojas .lb-monto.chico input{min-height:44px}
+/* (2.58.3) El monto del pacto se escribe grande, como fue pensado: la regla general de los campos (y la de 16 px del iPhone) lo dejaba chiquito al lado del «$». */
+.lb-hojas .lb-monto input{font-size:44px!important}
+.lb-hojas .lb-monto.chico input{font-size:30px!important}
 .lb-hojas .lb-rango{min-height:44px}
 
 /* =====================================================================

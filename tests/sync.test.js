@@ -5,7 +5,7 @@ import {ejemplo,defaults,migrar,armarRespaldo,leerRespaldo} from '../js/estado.j
 
 function copia(x){return JSON.parse(JSON.stringify(x))}
 /* el ejemplo, sin el boleto de hoy (2.30), para contar solo los gastos de cada prueba */
-function ej(){var e=ejemplo();e.gastos=[];return e}
+function ej(){var e=ejemplo('2026-10-27');e.gastos=[];return e}
 /* Simula un aparato: parte de un estado y guarda cambios en un momento dado */
 function guardar(prev,cambiar,t){var cur=copia(prev);cambiar(cur);return marcarCambios(prev,cur,t)}
 
@@ -31,7 +31,7 @@ test('dos aparatos sin conexión: se juntan los gastos de los dos',function(){
 });
 
 test('si el mismo dato cambió en los dos, gana el más reciente',function(){
-  var base=ejemplo();base.gastos=[{id:'g',fecha:'2026-10-13',monto:100,_u:1}];marcarCambios(null,base,0);
+  var base=ejemplo('2026-10-27');base.gastos=[{id:'g',fecha:'2026-10-13',monto:100,_u:1}];marcarCambios(null,base,0);
   var cel=guardar(base,function(s){s.gastos[0].monto=111;s.plan.ahorro=5000},10);
   var pc=guardar(base,function(s){s.gastos[0].monto=222},20);
   var m=combinar(cel,pc);
@@ -42,7 +42,7 @@ test('si el mismo dato cambió en los dos, gana el más reciente',function(){
 });
 
 test('lo borrado no vuelve a aparecer, pero lo cambiado después del borrado sí queda',function(){
-  var base=ejemplo();base.gastos=[{id:'g',fecha:'2026-10-13',monto:100,_u:1}];marcarCambios(null,base,0);
+  var base=ejemplo('2026-10-27');base.gastos=[{id:'g',fecha:'2026-10-13',monto:100,_u:1}];marcarCambios(null,base,0);
   var cel=guardar(base,function(s){s.gastos=[]},10);
   var pc=copia(base);
   assert.equal(combinar(pc,cel).gastos.length,0);
@@ -52,7 +52,7 @@ test('lo borrado no vuelve a aparecer, pero lo cambiado después del borrado sí
 });
 
 test('las horas y los meses cerrados también se juntan',function(){
-  var base=ejemplo();marcarCambios(null,base,0);
+  var base=ejemplo('2026-10-27');marcarCambios(null,base,0);
   var cel=guardar(base,function(s){s.horas.push({id:'h1',fecha:'2026-10-13',tipo:'sem',min:20});s.hist.push({k:'2026-09',meta:1,ahorrado:2})},10);
   var pc=guardar(base,function(s){s.horas=s.horas.filter(function(h){return h.id!=='x1'})},20);
   var m=combinar(cel,pc);
@@ -71,7 +71,7 @@ test('el estado con datos de sincronización pasa por migrar sin perderlos',func
 
 test('saber si hay datos para subir',function(){
   assert.equal(tieneDatos(defaults()),false);
-  assert.equal(tieneDatos(ejemplo()),true);
+  assert.equal(tieneDatos(ejemplo('2026-10-27')),true);
 });
 
 /* ---------- Pasar datos entre aparatos con un archivo ---------- */
@@ -136,7 +136,7 @@ test('datos viejos sin marcas se juntan sin perder nada',function(){
 });
 
 test('juntar un archivo que ya estaba todo: no cambia nada',function(){
-  var st=ejemplo(),u=prepararGuardado(null,st,0);
+  var st=ejemplo('2026-10-27'),u=prepararGuardado(null,st,0);
   st.gastos.push({id:'g',fecha:'2026-10-13',monto:1});prepararGuardado(u,st,5);
   var archivo=leerRespaldo(JSON.stringify(armarRespaldo(st))).estado;
   var r=juntar(st,archivo);
@@ -144,7 +144,7 @@ test('juntar un archivo que ya estaba todo: no cambia nada',function(){
 });
 
 test('importar con "Reemplazar todo" sigue igual: queda exactamente lo del archivo',function(){
-  var st=ejemplo(),u=prepararGuardado(null,st,0);
+  var st=ejemplo('2026-10-27'),u=prepararGuardado(null,st,0);
   st.gastos.push({id:'g',fecha:'2026-10-13',monto:850,nota:'Súper'});prepararGuardado(u,st,5);
   var r=leerRespaldo(JSON.stringify(armarRespaldo(st)));
   assert.ok(r.ok);

@@ -42,7 +42,7 @@ test('(2.53) sin horario no inventa nada',function(){
 });
 
 test('(2.53) así te pagan: la hora, la extra y los descuentos del último recibo',function(){
-  var s=ejemplo();
+  var s=ejemplo('2026-10-27');
   s.recibos=[{id:'a',mes:'2026-09',moneda:'UYU',nominal:48000,haberes:52000,aportes:7800,fonasa:2340,irpf:1500,liquido:40360,horasCant:10,horasMonto:4000}];
   var A=asiTePagan(s);
   assert.equal(A.mes,'2026-09');
@@ -55,7 +55,7 @@ test('(2.53) así te pagan: la hora, la extra y los descuentos del último recib
 });
 
 test('(2.53) sin horas cargadas de ese mes, el veredicto usa las horas que dice el recibo',function(){
-  var s=ejemplo();s.recibos=[];s.horas=[];
+  var s=ejemplo('2026-10-27');s.recibos=[];s.horas=[];
   var sm=estadoDelMes(s,'2026-09');sm=Object.assign({},sm,{horas:[{id:'x',fecha:'2026-09-15',tipo:'sem',min:360}]});
   var est=liq(sm,true);
   var v=veredicto(s,{mes:'2026-09',moneda:'UYU',haberes:est.N,liquido:est.liquido,horasCant:6,horasMonto:est.extraCom});
@@ -64,7 +64,7 @@ test('(2.53) sin horas cargadas de ese mes, el veredicto usa las horas que dice 
 });
 
 test('(2.54) un recibo mal leído no da veredicto ni cambia lo que vas a cobrar',function(){
-  var s=ejemplo();
+  var s=ejemplo('2026-10-27');
   var malo={id:'m',mes:mesTrabajo(s),moneda:'UYU',nominal:391,haberes:7099,aportes:8844,irpf:58959,liquido:47404};
   assert.ok(reciboRaro(malo));
   s.recibos=[malo];

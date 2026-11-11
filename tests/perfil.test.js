@@ -13,7 +13,7 @@ import {usarFeriados,bizRank,esFeriado} from '../js/logica/fechas.js';
 function cerca(a,b,msg){assert.ok(Math.abs(a-b)<=1,msg+': '+a.toFixed(2)+' vs '+b)}
 /* Así se guardaban los datos en la versión 4 (con números inventados) */
 function agusV4(){
-  var s=ejemplo();
+  var s=ejemplo('2026-10-27');
   s.v=4;s.ejemplo=false;delete s.perfil;delete s.feriados;
   s.sueldo={nominal:45000,bonoFijo:0,bonoHora:93.75,heCom:375,heEsp:187.5,hijos:0,conyuge:false,otros:0,bpc:6864,redondeo:true};
   s.horas.forEach(function(h){delete h.ej});
@@ -63,7 +63,7 @@ test('instalación nueva: en blanco, sin datos de Agus',function(){
 });
 
 test('datos de ejemplo: marcados como ejemplo',function(){
-  var s=ejemplo();
+  var s=ejemplo('2026-10-27');
   assert.equal(s.ejemplo,true);
   assert.ok(s.horas.every(function(h){return h.ej}));
   assert.equal(migrar(s).ejemplo,true,'siguen marcados después de guardar y abrir');
@@ -82,7 +82,7 @@ test('otras reglas de horas',function(){
 });
 
 test('sin horas extra: no suman y no aparece el logro de horas',function(){
-  var s=ejemplo();s.perfil.horas.activo=false;
+  var s=ejemplo('2026-10-27');s.perfil.horas.activo=false;
   assert.equal(mins(s,'sem'),0);assert.equal(mins(s,'fin'),0);
   var L=liq(s,true);assert.equal(L.N,45000);
   var ls=logrosLista(s,planCalc(s),'2026-10-13',null);
@@ -92,7 +92,7 @@ test('sin horas extra: no suman y no aparece el logro de horas',function(){
 });
 
 test('las horas se cobran el mes siguiente o el mismo mes',function(){
-  var s=ejemplo();
+  var s=ejemplo('2026-10-27');
   assert.equal(mesTrabajo(s),'2026-10');
   s.perfil.horas.mesCobro='mismo';
   assert.equal(mesTrabajo(s),'2026-11');

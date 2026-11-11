@@ -20,9 +20,6 @@ document.documentElement.setAttribute('data-theme','dark');
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Figtree:wght@400;500;600;700;800&display=swap">
 <link rel="preload" href="vendor/fraunces-5.3.0/fraunces-latin-full-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="vendor/nunito-5.3.0/nunito-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/app.css">
@@ -66,7 +63,7 @@ document.documentElement.setAttribute('data-theme','dark');
     <div class="hoy-hero" id="hoy-hero"></div>
     <form class="saldo-card tone-sky" id="saldo-card" autocomplete="off" hidden>
       <label for="saldo-in" class="saldo-l">¿Cuánta plata tenés ahora?</label>
-      <div class="money"><span>$</span><input id="saldo-in" type="number" inputmode="decimal" min="0" step="any" placeholder="lo que tenés en cuenta y en efectivo"></div>
+      <div class="money"><span>$</span><input id="saldo-in" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></div>
       <p class="saldo-p" id="saldo-prev" aria-live="polite"></p>
       <div class="row-btns"><button class="btn primary" type="submit">Actualizar</button><button class="btn quiet" type="button" id="saldo-x">Cancelar</button></div>
     </form>

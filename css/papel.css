@@ -55,7 +55,7 @@
   --coral:#A9B9D2; --coral-soft:#262C3A; --coral-ink:#CBD6E6;
   --sun:#D9B56C; --sun-soft:#3A3224; --sun-ink:#F1D99E;
   --slate:#ABA79E; --slate-soft:#2A2B33; --slate-ink:#DCD7CC;
-  --cat-sky:#3987e5; --cat-coral:#d95926; --cat-teal:#199e70; --cat-sun:#c98500; --cat-pink:#d55181; --cat-mint:#008300; --cat-grape:#9085e9; --cat-bad:#e66767; --cat-slate:#9AA3C2; --cat-muted:#8C8A99;
+  --cat-sky:#3987e5; --cat-coral:#d95926; --cat-teal:#199e70; --cat-sun:#c98500; --cat-pink:#d55181; --cat-mint:#6FAE4A; --cat-grape:#9085e9; --cat-bad:#e66767; --cat-slate:#9AA3C2; --cat-muted:#8C8A99;
   --bad:#F2907F; --bad-soft:#3E2526;
   --hero:#16171E; --on-accent:#16171E; --on-sun:#16171E; --on-color:#F2ECDF;
   --cobro:#D9B56C; --cuero:#070B24;
@@ -79,7 +79,7 @@
     --coral:#A9B9D2; --coral-soft:#262C3A; --coral-ink:#CBD6E6;
     --sun:#D9B56C; --sun-soft:#3A3224; --sun-ink:#F1D99E;
     --slate:#ABA79E; --slate-soft:#2A2B33; --slate-ink:#DCD7CC;
-    --cat-sky:#3987e5; --cat-coral:#d95926; --cat-teal:#199e70; --cat-sun:#c98500; --cat-pink:#d55181; --cat-mint:#008300; --cat-grape:#9085e9; --cat-bad:#e66767; --cat-slate:#9AA3C2; --cat-muted:#8C8A99;
+    --cat-sky:#3987e5; --cat-coral:#d95926; --cat-teal:#199e70; --cat-sun:#c98500; --cat-pink:#d55181; --cat-mint:#6FAE4A; --cat-grape:#9085e9; --cat-bad:#e66767; --cat-slate:#9AA3C2; --cat-muted:#8C8A99;
     --bad:#F2907F; --bad-soft:#3E2526;
     --hero:#16171E; --on-accent:#16171E; --on-sun:#16171E; --on-color:#F2ECDF;
     --cobro:#D9B56C; --cuero:#070B24;
@@ -1852,3 +1852,21 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 @media (max-width:360px){.v2 .asi-top{grid-template-columns:1fr;justify-items:center}.v2 .asi-cuenta{width:100%}}
 .v2 .asi .asi-d .asi-n small{text-align:left}
 .v2 .asi .asi-d .asi-v small{text-align:right}
+
+/* ===== Repaso general (2.58) ===== */
+/* Logros: el sello desbloqueado es de lacre granate con el dibujo en oro, como el sello del pacto (el naranja no es de esta paleta) */
+.v2 .logro.on .lg-ic{color:#F3DCA6;
+  background:radial-gradient(circle at 35% 30%,#C25661,#93283A 45%,#641525 85%,#430B17);
+  box-shadow:inset 0 0 0 5px rgba(50,6,14,.34),inset 0 0 0 7px rgba(233,200,130,.42),0 3px 0 rgba(40,5,12,.4),0 6px 14px rgba(0,0,0,.35)}
+.v2 .logro.on .lg-st{color:var(--oro-t)}
+/* Herramientas: la cinta de cada renglón va centrada con su título */
+.v2 .ix-list li .ix-cinta{top:50%;transform:translateY(-50%);height:20px}
+.v2 .ix-list li.actual .ix-cinta{height:34px}
+/* Ajustes: un solo tono de botón, sereno (el marfil queda para la acción de cada página) */
+.v2 #p-ajustes .btn.primary{background:var(--sel);color:var(--on-sel);border:1px solid var(--sel-filo);box-shadow:inset 0 1px 0 var(--sel-luz),0 2px 0 color-mix(in srgb,var(--oro) 55%,transparent)}
+/* Los campos de plata no muestran las flechitas del navegador */
+.v2 input[type=number]{-moz-appearance:textfield;appearance:textfield}
+.v2 input[type=number]::-webkit-outer-spin-button,.v2 input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+/* Herramientas: la página donde estás va en oro (el jade es solo para la plata) */
+.v2 .ix-list li.actual .ix-t,.v2 .ix-list [aria-current] .ix-t{color:var(--oro)}
+.v2 .ix-list li.actual .ix-t small,.v2 .ix-list [aria-current] .ix-t small{color:var(--muted)}

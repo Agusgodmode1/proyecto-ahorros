@@ -78,7 +78,7 @@ test('si corregís un campo, se guarda una plantilla del empleador y el mes sigu
 });
 
 test('el recibo guardado pasa a ser lo que cobrás en el plan',function(){
-  var s=ejemplo(); /* cobra el 6/11: las horas y el recibo son de octubre */
+  var s=ejemplo('2026-10-27'); /* cobra el 6/11: las horas y el recibo son de octubre */
   var est=liq(s,true);
   assert.equal(liqReal(s).real,undefined,'sin recibo: la estimación de siempre');
   s.recibos=[{id:'r1',mes:'2026-10',moneda:'UYU',haberes:50718.75,liquido:40500}];
@@ -89,15 +89,15 @@ test('el recibo guardado pasa a ser lo que cobrás en el plan',function(){
 });
 
 test('ingreso en otra moneda: el recibo en dólares se pasa a pesos con su cotización',function(){
-  var s=ejemplo();s.recibos=[{id:'r',mes:'2026-10',moneda:'USD',cotiz:40,haberes:1200,liquido:1000}];
+  var s=ejemplo('2026-10-27');s.recibos=[{id:'r',mes:'2026-10',moneda:'USD',cotiz:40,haberes:1200,liquido:1000}];
   var L=liqReal(s);
   assert.equal(L.liquido,40000);assert.equal(L.N,48000);
   assert.deepEqual(sensibilidadDolar(L),{pct:5,cambio:2000},'si el dólar se mueve 5 %, cambian $ 2.000');
-  assert.equal(sensibilidadDolar(liq(ejemplo(),true)),null,'en pesos no aplica');
+  assert.equal(sensibilidadDolar(liq(ejemplo('2026-10-27'),true)),null,'en pesos no aplica');
 });
 
 test('comparar con lo calculado: muestra qué renglón explica la diferencia',function(){
-  var s=ejemplo(),est=liq(s,true);
+  var s=ejemplo('2026-10-27'),est=liq(s,true);
   var r={mes:'2026-10',moneda:'UYU',haberes:est.N,aportes:est.mont,fonasa:est.fon,irpf:est.irpf+800,otros:est.frl+est.otros,liquido:est.liquido-800};
   var c=compararRecibo(s,r);
   assert.equal(c.filas.filter(function(f){return f.campo==='irpf'})[0].estado,'revisar');
@@ -108,7 +108,7 @@ test('comparar con lo calculado: muestra qué renglón explica la diferencia',fu
 });
 
 test('el aguinaldo usa los sueldos reales de los recibos',function(){
-  var s=ejemplo();s.recibos=[];
+  var s=ejemplo('2026-10-27');s.recibos=[];
   var antes=aguinaldo(s,'2026-10-15');
   s.recibos=[{id:'a',mes:'2026-06',moneda:'UYU',haberes:60000,liquido:48000},{id:'b',mes:'2026-07',moneda:'UYU',haberes:60000,liquido:48000}];
   var A=aguinaldo(s,'2026-10-15');
@@ -124,7 +124,7 @@ test('v12 → v13: suma recibos y plantillas vacíos',function(){
 });
 
 test('(2.51) veredicto: compara el recibo con las horas de SU mes y dice bien, de menos o de más',function(){
-  var s=ejemplo();s.recibos=[];
+  var s=ejemplo('2026-10-27');s.recibos=[];
   var mt=mesTrabajo(s),y=Number(mt.slice(0,4)),m=Number(mt.slice(5,7)),ant=(m===1?(y-1)+'-12':y+'-'+String(m-1).padStart(2,'0'));
   var sm=estadoDelMes(s,ant);
   assert.equal(mesTrabajo(sm),ant,'el estado del mes cobra ese mes');

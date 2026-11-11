@@ -24,7 +24,7 @@ test('migra un estado v3 del archivo HTML: suma voz y meta y conserva todo',func
 });
 
 test('en v4 una hora del Excel borrada no vuelve a aparecer',function(){
-  var s=ejemplo();s.v=4;s.ejemplo=false;s.horas=s.horas.filter(function(h){return h.id!=='x1'});
+  var s=ejemplo('2026-10-27');s.v=4;s.ejemplo=false;s.horas=s.horas.filter(function(h){return h.id!=='x1'});
   assert.equal(migrar(s).horas.length,9);
 });
 
@@ -57,7 +57,7 @@ test('rechaza textos que no son respaldos',function(){
 });
 
 test('resumen antes de importar',function(){
-  var st=ejemplo();
+  var st=ejemplo('2026-10-27');
   st.gastos=new Array(12).fill(0).map(function(_,i){return {id:'g'+i,fecha:'2026-10-13',monto:1}});
   st.fijos=[{id:'a'},{id:'b'},{id:'c'}];
   assert.equal(resumenDatos(st),'12 gastos, 10 registros de horas, 3 fijos, 0 meses cerrados, 0 logros, un extracto pegado');
@@ -225,4 +225,18 @@ test('v24/v25 → v26: el reparto arranca parejo (sin colchón) y el sobre de co
   assert.equal(k.plan.reparto,'parejo');assert.equal(k.plan.colchon,undefined);assert.equal(k.plan.compras,2500);
   assert.equal(migrar({v:26,plan:{reparto:'recomendado'}}).plan.reparto,'recomendado');
   assert.equal(defaults().plan.reparto,'parejo');
+});
+
+/* (2.58) el ejemplo siempre está vivo: en cualquier fecha, hoy cae dentro del pacto y todo se corre junto */
+test('el ejemplo se corre a la fecha de hoy', function(){
+  var base=ejemplo('2026-10-27');
+  assert.equal(base.plan.inicio,'2026-10-12');assert.equal(base.horas[0].fecha,'2026-10-01');assert.equal(base.recibos[0].mes,'2026-09');
+  ['2026-11-11','2026-11-20','2027-01-03','2027-02-28','2027-07-15','2026-10-05'].forEach(function(h){
+    var e=ejemplo(h);
+    assert.ok(e.plan.inicio<=h&&h<e.plan.cobro,h+': hoy cae dentro del pacto ('+e.plan.inicio+' → '+e.plan.cobro+')');
+    var mt=e.plan.cobro.slice(0,7),ant=new Date(Number(mt.slice(0,4)),Number(mt.slice(5,7))-2,1,12);
+    var mesAnt=ant.getFullYear()+'-'+String(ant.getMonth()+1).padStart(2,'0');
+    assert.ok(e.horas.every(function(x){return x.fecha.slice(0,7)===mesAnt}),h+': las horas son del mes trabajado');
+    assert.ok(e.recibos[0].mes<mesAnt,h+': el recibo es de un mes anterior');
+  });
 });

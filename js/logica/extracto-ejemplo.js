@@ -24,8 +24,15 @@ var MOVS=[
 ];
 function fmt(n){var p=n.toFixed(2).split('.');return p[0].replace(/\B(?=(\d{3})+(?!\d))/g,'.')+','+p[1]}
 function fecha(iso){return iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4)}
-export function extractoEjemplo(){
+/* (2.58) k = cuántos meses correr las fechas, para que el ejemplo siempre sea «de ahora» */
+function correr(iso,k){
+  if(!k)return iso;var y=Number(iso.slice(0,4)),m=Number(iso.slice(5,7))-1+k,d=Number(iso.slice(8,10));
+  y+=Math.floor(m/12);m=((m%12)+12)%12;var ult=new Date(y,m+1,0,12).getDate();if(d>ult)d=ult;
+  return y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+}
+export {correr as correrMeses};
+export function extractoEjemplo(k){
   var saldo=12000,l=['Banco de la República Oriental del Uruguay (ejemplo inventado)','Caja de ahorro en pesos · cuenta •••000','Fecha\tDescripción\tDébito\tCrédito\tSaldo'];
-  MOVS.forEach(function(m){saldo+=m[2];l.push(fecha(m[0])+'\t'+m[1]+'\t'+(m[2]<0?fmt(-m[2]):'')+'\t'+(m[2]>0?fmt(m[2]):'')+'\t'+fmt(saldo))});
+  MOVS.forEach(function(m){saldo+=m[2];l.push(fecha(correr(m[0],k||0))+'\t'+m[1]+'\t'+(m[2]<0?fmt(-m[2]):'')+'\t'+(m[2]>0?fmt(m[2]):'')+'\t'+fmt(saldo))});
   return l.join('\n');
 }

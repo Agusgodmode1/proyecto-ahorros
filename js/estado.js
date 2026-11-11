@@ -1,6 +1,6 @@
 /* Estado de la app: valores por defecto, migraciones, guardado en IndexedDB y respaldo.
    Todo queda en el teléfono: no hay servidor ni cuentas. */
-import {extractoEjemplo} from './logica/extracto-ejemplo.js';
+import {extractoEjemplo,correrMeses} from './logica/extracto-ejemplo.js';
 import {num} from './logica/util.js';
 import {iso,parse,usarFeriados} from './logica/fechas.js';
 import {cobroDesde,fechaCobro} from './logica/plan.js';
@@ -107,14 +107,23 @@ function legado(){
 /* "Empezar con datos de ejemplo": el sueldo y las horas de octubre de Agus, marcados como ejemplo. */
 export function ejemplo(hoy){
   var s=defaults(hoy),L=legado();
+  /* (2.58) El ejemplo siempre está «vivo»: si hoy no cae dentro del pacto de base (12 oct → cobro de noviembre de 2026),
+     todas las fechas se corren k meses hasta el primer pacto que todavía no cobró. Con k = 0 da idéntico. */
+  var H=hoy||hoyISO(),k=0,c0=fechaCobro(2026,10,s.perfil.cobro);
+  if(H<L.plan.inicio||H>=c0){
+    k=(Number(H.slice(0,4))-2026)*12+(Number(H.slice(5,7))-1)-10;
+    if(H>=fechaCobro(2026,10+k,s.perfil.cobro))k++;
+  }
   s.ejemplo=true;
   s.perfil.hecho=true;
   /* el ejemplo es el puesto de CRM: horario de 12 a 21 y sus reglas */
   s.perfil.horas=horasDeAntes();s.perfil.puesto='crm';
   s.plan=L.plan;
-  s.plan.cobro=fechaCobro(2026,10,s.perfil.cobro); /* 5.º día hábil de noviembre con la regla actual */
+  s.plan.cobro=fechaCobro(2026,10+k,s.perfil.cobro); /* 5.º día hábil del mes que viene con la regla actual */
+  s.plan.inicio=correrMeses(L.plan.inicio,k);
+  if(k&&s.plan.inicio>H){var d0=parse(H);d0.setDate(d0.getDate()-3);s.plan.inicio=iso(d0)}
   s.sueldo.nominal=L.sueldo.nominal;
-  s.horas=L.horas.map(function(h){return Object.assign(h,{ej:true})});
+  s.horas=L.horas.map(function(h){return Object.assign(h,{ej:true,fecha:correrMeses(h.fecha,k)})});
   s.pacto=pactoDesdePlan(s,hoy||hoyISO());
   /* Fijos de ejemplo (2.11): solo tuyos, compartidos en pareja y entre 3 (nombres y números inventados) */
   s.grupos=[
@@ -130,12 +139,14 @@ export function ejemplo(hoy){
   ];
   s.perfil.horas.preguntado=true;
   /* un recibo de ejemplo del mes anterior (inventado), para ver «¿Te pagaron bien?» */
-  s.recibos=[{id:'ej-rec',mes:'2026-09',moneda:'UYU',nominal:45000,haberes:47812.5,aportes:7171.88,fonasa:2151.56,irpf:0,otros:47.81,liquido:38441.25,horasCant:7.5,horasMonto:2812.5,fuente:'ejemplo'}];
+  s.recibos=[{id:'ej-rec',mes:correrMeses('2026-09-01',k).slice(0,7),moneda:'UYU',nominal:45000,haberes:47812.5,aportes:7171.88,fonasa:2151.56,irpf:0,otros:47.81,liquido:38441.25,horasCant:7.5,horasMonto:2812.5,fuente:'ejemplo'}];
   /* el boleto de hoy, para ver «Gastaste hoy» */
-  s.gastos=[{id:'ej-hoy',fecha:hoy||hoyISO(),monto:50,nota:'Boleto',cat:'Transporte'}];
+  s.gastos=[{id:'ej-hoy',fecha:H,monto:50,nota:'Boleto',cat:'Transporte'}];
   /* un extracto de ejemplo (inventado) para ver el detector de la Tarjeta */
-  s.extracto.texto=extractoEjemplo();
-  var k=s.plan.cobro;s.fijosPagos={};s.fijosPagos[k]={'ej-alq':{monto:22000,parte:11000,fecha:'2026-10-15',nombre:'Alquiler',paga:'yo'}};
+  /* el extracto nunca trae días que todavía no pasaron */
+  var kE=k;if(k&&correrMeses('2026-10-26',kE)>H)kE--;
+  s.extracto.texto=extractoEjemplo(kE);
+  var k=s.plan.cobro;s.fijosPagos={};s.fijosPagos[k]={'ej-alq':{monto:22000,parte:11000,fecha:correrMeses('2026-10-15',k),nombre:'Alquiler',paga:'yo'}};
   return s;
 }
 function obj(o){return (o&&typeof o==='object'&&!Array.isArray(o))?o:{}}

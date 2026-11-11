@@ -41,7 +41,7 @@ test('FONASA con hijos y cónyuge, y la franja de 2,5 BPC',function(){
 });
 
 test('extras: semana redondeada, finde y bono, desde el estado de ejemplo',function(){
-  var s=ejemplo();
+  var s=ejemplo('2026-10-27');
   assert.equal(mesTrabajo(s),'2026-10');
   assert.equal(mins(s,'sem'),140);
   assert.equal(mins(s,'fin'),1020);
@@ -53,7 +53,7 @@ test('extras: semana redondeada, finde y bono, desde el estado de ejemplo',funct
 });
 
 test('redondeo de minutos de semana a la media hora más cercana',function(){
-  var s=ejemplo();s.horas=[{id:'a',fecha:'2026-10-05',tipo:'sem',min:265}];
+  var s=ejemplo('2026-10-27');s.horas=[{id:'a',fecha:'2026-10-05',tipo:'sem',min:265}];
   assert.equal(pagoSem(s),270);
   s.horas[0].min=245;assert.equal(pagoSem(s),240);
   s.perfil.horas.redondeo='no';assert.equal(pagoSem(s),245);

@@ -14,7 +14,7 @@ function persona(tipo,moneda){
 function cerca(a,b,msg){assert.ok(Math.abs(a-b)<=0.01,(msg||'')+': '+a+' vs '+b)}
 
 test('sueldo en Uruguay: el cálculo de siempre (ejemplo)',function(){
-  var s=ejemplo();
+  var s=ejemplo('2026-10-27');
   assert.equal(ingresoDe(s).tipo,'uy');
   var L=liq(s,true);
   assert.ok(L.mont>0&&L.fon>0&&L.frl>0,'tiene aportes de Uruguay');
@@ -92,7 +92,7 @@ test('sueldo en Uruguay es siempre en pesos',function(){
 });
 
 test('v9 → v10: todos pasan a "sueldo en Uruguay" en pesos, sin cambiar el resultado',function(){
-  var s=ejemplo();s.v=9;delete s.perfil.ingreso;delete s.sueldo.descuentos;delete s.sueldo.ingresosMes;
+  var s=ejemplo('2026-10-27');s.v=9;delete s.perfil.ingreso;delete s.sueldo.descuentos;delete s.sueldo.ingresosMes;
   var antes=liq(s,true).liquido;
   var m=migrar(s);
   assert.equal(m.v,VERSION_ESTADO);

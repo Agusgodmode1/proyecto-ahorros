@@ -1333,7 +1333,9 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
 .v2 .hx-q .seg{flex-wrap:wrap}
 .v2 .hx-q .seg button{flex:1 1 auto;min-height:44px}
 .v2 .hx-otro{max-width:14em;margin-top:var(--e2)}
-.v2 #sd-horas.sin-horario #sec-rates,.v2 #sd-horas.sin-horario #card-horas{display:none!important}
+/* (2.58.6) Sin horario se esconde solo lo que todavía no sirve. Antes se escondía todo #card-horas, que desde 2.51 también
+   tiene adentro el horario y la carga del archivo: quedaba «Primero contame tu horario» sin dónde ponerlo. */
+.v2 #sd-horas.sin-horario #sec-rates,.v2 #sd-horas.sin-horario #sd-amano,.v2 #sd-horas.sin-horario #sd-lista{display:none!important}
 
 /* ---------- 2.30: Hoy más simple ---------- */
 /* «Tu plan»: un solo desplegable; «Cuando cobres» va adentro, con su subtítulo */

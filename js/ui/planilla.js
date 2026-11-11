@@ -7,7 +7,7 @@ import {diasDeFilas,celdasDe} from '../logica/horas-archivo.js';
 import {reglasHoras,mesTrabajo} from '../logica/sueldo.js';
 import {MESL} from '../logica/fechas.js';
 import {uid} from '../logica/util.js';
-import {ctx,$,today,esc,fMin,fLarga,toast,toastAccion} from './comun.js';
+import {ctx,$,today,esc,fMin,fLarga,toast,toastAccion,sdS} from './comun.js';
 import {aplicarHorario} from '../logica/horario.js';
 
 /* (2.53) generico: días leídos de un archivo con otro formato (otra planilla, un PDF o un texto) */
@@ -15,21 +15,21 @@ var hojas=null,quien=null,alcance='mes',res=null,error='',generico=null;
 
 function nombreMes(k){return MESL[Number(k.slice(5,7))-1]}
 function resumenDias(todos){
-  var mt=mesTrabajo(ctx.state),h='';
+  var mt=mesTrabajo(sdS()),h='';
   var dias=alcance==='mes'?todos.filter(function(d){return d.fecha.slice(0,7)===mt}):todos;
   /* (2.55) si el archivo es de otro mes, se muestra lo que trae en lugar de «no encontré nada» */
   if(!dias.length&&todos.length&&alcance==='mes'){alcance='todo';dias=todos}
   var conExtra=dias.filter(function(d){return d.min>0}),sem=0,fin=0;
   conExtra.forEach(function(d){if(d.tipo==='fin')fin+=d.min;else sem+=d.min});
   var avisos=dias.filter(function(d){return d.aviso});
-  h+='<div class="seg" role="group" aria-label="Qué cargar"><button type="button" data-plal="mes" aria-pressed="'+(alcance==='mes')+'">'+esc(nombreMes(mt))+' (se cobra el '+esc(fLarga(ctx.state.plan.cobro))+')</button><button type="button" data-plal="todo" aria-pressed="'+(alcance==='todo')+'">Todo lo que trae</button></div>';
+  h+='<div class="seg" role="group" aria-label="Qué cargar"><button type="button" data-plal="mes" aria-pressed="'+(alcance==='mes')+'">'+esc(nombreMes(mt))+' (se cobra el '+esc(fLarga(sdS().plan.cobro))+')</button><button type="button" data-plal="todo" aria-pressed="'+(alcance==='todo')+'">Todo lo que trae</button></div>';
   if(!dias.length)return h+'<p class="note">No encontré días con entrada y salida '+(alcance==='mes'?'en '+esc(nombreMes(mt)):'')+'.</p>';
   h+='<p class="lead pl-res">'+conExtra.length+' '+(conExtra.length===1?'día':'días')+' con extra: <b>'+fMin(sem)+'</b> entre semana y <b>'+fMin(fin)+'</b> de finde o feriado.</p>';
   if(avisos.length)h+='<div class="callout tone-coral"><b>Ojo con la planilla</b><ul class="lect">'+avisos.map(function(d){return '<li>'+esc(fLarga(d.fecha))+': '+esc(d.aviso)+'</li>'}).join('')+'</ul></div>';
   h+='<details><summary>Ver día por día</summary><ul class="list pl-dias">'+dias.map(function(d){
     return '<li><span class="when">'+esc(fLarga(d.fecha))+'</span><span class="what">'+esc(d.llegada)+' a '+esc(d.salida)+(d.tipo==='fin'?' <span class="pill ex">finde o feriado</span>':'')+'</span><span class="amt">'+(d.min?fMin(d.min):'—')+'</span></li>';
   }).join('')+'</ul></details>';
-  var ya=ctx.state.horas.filter(function(x){return dias.some(function(d){return d.fecha===x.fecha})}).length;
+  var ya=sdS().horas.filter(function(x){return dias.some(function(d){return d.fecha===x.fecha})}).length;
   h+='<div class="row-btns"><button class="btn primary" type="button" id="pl-ok">Cargar estas horas</button></div>'
     +(ya?'<p class="note">Reemplaza '+ya+(ya===1?' registro que ya tenías':' registros que ya tenías')+' en esos días.</p>':'');
   return h;
@@ -45,7 +45,7 @@ export function renderPlanilla(){
     h+='<div class="field"><label for="pl-quien" class="sub-l">¿Quién sos en la planilla?</label><select id="pl-quien"><option value="">Elegí tu nombre</option>'
       +ps.map(function(p){return '<option'+(p===quien?' selected':'')+'>'+esc(p)+'</option>'}).join('')+'</select></div>';
     if(quien){
-      res=leerPlanilla(hojas,quien,reglasHoras(ctx.state),today());
+      res=leerPlanilla(hojas,quien,reglasHoras(sdS()),today());
       h+=resumenDias(res.dias);
     }
   }
@@ -60,7 +60,7 @@ export function initPlanilla(){
       error='';hojas=null;res=null;generico=null;renderPlanilla();
       try{
         if(f.size>15e6)throw new Error('El archivo es demasiado grande.');
-        var nom=String(f.name||'').toLowerCase(),R=reglasHoras(ctx.state),filas=null;
+        var nom=String(f.name||'').toLowerCase(),R=reglasHoras(sdS()),filas=null;
         if(/\.pdf$/.test(nom)||f.type==='application/pdf'){
           toast('Leyendo el PDF…');
           var mod=await import('./recibos.js');filas=(await mod.textoPdf(f,15)).map(celdasDe);
@@ -68,7 +68,7 @@ export function initPlanilla(){
           filas=(await f.text()).split(/\r?\n/).map(celdasDe);
         }else{
           hojas=await leerXlsx(await f.arrayBuffer());
-          var ps=personas(hojas),guardado=ctx.state.perfil.planillaNombre;
+          var ps=personas(hojas),guardado=sdS().perfil.planillaNombre;
           if(ps.length)quien=guardado&&ps.indexOf(guardado)>=0?guardado:(ps.length===1?ps[0]:null);
           /* otra planilla: se buscan filas con una fecha y dos horas */
           else{filas=[];hojas.forEach(function(hj){filas=filas.concat(hj.filas||[])});hojas=null}
@@ -78,12 +78,12 @@ export function initPlanilla(){
           /* (2.55) sin horario: se toma el que más se repite en el archivo (con aviso y «Deshacer») */
           /* (2.58.7) también si el archivo trae algún sábado o domingo (que cuenta sin horario): si no, los días de semana se perdían sin aviso */
           if(g.sinHorario&&g.horarioProbable){
-            var H=ctx.state.perfil.horas,antesH=JSON.parse(JSON.stringify(H||{})),hp=g.horarioProbable;
+            var H=sdS().perfil.horas,antesH=JSON.parse(JSON.stringify(H||{})),hp=g.horarioProbable;
             if(aplicarHorario(H,hp).ok){
               H.activo=true;H.preguntado=true;ctx.persist();
               toastAccion('Tomé tu horario de la planilla: de '+hp.entrada+' a '+hp.salida+(hp.dias==='ls'?', de lunes a sábado':''),'Cambiar',function(){var cf=$('#sd-config');if(cf){cf.open=true;try{cf.scrollIntoView({block:'start',behavior:'smooth'})}catch(x){}}});
-              g=diasDeFilas(filas,reglasHoras(ctx.state),today());
-            }else ctx.state.perfil.horas=antesH;
+              g=diasDeFilas(filas,reglasHoras(sdS()),today());
+            }else sdS().perfil.horas=antesH;
           }
           if(g.sinHorario&&!g.dias.length)throw new Error('Primero contame tu horario (en «Tu horario y cómo te pagan»): sin eso no sé cuáles son extras.');
           if(!g.dias.length)throw new Error('No encontré días con fecha, entrada y salida en este archivo.');
@@ -97,9 +97,9 @@ export function initPlanilla(){
   el.addEventListener('click',function(e){
     var b=e.target.closest('[data-plal]');if(b){alcance=b.getAttribute('data-plal');renderPlanilla();return}
     if(e.target.id==='pl-ok'&&res){
-      var mt=mesTrabajo(ctx.state),dias=alcance==='mes'?res.dias.filter(function(d){return d.fecha.slice(0,7)===mt}):res.dias;
-      var r=importarHoras(ctx.state,dias,uid);
-      if(quien)ctx.state.perfil.planillaNombre=quien;
+      var mt=mesTrabajo(sdS()),dias=alcance==='mes'?res.dias.filter(function(d){return d.fecha.slice(0,7)===mt}):res.dias;
+      var r=importarHoras(sdS(),dias,uid);
+      if(quien)sdS().perfil.planillaNombre=quien;
       hojas=null;res=null;generico=null;
       ctx.persist();ctx.renderAll();
       toast('Cargué '+r.nuevos+(r.nuevos===1?' día con extra':' días con extra')+' de la planilla');

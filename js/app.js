@@ -32,6 +32,7 @@ import {tienePacto,pideElPacto,alDiaSinPacto,sugerenciaPacto,herramienta} from '
 import {listaHerrHTML,irHerramienta,mostrarHerramienta} from './ui/herramientas.js';
 import {renderCategorias,initCategorias} from './ui/categorias.js';
 import {renderRecibos,initRecibos} from './ui/recibos.js';
+import {activarPareja,sincronizarGrupo,hayPareja,parejaVacia,nombrePareja} from './logica/pareja.js';
 import {pinActivo,pedirPin,initPin,renderAjustesPin,initAjustesPin} from './ui/pin.js';
 
 /* ---------- Guardado en IndexedDB ---------- */
@@ -92,6 +93,9 @@ function showPanels(){
 /* ---------- Render general ---------- */
 function renderAll(){
   document.documentElement.classList.toggle('modo-saldo',!anota());
+  /* (2.59) en pareja: el grupo de Fijos y lo que cobra cada uno se mantienen al día solos */
+  document.documentElement.classList.toggle('modo-pareja',hayPareja(ctx.state));
+  if(sincronizarGrupo(ctx.state,today()))persist();marcarPareja();
   var pc=planNow();
   if(/^w\d+$/.test(ctx.tab)&&Number(ctx.tab.slice(1))>=pc.weeks.length)ctx.tab='resumen';
   try{localStorage.setItem(TK,ctx.tab)}catch(e){}
@@ -311,6 +315,24 @@ function initGlobal(){
   document.addEventListener('click',function(e){var a=e.target.closest('[data-anotar]');if(!a)return;var v=a.getAttribute('data-anotar')==='1';if(anota()===v)return;
     ctx.state.perfil.anotarGastos=v;persist();renderAll();marcarAnotar();
     toastAccion(v?'Listo: anotás cada gasto con «+ Gasto»':'Listo: actualizás lo que tenés y yo calculo lo gastado','Deshacer',function(){ctx.state.perfil.anotarGastos=!v;persist();renderAll();marcarAnotar()})});
+  /* (2.59) solo o en pareja: al volver a «Solo» no se borra nada, solo se esconde */
+  document.addEventListener('click',function(e){
+    var a=e.target.closest('[data-pareja]');
+    if(a){var v=a.getAttribute('data-pareja')==='1';if(hayPareja(ctx.state)===v)return;
+      if(v)activarPareja(ctx.state,undefined,defaults());else ctx.state.pareja.activa=false;
+      persist();renderAll();if(v){toast('Listo: en Sueldo van los dos, lado a lado');var n=$('#pj-nombre');if(n&&!n.value)n.focus()}else toast('Listo: la app queda solo para vos');return}
+    if(e.target.closest('#pj-borrar')){
+      var antes=ctx.state.pareja,gr=ctx.state.grupos.slice(),nom=nombrePareja(ctx.state);
+      ctx.state.pareja=parejaVacia();persist();renderAll();
+      toastAccion('Borré los datos de '+nom,'Deshacer',function(){ctx.state.pareja=antes;ctx.state.grupos=gr;persist();renderAll()});
+    }
+  });
+  document.addEventListener('change',function(e){
+    var id=e.target.id,p=ctx.state&&ctx.state.pareja;if(!p||!p.perfil||(id!=='pj-nombre'&&id!=='pj-cobro'&&id!=='pj-dia'))return;
+    if(id==='pj-nombre')p.nombre=e.target.value.trim().slice(0,30);
+    else{var t=$('#pj-cobro').value,d=Math.min(31,Math.max(1,Math.round(Number($('#pj-dia').value))||1));p.perfil.cobro=Object.assign({},p.perfil.cobro,{tipo:t},t==='fijo'?{dia:d}:{})}
+    persist();renderAll();
+  });
   document.addEventListener('click',function(e){var d=e.target.closest('[data-discreto]');if(d){setDiscreto(d.getAttribute('data-discreto')==='1');marcarDiscreto();renderAll()}});
   /* Modo discreto: un toque tapa o muestra todos los montos */
   $('#discreto').addEventListener('click',function(){setDiscreto(!discreto.on);marcarDiscreto();renderAll();toast(discreto.on?'Montos ocultos':'Montos visibles')});
@@ -324,6 +346,16 @@ function initGlobal(){
 function marcarSonido(){
   document.querySelectorAll('[data-sonido]').forEach(function(b){b.setAttribute('aria-pressed',String((b.getAttribute('data-sonido')==='1')===sonidoOn()))});
   var v=$('#aj-volumen');if(v){v.value=String(Math.round(volumen()*100));v.style.setProperty('--v',v.value+'%');$('#aj-vol-box').hidden=!sonidoOn()}
+}
+function marcarPareja(){
+  var st=ctx.state,on=hayPareja(st),p=st.pareja||{},hayDatos=!!p.perfil;
+  document.querySelectorAll('[data-pareja]').forEach(function(x){x.setAttribute('aria-pressed',String((x.getAttribute('data-pareja')==='1')===on))});
+  var box=$('#pj-datos');if(!box)return;box.hidden=!on;
+  $('#pj-borrar-box').hidden=!hayDatos;if(hayDatos)$('#pj-borrar').textContent='Borrar los datos de '+nombrePareja(st);
+  if(!on)return;
+  var n=$('#pj-nombre'),c=$('#pj-cobro'),d=$('#pj-dia'),cf=p.perfil.cobro||{};
+  if(document.activeElement!==n)n.value=p.nombre||'';
+  c.value=cf.tipo==='fijo'||cf.tipo==='ultimoHabil'?cf.tipo:'habil5';d.hidden=c.value!=='fijo';if(document.activeElement!==d)d.value=c.value==='fijo'?String(cf.dia||1):'';
 }
 function marcarAnotar(){document.querySelectorAll('[data-anotar]').forEach(function(x){x.setAttribute('aria-pressed',String((x.getAttribute('data-anotar')==='1')===anota()))})}
 function marcarDiscreto(){

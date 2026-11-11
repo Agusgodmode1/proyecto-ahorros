@@ -243,3 +243,17 @@ test('el ejemplo se corre a la fecha de hoy', function(){
     assert.ok(pago.fecha>=e.plan.inicio&&pago.fecha<=h,h+': el alquiler se pagó dentro del pacto y no en el futuro ('+pago.fecha+')');
   });
 });
+
+/* (2.59, v27) modo pareja: la migración solo agrega `pareja` vacía y no toca nada más */
+test('v27: quien venía de antes migra con la pareja vacía y todo lo demás igual', function(){
+  var antes=ejemplo('2026-10-27');antes.v=26;delete antes.pareja;
+  var s=migrar(antes);
+  assert.equal(s.v,VERSION_ESTADO);
+  assert.deepEqual(s.pareja,{activa:false,nombre:'',perfil:null,sueldo:null,recibos:[],horas:[],plantillasRecibo:{},recibo:{}});
+  ['sueldo','recibos','horas','fijos','grupos','gastos'].forEach(function(k){assert.deepEqual(s[k],antes[k],k+' no cambia')});
+  ['monto','ahorro','inicio','cobro'].forEach(function(k){assert.equal(s.plan[k],antes.plan[k],'plan.'+k+' no cambia')});
+  /* y si ya tenía pareja, se conserva */
+  s.pareja.activa=true;s.pareja.nombre='Sofi';s.pareja.recibos=[{id:'r1',mes:'2026-10',liquido:100}];
+  var s2=migrar(JSON.parse(JSON.stringify(s)));
+  assert.equal(s2.pareja.nombre,'Sofi');assert.equal(s2.pareja.recibos.length,1);
+});

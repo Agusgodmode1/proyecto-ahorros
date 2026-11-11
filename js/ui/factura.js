@@ -8,7 +8,7 @@ import {REGIMENES,COSTOS,datosFactura,liqFactura,leerFactura,nuevaFactura,sinIva
 import {renglonesDeTexto} from '../logica/lector-recibo.js';
 import {mesIngreso} from '../logica/sueldo.js';
 import {cotizacion} from '../logica/monedas.js';
-import {ctx,$,today,money,usd,esc,cap,fCorta,toast,toastAccion} from './comun.js';
+import {ctx,$,today,money,usd,esc,cap,fCorta,toast,toastAccion,sdS} from './comun.js';
 import {EJ_FACTURA} from './lector.js';
 
 var form=null,pegar=false;  /* form = la factura que se está cargando */
@@ -32,7 +32,7 @@ function formHTML(){
 }
 export function renderFactura(){
   var el=$('#factura-out');if(!el)return;
-  var st=ctx.state,F=datosFactura(st),mes=mesIngreso(st),L=liqFactura(st,mes),cot=cotizacion(st);
+  var st=sdS(),F=datosFactura(st),mes=mesIngreso(st),L=liqFactura(st,mes),cot=cotizacion(st);
   var h='<p class="note">No reemplaza a tu contador: es para planificar.</p>';
   if(revisarCostos(st,today()))h+='<div class="banner"><p><b>¿Cambiaron tus costos este año?</b> Los aportes y el IVA mínimo cambian cada enero. Estás usando los de '+esc(String(F.anio))+'.</p><div class="row-btns"><button class="btn" type="button" data-fac="igual">Siguen igual</button></div></div>';
   h+='<div class="fac-res"><p><span>Facturaste'+(L.estimado?' (un mes normal)':' en '+esc(mesTxt(mes)))+'</span><b>'+money(L.N)+'</b></p><p><span>Tus costos</span><b>− '+money(L.otros)+'</b></p><p class="fin"><span>Te queda</span><b>≈ '+money(L.liquido)+'</b></p></div>';
@@ -53,7 +53,7 @@ export function renderFactura(){
   var d=$('#sd-factura-d');if(d)d.textContent='te queda ≈ '+money(L.liquido)+(L.estimado?'':' en '+mesTxt(mes));
 }
 function guardarF(){
-  var st=ctx.state,F=datosFactura(st);
+  var st=sdS(),F=datosFactura(st);
   var f=Object.assign({},form,{fecha:$('#fac-fecha').value||today(),cliente:$('#fac-cli').value.trim()||null,neto:$('#fac-neto').value===''?null:num($('#fac-neto').value),iva:$('#fac-iva').value===''?null:num($('#fac-iva').value),total:$('#fac-total').value===''?null:num($('#fac-total').value)});
   if(!(num(f.neto)>0||num(f.total)>0)){$('#fac-total').focus();toast('Falta el monto');return}
   if(f.moneda==='USD'&&!cotizacion(st)){toast('Primero cargá la cotización del dólar en Ajustes');return}
@@ -65,11 +65,11 @@ export function initFactura(){
   var el=$('#factura-out');if(!el)return;
   document.addEventListener('factura-leida',function(e){leida(e.detail)});
   el.addEventListener('click',function(e){
-    var st=ctx.state,b;
+    var st=sdS(),b;
     if((b=e.target.closest('[data-facreg]'))){var F=datosFactura(st);F.regimen=b.getAttribute('data-facreg');st.sueldo.factura=F;ctx.persist();ctx.renderAll();return}
     if((b=e.target.closest('[data-facmon]'))){form.moneda=b.getAttribute('data-facmon');['neto','iva','total'].forEach(function(k){var i=$('#fac-'+k);if(i)form[k]=i.value===''?null:num(i.value)});renderFactura();return}
     if((b=e.target.closest('[data-facdel]'))){var F2=datosFactura(st),id=b.getAttribute('data-facdel'),x=F2.facturas.filter(function(f){return f.id===id})[0];F2.facturas=F2.facturas.filter(function(f){return f.id!==id});st.sueldo.factura=F2;ctx.persist();ctx.renderAll();
-      toastAccion('Borraste la factura','Deshacer',function(){var F3=datosFactura(ctx.state);F3.facturas.push(x);ctx.state.sueldo.factura=F3;ctx.persist();ctx.renderAll()});return}
+      toastAccion('Borraste la factura','Deshacer',function(){var F3=datosFactura(sdS());F3.facturas.push(x);sdS().sueldo.factura=F3;ctx.persist();ctx.renderAll()});return}
     if(!(b=e.target.closest('[data-fac]')))return;
     var a=b.getAttribute('data-fac');
     if(a==='mano'){form={moneda:'UYU',fecha:today()};renderFactura();$('#fac-total').focus()}
@@ -81,7 +81,7 @@ export function initFactura(){
   });
   el.addEventListener('input',function(e){
     var k=e.target.getAttribute&&e.target.getAttribute('data-faccosto');if(!k)return;
-    var st=ctx.state,F=datosFactura(st);F.costos[k]=num(e.target.value);if(!F.anio)F.anio=Number(today().slice(0,4));st.sueldo.factura=F;ctx.persist();
+    var st=sdS(),F=datosFactura(st);F.costos[k]=num(e.target.value);if(!F.anio)F.anio=Number(today().slice(0,4));st.sueldo.factura=F;ctx.persist();
     var L=liqFactura(st,mesIngreso(st)),r=el.querySelector('.fac-res .fin b');if(r)r.textContent='≈ '+money(L.liquido);
   });
   el.addEventListener('change',async function(e){

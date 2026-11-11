@@ -5,6 +5,7 @@ import {planCalc} from '../logica/plan.js';
 import {ajustarPlan} from '../logica/mes.js';
 import {liqReal} from '../logica/recibos.js';
 import {liq} from '../logica/sueldo.js';
+import {estadoDe,hayPareja,nombrePareja} from '../logica/pareja.js';
 import {analisisGuardado} from '../logica/extracto.js';
 
 /* ctx.state es el estado actual; app.js completa persist, renderAll y go. */
@@ -18,6 +19,12 @@ function sinSobre(st){return anota()||!(st.plan&&st.plan.compras>0)?st:Object.as
 export function planNow(){return ajustarPlan(ctx.state,aplicarSobres(sinSobre(ctx.state),planCalc(ctx.state)),today())}
 /* Con extras: lo que vas a cobrar (el recibo real del mes si lo cargaste; si no, la estimación) */
 export function liqNow(conExtras){return conExtras?liqReal(ctx.state):liq(ctx.state,false)}
+/* (2.59) Sueldo en pareja: de quién es lo que se ve en Sueldo ('yo' | 'pareja'). Las pantallas de Sueldo leen y escriben sobre sdS(). */
+export var sd={quien:'yo'};
+export function sdS(){return sd.quien==='pareja'&&hayPareja(ctx.state)?estadoDe(ctx.state,'pareja',today()):ctx.state}
+/* el nombre de tu pareja si Sueldo está mostrando lo suyo; '' si es lo tuyo */
+export function deQuien(){return sd.quien==='pareja'&&hayPareja(ctx.state)?nombrePareja(ctx.state):''}
+export function liqSd(conExtras){var S=sdS();return conExtras?liqReal(S):liq(S,false)}
 /* El análisis del extracto. Cuando se carga la Tarjeta (ui/tarjeta-ver.js) pone acá el suyo, con el lector de
    bancos y los nombres limpios; antes, el de siempre. */
 export var exHook={f:null};

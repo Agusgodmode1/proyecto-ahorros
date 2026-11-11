@@ -10,7 +10,7 @@ import {mesTrabajo,reglasHoras,ingresoDe} from '../logica/sueldo.js';
 import {precision} from '../logica/precision.js';
 import {liqReal} from '../logica/recibos.js';
 import {esFactura} from '../logica/factura.js';
-import {ctx,$,money,money2,esc,cap,toast,toastAccion} from './comun.js';
+import {ctx,$,money,money2,esc,cap,toast,toastAccion,sdS,deQuien} from './comun.js';
 
 /* Documentos INVENTADOS para probar sin datos propios */
 export var EJ_RECIBO='Panadería La Espiga S.R.L.   RUT: 21.555666.0017\nRECIBO DE SUELDO - Setiembre 2026\nFuncionario: Ejemplo Ejemplar\nConcepto                 Cant.     Haberes     Descuentos\nSueldo básico            30        42.000,00\nHoras extras comunes      6,00      2.100,00\nPresentismo                         1.500,00\nMontepío 15%                                     6.840,00\nFONASA 4,5%                                      2.052,00\nFRL 0,1%                                            45,60\nIRPF                                               820,00\nTotal haberes                       45.600,00\nTotal descuentos                                 9.757,60\nLíquido a cobrar                    35.842,40';
@@ -32,7 +32,7 @@ export function subirHTML(hayEsteMes){
   if(S)return '<div class="sec"><h2>Así te pagan</h2><p class="note">Revisá que esté bien: si corregís un renglón, lo recuerdo.</p></div>'+propuestaHTML();
   /* (2.56) con un recibo ya alcanza: subir otro queda plegado */
   if(hayEsteMes)return '<details class="sub-d sd-otro"'+(pegar?' open':'')+'><summary>Subir otro recibo</summary><div class="stack" style="margin-top:12px"><p class="note">Si cambió tu sueldo, subí el más nuevo y actualizo todo.</p>'+entradaHTML()+'</div></details>';
-  return '<div class="sec"><h2>Subí tu recibo de sueldo</h2><p class="note">Uno solo alcanza: saco tu sueldo, cuánto vale tu hora extra y tus descuentos.</p></div>'+entradaHTML();
+  return '<div class="sec"><h2>'+(deQuien()?'Subí el recibo de '+esc(deQuien()):'Subí tu recibo de sueldo')+'</h2><p class="note">Uno solo alcanza: saco tu sueldo, cuánto vale tu hora extra y tus descuentos.</p></div>'+entradaHTML();
 }
 function entradaHTML(){
   return '<div class="lector stack"><div class="row-btns"><label class="btn primary filebtn">Leer un PDF<input type="file" class="sr-only" accept="application/pdf,.pdf" id="lec-pdf"></label>'
@@ -44,7 +44,7 @@ function entradaHTML(){
 
 /* ---------- Leer ---------- */
 export function procesar(lineas,fuente){
-  var st=ctx.state;
+  var st=sdS();
   if(tipoDocumento(lineas)==='factura'){
     S=null;pegar=false;
     if(esFactura(st)){toast('Es una factura: la cargo en «Tus facturas y costos»');document.dispatchEvent(new CustomEvent('factura-leida',{detail:lineas}));return}
@@ -66,9 +66,9 @@ export function procesar(lineas,fuente){
 }
 /* Re-lee con lo que corregiste (sin guardar todavía lo aprendido) */
 function releer(){
-  var pl=JSON.parse(JSON.stringify(ctx.state.plantillasRecibo||{}));
+  var pl=JSON.parse(JSON.stringify(sdS().plantillasRecibo||{}));
   Object.keys(S.cambios).forEach(function(i){var r=S.L.renglones.filter(function(x){return String(x.i)===String(i)})[0]||S.base[i];if(r)aprenderConcepto(pl,S.L.empleador,r,S.cambios[i])});
-  S.L=leer(S.lineas,pl);S.H=deducirHoras(S.L,reglasHoras(ctx.state));
+  S.L=leer(S.lineas,pl);S.H=deducirHoras(S.L,reglasHoras(sdS()));
   if(S.H&&S.H.mult&&!S.resp.mult)S.resp.mult=S.H.mult;
   return pl;
 }
@@ -83,7 +83,7 @@ function pregunta(clave,titulo,ops,actual){
     +ops.map(function(o){return '<button type="button" role="radio" data-lecq="'+clave+'" data-val="'+esc(o[0])+'" aria-checked="'+(String(o[0])===String(actual))+'">'+esc(o[1])+'</button>'}).join('')+'</div></div>';
 }
 function propuestaHTML(){
-  var L=S.L,H=S.H,R=reglasHoras(ctx.state),moneyR=function(n){return money(n)};
+  var L=S.L,H=S.H,R=reglasHoras(sdS()),moneyR=function(n){return money(n)};
   var hx=H&&S.resp.mult?{mult:S.resp.mult,hora:H.valorHora/S.resp.mult,seguro:true,feriado:S.resp.feriado?{mult:S.resp.feriado}:null}:H;
   /* (2.14) el desglose de cómo te pagan, renglón por renglón */
   var D=desglose(L,hx),nf=function(x){return String(Math.round(num(x)*100)/100).replace('.',',')};
@@ -123,7 +123,7 @@ function propuestaHTML(){
       +pregunta('redondeo','Los minutos del mes, ¿cómo se pagan?',[['media','A la media hora'],['cuarto','Al cuarto de hora'],['no','Sin redondear']],S.resp.redondeo);
     if(H.feriado&&H.feriado.mult!==num(R.multFin))h+=pregunta('feriado','Los feriados, ¿te los pagan ×'+String(H.feriado.mult).replace('.',',')+'?',[[H.feriado.mult,'Sí, ×'+String(H.feriado.mult).replace('.',',')],['','No, como el finde (×'+String(R.multFin).replace('.',',')+')']],S.resp.feriado||'');
   }
-  var P=precision(Object.assign({},ctx.state,{recibos:[{mes:S.mes,liquido:L.campos.liquido,moneda:'UYU'}]}),{liquido:num(L.campos.liquido)});
+  var P=precision(Object.assign({},sdS(),{recibos:[{mes:S.mes,liquido:L.campos.liquido,moneda:'UYU'}]}),{liquido:num(L.campos.liquido)});
   h+='<p class="note">Es una estimación: guardado este recibo, el cálculo de '+esc(mesTxt(S.mes).toLowerCase())+' queda <b>'+P.nombre+'</b>'+(P.margen?' (± '+money(P.margen)+')':'')+'. Los demás meses se calculan con las reglas que confirmes.</p>'
     +'<div class="row-btns"><button class="btn primary" type="button" data-lec="guardar-todo">Listo: usar este recibo para mis cálculos</button><button class="btn" type="button" data-lec="guardar-recibo">Solo guardar el recibo de '+esc(MESL[Number(S.mes.slice(5,7))-1])+'</button><button class="btn quiet" type="button" data-lec="cancelar">Cancelar</button></div></div>';
   return h;
@@ -131,7 +131,7 @@ function propuestaHTML(){
 
 /* ---------- Guardar ---------- */
 function guardar(enPerfil){
-  var st=ctx.state,pl=releer(),L=S.L,c=L.campos,mes=($('#lec-mes')||{}).value||S.mes;
+  var st=sdS(),pl=releer(),L=S.L,c=L.campos,mes=($('#lec-mes')||{}).value||S.mes;
   var antes=JSON.parse(JSON.stringify({sueldo:st.sueldo,horas:st.perfil.horas,recibos:st.recibos||[],plantillas:st.plantillasRecibo||{}}));
   if(!/^\d{4}-\d{2}$/.test(mes)){toast('Elegí de qué mes es el recibo');return}
   if(!(num(c.liquido)>0)){toast('No encontré el líquido: cargalo a mano');return}
@@ -159,8 +159,8 @@ function guardar(enPerfil){
   try{sessionStorage.setItem('pa-sd-tab','control')}catch(x){}
   ctx.persist();ctx.renderAll();
   var a=$('#sd-veredicto');if(a)try{a.scrollIntoView({block:'start',behavior:'smooth'})}catch(x){}
-  toastAccion('Listo: leí tu recibo de '+MESL[Number(mes.slice(5,7))-1]+(enPerfil?' y completé tu sueldo':'')+'. Ahora cobrás ≈ '+money(liqReal(st).liquido),'Deshacer',function(){
-    var s2=ctx.state;s2.sueldo=antes.sueldo;s2.perfil.horas=antes.horas;s2.recibos=antes.recibos;s2.plantillasRecibo=antes.plantillas;ctx.persist();ctx.renderAll();
+  toastAccion('Listo: leí '+(deQuien()?'el recibo de '+deQuien():'tu recibo')+' de '+MESL[Number(mes.slice(5,7))-1]+(enPerfil?' y completé '+(deQuien()?'su':'tu')+' sueldo':'')+'. Ahora '+(deQuien()?'cobra':'cobrás')+' ≈ '+money(liqReal(st).liquido),'Deshacer',function(){
+    var s2=sdS();s2.sueldo=antes.sueldo;s2.perfil.horas=antes.horas;s2.recibos=antes.recibos;s2.plantillasRecibo=antes.plantillas;ctx.persist();ctx.renderAll();
   });
 }
 

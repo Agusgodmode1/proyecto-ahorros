@@ -224,6 +224,7 @@ document.documentElement.setAttribute('data-theme','dark');
       <div class="card stack sd-emp" id="sd-empezar" hidden></div>
       <div id="sueldo-pregunta"></div>
       <!-- (2.51) Dos pestañas: «Este mes» (lo que vas a cobrar y tus horas) y «¿Te pagaron bien?» (tu último recibo) -->
+      <div id="sd-duo" hidden></div>
       <div class="seg sd-tabs" id="sd-tabs" role="tablist" aria-label="Partes de tu sueldo"><button type="button" role="tab" data-sdtab="mes" aria-selected="true">Este mes</button><button type="button" role="tab" data-sdtab="control" aria-selected="false">Tu recibo</button></div>
       <div id="sueldo-hero" data-sdpar="mes"></div>
       <div id="sd-veredicto" data-sdpar="control"></div>
@@ -462,6 +463,16 @@ document.documentElement.setAttribute('data-theme','dark');
       <div class="card stack" id="aj-anotar">
         <div class="sec"><h2>Tus gastos</h2><p class="note">Actualizá lo que tenés y la app calcula lo gastado, o anotá cada gasto.</p></div>
         <div class="seg" role="group" aria-label="Cómo llevás tus gastos"><button type="button" data-anotar="0">Con lo que tengo</button><button type="button" data-anotar="1">Anoto cada gasto</button></div>
+      </div>
+      <div class="card stack" id="aj-pareja">
+        <div class="sec"><h2>¿Llevás la plata solo o en pareja?</h2><p class="note">En pareja: el sueldo de los dos lado a lado y los fijos repartidos según lo que cobra cada uno.</p></div>
+        <div class="seg" role="group" aria-label="Solo o en pareja"><button type="button" data-pareja="0">Solo</button><button type="button" data-pareja="1">En pareja</button></div>
+        <div class="stack" id="pj-datos" hidden>
+          <div class="field"><label for="pj-nombre" class="sub-l">¿Cómo se llama tu pareja?</label><input id="pj-nombre" type="text" maxlength="30" autocomplete="off" placeholder="Su nombre"></div>
+          <div class="field"><label for="pj-cobro" class="sub-l">¿Qué día cobra?</label><div class="pj-cobro"><select id="pj-cobro"><option value="habil5">El 5.º día hábil</option><option value="ultimoHabil">El último día hábil</option><option value="fijo">Un día fijo del mes</option></select><input id="pj-dia" type="number" inputmode="numeric" min="1" max="31" step="1" aria-label="Día del mes" hidden></div></div>
+          <p class="note">Su sueldo se completa con su recibo, en Sueldo.</p>
+        </div>
+        <div id="pj-borrar-box" hidden><button class="linklike" type="button" id="pj-borrar"></button></div>
       </div>
       <h3 class="aj-grupo" id="aj-g-ver">Sonido</h3>
       

@@ -5,7 +5,7 @@ import {MESL} from '../logica/fechas.js';
 import {reciboRaro,estadoDelMes,CAMPOS,leerRecibo,renglones,aprenderPlantilla,compararRecibo,enPesosRecibo} from '../logica/recibos.js';
 import {mesTrabajo,ingresoDe} from '../logica/sueldo.js';
 import {cotizacion} from '../logica/monedas.js';
-import {ctx,$,money,usd,esc,cap,toast,armar} from './comun.js';
+import {ctx,$,money,usd,esc,cap,toast,armar,sdS} from './comun.js';
 import {lectorHTML,lectorAbierto,subirHTML} from './lector.js';
 
 var PDFJS='../../vendor/pdfjs-6.3.289/';
@@ -40,7 +40,7 @@ function formRecibo(){
     +(edit.fuente==='pdf'?'<p class="voz-msg">Revisá cada valor: al lado ves el renglón del PDF de donde lo saqué. Corregí lo que esté mal; la próxima vez lo leo solo.</p>':'')
     +'<div class="grid2"><div class="field"><label for="rec-mes" class="sub-l">Mes trabajado</label><input id="rec-mes" type="month" value="'+esc(d.mes||'')+'" required></div>'
     +'<div class="field"><span class="sub-l">Moneda</span><div class="seg" role="group" aria-label="Moneda del recibo"><button type="button" data-recmon="UYU" aria-pressed="'+(!usdM)+'">Pesos</button><button type="button" data-recmon="USD" aria-pressed="'+usdM+'">Dólares</button></div>'
-    +(usdM?'<small>'+(cotizacion(ctx.state)?'Se pasa a pesos a '+String(d.cotiz||cotizacion(ctx.state)).replace('.',',')+' el dólar.':'Cargá la cotización del dólar en Ajustes.')+'</small>':'')+'</div></div>'
+    +(usdM?'<small>'+(cotizacion(sdS())?'Se pasa a pesos a '+String(d.cotiz||cotizacion(sdS())).replace('.',',')+' el dólar.':'Cargá la cotización del dólar en Ajustes.')+'</small>':'')+'</div></div>'
     +'<div class="grid2 rec-campos">'+CAMPOS.map(function(c){
       var k=c[0],v=d[k]===undefined||d[k]===null?'':d[k],cant=k==='horasCant';
       return '<div class="field"><label for="rec-'+k+'" class="sub-l">'+esc(c[1])+'</label>'
@@ -58,7 +58,7 @@ function leerForm(){
 
 /* ---------- Comparación ---------- */
 function comparacion(r){
-  var c=compararRecibo(estadoDelMes(ctx.state,r.mes),r),EST={igual:['ok','igual'],cerca:['ex','cerca'],revisar:['bad','revisar']};
+  var c=compararRecibo(estadoDelMes(sdS(),r.mes),r),EST={igual:['ok','igual'],cerca:['ex','cerca'],revisar:['bad','revisar']};
   var h='<div class="scroll"><table style="min-width:420px"><thead><tr><th>Concepto</th><th class="r">Calculado</th><th class="r">Recibo</th><th></th></tr></thead><tbody>'
     +c.filas.map(function(f){var e=EST[f.estado],h1=f.campo==='horasCant';
       return '<tr><td>'+esc(f.concepto)+'</td><td class="r">'+(h1?String(Math.round(f.calculado*100)/100).replace('.',','):money(f.calculado))+'</td><td class="r">'+(h1?String(f.recibo).replace('.',','):money(f.recibo))+'</td><td><span class="pill '+e[0]+'">'+e[1]+'</span></td></tr>'}).join('')
@@ -72,7 +72,7 @@ function comparacion(r){
 
 export function renderRecibos(){
   var el=$('#recibos-out');if(!el)return;
-  var st=ctx.state,l=(st.recibos||[]).slice().sort(function(a,b){return a.mes<b.mes?1:-1}),mt=mesTrabajo(st);
+  var st=sdS(),l=(st.recibos||[]).slice().sort(function(a,b){return a.mes<b.mes?1:-1}),mt=mesTrabajo(st);
   /* (2.14) con sueldo en Uruguay (o personalizado), el lector va arriba de todo: «Subí tu recibo de sueldo» */
   var ing=st.perfil&&st.perfil.ingreso||{},arriba=!ing.factura&&ing.tipo!=='variable',sub=$('#sd-subir');
   if(sub){sub.hidden=!arriba;if(arriba)sub.innerHTML=subirHTML(l.length>0)}
@@ -92,7 +92,7 @@ export function renderRecibos(){
 
 /* «Cargar a mano» desde arriba: se abre «¿Te pagaron bien?» con el formulario */
 function aMano(){
-  edit={datos:{mes:mesTrabajo(ctx.state),moneda:ingresoDe(ctx.state).moneda},fuente:'manual'};
+  edit={datos:{mes:mesTrabajo(sdS()),moneda:ingresoDe(sdS()).moneda},fuente:'manual'};
   var d=$('#sd-control');if(d)d.open=true;
   try{sessionStorage.setItem('pa-sd-tab','control')}catch(x){}var ps=$('#p-sueldo');if(ps)ps.setAttribute('data-sdtab','control');
   renderRecibos();var f=$('#rec-form');if(f)try{f.scrollIntoView({block:'start',behavior:'smooth'})}catch(e){}
@@ -105,16 +105,16 @@ export function initRecibos(){
     var b;
     if((b=e.target.closest('[data-reca]'))){
       var a=b.getAttribute('data-reca');
-      if(a==='manual'){edit={datos:{mes:mesTrabajo(ctx.state),moneda:ingresoDe(ctx.state).moneda},fuente:'manual'};renderRecibos();var m=$('#rec-nominal');if(m)m.focus()}
+      if(a==='manual'){edit={datos:{mes:mesTrabajo(sdS()),moneda:ingresoDe(sdS()).moneda},fuente:'manual'};renderRecibos();var m=$('#rec-nominal');if(m)m.focus()}
       if(a==='cancelar'){edit=null;renderRecibos()}
       return;
     }
     if((b=e.target.closest('[data-recmon]'))){leerForm();edit.datos.moneda=b.getAttribute('data-recmon');renderRecibos();return}
     if((b=e.target.closest('[data-recver]'))){var id=b.getAttribute('data-recver');abierto=abierto===id?null:id;renderRecibos();return}
-    if((b=e.target.closest('[data-receditar]'))){var r=ctx.state.recibos.filter(function(x){return x.id===b.getAttribute('data-receditar')})[0];if(r){edit={datos:Object.assign({},r),fuente:'manual'};renderRecibos()}return}
+    if((b=e.target.closest('[data-receditar]'))){var r=sdS().recibos.filter(function(x){return x.id===b.getAttribute('data-receditar')})[0];if(r){edit={datos:Object.assign({},r),fuente:'manual'};renderRecibos()}return}
     if((b=e.target.closest('[data-recdel]'))){
       if(!armar(b))return;
-      var did=b.getAttribute('data-recdel');ctx.state.recibos=ctx.state.recibos.filter(function(x){return x.id!==did});ctx.persist();ctx.renderAll();
+      var did=b.getAttribute('data-recdel');sdS().recibos=sdS().recibos.filter(function(x){return x.id!==did});ctx.persist();ctx.renderAll();
     }
   });
   el.addEventListener('change',async function(e){
@@ -122,25 +122,25 @@ export function initRecibos(){
     var f=e.target.files&&e.target.files[0];e.target.value='';if(!f)return;
     toast('Leyendo el PDF…');
     try{
-      var lineas=await textoPdf(f),r=leerRecibo(lineas,ctx.state.plantillasRecibo);
+      var lineas=await textoPdf(f),r=leerRecibo(lineas,sdS().plantillasRecibo);
       if(r.sinTexto){
         toast('Ese PDF es una imagen escaneada: no tiene texto para leer. Cargalo a mano.');
-        edit={datos:{mes:mesTrabajo(ctx.state),moneda:ingresoDe(ctx.state).moneda},fuente:'manual'};renderRecibos();return;
+        edit={datos:{mes:mesTrabajo(sdS()),moneda:ingresoDe(sdS()).moneda},fuente:'manual'};renderRecibos();return;
       }
-      var d={mes:r.mes||mesTrabajo(ctx.state),moneda:ingresoDe(ctx.state).moneda};
+      var d={mes:r.mes||mesTrabajo(sdS()),moneda:ingresoDe(sdS()).moneda};
       Object.keys(r.campos).forEach(function(k){d[k]=r.campos[k].valor});
       edit={datos:d,fuente:'pdf',lineas:lineas,detectado:r.campos,empleador:r.empleador};
       renderRecibos();
       var n=Object.keys(r.campos).length;toast(n?'Encontré '+n+' valores. Revisalos antes de guardar.':'No reconocí los valores: completalos a mano.');
     }catch(er){
       toast(/password/i.test(String(er&&er.name||er))?'Ese PDF tiene contraseña: no lo puedo leer. Cargalo a mano.':'No pude leer ese PDF. Cargalo a mano.');
-      edit={datos:{mes:mesTrabajo(ctx.state),moneda:ingresoDe(ctx.state).moneda},fuente:'manual'};renderRecibos();
+      edit={datos:{mes:mesTrabajo(sdS()),moneda:ingresoDe(sdS()).moneda},fuente:'manual'};renderRecibos();
     }
   });
   el.addEventListener('submit',function(e){
     if(e.target.id!=='rec-form')return;
     e.preventDefault();leerForm();
-    var d=edit.datos,st=ctx.state;
+    var d=edit.datos,st=sdS();
     if(!/^\d{4}-\d{2}$/.test(d.mes||'')){$('#rec-mes').focus();return}
     if(!(num(d.liquido)>0)){$('#rec-liquido').focus();toast('Falta el líquido');return}
     if(d.moneda==='USD'){var c=num(d.cotiz)||cotizacion(st);if(!c){toast('Primero cargá la cotización del dólar en Ajustes');return}d.cotiz=c}else delete d.cotiz;

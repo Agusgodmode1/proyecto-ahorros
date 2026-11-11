@@ -22,6 +22,12 @@ var gEdit=null,gVolverAlForm=false;                    /* el grupo que se está 
 var calc={n:2,modo:'iguales',personas:[{nombre:'Vos',ingreso:''},{nombre:'',ingreso:''}]};
 var ES_TARJETA=/TARJETA|\bVISA\b|MASTER|\bOCA\b|CREDITO|CRÉDITO|AMEX|CREDITEL|ANDA/;
 function fcatCol(c){for(var i=0;i<FCATS.length;i++)if(FCATS[i][0]===c)return FCATS[i][1];return 'var(--muted)'}
+/* (2.59) grupo «En pareja»: el reparto sale solo de lo que cobra cada uno */
+function autoTxt(g){
+  if(!g.personas.some(function(p){return p.ingresoAuto})||(g.reparto||{}).tipo!=='ingresos')return '';
+  var P=proporciones(g),a=Math.round((P[g.personas[0].id]||0)*100);
+  return '<p class="note fg-auto">Se reparte <b>'+a+' % / '+(100-a)+' %</b> según lo que cobra cada uno este mes.</p>';
+}
 function tipoTxt(t){for(var i=0;i<TIPOS.length;i++)if(TIPOS[i][0]===t)return TIPOS[i][1].toLowerCase();return 'partes iguales'}
 function quienes(g){var n=g.personas.slice(1).map(function(p){return p.nombre});return 'vos y '+(n.length>1?n.slice(0,-1).join(', ')+' y '+n[n.length-1]:n[0])}
 function pesos(n){return '$ '+Math.round(num(n)).toLocaleString('es-UY')} /* para el texto que se comparte (sin el modo discreto) */
@@ -57,7 +63,7 @@ export function renderFijos(pc){
     R.grupos.forEach(function(x){
       if(!x.fijos.length)return;
       var g=x.grupo;
-      o+='<div class="card stack fgrupo"><div class="sec"><h2>'+esc(g.nombre)+'</h2><p class="note">Con '+esc(quienes(g).replace(/^vos y /,''))+' · '+esc(tipoTxt((g.reparto||{}).tipo))+'</p></div>'
+      o+='<div class="card stack fgrupo"><div class="sec"><h2>'+esc(g.nombre)+'</h2><p class="note">Con '+esc(quienes(g).replace(/^vos y /,''))+' · '+esc(tipoTxt((g.reparto||{}).tipo))+'</p>'+autoTxt(g)+'</div>'
         +'<p class="pone">Cada mes pone: '+g.personas.map(function(pe){return '<span>'+esc(nombreDe(g,pe.id))+' <b>'+money(x.porPersona[pe.id]||0)+'</b></span>'}).join('')+'</p>'
         +'<ul class="list flist">'+x.fijos.slice().sort(orden).map(function(f){return itemFijo(f,fp)}).join('')+'</ul>'
         +'<div class="row-btns"><button class="btn quiet" type="button" data-compartir="'+esc(g.id)+'">Compartir el resumen</button></div></div>';

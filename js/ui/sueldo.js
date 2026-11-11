@@ -2,7 +2,8 @@
 import {parse,MESL} from '../logica/fechas.js';
 import {num,uid} from '../logica/util.js';
 import {mesTrabajo,mins,pagoSem,tarifas,reglasHoras,extraDelDia,ingresoDe,mesIngreso} from '../logica/sueldo.js';
-import {ctx,$,today,liqNow,planNow,money,money2,usd,pctTxt,veces,fmtH,esc,fLarga,fMin,tile,row,cap,toast,toastAccion,armar,abrirDetalle} from './comun.js';
+import {ctx,$,today,liqSd,planNow,money,money2,usd,pctTxt,veces,fmtH,esc,fLarga,fMin,tile,row,cap,toast,toastAccion,armar,abrirDetalle,sdS,sd,deQuien} from './comun.js';
+import {juntos,hayPareja,nombrePareja} from '../logica/pareja.js';
 import {renderResumen} from './plan.js';
 import {aguinaldo,salarioVacacional} from '../logica/aguinaldo.js';
 import {extraPorHorario,tipoDeDia,minimoExtra,tieneHorario,aplicarHorario,aplicarPago} from '../logica/horario.js';
@@ -20,7 +21,7 @@ import {initLector} from './lector.js';
 /* ---------- Arriba de todo (2.12): «Vas a cobrar ≈ $X el vie 6 nov», el recibo en miniatura y la precisión ---------- */
 function fechaCorta(s){var d=parse(s);return DIA[d.getDay()]+' '+d.getDate()+' '+MES[d.getMonth()]}
 function heroHTML(Lr,lineas){
-  var state=ctx.state,P=precision(state,Lr),dots='';for(var i=0;i<4;i++)dots+='<i'+(i<=P.nivel?' class="on"':'')+'></i>';
+  var state=sdS(),P=precision(state,Lr),dots='';for(var i=0;i<4;i++)dots+='<i'+(i<=P.nivel?' class="on"':'')+'></i>';
   var a=P.falta?(/recibo/.test(P.falta)?'subir':/horas extra/.test(P.falta)?'control':/factura|costos/.test(P.falta)?'factura':/cobraste/.test(P.falta)?'recibo':'ajustes'):null;
   return '<div class="card cobro-hero"><span class="cd-l">Vas a cobrar</span><div class="ch-n"><b class="pay-big">'+(P.nivel<3?'≈ ':'')+money(Lr.liquido)+'</b><span>el '+esc(fechaCorta(state.plan.cobro))+'</span></div>'
     +'<div class="mini-rec">'+lineas.map(function(l){return '<p class="'+(l[2]||'')+'"><span>'+esc(l[0])+'</span><b>'+l[1]+'</b></p>'}).join('')+'</div>'
@@ -33,8 +34,8 @@ var empAbierto=false,cfAuto=false;
 function sinRecibo(state){return !state.ejemplo&&!state.sueldo.aMano&&!(state.recibos||[]).some(function(r){return !reciboRaro(r)})}
 function heroCero(){
   return '<div class="card cobro-hero sd-cero"><span class="cd-l">Vas a cobrar</span><div class="ch-n"><b class="pay-big">'+money(0)+'</b></div>'
-    +'<p class="note">Subí tu recibo de sueldo y lo calculo: tu sueldo, tus horas extra y tus descuentos.</p>'
-    +'<div class="row-btns"><button class="btn primary" type="button" data-sdcero="subir">Subir mi recibo</button></div>'
+    +'<p class="note">'+(deQuien()?'Subí el recibo de '+esc(deQuien())+' y lo calculo: su sueldo, sus horas extra y sus descuentos.':'Subí tu recibo de sueldo y lo calculo: tu sueldo, tus horas extra y tus descuentos.')+'</p>'
+    +'<div class="row-btns"><button class="btn primary" type="button" data-sdcero="subir">'+(deQuien()?'Subir su recibo':'Subir mi recibo')+'</button></div>'
     +'<p class="note"><button class="linklike" type="button" data-sdcero="mano">No tengo el recibo</button></p></div>';
 }
 /* Los desplegables: cerrados de entrada; se recuerda si los abriste (pa-sueldo-abiertos) */
@@ -44,8 +45,8 @@ function datoDe(id,txt){var el=$('#sd-'+id+'-d');if(el)el.textContent=txt||''}
 function mostrar(id,si){var el=$('#sd-'+id);if(el)el.hidden=!si}
 /* ¿En tu trabajo hay horas extra? (se pregunta una sola vez) */
 function renderPregunta(conHoras,tipo){
-  var p=ctx.state.perfil,H=p.horas||{},el=$('#sueldo-pregunta');if(!el)return;
-  if(!H.preguntado&&(p.recibosAgus||ctx.state.horas.length)){H.preguntado=true}
+  var p=sdS().perfil,H=p.horas||{},el=$('#sueldo-pregunta');if(!el)return;
+  if(!H.preguntado&&(p.recibosAgus||sdS().horas.length)){H.preguntado=true}
   el.innerHTML=!H.preguntado&&tipo!=='variable'?'<div class="card stack pregunta-horas"><h2>¿En tu trabajo hay horas extra?</h2><p class="note">Te lo pregunto una sola vez. Si no hay, saco todo lo de las horas extra de esta página (lo podés cambiar en Mi perfil).</p><div class="row-btns"><button class="btn primary" type="button" data-hx="si">Sí, a veces</button><button class="btn" type="button" data-hx="no">No, nunca</button></div></div>':'';
 }
 
@@ -77,11 +78,11 @@ function clicEmpezar(e){
   if(c){emp.cobro=c.getAttribute('data-emp-cobro');c.parentNode.querySelectorAll('button').forEach(function(b){b.setAttribute('aria-pressed',String(b===c))});$('#emp-dia-f').hidden=emp.cobro!=='fijo';return true}
   if(e.target.closest('[data-emp-recibo]')){var s=$('#sd-subir');if(s&&!s.hidden)try{s.scrollIntoView({block:'start',behavior:'smooth'})}catch(x){}return true}
   if(e.target.closest('#emp-ok')){
-    var r=aplicarFormaCobro(ctx.state,{tipo:emp.tipo,nominal:$('#emp-nom').value,cobro:{tipo:emp.cobro,dia:$('#emp-dia').value}},today()),er=$('#emp-err');
+    var r=aplicarFormaCobro(sdS(),{tipo:emp.tipo,nominal:$('#emp-nom').value,cobro:{tipo:emp.cobro,dia:$('#emp-dia').value}},today()),er=$('#emp-err');
     if(!r.ok){er.textContent=emp.tipo==='factura'?'Escribí cuánto facturás en un mes normal.':'Escribí tu sueldo.';er.hidden=false;try{$('#emp-nom').focus()}catch(x){}return true}
-    ctx.state.sueldo.aMano=true;empAbierto=false;ctx.persist();ctx.syncInputs();ctx.renderAll();
+    sdS().sueldo.aMano=true;empAbierto=false;ctx.persist();ctx.syncInputs();ctx.renderAll();
     try{window.scrollTo({top:0,behavior:'smooth'})}catch(x){window.scrollTo(0,0)}
-    toast('Listo: te quedan ≈ '+money(liqNow(true).liquido)+' en mano por mes');
+    toast('Listo: te quedan ≈ '+money(liqSd(true).liquido)+' en mano por mes');
     return true;
   }
   return false;
@@ -98,7 +99,7 @@ function pregHx(t,k,ops,val,suf){
 }
 function renderHorario(conHoras){
   var el=$('#sd-horario'),sd=$('#sd-horas');if(!el)return;
-  var R=reglasHoras(ctx.state),hay=tieneHorario(R);
+  var R=reglasHoras(sdS()),hay=tieneHorario(R);
   if(sd)sd.classList.toggle('sin-horario',conHoras&&!hay);
   if(!conHoras){el.innerHTML='';return}
   var ac=document.activeElement;if(el.innerHTML&&ac&&el.contains(ac)&&ac.matches('input,select'))return; /* no se redibuja mientras escribís */
@@ -117,17 +118,17 @@ function renderHorario(conHoras){
 }
 function errHx(m){var e=$('#hx-err');if(e){e.textContent=m||'';e.hidden=!m}}
 function guardarHorario(avisar){
-  var r=aplicarHorario(ctx.state.perfil.horas,{entrada:$('#hx-ent').value,salida:$('#hx-sal').value,dias:$('#hx-dias').value});
+  var r=aplicarHorario(sdS().perfil.horas,{entrada:$('#hx-ent').value,salida:$('#hx-sal').value,dias:$('#hx-dias').value});
   if(!r.ok){errHx('Poné a qué hora entrás y a qué hora salís.');return}
   errHx('');ctx.persist();
-  var H=ctx.state.perfil.horas;if(!$('#l-lleg').value)$('#l-lleg').value=H.entrada;if(!$('#l-sal').value)$('#l-sal').value=H.salida;
+  var H=sdS().perfil.horas;if(!$('#l-lleg').value)$('#l-lleg').value=H.entrada;if(!$('#l-sal').value)$('#l-sal').value=H.salida;
   ctx.renderAll();
-  if(avisar)toast('Listo: tu horario es de '+ctx.state.perfil.horas.entrada+' a '+ctx.state.perfil.horas.salida);
+  if(avisar)toast('Listo: tu horario es de '+sdS().perfil.horas.entrada+' a '+sdS().perfil.horas.salida);
 }
 function guardarPago(d){
-  var r=aplicarPago(ctx.state.perfil.horas,d);
+  var r=aplicarPago(sdS().perfil.horas,d);
   if(!r.ok){errHx('Revisá ese número.');return}
-  if(ctx.state.sueldo.tarifaManual&&(d.multSem!==undefined||d.multFin!==undefined))ctx.state.sueldo.tarifaManual=null;
+  if(sdS().sueldo.tarifaManual&&(d.multSem!==undefined||d.multFin!==undefined))sdS().sueldo.tarifaManual=null;
   errHx('');ctx.persist();ctx.renderAll();
 }
 function clicHorario(e){
@@ -145,7 +146,7 @@ var REDTXT={media:' y se pagan redondeados a la media hora',cuarto:' y se pagan 
 /* ---------- (2.51) Las dos pestañas: «Este mes» y «¿Te pagaron bien?» ---------- */
 var KT='pa-sd-tab';
 /* sin ningún recibo guardado, se arranca por «Tu recibo»: es lo primero que hay que hacer */
-function tabActual(){var d=sinRecibo(ctx.state)&&!ctx.state.sueldo.aMano?'control':'mes';try{return sessionStorage.getItem(KT)||d}catch(e){return d}}
+function tabActual(){var d=sinRecibo(sdS())&&!sdS().sueldo.aMano?'control':'mes';try{return sessionStorage.getItem(KT)||d}catch(e){return d}}
 export function ponerTab(t){
   try{sessionStorage.setItem(KT,t)}catch(e){}
   var p=$('#p-sueldo');if(p)p.setAttribute('data-sdtab',t);
@@ -187,7 +188,7 @@ function renderAsi(state){
   var A=asiTePagan(state);if(!A){el.innerHTML='';return}
   var mn=MESL[Number(A.mes.slice(5,7))-1],R=reglasHoras(state),conH=R.activo!==false;
   var D=A.descuentos,totD=D.reduce(function(x,d){return x+d.monto},0),pD=A.haberes>0?Math.round(totD/A.haberes*1000)/10:0,hayEst=D.some(function(d){return d.est});
-  var h='<div class="card asi"><div class="asi-cab"><h3>Así te pagan</h3><span class="note">tu recibo de '+mn+'</span></div>';
+  var h='<div class="card asi"><div class="asi-cab"><h3>'+(deQuien()?'Así le pagan a '+esc(deQuien()):'Así te pagan')+'</h3><span class="note">'+(deQuien()?'su':'tu')+' recibo de '+mn+'</span></div>';
   /* 1. lo que te queda en mano */
   if(A.enMano)h+='<div class="asi-top"><div class="asi-anillo">'+anillo(A.enMano)+'<div class="asi-ring-t"><b>'+pctTx(A.enMano)+'</b><span>en mano</span></div></div>'
     +'<dl class="asi-cuenta"><div><dt>Ganaste</dt><dd>'+money(A.haberes)+'</dd></div>'
@@ -216,10 +217,29 @@ function renderAsi(state){
   }
   el.innerHTML=h+'</div>';
 }
+var KQ='pa-sd-quien';
+/* (2.59) En pareja: las dos personas lado a lado; tocar una elige de quién es todo lo de abajo */
+function renderDuo(){
+  var el=$('#sd-duo'),st=ctx.state,on=hayPareja(st);if(!el)return;
+  if(!on)sd.quien='yo';
+  var deP=on&&sd.quien==='pareja';
+  el.hidden=!on;$('#p-sueldo').classList.toggle('sd-pareja',deP);
+  var tt=document.querySelector('#p-sueldo .ph-t');if(tt)tt.textContent=deP?'Sueldo de '+nombrePareja(st):'Tu sueldo';
+  if(!on){el.innerHTML='';return}
+  var J=juntos(st,today()),a=J.personas[0],b=J.personas[1];
+  el.innerHTML='<div class="duo" role="group" aria-label="De quién es el sueldo que se ve abajo">'+J.personas.map(function(p){
+    var yo=p.quien==='yo';
+    return '<button type="button" class="duo-c duo-'+p.quien+'" data-sdq="'+p.quien+'" aria-pressed="'+(sd.quien===p.quien)+'"><span class="duo-n">'+esc(p.nombre)+'</span><b>'+money(p.cobra)+'</b>'
+      +(p.sinRecibo?'<small class="duo-sub">'+(yo?'Subir tu recibo':'Subir su recibo')+'</small>'
+        :'<small>'+(yo?'cobrás':'cobra')+' el '+esc(fechaCorta(p.cobro))+'</small><small>'+(p.extras>=1?'+ '+money(p.extras)+' extras':'sin extras')+'</small>')+'</button>'}).join('')+'</div>'
+    +'<p class="duo-j">Juntos: <b>'+money(J.total)+'</b> este mes · '+a.pct+' % / '+b.pct+' %</p>'
+    +'<div class="duo-bar" role="img" aria-label="'+esc(a.nombre)+' aporta el '+a.pct+' por ciento y '+esc(b.nombre)+' el '+b.pct+'"><i class="duo-yo" style="flex:'+Math.max(a.pct,1)+'"></i><i class="duo-pareja" style="flex:'+Math.max(b.pct,1)+'"></i></div>';
+}
 export function renderSueldo(){
-  ponerTab(tabActual());renderVeredicto(ctx.state);renderAsi(ctx.state);
+  renderDuo();
+  ponerTab(tabActual());renderVeredicto(sdS());renderAsi(sdS());
   /* Lr: lo que vas a cobrar (el recibo, si lo cargaste); L: la estimación, para el desglose */
-  var state=ctx.state,s=state.sueldo,Lr=liqNow(true),L=Lr.estimado||Lr,L0=liqNow(false),mc=mins(state,'sem'),me=mins(state,'fin');
+  var state=sdS(),s=state.sueldo,Lr=liqSd(true),L=Lr.estimado||Lr,L0=liqSd(false),mc=mins(state,'sem'),me=mins(state,'fin');
   var bpc=num(s.bpc)||6864,nom=num(s.nominal),t=tarifas(state),R=reglasHoras(state),hn=t.hora,finH=t.heEsp+t.bonoHora,conHoras=R.activo!==false;
   var desc=L.mont+L.fon+L.frl+L.irpf+L.otros,extras=L.N-nom;
   /* (2.26) sin nada cargado: primero «¿Cuánto cobrás por mes?» (o subir el recibo) */
@@ -296,8 +316,8 @@ export function renderSueldo(){
 }
 /* (2.51) Arriba de las horas: el total del mes y cuánta plata suman; debajo, el calendario */
 function renderHorasMes(Lr,L0,mc,me){
-  var state=ctx.state,mt=mesTrabajo(state),mn=MESL[Number(mt.slice(5,7))-1],est=Lr.estimado||Lr,plata=Math.max(0,est.liquido-L0.liquido);
-  var tt=$('#sd-hx-t');if(tt)tt.textContent='Tus horas extra de '+mn;
+  var state=sdS(),mt=mesTrabajo(state),mn=MESL[Number(mt.slice(5,7))-1],est=Lr.estimado||Lr,plata=Math.max(0,est.liquido-L0.liquido);
+  var tt=$('#sd-hx-t');if(tt)tt.textContent=deQuien()?'Horas extra de '+deQuien()+' · '+mn:'Tus horas extra de '+mn;
   var sinH=!tieneHorario(reglasHoras(state));
   var tot=$('#sd-hx-tot');if(tot)tot.innerHTML=sinH?'Primero contame tu horario.':(mc||me)?'<b>'+fMin(mc)+'</b> entre semana'+(me?' · <b>'+fmtH(me/60)+' h</b> de finde':'')+' <span class="sd-hx-pl">→ + '+money(plata)+'</span>':'Todavía nada este mes.';
   /* sin horario, lo primero es el horario: se abre su desplegable */
@@ -306,7 +326,7 @@ function renderHorasMes(Lr,L0,mc,me){
 }
 /* El dato clave de cada desplegable, en su título */
 function datosDesplegables(Lr,L0,conHoras,mc,me){
-  var state=ctx.state,est=Lr.estimado||Lr;
+  var state=sdS(),est=Lr.estimado||Lr;
   if(conHoras)datoDe('horas',!tieneHorario(reglasHoras(state))?'falta tu horario':fMin(mc)+(me?' · '+fmtH(me/60)+' h de finde':'')+' · + '+money(Math.max(0,est.liquido-L0.liquido)));
   var mt=mesTrabajo(state),r=reciboDe(state,mt),mn=MESL[Number(mt.slice(5,7))-1];
   var nr=(state.recibos||[]).length;datoDe('control',nr?nr+(nr===1?' guardado':' guardados'):'');
@@ -316,7 +336,7 @@ function datosDesplegables(Lr,L0,conHoras,mc,me){
 /* ---------- Sueldo personalizado e ingreso variable ---------- */
 function enMoneda(L,v){return L.moneda==='USD'&&L.cotiz?' <span class="src">('+usd(v/L.cotiz)+')</span>':''}
 function renderOtroIngreso(L,conHoras){
-  var state=ctx.state,s=state.sueldo,variable=L.tipo==='variable',nom=num(s.nominal);
+  var state=sdS(),s=state.sueldo,variable=L.tipo==='variable',nom=num(s.nominal);
   var ban=state.ejemplo?'<div class="banner"><p><b>Son valores de ejemplo.</b></p><button class="btn" type="button" data-cero>Borrar el ejemplo y crear mi perfil</button></div>':'';
   if(L.sinCotizacion)ban+='<div class="banner"><p><b>Cobrás en dólares y falta la cotización.</b> Cargala en Ajustes → Dólar para pasar tu ingreso a pesos. Mientras tanto uso el número tal cual.</p><button class="btn" type="button" data-goto="ajustes">Ir a Ajustes</button></div>';
   $('#ej-banner').innerHTML=ban;$('#bpc-aviso').innerHTML='';
@@ -356,7 +376,7 @@ function renderOtroIngreso(L,conHoras){
 var MESC=['ene','feb','mar','abr','may','jun','jul','ago','set','oct','nov','dic'];
 function renderAguinaldo(){
   var el=$('#aguinaldo-out');if(!el)return;
-  var A=aguinaldo(ctx.state,today()),fp=A.pago.split('-');
+  var A=aguinaldo(sdS(),today()),fp=A.pago.split('-');
   var h='<div class="sec-h"><h2>Aguinaldo de '+A.nombre+'</h2><span class="note">antes del '+Number(fp[2])+' de '+A.nombre+'</span></div>'
     +'<div class="ag-n"><b>'+money(A.liquido)+'</b><span>en mano, más o menos</span></div>'
     +'<details><summary>Cómo se calcula</summary><div class="receipt" style="margin-top:10px">'
@@ -368,17 +388,17 @@ function renderAguinaldo(){
     +(A.estimados?'<p class="note" style="margin-top:8px">'+A.estimados+(A.estimados===1?' mes está estimado':' meses están estimados')+' con tu sueldo base; con el recibo de cada mes, uso lo de verdad.</p>':'')
     +'</details>';
   el.innerHTML=h;
-  var d=$('#sv-dias');if(document.activeElement!==d)d.value=num(ctx.state.sueldo.diasLicencia)||'';
+  var d=$('#sv-dias');if(document.activeElement!==d)d.value=num(sdS().sueldo.diasLicencia)||'';
   renderVacacional();
 }
 function renderVacacional(){
-  var dias=num(ctx.state.sueldo.diasLicencia),o=$('#sv-out');
+  var dias=num(sdS().sueldo.diasLicencia),o=$('#sv-out');
   if(!(dias>0)){o.textContent='Poné los días y te calculo el salario vacacional.';return}
-  var V=salarioVacacional(ctx.state,dias);
+  var V=salarioVacacional(sdS(),dias);
   o.innerHTML='Salario vacacional: <b>'+money(V.liquido)+'</b> en mano ('+money(V.jornal)+' por día × '+dias+(V.irpf>0?', menos '+money(V.irpf)+' de IRPF':'')+').';
 }
 function renderLog(mc,me,L){
-  var state=ctx.state;
+  var state=sdS();
   var mt=mesTrabajo(state),mtN=MESL[Number(mt.slice(5,7))-1];
   var pagoH=pagoSem(state)/60,finTot=L.extraEsp+tarifas(state).bonoHora*me/60;
   var h='<p class="note">Horas de <b>'+mtN+'</b>: se cobran el '+esc(fLarga(state.plan.cobro))+'.</p>';
@@ -399,10 +419,10 @@ function renderLog(mc,me,L){
 
 /* ---------- Control del recibo ---------- */
 var RID={sue:'r-sue',heh:'r-heh',hem:'r-hem',des:'r-des',fer:'r-fer',bon:'r-bon',hab:'r-hab',dto:'r-dto',liq:'r-liq'};
-function reciboVal(k){var v=ctx.state.recibo[k];return (v===undefined||v===null||v==='')?null:num(v)}
+function reciboVal(k){var v=sdS().recibo[k];return (v===undefined||v===null||v==='')?null:num(v)}
 function renderCtrl(){
   var el=$('#ctrl-out');if(!el)return;
-  var state=ctx.state,s=state.sueldo,L=liqNow(true),R={},any=false;
+  var state=sdS(),s=state.sueldo,L=liqSd(true),R={},any=false;
   Object.keys(RID).forEach(function(k){R[k]=reciboVal(k);if(R[k]!==null)any=true});
   if(!any){el.innerHTML='';return}
   var esp={sue:num(s.nominal),heh:pagoSem(state)/60,hem:L.extraCom,esp:L.extraEsp,bon:L.bono,hab:L.N,dto:L.mont+L.fon+L.frl+L.irpf+L.otros,liq:L.liquido};
@@ -440,15 +460,15 @@ function renderCtrl(){
   if(msg.length)h+='<ul class="lect" style="margin-top:12px">'+msg.map(function(m){return '<li>'+m+'</li>'}).join('')+'</ul>';
   el.innerHTML=h;
 }
-function syncRecibo(){Object.keys(RID).forEach(function(k){var e=$('#'+RID[k]);if(e&&document.activeElement!==e)e.value=(ctx.state.recibo[k]===undefined?'':ctx.state.recibo[k])})}
+function syncRecibo(){Object.keys(RID).forEach(function(k){var e=$('#'+RID[k]);if(e&&document.activeElement!==e)e.value=(sdS().recibo[k]===undefined?'':sdS().recibo[k])})}
 
 /* ---------- Formularios ---------- */
 export function syncSueldo(){
-  var s=ctx.state.sueldo;
+  var s=sdS().sueldo;
   $('#s-nominal').value=s.nominal||'';$('#s-bonofijo').value=s.bonoFijo||'';
   $('#s-otros').value=s.otros||'';$('#s-hijos').value=s.hijos||'';$('#s-conyuge').checked=!!s.conyuge;$('#s-bpc').value=s.bpc||'';
   document.querySelectorAll('[data-tipo]').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-tipo')===tipoSel))});
-  var R=reglasHoras(ctx.state);
+  var R=reglasHoras(sdS());
   if(!$('#l-fecha').value){$('#l-fecha').value=today();elegirTipo(tipoDeDia(today(),R.dias))}
   if(!$('#l-lleg').value)$('#l-lleg').value=R.entrada||'';
   if(!$('#l-sal').value)$('#l-sal').value=R.salida||'';
@@ -456,7 +476,7 @@ export function syncSueldo(){
   syncRecibo();
 }
 function onSueldoInput(){
-  var s=ctx.state.sueldo;
+  var s=sdS().sueldo;
   s.nominal=num($('#s-nominal').value);if(s.nominal>0)s.aMano=true;s.bonoFijo=num($('#s-bonofijo').value);
   s.otros=num($('#s-otros').value);s.hijos=Math.max(0,Math.round(num($('#s-hijos').value)));s.conyuge=$('#s-conyuge').checked;
   var nb=num($('#s-bpc').value)||6864;if(nb!==num(s.bpc))s.bpcAnio=Number(today().slice(0,4));s.bpc=nb;
@@ -465,14 +485,14 @@ function onSueldoInput(){
 function addHoras(min){
   if(!(min>0))return;
   var f=$('#l-fecha').value||today();
-  ctx.state.horas.push({id:uid(),fecha:f,tipo:tipoSel,min:Math.round(min)});
+  sdS().horas.push({id:uid(),fecha:f,tipo:tipoSel,min:Math.round(min)});
   confirmClear=false;ctx.persist();renderSueldo();renderResumen(planNow());
 }
 function elegirTipo(t){tipoSel=t;document.querySelectorAll('[data-tipo]').forEach(function(x){x.setAttribute('aria-pressed',String(x.getAttribute('data-tipo')===t))})}
-function calcHorario(){return extraPorHorario(reglasHoras(ctx.state),$('#l-lleg').value,$('#l-sal').value,tipoSel)}
+function calcHorario(){return extraPorHorario(reglasHoras(sdS()),$('#l-lleg').value,$('#l-sal').value,tipoSel)}
 /* Debajo de las horas: qué se va a sumar */
 function horNota(){
-  var el=$('#l-hor-nota'),b=$('#l-hor-add'),x=calcHorario(),R=reglasHoras(ctx.state);
+  var el=$('#l-hor-nota'),b=$('#l-hor-add'),x=calcHorario(),R=reglasHoras(sdS());
   if(!x){el.textContent='Poné la hora de llegada y de salida.';b.disabled=true;b.textContent='Sumar';return}
   if(tipoSel==='fin'){el.innerHTML='Fin de semana o feriado: cuenta el turno entero, <b>'+fMin(x.min)+'</b>.';b.disabled=!x.min;b.textContent='Sumar '+fMin(x.min);return}
   var p=[];if(x.antes)p.push('llegaste '+fMin(x.antes)+' antes');if(x.despues)p.push('te quedaste '+fMin(x.despues)+' después');
@@ -484,6 +504,8 @@ export function initSueldo(){
   initPlanilla();initLector();initFactura();
   /* (2.51) pestañas */
   $('#sd-tabs').addEventListener('click',function(e){var b=e.target.closest('[data-sdtab]');if(b)ponerTab(b.getAttribute('data-sdtab'))});
+  try{if(sessionStorage.getItem(KQ)==='pareja')sd.quien='pareja'}catch(e){}
+  $('#sd-duo').addEventListener('click',function(e){var b=e.target.closest('[data-sdq]');if(!b||sd.quien===b.getAttribute('data-sdq'))return;sd.quien=b.getAttribute('data-sdq');try{sessionStorage.setItem(KQ,sd.quien);sessionStorage.removeItem(KT)}catch(x){}ctx.renderAll()});
   /* desde Hoy: «¿Llegó tu recibo?» → Sueldo, en «¿Te pagaron bien?» */
   document.addEventListener('click',function(e){
     var b=e.target.closest('[data-sdtab-ir]');
@@ -499,7 +521,7 @@ export function initSueldo(){
   /* (2.26) tu horario y cómo te pagan: con horario, se guarda al cambiar; los «Otro» al escribir */
   $('#p-sueldo').addEventListener('change',function(e){
     var id=e.target.id;
-    if((id==='hx-ent'||id==='hx-sal'||id==='hx-dias')&&tieneHorario(reglasHoras(ctx.state))){guardarHorario(false);toast('Horario guardado');return}
+    if((id==='hx-ent'||id==='hx-sal'||id==='hx-dias')&&tieneHorario(reglasHoras(sdS()))){guardarHorario(false);toast('Horario guardado');return}
     if(id==='hx-ms'||id==='hx-mf'||id==='hx-de'){var d={};d[id==='hx-ms'?'multSem':id==='hx-mf'?'multFin':'desde']=Number(e.target.value);guardarPago(d)}
   });
   $('#p-sueldo').addEventListener('click',function(e){
@@ -507,14 +529,14 @@ export function initSueldo(){
     var z=e.target.closest('[data-sdcero]');
     if(z){
       if(z.getAttribute('data-sdcero')==='subir'){ponerTab('control');var sb=$('#sd-subir');if(sb)try{sb.scrollIntoView({block:'start',behavior:'smooth'})}catch(x){}}
-      else if(num(ctx.state.sueldo.nominal)>0){ctx.state.sueldo.aMano=true;ctx.persist();ctx.renderAll();toast('Listo: calculo con tu sueldo de '+money(num(ctx.state.sueldo.nominal)))}
+      else if(num(sdS().sueldo.nominal)>0){sdS().sueldo.aMano=true;ctx.persist();ctx.renderAll();toast('Listo: calculo con tu sueldo de '+money(num(sdS().sueldo.nominal)))}
       else{empAbierto=true;ponerTab('mes');renderSueldo();var en=$('#emp-nom');if(en)try{en.focus()}catch(x){}}
       return}
     if(clicHorario(e))return;
     /* «Para afinarla»: abre el desplegable que hace falta */
     var dir=e.target.closest('[data-sdir]');if(dir){var dk=dir.getAttribute('data-sdir');ponerTab(dk==='subir'||dk==='control'?'control':'mes');var d=$('#sd-'+dk);if(d&&d.hidden&&dir.getAttribute('data-sdir')==='subir')d=$('#sd-control');if(d){abrirDetalle(d);try{d.scrollIntoView({block:'start',behavior:'smooth'})}catch(x){}}return}
     var hx=e.target.closest('[data-hx]');
-    if(hx){var p=ctx.state.perfil;p.horas=Object.assign({},p.horas,{preguntado:true,activo:hx.getAttribute('data-hx')==='si'});ctx.persist();ctx.renderAll();toast(p.horas.activo?'Listo: sumá tus horas extra en «Horas extra»':'Listo: sin horas extra');
+    if(hx){var p=sdS().perfil;p.horas=Object.assign({},p.horas,{preguntado:true,activo:hx.getAttribute('data-hx')==='si'});ctx.persist();ctx.renderAll();toast(p.horas.activo?'Listo: sumá tus horas extra en «Horas extra»':'Listo: sin horas extra');
       /* (2.26) con extras, lo primero es tu horario: se abre «Horas extra» */
       if(p.horas.activo){var dh=$('#sd-horas');if(dh){dh.open=true;try{dh.scrollIntoView({block:'start',behavior:'smooth'})}catch(x){}}}
       return}
@@ -522,16 +544,16 @@ export function initSueldo(){
   /* (2.54) borrar un recibo mal leído (con Deshacer) */
   $('#p-sueldo').addEventListener('click',function(e){
     var b=e.target.closest('[data-recborrar]');if(!b)return;
-    var id=b.getAttribute('data-recborrar'),st=ctx.state,antes=(st.recibos||[]).slice();
+    var id=b.getAttribute('data-recborrar'),st=sdS(),antes=(st.recibos||[]).slice();
     st.recibos=antes.filter(function(x){return x.id!==id});ctx.persist();ctx.renderAll();
-    toastAccion('Borré el recibo','Deshacer',function(){ctx.state.recibos=antes;ctx.persist();ctx.renderAll()});
+    toastAccion('Borré el recibo','Deshacer',function(){sdS().recibos=antes;ctx.persist();ctx.renderAll()});
   });
   $('#bpc-aviso').addEventListener('click',function(e){
     if(e.target.id==='nom-arreglar'){ponerTab('mes');var i=$('#s-nominal');abrirDetalle(i);try{i.scrollIntoView({block:'center'})}catch(er){}i.focus();i.select();return}
-    if(e.target.id==='bpc-igual'){ctx.state.sueldo.bpcAnio=Number(today().slice(0,4));ctx.persist();renderSueldo()}
+    if(e.target.id==='bpc-igual'){sdS().sueldo.bpcAnio=Number(today().slice(0,4));ctx.persist();renderSueldo()}
     if(e.target.id==='bpc-ir'){abrirDetalle($('#s-bpc'));var i=$('#s-bpc');try{i.scrollIntoView({block:'center'})}catch(er){}i.focus();i.select()}
   });
-  $('#sv-dias').addEventListener('input',function(){ctx.state.sueldo.diasLicencia=Math.max(0,Math.min(60,Math.round(num(this.value))));ctx.persist();renderVacacional()});
+  $('#sv-dias').addEventListener('input',function(){sdS().sueldo.diasLicencia=Math.max(0,Math.min(60,Math.round(num(this.value))));ctx.persist();renderVacacional()});
   ['s-nominal','s-bonofijo','s-otros','s-hijos','s-conyuge','s-bpc'].forEach(function(id){$('#'+id).addEventListener('input',onSueldoInput);$('#'+id).addEventListener('change',onSueldoInput)});
   document.querySelectorAll('[data-tipo]').forEach(function(b){b.addEventListener('click',function(){elegirTipo(b.getAttribute('data-tipo'));horNota()})});
   $('#quick').addEventListener('click',function(e){var b=e.target.closest('[data-min]');if(b)addHoras(Number(b.getAttribute('data-min')))});
@@ -540,15 +562,15 @@ export function initSueldo(){
     if(m>0){addHoras(m);$('#l-h').value='';$('#l-m').value=''}
   });
   /* Por horario: el día y la hora de llegada y salida; la app calcula los minutos extra */
-  $('#l-fecha').addEventListener('change',function(){if(this.value){elegirTipo(tipoDeDia(this.value,reglasHoras(ctx.state).dias));horNota()}});
+  $('#l-fecha').addEventListener('change',function(){if(this.value){elegirTipo(tipoDeDia(this.value,reglasHoras(sdS()).dias));horNota()}});
   ['l-lleg','l-sal'].forEach(function(id){$('#'+id).addEventListener('input',horNota)});
   $('#l-hor-add').addEventListener('click',function(){
     var x=calcHorario();if(!x||!x.min)return;
     addHoras(x.min);toast('Sumé '+fMin(x.min)+(tipoSel==='fin'?' de finde o feriado':' de extra'));
-    var R=reglasHoras(ctx.state);$('#l-lleg').value=R.entrada||'';$('#l-sal').value=R.salida||'';horNota();
+    var R=reglasHoras(sdS());$('#l-lleg').value=R.entrada||'';$('#l-sal').value=R.salida||'';horNota();
   });
-  Object.keys(RID).forEach(function(k){$('#'+RID[k]).addEventListener('input',function(){ctx.state.recibo[k]=this.value;ctx.persist();renderCtrl()})});
-  $('#r-clear').addEventListener('click',function(){ctx.state.recibo={};syncRecibo();ctx.persist();renderCtrl()});
+  Object.keys(RID).forEach(function(k){$('#'+RID[k]).addEventListener('input',function(){sdS().recibo[k]=this.value;ctx.persist();renderCtrl()})});
+  $('#r-clear').addEventListener('click',function(){sdS().recibo={};syncRecibo();ctx.persist();renderCtrl()});
   /* Ingreso variable: lo que cobraste cada mes */
   $('#p-sueldo').addEventListener('submit',function(e){
     if(e.target.id!=='ing-form')return;
@@ -556,11 +578,11 @@ export function initSueldo(){
     var m=$('#ing-mes').value,v=$('#ing-monto').value;
     if(!/^\d{4}-\d{2}$/.test(m)){$('#ing-mes').focus();return}
     if(v===''||!(num(v)>=0)){$('#ing-monto').focus();return}
-    var s=ctx.state.sueldo;s.ingresosMes=Object.assign({},s.ingresosMes);s.ingresosMes[m]=Math.round(num(v)*100)/100;
+    var s=sdS().sueldo;s.ingresosMes=Object.assign({},s.ingresosMes);s.ingresosMes[m]=Math.round(num(v)*100)/100;
     ctx.persist();ctx.renderAll();toast('Guardado lo de '+MESL[Number(m.slice(5,7))-1]);
   });
   $('#p-sueldo').addEventListener('click',function(e){
-    var state=ctx.state;
+    var state=sdS();
     var di=e.target.closest('[data-ingdel]');
     if(di){if(!armar(di))return;var k=di.getAttribute('data-ingdel'),im=Object.assign({},state.sueldo.ingresosMes);delete im[k];state.sueldo.ingresosMes=im;ctx.persist();ctx.renderAll();return}
     var dh=e.target.closest('[data-delh]');
@@ -569,7 +591,7 @@ export function initSueldo(){
       var hid=dh.getAttribute('data-delh'),antesH=state.horas.slice(),qH=antesH.filter(function(x){return x.id===hid})[0];
       state.horas=antesH.filter(function(x){return x.id!==hid});ctx.persist();renderSueldo();renderResumen(planNow());
       if(qH)toastAccion('Borré las horas del '+fLarga(qH.fecha),'Deshacer',function(){
-        if(!ctx.state.horas.some(function(x){return x.id===hid})){ctx.state.horas.push(qH);ctx.persist();renderSueldo();renderResumen(planNow())}
+        if(!sdS().horas.some(function(x){return x.id===hid})){sdS().horas.push(qH);ctx.persist();renderSueldo();renderResumen(planNow())}
       });
       return}
     if(e.target.id==='log-clear'){confirmClear=true;renderSueldo();return}

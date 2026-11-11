@@ -11,6 +11,7 @@ import {categoriasBase,categoriasDesde} from './logica/categorias.js';
 import {pactoBase,pactoDesdePlan,normApartado} from './logica/pacto.js';
 import {normEsperado} from './logica/supervivencia.js';
 import {normIngresos} from './logica/ingresos.js';
+import {parejaVacia} from './logica/pareja.js';
 
 /* Subí este número cuando cambie la forma del estado y agregá el paso en migrar().
    v1–v3: archivo HTML · v4: voz y meta · v5: perfil propio y feriados editables · v6: sincronización
@@ -38,7 +39,7 @@ import {normIngresos} from './logica/ingresos.js';
         su historial y lo que anotó que entró quedan igual.
    v24: el horario de cada uno (perfil.horas.entrada, salida y dias 'lv' | 'ls'). Alguien nuevo arranca sin horario;
         a quien ya usaba la app se le completan las reglas que tenía (las de siempre), así sus cuentas dan idéntico. */
-export var VERSION_ESTADO=26;
+export var VERSION_ESTADO=27;
 
 function hoyISO(){return iso(new Date())}
 /* Feriados: por defecto solo cuentan los 5 no laborables (1/1, 1/5, 18/7, 25/8, 25/12).
@@ -73,6 +74,7 @@ export function defaults(hoy){
     sync:{t:{},borrados:{}},             /* cuándo cambió cada cosa, para juntar aparatos (logica/sync.js) */
     metas:[],                            /* {id,nombre,objetivo,para:'aaaa-mm',aportes:[{id,fecha,monto}]} */
     monedas:monedasBase(),               /* cotización del dólar que cargás en Ajustes */
+    pareja:parejaVacia(),                /* (2.59) la otra persona, con la misma forma que lo tuyo (logica/pareja.js) */
     categorias:categoriasBase(),         /* categorías de gasto, editables en Ajustes (logica/categorias.js) */
     recibos:[],                          /* recibos de sueldo confirmados, mes a mes (logica/recibos.js) */
     plantillasRecibo:{},                 /* por empleador: qué renglón del PDF es cada campo */
@@ -186,7 +188,9 @@ export function migrar(d){
     /* v18: sin gastos que se repiten solos (nada cambia) */
     repetidos:Array.isArray(x.repetidos)?x.repetidos:[],
     /* v21: sin ingresos fijos (nada cambia) */
-    ingresosFijos:normIngresos(x.ingresosFijos)};
+    ingresosFijos:normIngresos(x.ingresosFijos),
+    /* v27: modo pareja, vacío (nada cambia) */
+    pareja:Object.assign(parejaVacia(),obj(x.pareja))};
   /* v14: a quien ya usaba la app no se le muestra el prólogo: su plan pasa a ser su pacto */
   if(vx<14&&!state.pacto.sellado)state.pacto=pactoDesdePlan(state,hoyISO());
   /* v19: la plata apartada, siempre como lista prolija (sin nada apartado, nada cambia) */

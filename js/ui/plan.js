@@ -409,7 +409,7 @@ export function renderResumen(pc){
   h+=foldIni('plan','tone-mint','Tu plan','en qué se reparte tu plata'+(L.liquido>0?' y cuando cobres':''));
   var gas=Math.max(0,pc.gastar);
   h+=reparto('Tu plata del pacto',pc.fijos+pc.ahorro+gas,[
-    {k:'f',n:'Fijos',v:pc.fijos,s:!state.fijos.length?'sin cargar':pend>0?'faltan '+money(pend):'todos pagos'},
+    {k:'f',n:'Fijos',v:pc.fijos,s:!state.fijos.length?'sin cargar':pend>0?'faltan '+money(pend):pc.fijos>0?'todos pagos':'ninguno antes del cobro'},
     {k:'a',n:'Guardás',v:pc.ahorro,s:pc.ahorro>0?'hasta el '+fCorta(p.cobro):'nada todavía'},
     {k:'g',n:'Para gastar',v:gas,s:'gastaste '+money(pc.spentInPlan)}]);
   if(resto<0)h+='<p class="err tp-n">Te pasaste '+money(-resto)+': no llegás a guardar todo.</p>';

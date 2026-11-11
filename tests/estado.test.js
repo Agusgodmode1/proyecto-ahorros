@@ -230,7 +230,7 @@ test('v24/v25 → v26: el reparto arranca parejo (sin colchón) y el sobre de co
 /* (2.58) el ejemplo siempre está vivo: en cualquier fecha, hoy cae dentro del pacto y todo se corre junto */
 test('el ejemplo se corre a la fecha de hoy', function(){
   var base=ejemplo('2026-10-27');
-  assert.equal(base.plan.inicio,'2026-10-12');assert.equal(base.horas[0].fecha,'2026-10-01');assert.equal(base.recibos[0].mes,'2026-09');
+  assert.equal(base.plan.inicio,'2026-10-12');assert.equal(base.fijosPagos[base.plan.cobro]['ej-alq'].fecha,'2026-10-15');assert.equal(base.horas[0].fecha,'2026-10-01');assert.equal(base.recibos[0].mes,'2026-09');
   ['2026-11-11','2026-11-20','2027-01-03','2027-02-28','2027-07-15','2026-10-05'].forEach(function(h){
     var e=ejemplo(h);
     assert.ok(e.plan.inicio<=h&&h<e.plan.cobro,h+': hoy cae dentro del pacto ('+e.plan.inicio+' → '+e.plan.cobro+')');
@@ -238,5 +238,8 @@ test('el ejemplo se corre a la fecha de hoy', function(){
     var mesAnt=ant.getFullYear()+'-'+String(ant.getMonth()+1).padStart(2,'0');
     assert.ok(e.horas.every(function(x){return x.fecha.slice(0,7)===mesAnt}),h+': las horas son del mes trabajado');
     assert.ok(e.recibos[0].mes<mesAnt,h+': el recibo es de un mes anterior');
+    var pago=e.fijosPagos[e.plan.cobro]['ej-alq'];
+    assert.match(pago.fecha,/^\d{4}-\d{2}-\d{2}$/,h+': el pago del alquiler tiene una fecha de verdad');
+    assert.ok(pago.fecha>=e.plan.inicio&&pago.fecha<=h,h+': el alquiler se pagó dentro del pacto y no en el futuro ('+pago.fecha+')');
   });
 });

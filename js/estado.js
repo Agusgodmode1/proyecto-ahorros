@@ -146,7 +146,9 @@ export function ejemplo(hoy){
   /* el extracto nunca trae días que todavía no pasaron */
   var kE=k;if(k&&correrMeses('2026-10-26',kE)>H)kE--;
   s.extracto.texto=extractoEjemplo(kE);
-  var k=s.plan.cobro;s.fijosPagos={};s.fijosPagos[k]={'ej-alq':{monto:22000,parte:11000,fecha:correrMeses('2026-10-15',k),nombre:'Alquiler',paga:'yo'}};
+  /* el alquiler ya pagado: su fecha se corre con el pacto y nunca queda en el futuro ni antes del inicio */
+  var fAlq=correrMeses('2026-10-15',k);if(fAlq>H)fAlq=H;if(fAlq<s.plan.inicio)fAlq=s.plan.inicio;
+  s.fijosPagos={};s.fijosPagos[s.plan.cobro]={'ej-alq':{monto:22000,parte:11000,fecha:fAlq,nombre:'Alquiler',paga:'yo'}};
   return s;
 }
 function obj(o){return (o&&typeof o==='object'&&!Array.isArray(o))?o:{}}

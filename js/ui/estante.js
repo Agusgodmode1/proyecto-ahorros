@@ -15,8 +15,7 @@ function quieto(){try{return matchMedia('(prefers-reduced-motion: reduce)').matc
 
 var EMBLEMA={
   solo:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 18 10 12 8 6M10 12l7-2 2 6" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"/><g fill="currentColor"><circle cx="5" cy="18" r="1.6"/><circle cx="10" cy="12" r="2"/><circle cx="8" cy="6" r="1.4"/><circle cx="17" cy="10" r="1.6"/><circle cx="19" cy="16" r="1.3"/></g></svg>',
-  duo:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15Q12 6 18 9" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"/><path d="M6 11.2l1.1 2.7 2.7 1.1-2.7 1.1L6 18.8l-1.1-2.7L2.2 15l2.7-1.1zM18 5.6l1 2.4 2.4 1-2.4 1-1 2.4-1-2.4-2.4-1 2.4-1z" fill="currentColor"/></svg>',
-  negocio:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="11" width="12" height="9" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8.5 11V8.5a3.5 3.5 0 0 1 7 0V11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="15.5" r="1.3" fill="currentColor"/></svg>'
+  duo:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15Q12 6 18 9" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"/><path d="M6 11.2l1.1 2.7 2.7 1.1-2.7 1.1L6 18.8l-1.1-2.7L2.2 15l2.7-1.1zM18 5.6l1 2.4 2.4 1-2.4 1-1 2.4-1-2.4-2.4-1 2.4-1z" fill="currentColor"/></svg>'
 };
 function lomo(l,ultimo){
   return '<li class="es-li"><button type="button" class="es-lomo es-'+l.id+(l.bloqueado?' es-cerrado':'')+(ultimo===l.id?' es-ultimo':'')+'" data-libro="'+l.id+'"'

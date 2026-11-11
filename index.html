@@ -31,12 +31,6 @@ document.documentElement.setAttribute('data-theme','dark');
 <div class="sbar" aria-hidden="true"></div>
 <div class="upd" id="upd" role="status" hidden><span>Hay una versión nueva</span><button class="btn primary" type="button">Actualizar</button></div>
 <div class="lb-mesa estante" id="estante" hidden role="dialog" aria-modal="true" aria-label="La estantería: elegí tu libro"></div>
-<div class="lb-mesa duo-app" id="duo-app" hidden>
-  <div class="duo-hoja"><span class="lb-cap">el pacto de los dos</span><h1>Este libro se está escribiendo</h1>
-  <p>Acá vas a llevar los gastos compartidos con otra persona: quién pagó, cuánto le toca a cada uno y cómo quedan a mano. Llega en la próxima versión.</p>
-  <p class="duo-nota">Sus datos van aparte: nada de El Libro del Ahorro entra acá.</p>
-  <button class="lb-btn" type="button" data-estante>Volver a la estantería</button></div>
-</div>
 <div class="lb-mesa" id="libro" hidden role="dialog" aria-modal="true" aria-label="El Libro del Ahorro"></div>
 <div class="indice" id="indice" hidden role="dialog" aria-modal="true" aria-labelledby="ix-t"><div class="indice-pag" id="indice-box"></div></div>
 <div class="lb-hojas" id="lb-hojas" hidden role="dialog" aria-modal="true" aria-label="Prólogo del Libro del Ahorro"></div>
@@ -85,6 +79,7 @@ document.documentElement.setAttribute('data-theme','dark');
     <div id="inv-pacto" hidden></div>
     <!-- PLAN -->
     <section id="p-resumen" role="tabpanel" class="tone-sky stack">
+      <div id="duo-hoy"></div>
       <div id="sem-hoy"></div>
       <div id="pasar-aviso"></div>
       <div id="repaso-aviso"></div>
@@ -140,6 +135,7 @@ document.documentElement.setAttribute('data-theme','dark');
       <div class="panel-head"><h2 class="ph-t">Gastos fijos</h2><p class="ph-s">Lo que pagás todos los meses. Lo descuento antes de calcular cuánto podés gastar.</p></div>
       <div id="fijos-sum"></div>
       <div id="fijos-balance"></div>
+      <div class="card stack" id="cuentas-card" hidden></div>
       <div id="fijos-out" class="stack"></div>
       <details class="card fold" id="fijo-form-card"><summary><span class="fold-t" id="fijo-form-t">+ Agregar un gasto fijo</span><span class="fold-s" id="fijo-form-s">alquiler, luz, internet…</span></summary><div class="stack fold-b">
         <div class="field" id="fijo-sug-box"><span class="lab">Ideas</span><div class="sugs" id="fijo-sug"></div></div>
@@ -478,11 +474,12 @@ document.documentElement.setAttribute('data-theme','dark');
         <div class="seg" role="group" aria-label="Cómo llevás tus gastos"><button type="button" data-anotar="0">Con lo que tengo</button><button type="button" data-anotar="1">Anoto cada gasto</button></div>
       </div>
       <div class="card stack" id="aj-pareja">
-        <div class="sec"><h2>¿Llevás la plata solo o en pareja?</h2><p class="note">En pareja: el sueldo de los dos lado a lado y los fijos repartidos según lo que cobra cada uno.</p></div>
+        <div class="sec"><h2>En pareja</h2><p class="note">El sueldo de los dos lado a lado, los fijos repartidos y las cuentas entre ustedes.</p></div>
         <div class="seg" role="group" aria-label="Solo o en pareja"><button type="button" data-pareja="0">Solo</button><button type="button" data-pareja="1">En pareja</button></div>
         <div class="stack" id="pj-datos" hidden>
           <div class="field"><label for="pj-nombre" class="sub-l">¿Cómo se llama tu pareja?</label><input id="pj-nombre" type="text" maxlength="30" autocomplete="off" placeholder="Su nombre"></div>
           <div class="field"><label for="pj-cobro" class="sub-l">¿Qué día cobra?</label><div class="pj-cobro"><select id="pj-cobro"><option value="habil5">El 5.º día hábil</option><option value="ultimoHabil">El último día hábil</option><option value="fijo">Un día fijo del mes</option></select><input id="pj-dia" type="number" inputmode="numeric" min="1" max="31" step="1" aria-label="Día del mes" hidden></div></div>
+          <div class="field"><span class="sub-l" id="pj-pacto-l">El ahorro del pacto</span><div class="seg" role="group" aria-labelledby="pj-pacto-l"><button type="button" data-pjpacto="juntos">Juntos: una sola meta</button><button type="button" data-pjpacto="dividido">Dividido: cada uno su parte</button></div></div>
           <p class="note">Su sueldo se completa con su recibo, en Sueldo.</p>
         </div>
         <div id="pj-borrar-box" hidden><button class="linklike" type="button" id="pj-borrar"></button></div>

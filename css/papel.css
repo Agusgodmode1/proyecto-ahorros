@@ -1942,7 +1942,6 @@ html.fl-escribe .flechas,html.hoja .flechas,html.voz-abierta:not(.lb-abierto) .f
   transform-origin:50% 100%;animation:es-respira 7s ease-in-out infinite}
 .es-solo{--libro-color:#16307F;--libro-sombra:#0A1440;--libro-brillo:#EED596}
 .es-duo{--libro-color:#A8581C;--libro-sombra:#4A2208;--libro-brillo:#FFDFA0;animation-duration:8.5s;animation-delay:-2s}
-.es-negocio{--libro-color:#2C5A4A;--libro-sombra:#14302A;--libro-brillo:#B9C9BF;animation-duration:10s;animation-delay:-5s;filter:saturate(.55) brightness(.8)}
 .es-lomo:focus-visible{outline:2px solid var(--tapa-oro);outline-offset:4px}
 .es-emb{width:34px;height:34px;flex:none}.es-emb svg{width:100%;height:100%;display:block}
 .es-banda{flex:none;width:100%;height:5px;background:linear-gradient(180deg,#F3D98F,#B98632);opacity:.9}
@@ -1969,4 +1968,28 @@ html[data-libro="duo"] .lb-bordado-w{filter:sepia(.5) saturate(1.4)}
 .duo-hoja{max-width:420px;display:grid;gap:var(--e3);padding:var(--e5);border-radius:14px;background:var(--surface);border:1px solid var(--line);color:var(--ink)}
 .duo-hoja h1{margin:0;font:600 26px/1.15 var(--f-libro);color:var(--oro-t)}
 .duo-hoja p{margin:0;line-height:1.5}.duo-hoja .duo-nota{color:var(--muted);font-size:14px}
+
+/* ---------- 2.61: El Pacto de los Dos ---------- */
+/* El libro 1 es para uno solo: la tarjeta «En pareja» se ve solo si ya la venías usando. En el libro 2 siempre es de a dos. */
+html[data-libro="solo"]:not(.modo-pareja) #aj-pareja{display:none}
+html[data-libro="duo"] #aj-pareja [data-pareja],html[data-libro="duo"] #pj-borrar-box{display:none}
+html[data-libro="duo"] #aj-pareja .seg:has([data-pareja]){display:none}
+/* Hoy: los dos (reusa la doble columna de Sueldo, sin tocar) */
+.v2 .duo-hoy{display:grid;gap:var(--e2)}
+.v2 .duo-t{margin:0;font:600 var(--t3)/1.2 var(--f-libro);color:var(--ink)}
+.v2 .duo-hoy .duo-c{cursor:default}
+.v2 .duo-c .duo-g{color:var(--oro-t)}
+.v2 .duo-j .plata{color:var(--azul)}.v2 .duo-j .neg,.v2 .cu-bal .neg{color:var(--mal)}
+/* Fijos: las cuentas entre los dos */
+.v2 .cu-bal{margin:0;font:600 20px/1.25 var(--f-libro);color:var(--ink)}
+.v2 .cu-bal .plata{color:var(--azul)}
+.v2 .cu-form .seg{flex-wrap:wrap}.v2 .cu-form .seg button{flex:1 1 auto;min-height:44px}
+.v2 .cu-prev{min-height:1.4em;margin:0}
+.v2 .cu-lista{list-style:none;margin:0;padding:0}
+.v2 .cu-li{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:var(--e2);padding:var(--e2) 0;border-top:1px solid var(--line)}
+.v2 .cu-f{font-size:13px;color:var(--muted);white-space:nowrap}
+.v2 .cu-n{min-width:0;overflow-wrap:anywhere}.v2 .cu-n small{display:block;font-size:13px;color:var(--muted)}
+.v2 .cu-li b{font-variant-numeric:tabular-nums;white-space:nowrap}
+.v2 .cu-li .btn{min-height:44px;padding:0 6px}
+.v2 .cu-saldo .cu-n{color:var(--oro-t)}
 

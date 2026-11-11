@@ -249,7 +249,7 @@ test('v27: quien venía de antes migra con la pareja vacía y todo lo demás igu
   var antes=ejemplo('2026-10-27');antes.v=26;delete antes.pareja;
   var s=migrar(antes);
   assert.equal(s.v,VERSION_ESTADO);
-  assert.deepEqual(s.pareja,{activa:false,nombre:'',perfil:null,sueldo:null,recibos:[],horas:[],plantillasRecibo:{},recibo:{}});
+  assert.deepEqual(s.pareja,{activa:false,nombre:'',perfil:null,sueldo:null,recibos:[],horas:[],plantillasRecibo:{},recibo:{},pacto:'juntos',cuentas:[]});
   ['sueldo','recibos','horas','fijos','grupos','gastos'].forEach(function(k){assert.deepEqual(s[k],antes[k],k+' no cambia')});
   ['monto','ahorro','inicio','cobro'].forEach(function(k){assert.equal(s.plan[k],antes.plan[k],'plan.'+k+' no cambia')});
   /* y si ya tenía pareja, se conserva */

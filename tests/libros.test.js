@@ -4,8 +4,8 @@ import assert from 'node:assert/strict';
 import {LIBROS,libroValido,claves,respaldoCompleto,parteDelRespaldo} from '../js/logica/libros.js';
 import {defaults,leerRespaldo,armarRespaldo,usarLibro,migrar,VERSION_ESTADO} from '../js/estado.js';
 
-test('hay tres libros: el de siempre, el de los dos y uno bloqueado que no se abre', function(){
-  assert.deepEqual(LIBROS.map(function(l){return l.id}),['solo','duo','negocio']);
+test('hay dos libros: el de siempre y el de los dos', function(){
+  assert.deepEqual(LIBROS.map(function(l){return l.id}),['solo','duo']);
   assert.equal(libroValido('duo'),'duo');assert.equal(libroValido('negocio'),'solo');assert.equal(libroValido('cualquiera'),'solo');assert.equal(libroValido(null),'solo');
 });
 test('cada libro guarda en su lugar y el de siempre no se movió', function(){

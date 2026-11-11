@@ -9,7 +9,8 @@ import {num} from './util.js';
 export var GRUPO='g-pareja';
 /* lo que cambia de una persona a la otra («recibo» es el formulario de comparar a mano) */
 export var CLAVES=['perfil','sueldo','recibos','horas','plantillasRecibo','recibo'];
-export function parejaVacia(){return {activa:false,nombre:'',perfil:null,sueldo:null,recibos:[],horas:[],plantillasRecibo:{},recibo:{}}}
+/* (2.61) pacto: 'juntos' (una meta) | 'dividido' (cada uno guarda su parte); cuentas: los gastos compartidos (logica/cuentas.js) */
+export function parejaVacia(){return {activa:false,nombre:'',perfil:null,sueldo:null,recibos:[],horas:[],plantillasRecibo:{},recibo:{},pacto:'juntos',cuentas:[]}}
 export function hayPareja(state){return !!(state&&state.pareja&&state.pareja.activa&&state.pareja.perfil)}
 export function nombrePareja(state){return String((state.pareja&&state.pareja.nombre)||'').trim()||'Tu pareja'}
 

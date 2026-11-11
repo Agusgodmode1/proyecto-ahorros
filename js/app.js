@@ -3,7 +3,8 @@ import {curWeek} from './logica/plan.js';
 import {charNoPermitido,limpiarNumero} from './logica/util.js';
 import {elegirLibro,ultimoLibro,recordarLibro,directo,setDirecto,pedirEstante,estantePedido} from './ui/estante.js';
 import {libroValido,respaldoCompleto} from './logica/libros.js';
-import {usarLibro,leerLibro} from './estado.js';
+import {usarLibro,leerLibro,libroEnUso} from './estado.js';
+import {renderDuoHoy,renderCuentas,initCuentas} from './ui/cuentas.js';
 import {migrar,cargar,guardar,pedirPersistencia,defaults,ejemplo,necesitaMigrar,guardarCopia,resumenDatos,borrarTodo} from './estado.js';
 import {ctx,$,today,planNow,anota,ICON,discreto,setDiscreto,toast,toastAccion,money} from './ui/comun.js';
 import {deshacerAjustePacto} from './logica/pacto.js';
@@ -99,6 +100,7 @@ function renderAll(){
   /* (2.59) en pareja: el grupo de Fijos y lo que cobra cada uno se mantienen al día solos */
   document.documentElement.classList.toggle('modo-pareja',hayPareja(ctx.state));
   if(sincronizarGrupo(ctx.state,today()))persist();marcarPareja();
+  if(ctx.tab==='resumen')renderDuoHoy();if(ctx.tab==='fijos')renderCuentas();
   var pc=planNow();
   if(/^w\d+$/.test(ctx.tab)&&Number(ctx.tab.slice(1))>=pc.weeks.length)ctx.tab='resumen';
   try{localStorage.setItem(TK,ctx.tab)}catch(e){}
@@ -352,6 +354,7 @@ function marcarSonido(){
 }
 function marcarPareja(){
   var st=ctx.state,on=hayPareja(st),p=st.pareja||{},hayDatos=!!p.perfil;
+  document.querySelectorAll('[data-pjpacto]').forEach(function(x){x.setAttribute('aria-pressed',String(x.getAttribute('data-pjpacto')===(p.pacto==='dividido'?'dividido':'juntos')))});
   document.querySelectorAll('[data-pareja]').forEach(function(x){x.setAttribute('aria-pressed',String((x.getAttribute('data-pareja')==='1')===on))});
   var box=$('#pj-datos');if(!box)return;box.hidden=!on;
   $('#pj-borrar-box').hidden=!hayDatos;if(hayDatos)$('#pj-borrar').textContent='Borrar los datos de '+nombrePareja(st);
@@ -369,6 +372,8 @@ function marcarDiscreto(){
 /* ---------- Arranque ---------- */
 function arrancar(st,tab){
   ctx.state=st;aplicarFeriados();fijarUltimo();
+  /* (2.61) El Pacto de los Dos es siempre en pareja */
+  if(libroEnUso()==='duo'&&!hayPareja(st)){activarPareja(st,undefined,defaults());persist()}
   if(!st.meta.creado){st.meta.creado=today();persist()}
   /* (2.26) sin pacto, el «hasta el cobro» de Fijos y la Tarjeta se mantiene al día */
   if(alDiaSinPacto(st,today()))persist();
@@ -376,7 +381,7 @@ function arrancar(st,tab){
   if(tab)ctx.tab=tab;
   initNotas();
   guiaInit();initGlobal();initPlan();initSemanas();initSueldo();initTarjeta();initFijos();initLogros();initAjustes(reemplazar,juntarDatos);initGuardado();initVoz();initFeriados();initCategorias();initRecibos();initAjustesPin();initPostal();
-  marcarDiscreto();marcarAnotar();
+  marcarDiscreto();marcarAnotar();initCuentas();
   ctx.booted=true;
   $('#app').hidden=false;
   syncInputs();renderAll();precargarTarjeta();
@@ -428,12 +433,6 @@ function initEstante(){
   var libro=porEstante?await elegirLibro():libroValido(ultimoLibro());
   recordarLibro(libro);usarLibro(libro);document.documentElement.setAttribute('data-libro',libro);
   initEstante();
-  if(libro==='duo'){
-    /* El Pacto de los Dos todavía no tiene páginas: su tapa y un aviso. Sus datos ya van aparte. */
-    if(pinActivo())await pedirPin();
-    abrirLibro({modo:'tapa',sinCierre:true,estado:defaults(),listo:function(){$('#duo-app').hidden=false}});
-    abrirSola();return;
-  }
   var d=await cargar();
   /* Antes de pasar los datos a la forma nueva, se guarda una copia tal cual estaban */
   if(necesitaMigrar(d))await guardarCopia(d,'antes de actualizar la app');

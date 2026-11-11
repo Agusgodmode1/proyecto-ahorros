@@ -238,6 +238,14 @@ export function descuentosDe(state,r,hab,liq){
   if(otros)L.push({k:'otros',nombre:'Otros',que:'sindicato, préstamos u otros',monto:otros,est:false});
   if(liq>0){
     var T=hab-liq,S=L.reduce(function(x,d){return x+d.monto},0),dif=T-S;
+    /* (2.58.5) Los «otros» de un recibo leído ya traen adentro el FRL (junto con el sindicato o un préstamo):
+       si lo que sobra es justo el FRL calculado, se saca de «Otros» para no contarlo dos veces. */
+    var fr=L[2],ot=L.filter(function(d){return d.k==='otros'})[0];
+    if(ot&&fr.est&&dif<0&&ot.monto>fr.monto&&Math.abs(dif+fr.monto)<=Math.max(5,fr.monto*0.2)){ot.monto-=fr.monto;fr.est=false;dif+=fr.monto}
+    /* (2.58.5) Los «otros» de un recibo leído ya traen adentro el FRL (junto con el sindicato o un préstamo):
+       si lo que sobra es justo el FRL calculado, se saca de «Otros» para no contarlo dos veces. */
+    var fr=L[2],ot=L.filter(function(d){return d.k==='otros'})[0];
+    if(ot&&fr.est&&dif<0&&ot.monto>fr.monto&&Math.abs(dif+fr.monto)<=Math.max(5,fr.monto*0.2)){ot.monto-=fr.monto;fr.est=false;dif+=fr.monto}
     if(Math.abs(dif)>50){
       var aj=['irpf','fonasa'].map(function(k){return L.filter(function(d){return d.k===k})[0]}).filter(function(d){return d.est&&d.monto+dif>=0})[0];
       if(aj)aj.monto+=dif;

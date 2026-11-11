@@ -145,7 +145,8 @@ function guardar(enPerfil){
     var nomOk=num(c.nominal)>=1000&&(!(num(c.haberes)>0)||num(c.nominal)>=num(c.haberes)*0.3);
     if(nomOk)st.sueldo.nominal=c.nominal;
     if(nomOk&&H&&H.valorHora&&S.resp.mult){var bas=num(c.nominal)||0;h.multSem=S.resp.mult;if(bas>0)h.divisor=Math.round(bas*S.resp.mult/H.valorHora);h.activo=true}
-    if(H){h.umbral=num(h.jornada||540)+num(S.resp.minutos);h.redondeo=S.resp.redondeo;if(S.resp.feriado)h.multFeriado=num(S.resp.feriado);else delete h.multFeriado}
+    /* (2.58.5) sin horario la jornada es 0 (no 540): si no, las extras quedaban «desde 540 minutos» */
+    if(H){h.umbral=(h.jornada===undefined||h.jornada===null||h.jornada===''?540:num(h.jornada))+num(S.resp.minutos);h.redondeo=S.resp.redondeo;if(S.resp.feriado)h.multFeriado=num(S.resp.feriado);else delete h.multFeriado}
     h.preguntado=true;
     st.sueldo.tarifaManual=null;
     /* (2.55) lo demás: hijos o cónyuge (por FONASA) y los descuentos fijos de todos los meses */

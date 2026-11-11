@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {parseMonto,montosDe,renglones,leerRecibo,aprenderPlantilla,liqReal,compararRecibo,sensibilidadDolar,reciboDe,ultimoRecibo,estadoDelMes,veredicto} from '../js/logica/recibos.js';
+import {parseMonto,montosDe,renglones,leerRecibo,aprenderPlantilla,liqReal,compararRecibo,sensibilidadDolar,reciboDe,ultimoRecibo,estadoDelMes,veredicto,descuentosDe} from '../js/logica/recibos.js';
 import {mesTrabajo} from '../js/logica/sueldo.js';
 import {ejemplo,defaults,migrar,VERSION_ESTADO} from '../js/estado.js';
 import {liq} from '../js/logica/sueldo.js';
@@ -139,4 +139,17 @@ test('(2.51) veredicto: compara el recibo con las horas de SU mes y dice bien, d
   s.recibos=[{id:'a',mes:'2026-08',liquido:1},{id:'b',mes:'2026-09',liquido:2},{id:'c',mes:'2026-07',liquido:3}];
   assert.equal(ultimoRecibo(s).id,'b');
   assert.equal(veredicto(s,null),null);
+});
+
+/* (2.58.5) Recibo inventado con sindicato y préstamo: haberes 69.000, líquido 48.496 → descuentos 20.504.
+   BPS 10.350 + FONASA 4.140 + IRPF 2.345 + otros 3.669 (FRL 69 + sindicato 600 + préstamo 3.000) = 20.504.
+   El FRL (0,1 % de 69.000 = 69) ya viene dentro de «otros»: no se cuenta dos veces. */
+test('Así te pagan: los descuentos suman lo ganado menos lo cobrado aunque el FRL venga dentro de «otros»', function(){
+  var D=descuentosDe(defaults('2026-11-12'),{moneda:'UYU',nominal:60000,haberes:69000,aportes:10350,fonasa:4140,irpf:2345,otros:3669,liquido:48496},69000,48496);
+  var m={};D.forEach(function(d){m[d.k]=d.monto});
+  assert.deepEqual(m,{bps:10350,fonasa:4140,frl:69,irpf:2345,otros:3600});
+  assert.equal(D.reduce(function(a,d){return a+d.monto},0),69000-48496);
+  /* solo el FRL en «otros» (40.000 → 40): sigue siendo el FRL y no aparece «Otros» */
+  var D2=descuentosDe(defaults('2026-11-12'),{moneda:'UYU',nominal:40000,haberes:40000,aportes:6000,fonasa:1800,otros:40,liquido:32160},40000,32160);
+  assert.deepEqual(D2.map(function(d){return d.k+':'+d.monto}),['bps:6000','fonasa:1800','frl:40','irpf:0']);
 });

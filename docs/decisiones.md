@@ -14,6 +14,7 @@ Una línea por decisión. Lo nuevo va arriba. El detalle técnico de cada una es
 - **Recibo:** con un solo recibo alcanza para completar el sueldo; el PDF nunca se guarda.
 
 ## Diseño
+- **Estantería mágica (2.62):** biblioteca nocturna realista con dos libros que brillan (zafiro y ámbar); al tocar uno sale del estante y muestra su tapa. Estética «cinematográfica»: colores vivos, brillos, movimiento suave, cámara que se acerca. Detalle en `direccion-visual.md`.
 - **Papel «Noche dorada»:** un solo tema oscuro; no hay claro ni selector de apariencia.
 - **Menos texto:** máximo 2 líneas por bloque, el resto en desplegables.
 

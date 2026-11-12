@@ -5,7 +5,7 @@ Orden sugerido. Lo marcado con (?) está por confirmar con Agus. Cuando se termi
 ## Próximo
 1. **Optimizar cada herramienta, una por una** (pedido de Agus): Sueldo, Horas extra, Tarjeta, Fijos, Logros, Lo guardado. Para cada una: qué sobra, qué falta, qué se puede explicar en menos palabras.
 2. **Adaptar la app para los padres de Agus** (ingreso variable, por pedidos): semanas del mes, los fijos se cubren con lo vendido y lo que sobra es ganancia. (?) Decidir si va como un modo del libro 1 o como libro aparte.
-3. **Toque mágico en las animaciones** que ya existen (tapa, sello, pase de hoja, camino al cobro), sin romper rendimiento ni «reducir movimiento».
+3. **Llevar la misma dirección visual al resto** (tapa, prólogo, sello, pase de hoja, camino al cobro, Hoy), siguiendo `direccion-visual.md`, sin romper rendimiento ni «reducir movimiento».
 
 ## Pareja (El Pacto de los Dos)
 - Que las cuentas entre los dos entren en el plan (hoy no bajan «Hoy podés gastar»).
@@ -22,4 +22,5 @@ Orden sugerido. Lo marcado con (?) está por confirmar con Agus. Cuando se termi
 - El campo del sueldo nominal no se tapa en modo discreto.
 
 ## Hecho
+- 2.62.0: estantería mágica (biblioteca de noche, libros con polvo de luz, el libro sale y muestra su tapa).
 - 2.61.0: El Pacto de los Dos como libro 2, con «Los dos» en Hoy y cuentas entre los dos.

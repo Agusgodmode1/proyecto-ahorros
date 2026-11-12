@@ -7,6 +7,7 @@ PWA para iPhone de finanzas personales de Agus (Uruguay), llamada «El Libro del
 - `docs/decisiones.md`: lo que ya se decidió y lo que se descartó. No lo vuelvas a discutir.
 - `docs/roadmap.md`: lo que sigue, en orden. Trabajá lo de arriba salvo que Agus pida otra cosa.
 - `docs/referencia-tecnica.md`: el detalle de cada pantalla, cuenta y versión (el CLAUDE.md largo de antes). **No lo leas entero**: buscá la sección con `grep -n` y leé solo esa.
+- `docs/fabrica/`: cómo pasamos de idea a cambio (Pensador → Revisor → Ejecutor). Specs en `docs/specs/`, planes en `docs/planes/`. Si te pasan una spec, usá el skill `escribir-plan`.
 - `docs/prompt-maestro.md`: plantilla para pedidos grandes. Si Agus manda un audio o un texto desordenado, ordenalo con esa plantilla antes de programar.
 
 ## Stack (no cambiar)

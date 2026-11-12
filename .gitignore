@@ -1,7 +1,9 @@
 PROMPT-CLAUDE-CODE.md
 proyecto-ahorros.html
 node_modules/
-.claude/
+.claude/*
+!.claude/skills/
+!.claude/agents/
 *.log
 CONTEXTO-PROYECTO.md
 PROMPT-ETAPA-2.md

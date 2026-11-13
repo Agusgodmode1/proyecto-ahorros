@@ -183,6 +183,7 @@ const COLORES = ['#5b1d1d', '#1f3b2c', '#1c2a4a', '#4a3020', '#6b5320', '#3e2440
    Devuelve { seguir(), pausar(), elegir(id, alTerminar), perder(), liberar() }; arranca en pausa, con el primer cuadro ya dibujado. */
 export async function crearEscena(op) {
   rnd = azar(11); TEXS = []; ANISO = 4; // siempre la misma biblioteca, también al recrearla
+  const misTex = TEXS; // las texturas de ESTA escena (si se crea otra, tiene su propia lista)
   const ancho = () => op.capa.clientWidth || innerWidth, alto = () => op.capa.clientHeight || innerHeight;
   const sueltos = []; // lo que hay que liberar aparte de la escena
   let ren = null, escena = null, comp = null, libre = false, corre = false;
@@ -199,12 +200,12 @@ export async function crearEscena(op) {
         if (o.geometry) o.geometry.dispose();
         for (const m of [].concat(o.material || [])) m.dispose();
       });
-      for (const t of TEXS) t.dispose();
+      for (const t of misTex) t.dispose();
       for (const s of sueltos) s.dispose();
       if (comp) comp.dispose();
       ren.dispose(); if (!ren.getContext().isContextLost()) ren.forceContextLoss();
     } catch (e) { /* ya no importa: se va igual */ }
-    ren.domElement.remove(); TEXS = [];
+    ren.domElement.remove(); misTex.length = 0;
   }
   let encuadre = () => {};
   const espera = () => new Promise((ok, mal) => requestAnimationFrame(() => {

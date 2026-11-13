@@ -114,7 +114,13 @@ export function elegirLibro(){
   return new Promise(function(ok){
     var elegido=false,hecho=false,capa=null,control;
     function vis(){control.visibilidad()}
-    function quitarCapa(){el.classList.remove('es-con3d');if(capa){var c=capa;capa=null;c.remove()}}
+    function quitarCapa(){
+      /* quien estaba con el teclado sobre un libro de la 3D sigue sobre el mismo libro en la 2.62 */
+      var act=document.activeElement,con=null;
+      try{if(capa&&act&&capa.contains(act)&&act.matches('[data-libro3d]:focus-visible'))con=act.getAttribute('data-libro3d')}catch(e){}
+      el.classList.remove('es-con3d');if(capa){var c=capa;capa=null;c.remove()}
+      var f=con&&el.querySelector('[data-libro="'+con+'"]');if(f)try{f.focus({preventScroll:true})}catch(e){}
+    }
     /* La única puerta para entrar a un libro, venga de la 3D o de la 2.62: abre una sola vez y deja todo limpio */
     function fin(id){
       if(hecho)return;hecho=true;

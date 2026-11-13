@@ -1,7 +1,10 @@
 /* La estantería (2.62): una biblioteca de noche. Entre libros comunes hay dos libros mágicos que brillan; tocar uno
    lo saca del estante, lo gira y muestra su tapa. Solo transform y opacity; con «reducir movimiento», solo fundidos.
+   (2.63) Encima entra con un fundido la estantería 3D (ui/escena3d.js, Three.js). La 2.62 se ve primero y queda de
+   respaldo: cuándo va cada una lo decide logica/estante3d.js. Las dos entran al libro por la misma puerta: fin().
    Qué libros hay: logica/libros.js. */
 import {LIBROS} from '../logica/libros.js';
+import {crearControl,forzado} from '../logica/estante3d.js';
 
 var UL='pa-libro',DI='pa-directo',VER='pa-estante';
 function ls(k){try{return localStorage.getItem(k)}catch(e){return null}}
@@ -70,6 +73,30 @@ function biblioteca(ultimo){
     +'<div class="es-e es-e3"><ol class="es-fila">'+comunes(16,57)+'</ol></div><div class="es-tabla"></div>';
 }
 
+/* ---------- (2.63) la estantería 3D ---------- */
+/* Three.js necesita WebGL 2. Se prueba con un lienzo aparte, que se suelta enseguida. */
+function hayWebgl(){
+  try{
+    var g=document.createElement('canvas').getContext('webgl2');if(!g)return false;
+    var x=g.getExtension('WEBGL_lose_context');if(x)x.loseContext();
+    return true;
+  }catch(e){return false}
+}
+var sesion={
+  leer:function(k){try{return sessionStorage.getItem(k)==='1'}catch(e){return false}},
+  poner:function(k){try{sessionStorage.setItem(k,'1')}catch(e){}}
+};
+/* La capa de la 3D: el lienzo va adentro. La pista, los lemas y un botón invisible por libro (44 px o más) van
+   encima; la escena los acomoda sobre cada libro. Hasta que termina de aparecer no recibe toques. */
+function capa3d(el){
+  var c=document.createElement('div'),ls=LIBROS.filter(function(l){return !l.bloqueado}).slice(0,2);
+  c.className='es-3d';c.setAttribute('aria-hidden','true');
+  c.innerHTML='<p class="e3-pista">Tocá un libro</p>'
+    +ls.map(function(l){return '<span class="e3-etq">'+l.lema+'</span>'}).join('')
+    +ls.map(function(l){return '<button type="button" class="e3-libro" tabindex="-1" data-libro3d="'+l.id+'" aria-label="Abrir '+l.titulo+', '+l.voz+'"></button>'}).join('');
+  el.appendChild(c);return c;
+}
+
 /* Muestra la estantería y espera a que se elija un libro. Devuelve su id. */
 export function elegirLibro(){
   var el=document.getElementById('estante'),ultimo=ultimoLibro();
@@ -85,8 +112,59 @@ export function elegirLibro(){
   }
   var f=el.querySelector('.es-ultimo .es-lomo');if(f)try{f.focus({preventScroll:true})}catch(e){}
   return new Promise(function(ok){
-    var elegido=false;
+    var elegido=false,hecho=false,capa=null,control;
+    function vis(){control.visibilidad()}
+    function quitarCapa(){el.classList.remove('es-con3d');if(capa){var c=capa;capa=null;c.remove()}}
+    /* La única puerta para entrar a un libro, venga de la 3D o de la 2.62: abre una sola vez y deja todo limpio */
+    function fin(id){
+      if(hecho)return;hecho=true;
+      document.removeEventListener('visibilitychange',vis);
+      control.cerrar();
+      try{el.getAnimations().forEach(function(a){a.cancel()})}catch(e){}
+      el.hidden=true;el.innerHTML='';el.onclick=null;capa=null;el.classList.remove('es-con3d');ok(id);
+    }
+    control=crearControl({
+      forzar:forzado(location.search),
+      quieto:quieto,webgl:hayWebgl,
+      visible:function(){return document.visibilityState!=='hidden'},
+      ahora:function(){return performance.now()},
+      temporizador:function(fn,ms){var t=setTimeout(fn,ms);return function(){clearTimeout(t)}},
+      sesion:sesion,
+      crear:function(){
+        quitarCapa();
+        var mia=capa=capa3d(el);
+        return import('./escena3d.js').then(function(m){
+          return m.crearEscena({capa:mia,pista:mia.querySelector('.e3-pista'),
+            etiquetas:[].slice.call(mia.querySelectorAll('.e3-etq')),botones:[].slice.call(mia.querySelectorAll('.e3-libro')),
+            cancelado:function(){return hecho||capa!==mia},
+            alPerder:function(){if(capa===mia)control.perdida()},
+            alError:function(e){if(capa===mia)control.error(e)}});
+        });
+      },
+      /* la 3D entra con un fundido por encima de la 2.62; mientras dura, los toques siguen siendo de la 2.62 */
+      fundir:function(listo){
+        var mia=capa;
+        mia.animate([{opacity:0},{opacity:1}],{duration:900,easing:'ease-in-out',fill:'forwards'}).onfinish=function(){if(capa===mia)listo()};
+      },
+      mostrada:function(){
+        /* quien venía con el teclado sobre un libro de la 2.62 sigue sobre el mismo libro en la 3D */
+        var act=document.activeElement,con=null;
+        try{if(act&&el.contains(act)&&act.matches('[data-libro]:focus-visible'))con=act.getAttribute('data-libro')}catch(e){}
+        capa.style.opacity='1';capa.classList.add('e3-lista');capa.removeAttribute('aria-hidden');
+        [].forEach.call(capa.querySelectorAll('.e3-libro'),function(b){b.removeAttribute('tabindex')});
+        el.classList.add('es-con3d');
+        var f=con&&capa.querySelector('[data-libro3d="'+con+'"]');if(f)try{f.focus({preventScroll:true})}catch(e){}
+      },
+      quitar:quitarCapa,
+      salir:function(id){el.animate([{opacity:1},{opacity:0}],{duration:420,fill:'both'}).onfinish=function(){fin(id)}},
+      entrar:fin,
+      /* queda anotado en la consola por qué se ve la 2.62 (para revisar en Safari o en la computadora) */
+      aviso:function(motivo,detalle){try{console.info('Estantería 3D → queda la 2.62: '+motivo,detalle||'')}catch(e){}}
+    });
+    document.addEventListener('visibilitychange',vis);
     el.onclick=function(e){
+      var b3=e.target.closest('[data-libro3d]');
+      if(b3){control.tocar3d(b3.getAttribute('data-libro3d'));return}
       var b=e.target.closest('[data-libro]');if(!b||elegido)return;
       var l=LIBROS.filter(function(x){return x.id===b.getAttribute('data-libro')})[0];
       if(l.bloqueado){
@@ -94,14 +172,14 @@ export function elegirLibro(){
         if(!quieto())b.animate([{transform:'translateX(0)'},{transform:'translateX(-5px) rotate(-1.5deg)'},{transform:'translateX(5px) rotate(1.5deg)'},{transform:'translateX(-3px)'},{transform:'translateX(0)'}],{duration:380});
         return;
       }
+      /* (regla 3) si la 3D todavía no terminó de aparecer, el toque es de la 2.62 y la 3D se cancela */
+      if(!control.tocar262())return;
       elegido=true;
-      var fin=function(){
-        try{el.getAnimations().forEach(function(a){a.cancel()})}catch(e){}
-        el.hidden=true;el.innerHTML='';el.onclick=null;ok(l.id);
-      };
-      if(quieto()){el.animate([{opacity:1},{opacity:0}],{duration:260}).onfinish=fin;return}
-      sacar(el,b,l,fin);
+      var entrar=function(){fin(l.id)};
+      if(quieto()){el.animate([{opacity:1},{opacity:0}],{duration:260}).onfinish=entrar;return}
+      sacar(el,b,l,entrar);
     };
+    control.iniciar();
   });
 }
 

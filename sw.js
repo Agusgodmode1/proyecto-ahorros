@@ -54,6 +54,8 @@ var ARCHIVOS=[
   'js/logica/cuentas.js',
   'js/ui/cuentas.js',
   'js/ui/estante.js',
+  'js/ui/escena3d.js',
+  'js/logica/estante3d.js',
   'js/logica/saldo.js',
   'js/logica/planilla.js',
   'js/logica/horas-archivo.js',
@@ -110,7 +112,24 @@ var ARCHIVOS=[
   'vendor/fraunces-5.3.0/fraunces-latin-full-normal.woff2',
   'vendor/fraunces-5.3.0/fraunces-latin-full-italic.woff2',
   'vendor/nunito-5.3.0/nunito-latin-wght-normal.woff2',
-  'vendor/caveat-5.3.0/caveat-latin-wght-normal.woff2'
+  'vendor/caveat-5.3.0/caveat-latin-wght-normal.woff2',
+  /* La estantería 3D: Three.js y sus complementos (todo lo que importa js/ui/escena3d.js) */
+  'vendor/three-r187/addons/environments/RoomEnvironment.js',
+  'vendor/three-r187/addons/geometries/RoundedBoxGeometry.js',
+  'vendor/three-r187/addons/postprocessing/BokehPass.js',
+  'vendor/three-r187/addons/postprocessing/EffectComposer.js',
+  'vendor/three-r187/addons/postprocessing/MaskPass.js',
+  'vendor/three-r187/addons/postprocessing/OutputPass.js',
+  'vendor/three-r187/addons/postprocessing/Pass.js',
+  'vendor/three-r187/addons/postprocessing/RenderPass.js',
+  'vendor/three-r187/addons/postprocessing/ShaderPass.js',
+  'vendor/three-r187/addons/postprocessing/UnrealBloomPass.js',
+  'vendor/three-r187/addons/shaders/BokehShader.js',
+  'vendor/three-r187/addons/shaders/CopyShader.js',
+  'vendor/three-r187/addons/shaders/LuminosityHighPassShader.js',
+  'vendor/three-r187/addons/shaders/OutputShader.js',
+  'vendor/three-r187/three.core.js',
+  'vendor/three-r187/three.module.js'
 ];
 
 self.addEventListener('install',function(e){

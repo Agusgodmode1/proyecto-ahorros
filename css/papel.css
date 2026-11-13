@@ -2045,3 +2045,15 @@ html[data-libro="duo"] #aj-pareja .seg:has([data-pareja]){display:none}
 .v2 .cu-li .btn{min-height:44px;padding:0 6px}
 .v2 .cu-saldo .cu-n{color:var(--oro-t)}
 
+/* ---------- 2.63: la estantería 3D, por encima de la 2.62 ---------- */
+/* La capa entra con un fundido (solo opacity) y recién al terminar recibe toques. Los colores de la escena los pone
+   Three.js (ui/escena3d.js); lo de afuera (pista, lemas, foco) sale de las variables de :root. */
+.es-3d{position:absolute;inset:0;z-index:9;overflow:hidden;opacity:0;pointer-events:none}
+.es-3d.e3-lista{pointer-events:auto}
+.es-3d canvas{display:block;position:absolute;left:0;top:0}
+/* con la 3D ya mostrada, la 2.62 de abajo no gasta batería */
+.es-con3d>.es-fondo,.es-con3d>.es-escena,.es-con3d>.es-oscuro{display:none}
+.e3-pista{position:absolute;left:0;right:0;top:calc(18px + env(safe-area-inset-top));margin:0;padding:0 max(16px,env(safe-area-inset-right)) 0 max(16px,env(safe-area-inset-left));text-align:center;font:italic 500 15px/1.2 var(--f-libro);color:var(--tapa-oro);text-shadow:0 1px 6px rgba(0,0,0,.9);opacity:0;transition:opacity 1.2s ease;pointer-events:none}
+.e3-etq{position:absolute;left:0;top:0;font:italic 500 13px/1.2 var(--f-libro);color:var(--tapa-oro);text-shadow:0 1px 6px rgba(0,0,0,.9);white-space:nowrap;opacity:0;transition:opacity .8s ease;pointer-events:none}
+.e3-libro{all:unset;box-sizing:border-box;position:absolute;left:0;top:0;width:44px;height:44px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.e3-libro:focus-visible{outline:2px solid var(--tapa-oro);outline-offset:2px;border-radius:6px}

@@ -67,6 +67,8 @@
   .pts{display:inline-block;font-family:Fredoka;font-weight:600;font-size:12px;border-radius:7px;padding:1px 7px;margin-top:3px;color:#fff;background:var(--bad)}
   .pts.p20{background:var(--solo)} .pts.p10{background:var(--ok)} .pts.p5{background:var(--dup)}
   td.word.tap{cursor:pointer}
+  .why{display:block;font-size:11px;color:var(--muted);margin-top:2px;line-height:1.2}
+  .why.man{color:var(--grape)}
   .total{font-family:Fredoka;font-weight:700;font-size:18px}
   .rank{list-style:none;margin:0;padding:0}
   .rank li{display:flex;justify-content:space-between;align-items:center;padding:10px 4px;border-bottom:1px solid var(--line);font-size:17px}
@@ -90,12 +92,13 @@
       <summary>Reglas y puntaje</summary>
       <p>El anfitrión sortea una letra. Todos completan las 5 categorías con palabras que empiecen con esa letra. Quien completa todo puede cantar <b>¡BASTA!</b> y se cierra la ronda para todos.</p>
       <p><b>20</b> si fuiste el único que completó esa categoría · <b>10</b> palabra única · <b>5</b> si alguien puso la misma · <b>0</b> vacía o inválida.</p>
-      <p>Si no empieza con la letra, vale 0 sola. En la revisión el anfitrión puede tocar una palabra para anularla o devolverla.</p>
+      <p>El juego revisa cada palabra: el nombre tiene que ser un nombre, el color un color, la fruta una fruta, el país un país y la cosa una palabra del diccionario. Si repetís la misma palabra en dos categorías, cuenta una sola vez. Si el juego se equivoca, el anfitrión toca la palabra para aceptarla o anularla.</p>
     </details>
   </div>
 </div>
 
 <script src="peerjs.min.js"></script>
+<script src="palabras.js"></script>
 <script>
 (function(){
   "use strict";
@@ -153,17 +156,86 @@
   let peer = null;
 
   function validWord(word, letter){ const n = norm(word); return n.length > 0 && n[0] === norm(letter); }
+  // ---------- validación de palabras ----------
+  const P = window.TF_PALABRAS || null;
+  const SET = {};
+  if (P) for (const k in P) SET[k] = new Set(P[k].split("|"));
+  const BASICOS = new Set("rojo azul verde amarillo negro blanco gris marron celeste violeta rosado morado lila fucsia turquesa bordo beige dorado plateado magenta purpura granate".split(" "));
+  function formas(n){
+    const f = [n];
+    if (n.endsWith("ces")) f.push(n.slice(0,-3)+"z");
+    if (n.endsWith("es")) f.push(n.slice(0,-2));
+    if (n.endsWith("s")) f.push(n.slice(0,-1));
+    const b = n.endsWith("s") ? n.slice(0,-1) : n;
+    if (b.endsWith("a")) f.push(b.slice(0,-1)+"o");
+    return f;
+  }
+  function dist1(a,b){ // ¿a y b difieren en como mucho una letra?
+    if (a === b) return true;
+    if (Math.abs(a.length-b.length) > 1) return false;
+    let i=0, j=0, d=0;
+    while (i<a.length && j<b.length){
+      if (a[i]===b[j]){ i++; j++; continue; }
+      if (++d > 1) return false;
+      if (a.length > b.length) i++; else if (b.length > a.length) j++; else { i++; j++; }
+    }
+    return d + (a.length-i) + (b.length-j) <= 1;
+  }
+  function enLista(set, n, aproximado){
+    for (const f of formas(n)) if (set.has(f)) return true;
+    const sinArt = n.replace(/^(el|la|los|las|republica de|isla|islas) /,"");
+    if (sinArt !== n && set.has(sinArt)) return true;
+    // tolerancia a un error de tipeo, solo si la palabra no existe tal cual (así "perro" no pasa por "puerro")
+    if (aproximado && n.length >= 5 && !(SET.cosas && SET.cosas.has(n))){
+      for (const w of set) if (w[0] === n[0] && dist1(w, n)) return true;
+    }
+    return false;
+  }
+  const NOMBRE_CAT = ["un nombre","un color","una fruta","un país","una cosa"];
+  // Devuelve {ok, motivo}
+  function revisar(i, word, letter){
+    const n = norm(word);
+    if (!n) return { ok:false, motivo:"" };
+    if (n[0] !== norm(letter)) return { ok:false, motivo:"no empieza con "+letter };
+    if (!/^[a-zñ ]+$/.test(n) || n.replace(/ /g,"").length < 2) return { ok:false, motivo:"no es una palabra" };
+    if (!P) return { ok:true, motivo:"" };
+    const primera = n.split(" ")[0];
+    let ok = false;
+    if (i === 0) ok = SET.nombres.has(n) || SET.nombres.has(primera);
+    else if (i === 1) ok = enLista(SET.colores, n, true) || SET.colores.has(primera);
+    else if (i === 2) ok = enLista(SET.frutas, n, true);
+    else if (i === 3) ok = enLista(SET.paises, n, true);
+    else {
+      if (formas(n).some(f=>BASICOS.has(f))) return { ok:false, motivo:"es un color, no una cosa" };
+      if (enLista(SET.paises, n, false)) return { ok:false, motivo:"es un país, no una cosa" };
+      ok = enLista(SET.cosas, n, false) || enLista(SET.cosas, primera, false);
+      if (!ok) return { ok:false, motivo:"no está en el diccionario" };
+    }
+    return ok ? { ok:true, motivo:"" } : { ok:false, motivo:"no es "+NOMBRE_CAT[i] };
+  }
+
+  // override: { "clave|categoría": 1 aceptada por el anfitrión, 0 anulada }
   function scoreRound(game, plist){
-    const res = {}; const inv = game.invalid || {};
+    const res = {}; const ov = game.override || {};
     for (const p of plist){
       const w = Array.isArray(p.w) ? p.w : emptyW();
-      res[p.key] = { cells: CATS.map((_,i)=>({ word: clip(w[i],40), pts:0, ok:false, inval: !!inv[p.key+"|"+i] })), total:0 };
+      const usadas = new Set();
+      res[p.key] = { cells: CATS.map((_,i)=>{
+        const word = clip(w[i],40);
+        const auto = revisar(i, word, game.letter);
+        const id = p.key+"|"+i;
+        let ok = auto.ok, motivo = auto.motivo, manual = null;
+        if (ok && usadas.has(norm(word))){ ok = false; motivo = "la usaste en otra categoría"; }
+        if (id in ov && norm(word)){ manual = ov[id] ? "ok" : "no"; ok = !!ov[id]; motivo = ok ? "aceptada por el anfitrión" : "anulada por el anfitrión"; }
+        if (ok) usadas.add(norm(word));
+        return { word, pts:0, ok, motivo, manual };
+      }), total:0 };
     }
     CATS.forEach((_,i)=>{
-      const valid = plist.filter(p => { const c = res[p.key].cells[i]; return validWord(c.word, game.letter) && !c.inval; });
+      const valid = plist.filter(p => res[p.key].cells[i].ok);
       const counts = {};
       valid.forEach(p => { const n = norm(res[p.key].cells[i].word); counts[n] = (counts[n]||0)+1; });
-      valid.forEach(p => { const c = res[p.key].cells[i]; c.ok = true; c.pts = valid.length === 1 ? 20 : (counts[norm(c.word)] > 1 ? 5 : 10); });
+      valid.forEach(p => { const c = res[p.key].cells[i]; c.pts = valid.length === 1 ? 20 : (counts[norm(c.word)] > 1 ? 5 : 10); });
     });
     for (const k in res) res[k].total = res[k].cells.reduce((a,c)=>a+c.pts,0);
     return res;
@@ -219,14 +291,19 @@
     let pool = LETTERS.filter(l => !g.used.includes(l));
     if (!pool.length){ g.used = []; pool = LETTERS.slice(); }
     const L = pool[Math.floor(Math.random()*pool.length)];
-    g.round += 1; g.letter = L; g.used = [...g.used, L]; g.invalid = {}; g.bastaBy = ""; g.phase = "playing";
+    g.round += 1; g.letter = L; g.used = [...g.used, L]; g.override = {}; g.bastaBy = ""; g.phase = "playing";
     hostBroadcast();
   }
   function hostToggle(key, i){
     const g = H.game; if (g.phase !== "review") return;
-    const id = key+"|"+i; const inv = Object.assign({}, g.invalid);
-    if (inv[id]) delete inv[id]; else inv[id] = 1;
-    g.invalid = inv; hostBroadcast();
+    // tocar: invierte lo que dijo el juego; tocar otra vez: vuelve a lo automático
+    const id = key+"|"+i; const ov = Object.assign({}, g.override);
+    if (id in ov) delete ov[id];
+    else {
+      const p = H.players[key]; const w = p && p.r === g.round ? p.w[i] : "";
+      ov[id] = revisar(i, w, g.letter).ok ? 0 : 1;
+    }
+    g.override = ov; hostBroadcast();
   }
   function hostConfirm(){
     const g = H.game; if (g.phase !== "review") return;
@@ -235,14 +312,14 @@
     const pts = {};
     for (const p of v.players){ g.totals[p.key] = (g.totals[p.key]||0) + sc[p.key].total; pts[p.key] = sc[p.key].total; }
     g.last = { r: g.round, letter: g.letter, pts };
-    g.phase = "lobby"; g.invalid = {};
+    g.phase = "lobby"; g.override = {};
     hostBroadcast();
   }
   let confirmReset = false;
   function hostReset(){
     if (!confirmReset){ confirmReset = true; render(); setTimeout(()=>{ confirmReset=false; render(); }, 4000); return; }
     confirmReset = false;
-    Object.assign(H.game, { phase:"lobby", round:0, letter:"", used:[], invalid:{}, totals:{}, last:null, bastaBy:"" });
+    Object.assign(H.game, { phase:"lobby", round:0, letter:"", used:[], override:{}, totals:{}, last:null, bastaBy:"" });
     hostBroadcast();
   }
 
@@ -250,7 +327,7 @@
     isHost = true;
     ls.set("tf_hosting", code);
     const saved = ls.get(hostSaveKey());
-    H = saved && saved.game ? { game: saved.game, players: {} } : { game: { phase:"lobby", round:0, letter:"", used:[], invalid:{}, totals:{}, names:{}, last:null, bastaBy:"" }, players: {} };
+    H = saved && saved.game ? { game: saved.game, players: {} } : { game: { phase:"lobby", round:0, letter:"", used:[], override:{}, totals:{}, names:{}, last:null, bastaBy:"" }, players: {} };
     H.game.names = H.game.names || {}; H.game.totals = H.game.totals || {};
     if (saved && saved.players) for (const k in saved.players) H.players[k] = Object.assign({ basta:0, online:false }, saved.players[k]);
     if (H.game.phase === "playing") H.game.phase = "review";
@@ -512,7 +589,8 @@
           const has = !!norm(c.word);
           return h("td",{class:"word"+(isHost && has?" tap":""), onclick: isHost && has ? ()=>hostToggle(p.key,i) : null},
             h("span",{class: !has ? "w empty" : (c.ok ? "w" : "w x")}, has ? c.word : "—"),
-            h("span",{class:"pts p"+c.pts}, String(c.pts)));
+            h("span",{class:"pts p"+c.pts}, String(c.pts)),
+            c.motivo ? h("span",{class:"why"+(c.manual?" man":"")}, c.motivo) : null);
         }),
         h("td",{class:"total"}, String(sc[p.key].total))
       )))
@@ -528,7 +606,7 @@
           h("span",null,h("span",{class:"pts p10"},"10")," única"),
           h("span",null,h("span",{class:"pts p5"},"5")," repetida"),
           h("span",null,h("span",{class:"pts"},"0")," vacía / inválida")),
-        h("p",{class:"muted small"}, isHost ? "Tocá una palabra para anularla si no vale (o devolverla)." : "El anfitrión revisa y confirma los puntajes.")
+        h("p",{class:"muted small"}, isHost ? "El juego ya revisó las palabras. Si se equivocó, tocá la palabra para aceptarla o anularla." : "El anfitrión revisa y confirma los puntajes.")
       ),
       isHost ? h("div",{class:"card"}, h("button",{class:"full",style:"font-size:20px",onclick:hostConfirm},"✅ Confirmar y sumar puntos")) : null
     );

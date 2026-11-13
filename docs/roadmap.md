@@ -22,5 +22,6 @@ Orden sugerido. Lo marcado con (?) está por confirmar con Agus. Cuando se termi
 - El campo del sueldo nominal no se tapa en modo discreto.
 
 ## Hecho
+- 2.63.0: la estantería 3D (Three.js) es el inicio; la 2.62 queda de respaldo.
 - 2.62.0: estantería mágica (biblioteca de noche, libros con polvo de luz, el libro sale y muestra su tapa).
 - 2.61.0: El Pacto de los Dos como libro 2, con «Los dos» en Hoy y cuentas entre los dos.

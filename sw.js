@@ -1,7 +1,7 @@
 /* Service worker: guarda la app para que funcione sin internet y avisa cuando hay una versión nueva.
    CADA CAMBIO EN LA APP: subí VERSION (y la de js/version.js). Así cambia el nombre del caché y el
    teléfono descarga la versión nueva. Si agregás un archivo, sumalo a ARCHIVOS (una prueba lo controla). */
-var VERSION='2.62.1';
+var VERSION='2.63.0';
 var CACHE='ahorros-'+VERSION;
 var FUENTES='ahorros-fuentes';
 var ARCHIVOS=[
@@ -154,7 +154,7 @@ self.addEventListener('fetch',function(e){
   var req=e.request;if(req.method!=='GET')return;
   var url=new URL(req.url);
   if(url.origin===self.location.origin){
-    /* Los prototipos van siempre por la red, fuera de la app. */
+    /* Los prototipos van siempre por la red, fuera de la app (la estantería 3D de la app usa su propia copia, en vendor/). */
     if(url.pathname.indexOf('/prototipo/')>=0)return;
     /* La app sale del caché (funciona sin internet). Abrirla siempre muestra index.html. */
     if(req.mode==='navigate'){

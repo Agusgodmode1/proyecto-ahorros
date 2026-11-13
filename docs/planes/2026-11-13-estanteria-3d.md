@@ -55,10 +55,15 @@ No hay nada que no se pueda guardar para usar sin internet.
 - Archivos: revisar `js/ui/estante.js` y el bloque «2.62» de `css/papel.css`.
 - Hace: confirma que con reducir movimiento no hay vuelo del libro, cámara, polvo ni partículas; si falta algo, se corrige.
 - Prueba: captura con reducir movimiento y conteo de animaciones en marcha.
-- [ ] Hecho
+- Resultado: ya cumplía, no hubo que cambiar nada. Con reducir movimiento hay 0 animaciones en marcha en la estantería, el polvo y las chispas no se dibujan, y al tocar un libro corre un solo fundido de 0,26 s.
+- [x] Hecho
 
 ### Tarea 6: versión, documentación y capturas finales
 - Archivos: `sw.js` y `js/version.js` (2.63.0); `docs/referencia-tecnica.md`; `docs/decisiones.md`; `sw.js` (comentario de `/prototipo/`).
 - Hace: sube la versión, documenta la pantalla de inicio y `?forzar3d=`, anota las decisiones y la excepción de colores.
 - Prueba: `node --test`; capturas a 390 y 320 px (2.62 inicial, 3D mostrada, 2.62 con reducir movimiento); prueba sin internet con el service worker.
-- [ ] Hecho
+- Resultado: 391 pruebas en verde. Sin internet (service worker instalado, red cortada, recarga) la 3D se mostró completa y los 17 archivos salieron de lo guardado, sin pedidos fallidos.
+- Decisión: los lemas de la 3D bajan a 11,5 px en pantallas de 320 px — a 13 px quedaban casi pegados.
+- Nota: el servidor de pruebas no tiene placa de video y la 3D tarda unos 10 s; para verla hubo que alargar el límite solo en el navegador de prueba. Con el límite real de 4 s, ahí cae a la 2.62 (como pide la regla 2). La velocidad real se juzga en el iPhone.
+- Fuera de alcance, para avisar a Agus: el botón «‹ Estantería» de la tapa del libro no hace nada (ya pasaba antes de este cambio; `js/ui/libro.js` solo lo atiende en las hojas, no en la tapa).
+- [x] Hecho

@@ -14,12 +14,17 @@ Una línea por decisión. Lo nuevo va arriba. El detalle técnico de cada una es
 - **Recibo:** con un solo recibo alcanza para completar el sueldo; el PDF nunca se guarda.
 
 ## Diseño
-- 2.62.1: se prueba una estantería 3D real con Three.js (copiado en `prototipo/vendor/`, sin npm), primero como prototipo aparte en `prototipo/`. El service worker deja pasar `/prototipo/` por la red.
+- **La estantería 3D (Three.js) es el inicio; la 2.62 queda como respaldo (2.63).** Al abrir se ve primero la 2.62 y la 3D entra con un fundido. Queda la 2.62 si no hay WebGL, si la 3D falla, si tarda más de 4 s, si se cortan los gráficos o con «reducir movimiento». Spec: `specs/2026-11-13-estanteria-3d.md`.
+- **Excepción de colores (2.63):** los colores de la escena 3D (madera, luz de luna, lámpara, brillos de los libros) van escritos en `js/ui/escena3d.js`, como en el prototipo. Todo lo de afuera de la escena (pista, lemas, foco) sale de las variables de `:root`.
+- **Al tocar un libro en la 3D se entra solo (2.63):** el libro sale, muestra la tapa un momento y abre. No están los botones «Volver / Abrir» del prototipo.
+- **Pocas partículas en la 3D (2.63):** 80 en total (40 de polvo y 20 chispas por libro), en vez de las más de 300 del prototipo, para cuidar la batería.
+- 2.62.1: la estantería 3D con Three.js empezó como prototipo aparte en `prototipo/` (Three.js copiado en `prototipo/vendor/`, sin npm). Desde 2.63 ya no es solo prototipo: la app la usa con su propia copia en `vendor/three-r187/`. La carpeta `prototipo/` sigue ahí (el service worker la deja pasar por la red); si se borra, se decide en otro cambio.
 - **Estantería mágica (2.62):** biblioteca nocturna realista con dos libros que brillan (zafiro y ámbar); al tocar uno sale del estante y muestra su tapa. Estética «cinematográfica»: colores vivos, brillos, movimiento suave, cámara que se acerca. Detalle en `direccion-visual.md`.
 - **Papel «Noche dorada»:** un solo tema oscuro; no hay claro ni selector de apariencia.
 - **Menos texto:** máximo 2 líneas por bloque, el resto en desplegables.
 
 ## Código
 - Sin frameworks ni dependencias; módulos ES; pruebas con `node --test`.
+- **Three.js va copiado en `vendor/three-r187/` (2.63), sin npm ni compilación.** En sus complementos, `from 'three'` se cambió por la ruta relativa para no depender de un importmap.
 - `sueldo.js`, `plan.js`, `extracto.js` y `logros.js` no se tocan sin pedido explícito.
 - Repo público: jamás datos reales de nadie.

@@ -12,6 +12,9 @@ Cómo se quiere ver y sentir la app. Pedido de Agus: «un cambio grande, un camb
 - **Al tocar un libro:** sale del estante, viaja al centro, gira de lomo a tapa, destello de luz + chispas, un brillo recorre la tapa; el resto de la biblioteca se apaga y se funde hacia la tapa del libro. Dura unos 2,2 s.
 - **Letra:** títulos en Fraunces (la de siempre), dorada con un resplandor suave; textos chicos en Nunito.
 
+## La estantería 3D (2.63)
+La misma idea, en 3D de verdad: es lo que se ve al abrir la app. Entra con un fundido por encima de la 2.62, que queda de respaldo. Se ve igual que el prototipo; los ajustes de aspecto se piden aparte.
+
 ## Reglas para todo lo visual
 - Un solo foco de color vivo por pantalla: lo mágico. Todo lo demás, apagado.
 - Movimiento lento y suave (ciclos de 4 a 11 s en lo ambiental, 0,4 a 2 s en lo que responde a un toque); nada brusco ni que parpadee.

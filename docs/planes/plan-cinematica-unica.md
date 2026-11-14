@@ -111,28 +111,41 @@ Capturas de hoy guardadas en `prototipo/antes/` (app, respaldo 2.62 y prototipo 
 - Archivos: mover a `js/ui/` y `js/logica/` lo aprobado del prototipo; fuentes a `fuentes/`; `sw.js` (`ARCHIVOS`).
 - Hace: la escena nueva reemplaza `js/ui/escena3d.js`. Se adapta `js/logica/estante3d.js`: la escena queda **en pausa** al abrir (no se libera), corte de gráficos en pausa → tapa fija + único reintento.
 - Prueba: `tests/estante3d.test.js` (casos nuevos de pausa y reintento), `tests/pwa.test.js`.
-- [ ] Hecho
+- [x] Hecho
 
 #### Tarea 9: el respaldo con 4 fotos
 - Archivos: crear `icons/escena/*.webp` (inicio, menú, tapa zafiro, tapa ámbar, menos de 150 KB cada una); crear `js/logica/recorte.js` y `tests/recorte.test.js`; `js/ui/estante.js`; `css/papel.css`.
 - Hace: foto de inicio al arrancar, fundido de 0,4 s a la 3D. Respaldo con fotos, fundidos, flechas y botones invisibles ubicados como porcentaje de la foto con una sola cuenta de recorte, recalculada al girar.
 - Prueba: `tests/recorte.test.js` (los botones caen sobre los libros a 320, 390 y horizontal); capturas con cada valor de `?forzar3d=` y con reducir movimiento.
-- [ ] Hecho
+- [x] Hecho
 
 #### Tarea 10: eliminar la 2.62 y las animaciones viejas
 - Archivos: `js/ui/estante.js`, `js/ui/tapa.js`, `js/ui/libro.js` (tapa, apertura y cierre), `css/papel.css` (bloques 2.62 y 2.63), `css/libro.css`, `js/app.js` (`abrirSola`, `aEstante` con recarga), `sw.js`.
 - Hace: borra lo que ya no se usa. El prólogo y el pacto quedan.
 - Prueba: `node --test`; búsqueda de clases `es-` y `lb-` sin uso.
-- [ ] Hecho
+- [x] Hecho
 
 #### Tarea 11: ◀ en la app, cerrar sin perder nada y prólogo
 - Archivos: `index.html` (◀ junto a la ruedita; «Ver el prólogo» en Ajustes), `js/app.js`, `js/ui/libro.js`, crear `js/logica/pendiente.js` y `tests/pendiente.test.js`.
 - Hace: ◀ desvanece la app (0,3 s) e invierte «Abrir» (1,6 s). Si hay un formulario con algo escrito o una carga por voz sin confirmar, pide confirmación. Libro sin nada guardado → prólogo con «Saltar» (con «importar» y «ver el ejemplo» en su primera página); con algo guardado → directo a Hoy.
 - Prueba: `tests/pendiente.test.js`; capturas del flujo con libro vacío y con datos; los datos de un libro no aparecen en el otro.
-- [ ] Hecho
+- [x] Hecho
 
 #### Tarea 12: versión, documentación y capturas finales
 - Archivos: `sw.js` y `js/version.js` (misma versión), `docs/direccion-visual.md`, `docs/decisiones.md`, `docs/referencia-tecnica.md`, `docs/creditos.md`.
 - Hace: cierra el cambio con el skill `cambio-de-la-app`.
 - Prueba: `node --test`; capturas finales a 390 y 320 px; modo avión; captura de `?perf3d=1` del iPhone de Agus.
-- [ ] Hecho
+- [x] Hecho
+
+#### Decisiones de la ronda 3
+- Decisión: Agus aprobó el diseño de la ronda 2 («adelante con ese diseño»). La medición de tiempos sigue pendiente: sus dos capturas se sacaron con el modo de bajo consumo (30 cuadros por segundo fijos) y la segunda todavía mostraba la versión anterior del prototipo.
+- Decisión: la estantería es una sola para toda la sesión — `elegirLibro()` devuelve el libro recién al terminar «Abrir»; la app carga debajo del velo y `soltarEstante()` funde hacia ella. Así los datos se leen después de elegir, como antes, y `js/estado.js` no se toca.
+- Decisión: abrir **el otro** libro después de cerrar uno hace que la app arranque de nuevo, directo en ese libro (`pa-abrir`), con la pantalla ya cubierta — es la forma más segura de no mezclar datos: no queda nada del libro anterior en memoria.
+- Decisión: «tiene datos guardados» = existe algo guardado en el lugar del libro — sin indicador nuevo ni cambio de estado (`VERSION_ESTADO` sigue en 28).
+- Decisión: «algo sin guardar» se detecta anotando los campos donde se escribe y olvidándolos cuando la app guarda — sirve para todos los formularios sin tocar ninguna pantalla.
+- Decisión: en el respaldo, si la zona segura de una foto no entra cubriendo la pantalla (teléfono acostado), la foto se achica hasta que entre — prioriza que los libros se vean y se puedan tocar.
+- Decisión: se quitaron los complementos de Three.js (`vendor/three-r187/addons/`), que la escena nueva no usa — 14 archivos menos para bajar.
+- Decisión: junto con la tapa vieja se quitó el CSS `lb-*` que ya no usa nadie (se comprobó clase por clase contra todo `js/` e `index.html`).
+- Decisión: `prototipo/` queda como estaba en la ronda 2 (la spec pide no borrarlo); la app usa su propia copia en `js/`.
+- Decisión: las fotos de las tapas muestran el título grabado en el cuero: es parte del libro, no un rótulo. Los nombres y etiquetas del menú sí son texto de la página.
+- Pendiente de comprobar en el iPhone de Agus: fluidez real (`?perf3d=1` sin bajo consumo), toques con el dedo y giro del teléfono.

@@ -1,14 +1,15 @@
-/* La estantería 3D (2.63, puro): decide cuándo se muestra la 3D y cuándo queda la estantería mágica 2.62 de respaldo.
+/* La estantería 3D (2.64, puro): decide cuándo se ve la escena 3D y cuándo quedan las fotos de respaldo.
    No toca la pantalla ni Three.js: todo lo de afuera entra por `d` (así se prueba con node --test).
-   La regla de fondo: ante cualquier duda, la 2.62. Nunca pantalla en blanco, y el libro abre una sola vez.
-   Spec: docs/specs/2026-11-13-estanteria-3d.md (las «reglas» de los comentarios son las de ahí). */
+   La regla de fondo: ante cualquier duda, las fotos. Nunca pantalla en blanco, y el libro abre una sola vez.
+   Specs: docs/specs/2026-11-13-estanteria-3d.md (reglas 2, 4, 5 y 14) y docs/specs/spec-cinematica-unica.md
+   (reglas 4, 5 y 6: la escena queda en pausa mientras estás en la app, y el respaldo son fotos). */
 
-/* Regla 2: la 3D tiene 4 s para estar lista, contados solo con la app a la vista */
+/* La 3D tiene 4 s para estar lista (desde que se pide hasta su primer cuadro), contados solo con la app a la vista */
 export var LIMITE_MS=4000;
 /* Si el aviso de «se cortaron los gráficos» llega apenas se vuelve a la app, el corte fue en segundo plano
    (el iPhone suele avisar recién al volver) */
 export var GRACIA_MS=1500;
-/* Regla 14: formas fijas de forzar cada falla, solo para probar (?forzar3d=...) */
+/* Formas fijas de forzar cada falla, solo para probar (?forzar3d=...) */
 export var FORZAR=['sinwebgl','error','lento','perdida'];
 /* Marcas de la sesión (sessionStorage: duran hasta cerrar la app del todo, y sobreviven al recargar) */
 export var SIN3D='pa-3d-no',REINTENTO='pa-3d-reintento';
@@ -23,24 +24,24 @@ export function forzado(search){
      quieto(), webgl(), visible() → true/false
      ahora() → ms;  temporizador(fn,ms) → función que lo cancela
      sesion: {leer(clave) → bool, poner(clave)}
-     crear() → Promise<escena>;  escena = {seguir(), pausar(), elegir(id,alTerminar), perder(), liberar()}
-     fundir(alTerminar)           la 3D entra con fundido por encima de la 2.62
-     mostrada()                   terminó el fundido: desde ahora los toques son de la 3D
-     quitar()                     saca la 3D de la pantalla y deja la 2.62 a la vista, ya
-     salir(id)                    la 3D terminó su animación: fundir y entrar al libro
-     entrar(id)                   entrar al libro ya mismo, sin animación
-     aviso(motivo,detalle)        opcional: por qué quedó la 2.62 (para la consola)
+     crear() → Promise<escena>;  escena = {seguir(), pausar(), perder(), liberar()}
+     fundir(alTerminar)           la 3D entra con un fundido por encima de la foto
+     viva()                       terminó el fundido: desde ahora se ve y se toca la 3D
+     fotos(motivo,detalle)        se saca la 3D de la pantalla y quedan las fotos, ya
+     entrar()                     se cortaron los gráficos en medio de «Abrir»: entrar al libro ya mismo
    } */
 export function crearControl(d){
-  /* nuevo → cargando → fundiendo → mostrada → abriendo → entrando → cerrado; «esperando» = reintento pendiente hasta volver
-     a la vista; «respaldo» = queda la 2.62 */
-  var estado='nuevo',esc=null,intento=0,elegido=null,limite=null,tVuelta=null,cortes=[];
+  /* nuevo → cargando → fundiendo → viva; «esperando» = reintento pendiente hasta volver a la vista;
+     «fotos» = queda el respaldo; «cerrado» = se desarmó todo */
+  var estado='nuevo',esc=null,intento=0,limite=null,tVuelta=null,cortes=[];
+  var abriendo=false,enApp=false,rota=false;
 
   function marcar(){d.sesion.poner(SIN3D)}
   function soltar(){if(esc){var e=esc;esc=null;try{e.liberar()}catch(x){}}}
   function parar(){if(limite){limite.pausar();limite=null}cortes.forEach(function(c){c()});cortes=[]}
-  function enCurso(){return estado==='cargando'||estado==='esperando'||estado==='fundiendo'||estado==='mostrada'}
+  function enCurso(){return estado==='cargando'||estado==='esperando'||estado==='fundiendo'||estado==='viva'}
   function enFondo(){return !d.visible()||(tVuelta!==null&&d.ahora()-tVuelta<GRACIA_MS)}
+  function puede(){return !d.sesion.leer(SIN3D)&&!d.quieto()&&d.forzar!=='sinwebgl'&&d.webgl()}
 
   /* Cronómetro que solo corre con la app a la vista */
   function crearLimite(alVencer){
@@ -59,11 +60,10 @@ export function crearControl(d){
     return {seguir:seguir,pausar:pausar,total:function(){return gastado+(desde===null?0:d.ahora()-desde)}};
   }
 
-  /* Regla 2: cualquier falla deja la 2.62 hasta cerrar la app del todo */
+  /* cualquier falla deja las fotos hasta cerrar la app del todo */
   function caer(motivo,detalle){
-    marcar();parar();intento++;soltar();estado='respaldo';
-    d.quitar();
-    if(d.aviso)d.aviso(motivo,detalle);
+    marcar();parar();intento++;soltar();estado='fotos';rota=false;
+    d.fotos(motivo,detalle);
   }
 
   function cargar(){
@@ -80,80 +80,106 @@ export function crearControl(d){
   }
 
   function lista(e,n){
-    /* llegó tarde (ya se cayó a la 2.62, se tocó un libro o se cerró): no aparece «de golpe» */
+    /* llegó tarde (ya quedaron las fotos o se cerró): no aparece «de golpe» */
     if(n!==intento||estado!=='cargando'){try{e.liberar()}catch(x){}return}
     esc=e;
     if(limite&&limite.total()>=LIMITE_MS){caer('tardó más de 4 s');return}
     parar();estado='fundiendo';
-    if(d.visible())e.seguir();
+    if(d.visible()&&!enApp)e.seguir();
     d.fundir(function(){
       if(n!==intento||estado!=='fundiendo')return;
-      estado='mostrada';d.mostrada();
+      estado='viva';d.viva();
       if(d.forzar==='perdida')cortes.push(d.temporizador(function(){if(esc)esc.perder()},1500));
     });
   }
 
+  /* un único reintento por sesión: se ven las fotos mientras la escena se arma de nuevo (con el mismo límite de 4 s) */
+  function reintentar(motivo){
+    d.sesion.poner(REINTENTO);parar();intento++;soltar();rota=false;
+    d.fotos(motivo);
+    if(d.visible())cargar();else estado='esperando';
+  }
+
   return {
     estado:function(){return estado},
+    /* ¿se está viendo la 3D? (si no, mandan las fotos) */
+    viva:function(){return estado==='viva'},
 
     iniciar:function(){
       if(estado!=='nuevo')return;
-      /* regla 6: la sesión ya quedó en la 2.62 */
-      if(d.sesion.leer(SIN3D)){estado='respaldo';return}
-      /* «reducir movimiento»: la 3D ni se carga */
-      if(d.quieto()){estado='respaldo';return}
-      if(d.forzar==='sinwebgl'||!d.webgl()){marcar();estado='respaldo';return}
+      /* la sesión ya quedó en las fotos, «reducir movimiento» o sin WebGL: la 3D ni se carga */
+      if(d.sesion.leer(SIN3D)||d.quieto()){estado='fotos';return}
+      if(d.forzar==='sinwebgl'||!d.webgl()){marcar();estado='fotos';return}
       cargar();
     },
 
-    /* Regla 3: un toque en la 2.62 antes de que la 3D termine de aparecer cancela la 3D por toda la sesión.
-       Devuelve true si el toque es de la 2.62. */
-    tocar262:function(){
-      if(estado==='cargando'||estado==='esperando'||estado==='fundiendo')caer('se tocó un libro antes');
-      return estado==='respaldo';
+    /* empieza «Abrir» (▶) / se invirtió antes de terminar (◀) */
+    abrir:function(){abriendo=true},
+    cancelar:function(){abriendo=false},
+
+    /* terminó «Abrir»: el libro está abierto y se ve la app. La escena queda en pausa (no dibuja ni gasta batería),
+       pero sigue en memoria para poder volver */
+    enLaApp:function(){
+      abriendo=false;enApp=true;
+      if(esc)esc.pausar();
     },
 
-    /* Un toque en un libro de la 3D ya mostrada. Devuelve true si lo tomó. */
-    tocar3d:function(id){
-      if(estado!=='mostrada'||!esc)return false;
-      estado='abriendo';elegido=id;
-      esc.elegir(id,function(){if(estado==='abriendo'){estado='entrando';d.salir(id)}});
-      return true;
+    /* ◀ desde la app. Devuelve 'viva' si la escena sigue ahí (se invierte la animación) o 'fotos' si hay que mostrar
+       la tapa fija: porque el teléfono cortó los gráficos en la pausa (único reintento), porque la escena todavía
+       no se había armado nunca en esta apertura, o porque la sesión ya quedó en las fotos */
+    volver:function(){
+      enApp=false;
+      if(estado==='viva'&&!rota){if(d.visible()&&esc)esc.seguir();return 'viva'}
+      if(estado==='viva'&&rota){
+        if(!d.sesion.leer(REINTENTO)&&puede())reintentar('se cortaron los gráficos con el libro abierto');
+        else caer('se cortaron los gráficos con el libro abierto');
+        return 'fotos';
+      }
+      if(estado==='nuevo'){
+        if(puede())cargar();
+        else{if(!d.sesion.leer(SIN3D)&&!d.quieto())marcar();estado='fotos'}
+      }
+      return 'fotos';
     },
 
     /* El teléfono cortó los gráficos (webglcontextlost) */
     perdida:function(){
-      /* regla 5: con un libro ya tocado, se entra directo a ese libro */
-      if(estado==='abriendo'){if(!enFondo())marcar();estado='entrando';d.entrar(elegido);return}
-      /* regla 4: 3D mostrada y corte en segundo plano → un único reintento por sesión */
-      if(estado==='mostrada'&&enFondo()&&!d.sesion.leer(REINTENTO)){
-        d.sesion.poner(REINTENTO);parar();intento++;soltar();d.quitar();
-        if(d.visible())cargar();else estado='esperando';
-        return;
+      /* en medio de «Abrir»: se entra directo a ese libro */
+      if(abriendo&&esc){
+        if(!enFondo())marcar();
+        abriendo=false;parar();intento++;soltar();estado='fotos';
+        d.fotos('se cortaron los gráficos al abrir');d.entrar();return;
       }
+      /* con el libro abierto la escena está en pausa: se resuelve al volver (◀) */
+      if(enApp&&estado==='viva'){rota=true;return}
+      /* 3D a la vista y corte en segundo plano → un único reintento por sesión */
+      if(estado==='viva'&&enFondo()&&!d.sesion.leer(REINTENTO)){reintentar('se cortaron los gráficos en segundo plano');return}
       if(enCurso())caer('se cortaron los gráficos');
     },
 
     /* La 3D tiró un error al dibujar */
     error:function(err){
-      if(estado==='abriendo'){marcar();estado='entrando';d.entrar(elegido);return}
+      if(abriendo&&esc){
+        marcar();abriendo=false;parar();intento++;soltar();estado='fotos';
+        d.fotos('error al dibujar',err);d.entrar();return;
+      }
       if(enCurso())caer('error al dibujar',err);
     },
 
-    /* La app pasó a segundo plano o volvió (regla 10: la animación se pausa y se retoma) */
+    /* La app pasó a segundo plano o volvió: la animación se pausa y se retoma */
     visibilidad:function(){
       if(d.visible()){
         tVuelta=d.ahora();
         if(estado==='esperando'){cargar();return}
         if(limite)limite.seguir();
-        if(esc&&(estado==='fundiendo'||estado==='mostrada'||estado==='abriendo'||estado==='entrando'))esc.seguir();
+        if(esc&&!enApp&&(estado==='fundiendo'||estado==='viva'))esc.seguir();
       }else{
         if(limite)limite.pausar();
         if(esc)esc.pausar();
       }
     },
 
-    /* Se entró a un libro (o se desarmó la estantería): la 3D se detiene y libera sus recursos */
+    /* Se desarma la estantería: la 3D se detiene y libera sus recursos */
     cerrar:function(){parar();intento++;soltar();estado='cerrado'}
   };
 }

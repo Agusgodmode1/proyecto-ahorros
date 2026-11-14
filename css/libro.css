@@ -24,72 +24,21 @@
 }
 
 /* ---------- La mesa ---------- */
-.lb-mesa{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;
-  padding:calc(20px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
-  background:radial-gradient(120% 70% at 50% 42%,#18201a 0%,var(--lb-n1) 48%,var(--lb-n0) 100%);color:var(--lb-tx);
-  font:400 16px/1.5 var(--lb-sans);overflow:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none}
-.lb-mesa[hidden]{display:none}
-.lb-mesa::before{content:"";position:absolute;inset:0;background:var(--lb-grano);opacity:.5;pointer-events:none}
-.lb-escena{position:relative;perspective:2200px;perspective-origin:50% 30%;width:var(--lb-w);height:var(--lb-h);--lb-w:min(64vw,300px);--lb-h:calc(var(--lb-w)*1.38);--lb-t:22px}
-.lb-cam{position:absolute;inset:0;transform-style:preserve-3d}
 .lb-libro{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateX(24deg) rotateY(-14deg) rotateZ(3deg);cursor:pointer}
 .lb-libro:focus-visible{outline:none}
-.lb-libro:focus-visible .lb-tapa-f{box-shadow:0 0 0 3px var(--lb-lima),inset 0 0 0 1px rgba(255,255,255,.04)}
 .lb-libro>*{position:absolute;transform-style:preserve-3d}
 
 /* sombra sobre la mesa */
-.lb-sombra{inset:4% -6% -8% 2%;background:radial-gradient(closest-side,rgba(0,0,0,.75),rgba(0,0,0,0));transform:translateZ(-2px);filter:blur(6px)}
 /* contratapa, cantos de las hojas y lomo */
-.lb-contra{inset:0;border-radius:4px 10px 10px 4px;background:var(--lb-n2)}
-.lb-bloque{inset:5px 6px 5px 3px;transform:translateZ(calc(var(--lb-t) - 3px));border-radius:2px 6px 6px 2px;background:var(--lb-fibra),linear-gradient(90deg,#0d110e 0,#161c17 4%,#141914 60%,#121712 100%)}
-.lb-canto{background:repeating-linear-gradient(90deg,#2a332c 0 1px,#1c231e 1px 2.4px);backface-visibility:visible}
-.lb-canto-d{left:calc(100% - 6px);top:5px;bottom:5px;width:calc(var(--lb-t) - 3px);transform-origin:left center;transform:translateZ(calc(var(--lb-t) - 3px)) rotateY(90deg)}
-.lb-canto-a{left:3px;right:6px;top:calc(100% - 5px);height:calc(var(--lb-t) - 3px);transform-origin:center top;transform:translateZ(calc(var(--lb-t) - 3px)) rotateX(-90deg);background:repeating-linear-gradient(0deg,#2a332c 0 1px,#1c231e 1px 2.4px)}
-.lb-lomo{left:0;top:0;bottom:0;width:var(--lb-t);transform-origin:left center;transform:translateZ(var(--lb-t)) rotateY(90deg);border-radius:6px;
-  background:linear-gradient(90deg,#0b0e0c,#1d241f 45%,#0b0e0c),var(--lb-grano)}
-.lb-lomo::after{content:"";position:absolute;left:0;right:0;top:16%;height:3px;background:var(--lb-oro);opacity:.6;box-shadow:0 calc(var(--lb-h)*.6) 0 var(--lb-oro)}
 
 /* hojas que pasan en cascada al abrir */
-.lb-hoja{inset:6px 8px 6px 3px;transform-origin:left center;border-radius:2px 6px 6px 2px;background:var(--lb-n3)}
-.lb-hoja>i{position:absolute;inset:0;border-radius:inherit;backface-visibility:hidden;background:var(--lb-fibra),linear-gradient(90deg,#10140f,#1a211b 12%,#171d18);box-shadow:inset 0 0 0 1px rgba(198,244,50,.05)}
-.lb-hoja>i+i{transform:rotateY(180deg);background:var(--lb-fibra),linear-gradient(270deg,#10140f,#1a211b 12%,#171d18)}
-.lb-hoja:nth-of-type(1){transform:translateZ(calc(var(--lb-t) - 2.4px))}
-.lb-hoja:nth-of-type(2){transform:translateZ(calc(var(--lb-t) - 1.8px))}
-.lb-hoja:nth-of-type(3){transform:translateZ(calc(var(--lb-t) - 1.2px))}
 
 /* la tapa: cuero grafito con relieve, marco lima, esquinas de metal */
-.lb-tapa{inset:0;transform-origin:left center;transform:translateZ(var(--lb-t))}
-.lb-tapa>div{position:absolute;inset:0;border-radius:4px 10px 10px 4px;backface-visibility:hidden}
-.lb-tapa-f{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:14% 12%;overflow:hidden;
-  background:var(--lb-grano),radial-gradient(130% 90% at 35% 25%,#263028 0%,#151a16 55%,#0b0e0c 100%);
-  box-shadow:inset 6px 0 10px -4px rgba(0,0,0,.8),inset -2px -3px 6px rgba(0,0,0,.6),inset 1px 1px 0 rgba(255,255,255,.06)}
-.lb-tapa-f::before{content:"";position:absolute;inset:7%;border:1px solid rgba(198,244,50,.32);border-radius:3px;box-shadow:inset 0 0 0 4px rgba(0,0,0,.25),inset 0 0 0 5px rgba(198,244,50,.14)}
-.lb-tapa-f::after{content:"";position:absolute;left:0;top:0;bottom:0;width:9%;background:linear-gradient(90deg,rgba(0,0,0,.55),rgba(0,0,0,0));border-right:1px solid rgba(255,255,255,.03)}
-.lb-tapa-d{transform:rotateY(180deg);background:var(--lb-fibra),radial-gradient(120% 120% at 70% 30%,#223018,#121a10 60%,#0b100a);box-shadow:inset -10px 0 18px -8px rgba(0,0,0,.8)}
-.lb-tapa-d::before{content:"";position:absolute;inset:9%;border:1px solid rgba(198,244,50,.18);border-radius:2px}
-.lb-esq{position:absolute;width:13%;aspect-ratio:1;background:linear-gradient(135deg,#d6bf78,var(--lb-oro) 40%,var(--lb-oro-os));clip-path:polygon(0 0,100% 0,100% 28%,28% 28%,28% 100%,0 100%);opacity:.92;z-index:1}
-.lb-esq.a{left:3%;top:3%}.lb-esq.b{right:3%;top:3%;transform:scaleX(-1)}.lb-esq.c{left:3%;bottom:3%;transform:scaleY(-1)}.lb-esq.d{right:3%;bottom:3%;transform:scale(-1)}
-.lb-orn{width:44%;height:auto;color:var(--lb-lima);opacity:.85;position:relative;z-index:1}
-.lb-tit{position:relative;z-index:1;margin:10px 0 6px;font:700 clamp(28px,8.6vw,40px)/.98 var(--lb-serif);letter-spacing:.01em;color:var(--lb-lima)}
-.lb-tit small{display:block;font:600 .5em/1.2 var(--lb-serif);letter-spacing:.18em;color:var(--lb-lima-cl);opacity:.75;margin-bottom:6px}
-.lb-tit-g{position:relative;display:inline-block}
-.lb-tit-g::after{content:attr(data-t);position:absolute;inset:0;color:var(--lb-lima-cl);filter:blur(8px);opacity:.15;animation:lb-respira 8s ease-in-out infinite;pointer-events:none}
-.lb-lema{position:relative;z-index:1;font:600 14px/1.3 var(--lb-serif);font-style:italic;color:var(--lb-tx2);max-width:16em}
-@keyframes lb-respira{0%,100%{opacity:.12}50%{opacity:.6}}
 
 /* el broche: una tira de metal que cruza el canto */
-.lb-broche{top:calc(50% - 22px);height:44px;left:calc(100% - 26px);width:34px;transform:translateZ(calc(var(--lb-t) + 1.5px));transform-origin:right center}
-.lb-broche>b{position:absolute;inset:0;border-radius:6px 3px 3px 6px;background:linear-gradient(180deg,#d6bf78,var(--lb-oro) 45%,var(--lb-oro-os));box-shadow:0 2px 3px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.35)}
-.lb-broche>b::after{content:"";position:absolute;left:7px;top:calc(50% - 6px);width:12px;height:12px;border-radius:50%;background:radial-gradient(circle at 35% 35%,var(--lb-lima-cl),var(--lb-lima) 45%,var(--lb-lima-pr));box-shadow:0 0 10px rgba(198,244,50,.55)}
-
-.lb-toca{margin:0;font:600 19px/1.3 var(--lb-serif);font-style:italic;color:var(--lb-tx2);text-align:center;animation:lb-respira-t 6s ease-in-out infinite}
-@keyframes lb-respira-t{0%,100%{opacity:.55}50%{opacity:1}}
 .lb-otros{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 14px;max-width:420px}
 .lb-link{background:none;border:0;color:var(--lb-tx2);font:500 15px/1.3 var(--lb-sans);text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(169,179,166,.4);padding:12px 6px;min-height:44px;cursor:pointer}
 .lb-link:focus-visible,.lb-btn:focus-visible{outline:2px solid var(--lb-lima);outline-offset:2px}
-.lb-nota{margin:0;font-size:14px;color:var(--lb-tx2);text-align:center;max-width:32em}
-.lb-saltar{position:absolute;right:max(14px,env(safe-area-inset-right,0px));top:calc(10px + env(safe-area-inset-top,0px));z-index:2}
-.lb-saltar[hidden]{display:none}
 
 /* importar desde la portada */
 .lb-imp{position:absolute;left:0;right:0;bottom:0;z-index:3;max-height:86%;overflow:auto;padding:22px max(18px,env(safe-area-inset-right,0px)) calc(22px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px));
@@ -118,11 +67,7 @@
 .lb-p{margin:0;color:var(--lb-tx2);font-size:17px}
 .lb-p b{color:var(--lb-tx);font-weight:600}
 .lb-cita{margin:4px 0;padding:6px 0 6px 18px;border-left:2px solid var(--lb-lima-pr);font:600 24px/1.3 var(--lb-serif);font-style:italic;color:var(--lb-lima-cl)}
-.lb-cap-ini::first-letter{float:left;font:700 3.3em/.8 var(--lb-serif);color:var(--lb-lima);margin:.08em .1em 0 0}
 .lb-orla{display:block;width:120px;height:14px;margin:4px auto;color:var(--lb-lima-pr)}
-.lb-tres{list-style:none;margin:0;padding:0;display:grid;gap:10px}
-.lb-tres li{display:grid;grid-template-columns:36px 1fr;gap:12px;align-items:center;font-size:17px;color:var(--lb-tx)}
-.lb-tres li>span{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font:700 19px/1 var(--lb-serif);color:var(--lb-n0);background:var(--lb-lima)}
 .lb-folio{margin-top:auto;padding-top:14px;text-align:center;font:600 15px/1 var(--lb-serif);font-style:italic;color:var(--lb-tx2);opacity:.75}
 .lb-acc{display:flex;gap:10px;flex-wrap:wrap}
 .lb-acc>*{flex:1 1 auto}
@@ -223,14 +168,13 @@
 }
 
 /* Números siempre a la misma altura (Cormorant trae cifras «antiguas» por defecto; el atajo font: las reinicia) */
-.lb-mesa *,.lb-hojas *{font-variant-numeric:lining-nums tabular-nums!important}
+.lb-hojas *{font-variant-numeric:lining-nums tabular-nums!important}
 
 /* Segundo plano: nada se mueve (ahorra batería) */
-.lb-pausa .lb-mesa *,.lb-pausa .lb-hojas *{animation-play-state:paused!important}
+.lb-pausa .lb-hojas *{animation-play-state:paused!important}
 
 /* Reducir movimiento: solo fundidos, sin portada animada ni tinta */
 @media (prefers-reduced-motion:reduce){
-  .lb-tit-g::after,.lb-toca{animation:none}
   .lb-tinta .w{animation:none;opacity:1;transform:none}
   .lb-btn,.lb-dia{transition:none}
 }
@@ -266,34 +210,8 @@
    una estrella fugaz cada tanto y el título grabado en dorado.
    Todo es gradiente estático + opacity/transform animados (barato para el iPhone).
    ===================================================================== */
-.lb-mesa{background:radial-gradient(110% 70% at 50% 40%,#151d4a 0%,#0a0f2e 50%,#04061a 100%)}
-.lb-mesa::before{background:var(--cielo);background-size:220px 220px;opacity:.55}
-.lb-tapa-f{background:radial-gradient(120% 90% at 30% 20%,#1B2A6B 0%,#0E1640 52%,#070B24 100%);
-  box-shadow:inset 6px 0 12px -4px rgba(0,0,0,.7),inset -2px -3px 8px rgba(0,0,0,.5),inset 1px 1px 0 rgba(255,255,255,.08)}
-.lb-tapa-f::before{border-color:rgba(255,210,122,.5);box-shadow:inset 0 0 0 4px rgba(0,0,0,.2),inset 0 0 0 5px rgba(255,210,122,.22)}
-.lb-neb{position:absolute;inset:-10%;background:radial-gradient(40% 30% at 70% 30%,rgba(75,63,168,.28),transparent 70%),radial-gradient(35% 28% at 25% 75%,rgba(75,63,168,.2),transparent 70%),radial-gradient(25% 20% at 55% 60%,rgba(42,79,184,.18),transparent 70%)}
-.lb-astros{position:absolute;inset:0;background:var(--cielo);background-size:110px 130px;opacity:.8;animation:lb-titila 7s ease-in-out infinite}
-.lb-astros.b{background-size:150px 90px;background-position:40px 25px;opacity:.5;animation-duration:11s;animation-delay:-4s}
-@keyframes lb-titila{0%,100%{opacity:.85}50%{opacity:.35}}
 /* la estrella fugaz: cruza en ~0,9 s y después espera (ciclo de 9 s) */
-.lb-fugaz{position:absolute;top:18%;left:-30%;width:42%;height:2px;border-radius:2px;opacity:0;transform:rotate(-18deg);
-  background:linear-gradient(90deg,rgba(255,210,122,0),rgba(255,210,122,.85) 70%,#F4F1FF);box-shadow:0 0 6px rgba(255,210,122,.6);
-  animation:lb-fugaz 9s cubic-bezier(.3,.6,.4,1) infinite;animation-delay:2.5s}
-@keyframes lb-fugaz{0%{opacity:0;transform:rotate(-18deg) translateX(0)}2%{opacity:1}10%{opacity:0;transform:rotate(-18deg) translateX(330%)}100%{opacity:0;transform:rotate(-18deg) translateX(330%)}}
-.lb-orn{color:#E2C27A}
-.lb-tit{color:#E2B65C}
-.lb-tit-g{color:transparent;background:linear-gradient(180deg,#FFE7A6 0%,#E2B65C 45%,#A87A1F 100%);-webkit-background-clip:text;background-clip:text}
-.lb-tit small{color:#E2C27A;opacity:.9;-webkit-text-fill-color:#E2C27A}
-.lb-tit-g::after{color:#FFD27A;-webkit-text-fill-color:#FFD27A}
-.lb-lema{color:#C9CBE0}
-.lb-contra{background:#0b1234}
-.lb-lomo{background:linear-gradient(90deg,#050821,#16225a 45%,#050821)}
-.lb-broche>b::after{background:radial-gradient(circle at 35% 35%,#FFF3D0,#FFD27A 45%,#A87A1F);box-shadow:0 0 10px rgba(255,210,122,.6)}
-.lb-libro:focus-visible .lb-tapa-f{box-shadow:0 0 0 3px #FFD27A}
-.lb-toca{color:#C9CBE0}
 .lb-link{color:#C9CBE0;text-decoration-color:rgba(201,203,224,.45)}
-.lb-nota{color:#A9ACC8}
-@media (prefers-reduced-motion:reduce){.lb-astros,.lb-fugaz{animation:none}.lb-fugaz{display:none}}
 
 /* =====================================================================
    Prólogo, pacto e índice en papel (2.4): las mismas páginas que el resto del libro.
@@ -314,14 +232,11 @@
 .lb-h{color:var(--ink)}
 .lb-h em{color:var(--oro)}
 .lb-cita{color:var(--azul);border-left-color:var(--oro)}
-.lb-cap-ini::first-letter{color:var(--oro)}
 .lb-orla{color:var(--oro)}
-.lb-tres li>span{background:var(--oro-t);color:var(--page)}
 .lb-btn{background:transparent;color:var(--ink);border:1.5px solid var(--line-2);border-radius:var(--r-m,8px);box-shadow:0 2px 0 var(--line-2)}
 .lb-btn:active{transform:translateY(2px);box-shadow:none}
 .lb-btn.si{background:var(--cta);border-color:var(--cta);color:var(--on-cta);box-shadow:0 2px 0 color-mix(in srgb,var(--cta) 55%,#3a1500)}
 .lb-link{color:var(--azul);text-decoration-color:color-mix(in srgb,var(--azul) 45%,transparent)}
-.lb-mesa .lb-link{color:#C9CBE0;text-decoration-color:rgba(201,203,224,.45)}
 .lb-monto{border-bottom-color:var(--line-2)}
 .lb-monto:focus-within{border-bottom-color:var(--azul)}
 .lb-monto>span{color:var(--oro-t)}
@@ -413,11 +328,5 @@
 .abanico i{position:absolute;inset:0;transform-origin:left center;border-radius:3px 12px 12px 3px;backface-visibility:hidden;
   background:var(--fibra),linear-gradient(90deg,var(--page-2) 0,var(--page) 6%,var(--page) 100%);box-shadow:0 0 0 1px var(--line),-12px 0 24px rgba(0,0,0,.18)}
 /* Por dentro de la tapa (al abrir o cerrar): guarda de cielo nocturno y hojas de papel */
-.lb-tapa-d{background:var(--cielo),radial-gradient(120% 120% at 70% 30%,#1B2A6B,#0E1640 60%,#070B24);background-size:120px 120px,120px 120px,120px 120px,120px 120px,120px 120px,120px 120px,120px 120px,120px 120px,auto;box-shadow:inset -10px 0 18px -8px rgba(0,0,0,.7)}
-.lb-tapa-d::before{border-color:rgba(255,210,122,.35)}
-.lb-hoja>i,.lb-bloque{background:var(--fibra),linear-gradient(90deg,var(--page-2),var(--page) 12%,var(--page))}
-.lb-hoja>i+i{background:var(--fibra),linear-gradient(270deg,var(--page-2),var(--page) 12%,var(--page))}
-.lb-canto,.lb-canto-a{background:repeating-linear-gradient(90deg,var(--canto) 0 1px,var(--page-2) 1px 2.4px)}
-.lb-canto-a{background:repeating-linear-gradient(0deg,var(--canto) 0 1px,var(--page-2) 1px 2.4px)}
 /* el monto del prólogo es un renglón: sin la caja de los campos comunes */
 .lb-hojas .lb-monto input{border:0!important;background:transparent!important;box-shadow:none!important;border-radius:0!important}

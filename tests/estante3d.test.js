@@ -1,287 +1,163 @@
-/* La estantería 3D (2.63): cuándo va la 3D y cuándo la 2.62 de respaldo. Todo simulado, sin pantalla ni Three.js. */
-import {test} from 'node:test';
+// La lógica que decide entre la escena 3D y las fotos de respaldo (js/logica/estante3d.js).
+// Specs: docs/specs/2026-11-13-estanteria-3d.md (reglas 2, 4, 5, 14) y docs/specs/spec-cinematica-unica.md (reglas 4, 5, 6).
+import test from 'node:test';
 import assert from 'node:assert/strict';
 import {crearControl,forzado,LIMITE_MS,GRACIA_MS,SIN3D,REINTENTO} from '../js/logica/estante3d.js';
 
-var tic=function(){return new Promise(function(ok){setImmediate(ok)})};
-
-/* Un teléfono de mentira: reloj a mano, visibilidad, sesión y una escena que anota lo que le piden */
-function montar(op){
+/* Un mundo de mentira: reloj a mano, sesión en memoria y una escena que anota lo que le piden */
+function mundo(op){
   op=op||{};
-  var m={t:0,visible:true,timers:[],marcas:Object.assign({},op.marcas),log:[],escenas:[],pedidos:[]};
-  m.avanzar=function(ms){
-    var fin=m.t+ms;
-    for(;;){
-      var prox=m.timers.filter(function(x){return x.en<=fin}).sort(function(a,b){return a.en-b.en})[0];
-      if(!prox)break;
-      m.timers.splice(m.timers.indexOf(prox),1);m.t=prox.en;prox.fn();
-    }
-    m.t=fin;
+  var t=0,timers=[],marcas=Object.assign({},op.marcas),log=[],pend=[],escenas=[];
+  var M={
+    log:log,marcas:marcas,escenas:escenas,visible:true,
+    pasar:function(ms){
+      var fin=t+ms;
+      for(;;){var prox=timers.filter(function(x){return x.t<=fin}).sort(function(a,b){return a.t-b.t})[0];if(!prox)break;t=prox.t;timers.splice(timers.indexOf(prox),1);prox.fn()}
+      t=fin;
+    },
+    /* la escena termina de armarse */
+    llega:async function(){var p=pend.shift();var e={log:[],seguir:function(){this.log.push('seguir')},pausar:function(){this.log.push('pausar')},perder:function(){this.log.push('perder')},liberar:function(){this.log.push('liberar')}};escenas.push(e);p.ok(e);await null;await null;return e},
+    falla:async function(){pend.shift().mal(new Error('no'));await null;await null},
+    fundido:null
   };
-  m.ocultar=function(){m.visible=false;m.c.visibilidad()};
-  m.volver=function(){m.visible=true;m.c.visibilidad()};
-  function escena(){
-    var e={corre:false,libre:false,elegido:null,fin:null,
-      seguir:function(){e.corre=true},pausar:function(){e.corre=false},
-      elegir:function(id,fin){e.elegido=id;e.fin=fin},
-      perder:function(){m.log.push('perder');m.c.perdida()},
-      liberar:function(){e.libre=true;e.corre=false}};
-    m.escenas.push(e);return e;
-  }
-  /* cada crear() queda pendiente hasta que la prueba lo resuelve con m.llega() o m.falla() */
-  m.llega=async function(){var p=m.pedidos.shift(),e=escena();p.ok(e);await tic();return e};
-  m.falla=async function(){m.pedidos.shift().mal(new Error('no pude'));await tic()};
-  m.fundido=null;
-  m.c=crearControl({
+  M.d={
     forzar:op.forzar||'',
-    quieto:function(){return !!op.quieto},
-    webgl:function(){return op.webgl!==false},
-    visible:function(){return m.visible},
-    ahora:function(){return m.t},
-    temporizador:function(fn,ms){var x={fn:fn,en:m.t+ms};m.timers.push(x);return function(){var i=m.timers.indexOf(x);if(i>=0)m.timers.splice(i,1)}},
-    sesion:{leer:function(k){return !!m.marcas[k]},poner:function(k){m.marcas[k]=true}},
-    crear:function(){m.log.push('crear');return new Promise(function(ok,mal){m.pedidos.push({ok:ok,mal:mal})})},
-    fundir:function(fin){m.log.push('fundir');m.fundido=fin},
-    mostrada:function(){m.log.push('mostrada')},
-    quitar:function(){m.log.push('quitar')},
-    salir:function(id){m.log.push('salir:'+id)},
-    entrar:function(id){m.log.push('entrar:'+id)}
-  });
-  /* atajo: la 3D cargó bien y terminó de aparecer */
-  m.mostrar=async function(){m.c.iniciar();var e=await m.llega();m.fundido();return e};
-  return m;
+    quieto:function(){return !!op.quieto},webgl:function(){return op.webgl!==false},visible:function(){return M.visible},
+    ahora:function(){return t},
+    temporizador:function(fn,ms){var x={t:t+ms,fn:fn};timers.push(x);return function(){var i=timers.indexOf(x);if(i>=0)timers.splice(i,1)}},
+    sesion:{leer:function(k){return !!marcas[k]},poner:function(k){marcas[k]=true}},
+    crear:function(){log.push('crear');return new Promise(function(ok,mal){pend.push({ok:ok,mal:mal})})},
+    fundir:function(fin){log.push('fundir');M.fundido=fin},
+    viva:function(){log.push('viva')},
+    fotos:function(m){log.push('fotos: '+m)},
+    entrar:function(){log.push('entrar')}
+  };
+  M.c=crearControl(M.d);
+  /* atajo: deja la 3D a la vista */
+  M.viva=async function(){M.c.iniciar();var e=await M.llega();M.fundido();return e};
+  return M;
 }
-function veces(m,que){return m.log.filter(function(x){return x===que}).length}
 
-test('?forzar3d= solo acepta los cuatro valores fijos',function(){
-  assert.equal(forzado('?forzar3d=sinwebgl'),'sinwebgl');
-  assert.equal(forzado('?a=1&forzar3d=perdida'),'perdida');
-  assert.equal(forzado('?forzar3d=lento&x=2'),'lento');
-  assert.equal(forzado('?forzar3d=error'),'error');
-  assert.equal(forzado('?forzar3d=otra'),'');
-  assert.equal(forzado('?forzar3d=errores'),'');
-  assert.equal(forzado(''),'');
-  assert.equal(forzado(undefined),'');
+test('forzado() solo acepta los cuatro valores',function(){
+  assert.equal(forzado('?forzar3d=lento'),'lento');assert.equal(forzado('?a=1&forzar3d=perdida&b=2'),'perdida');
+  assert.equal(forzado('?forzar3d=otra'),'');assert.equal(forzado(''),'');
 });
-
-test('camino normal: se ve la 2.62, la 3D entra con fundido y recién después recibe los toques',async function(){
-  var m=montar();
-  m.c.iniciar();
-  assert.equal(m.c.estado(),'cargando');
-  var e=await m.llega();
-  assert.equal(m.c.estado(),'fundiendo');
-  assert.ok(e.corre,'la animación ya corre durante el fundido');
-  assert.equal(m.c.tocar3d('solo'),false,'durante el fundido la 3D no recibe toques');
-  m.fundido();
-  assert.equal(m.c.estado(),'mostrada');
-  assert.deepEqual(m.log,['crear','fundir','mostrada']);
-  assert.equal(m.c.tocar3d('duo'),true);
-  assert.equal(e.elegido,'duo');
-  assert.equal(m.c.tocar3d('solo'),false,'un solo libro por vez');
-  e.fin();
-  assert.deepEqual(m.log.slice(-1),['salir:duo']);
-  m.c.cerrar();
-  assert.ok(e.libre,'al entrar al libro la 3D libera sus recursos (regla 10)');
-  assert.ok(!m.marcas[SIN3D],'la sesión sigue con 3D: al volver a la estantería se repite el arranque (regla 6)');
+test('camino normal: carga, funde sobre la foto y queda viva',async function(){
+  var M=mundo();M.c.iniciar();assert.equal(M.c.estado(),'cargando');
+  var e=await M.llega();assert.equal(M.c.estado(),'fundiendo');assert.deepEqual(e.log,['seguir']);
+  M.fundido();assert.equal(M.c.estado(),'viva');assert.ok(M.c.viva());assert.deepEqual(M.log,['crear','fundir','viva']);
 });
-
-test('sin WebGL: queda la 2.62 y la 3D ni se carga',function(){
-  var m=montar({webgl:false});
-  m.c.iniciar();
-  assert.equal(m.c.estado(),'respaldo');
-  assert.equal(veces(m,'crear'),0);
-  var f=montar({forzar:'sinwebgl'});f.c.iniciar();
-  assert.equal(f.c.estado(),'respaldo');assert.equal(veces(f,'crear'),0);
+test('sin WebGL: quedan las fotos por toda la sesión y la 3D ni se pide',function(){
+  var M=mundo({webgl:false});M.c.iniciar();
+  assert.equal(M.c.estado(),'fotos');assert.ok(M.marcas[SIN3D]);assert.deepEqual(M.log,[]);
 });
-
-test('«reducir movimiento»: ni se carga la 3D',function(){
-  var m=montar({quieto:true});
-  m.c.iniciar();
-  assert.equal(m.c.estado(),'respaldo');
-  assert.equal(veces(m,'crear'),0);
-  assert.equal(m.c.tocar262(),true);
+test('?forzar3d=sinwebgl hace lo mismo',function(){
+  var M=mundo({forzar:'sinwebgl'});M.c.iniciar();assert.equal(M.c.estado(),'fotos');assert.ok(M.marcas[SIN3D]);
 });
-
-test('error al cargar: queda la 2.62 por toda la sesión',async function(){
-  var m=montar();
-  m.c.iniciar();await m.falla();
-  assert.equal(m.c.estado(),'respaldo');
-  assert.ok(m.marcas[SIN3D]);
-  var f=montar({forzar:'error'});f.c.iniciar();await tic();
-  assert.equal(f.c.estado(),'respaldo');assert.equal(veces(f,'crear'),0);
-  /* regla 6: al volver a la estantería en la misma sesión, se queda en la 2.62 */
-  var otra=montar({marcas:m.marcas});otra.c.iniciar();
-  assert.equal(otra.c.estado(),'respaldo');assert.equal(veces(otra,'crear'),0);
+test('reducir movimiento: fotos, sin marcar la sesión',function(){
+  var M=mundo({quieto:true});M.c.iniciar();assert.equal(M.c.estado(),'fotos');assert.ok(!M.marcas[SIN3D]);assert.deepEqual(M.log,[]);
 });
-
-test('error al dibujar con la 3D mostrada: pasa a la 2.62',async function(){
-  var m=montar(),e=await m.mostrar();
-  m.c.error();
-  assert.equal(m.c.estado(),'respaldo');
-  assert.ok(e.libre);assert.equal(veces(m,'quitar'),1);assert.ok(m.marcas[SIN3D]);
+test('si la sesión ya quedó en las fotos, la 3D no vuelve a aparecer',function(){
+  var m={};m[SIN3D]=true;var M=mundo({marcas:m});M.c.iniciar();assert.equal(M.c.estado(),'fotos');assert.deepEqual(M.log,[]);
 });
-
-test('más de 4 s: queda la 2.62 y la 3D que llega tarde no aparece de golpe',async function(){
-  var m=montar();
-  m.c.iniciar();
-  m.avanzar(LIMITE_MS-1);assert.equal(m.c.estado(),'cargando');
-  m.avanzar(1);assert.equal(m.c.estado(),'respaldo');
-  var e=await m.llega();
-  assert.ok(e.libre,'la escena tardía se descarta');
-  assert.equal(veces(m,'fundir'),0);
-  assert.ok(m.marcas[SIN3D]);
+test('error al cargar: fotos por toda la sesión',async function(){
+  var M=mundo();M.c.iniciar();await M.falla();
+  assert.equal(M.c.estado(),'fotos');assert.ok(M.marcas[SIN3D]);assert.deepEqual(M.log,['crear','fotos: error al cargar']);
 });
-
-test('los 4 s se cuentan solo con la app a la vista',async function(){
-  var m=montar();
-  m.c.iniciar();
-  m.avanzar(3000);m.ocultar();
-  m.avanzar(60000);assert.equal(m.c.estado(),'cargando','en segundo plano el reloj no corre');
-  m.volver();
-  m.avanzar(999);assert.equal(m.c.estado(),'cargando');
-  m.avanzar(1);assert.equal(m.c.estado(),'respaldo');
+test('?forzar3d=error',async function(){
+  var M=mundo({forzar:'error'});M.c.iniciar();await null;await null;assert.equal(M.c.estado(),'fotos');
 });
-
-test('si la escena llega justo pasado el límite (el teléfono estaba trabado), igual cuenta como lenta',async function(){
-  var m=montar();
-  m.c.iniciar();
-  m.t=LIMITE_MS+200; /* el reloj avanzó pero el temporizador todavía no pudo correr */
-  var e=await m.llega();
-  assert.equal(m.c.estado(),'respaldo');assert.ok(e.libre);assert.equal(veces(m,'fundir'),0);
+test('más de 4 s: se cancela, quedan las fotos y si la escena llega tarde se descarta',async function(){
+  var M=mundo();M.c.iniciar();M.pasar(LIMITE_MS);
+  assert.equal(M.c.estado(),'fotos');assert.ok(M.marcas[SIN3D]);
+  var e=await M.llega();assert.deepEqual(e.log,['liberar']);assert.equal(M.c.estado(),'fotos');assert.ok(M.log.indexOf('fundir')<0);
 });
-
-test('?forzar3d=lento: a los 4 s queda la 2.62 y la 3D no aparece después',async function(){
-  var m=montar({forzar:'lento'});
-  m.c.iniciar();
-  var e=await m.llega(); /* la escena está, pero se entrega tarde */
-  assert.equal(m.c.estado(),'cargando');
-  m.avanzar(LIMITE_MS);assert.equal(m.c.estado(),'respaldo');
-  m.avanzar(5000);await tic();await tic();
-  assert.ok(e.libre);assert.equal(veces(m,'fundir'),0);
+test('los 4 s solo corren con la app a la vista',async function(){
+  var M=mundo();M.c.iniciar();M.pasar(3000);
+  M.visible=false;M.c.visibilidad();M.pasar(60000);assert.equal(M.c.estado(),'cargando');
+  M.visible=true;M.c.visibilidad();M.pasar(900);assert.equal(M.c.estado(),'cargando');
+  M.pasar(200);assert.equal(M.c.estado(),'fotos');
 });
-
-test('regla 3: tocar un libro de la 2.62 durante la carga cancela la 3D por toda la sesión',async function(){
-  var m=montar();
-  m.c.iniciar();
-  assert.equal(m.c.tocar262(),true);
-  assert.equal(m.c.estado(),'respaldo');
-  assert.ok(m.marcas[SIN3D]);
-  var e=await m.llega();
-  assert.ok(e.libre);assert.equal(veces(m,'fundir'),0,'la 3D no aparece encima');
-  m.avanzar(10000);assert.equal(m.c.estado(),'respaldo');
+test('la entrada de 2,6 s no cuenta: una vez lista, el límite ya no corre',async function(){
+  var M=mundo();await M.viva();M.pasar(LIMITE_MS*3);assert.equal(M.c.estado(),'viva');
 });
-
-test('regla 3: tocar durante el fundido de entrada también es de la 2.62 y cancela la 3D',async function(){
-  var m=montar();
-  m.c.iniciar();var e=await m.llega();
-  assert.equal(m.c.tocar262(),true);
-  assert.ok(e.libre);assert.equal(veces(m,'quitar'),1);
-  m.fundido(); /* el fundido termina igual: no pasa nada */
-  assert.equal(m.c.estado(),'respaldo');assert.equal(veces(m,'mostrada'),0);
-  assert.equal(m.c.tocar3d('solo'),false);
+test('?forzar3d=lento: la escena se arma pero llega después del límite',async function(){
+  var M=mundo({forzar:'lento'});M.c.iniciar();M.pasar(LIMITE_MS);assert.equal(M.c.estado(),'fotos');
 });
-
-test('con la 3D ya mostrada, la 2.62 no recibe toques',async function(){
-  var m=montar();await m.mostrar();
-  assert.equal(m.c.tocar262(),false);
-  assert.equal(m.c.estado(),'mostrada');
+test('en segundo plano la escena se pausa y al volver sigue',async function(){
+  var M=mundo(),e=await M.viva();
+  M.visible=false;M.c.visibilidad();M.visible=true;M.c.visibilidad();
+  assert.deepEqual(e.log,['seguir','pausar','seguir']);
 });
-
-test('gráficos perdidos con la app a la vista: directo a la 2.62, sin reintento',async function(){
-  var m=montar(),e=await m.mostrar();
-  m.avanzar(GRACIA_MS+1);
-  m.c.perdida();
-  assert.equal(m.c.estado(),'respaldo');
-  assert.equal(veces(m,'crear'),1,'no reintenta');
-  assert.ok(e.libre);assert.ok(m.marcas[SIN3D]);assert.ok(!m.marcas[REINTENTO]);
+test('al abrir un libro la escena queda en pausa y en memoria; ◀ la retoma',async function(){
+  var M=mundo(),e=await M.viva();
+  M.c.abrir();M.c.enLaApp();
+  assert.deepEqual(e.log,['seguir','pausar']);assert.ok(e.log.indexOf('liberar')<0,'no se libera');
+  M.visible=false;M.c.visibilidad();M.visible=true;M.c.visibilidad();
+  assert.deepEqual(e.log,['seguir','pausar','pausar'],'en la app no vuelve a dibujar aunque la app vuelva a la vista');
+  assert.equal(M.c.volver(),'viva');assert.deepEqual(e.log,['seguir','pausar','pausar','seguir']);
 });
-
-test('?forzar3d=perdida: se pierden los gráficos después de mostrarse y queda la 2.62',async function(){
-  var m=montar({forzar:'perdida'});await m.mostrar();
-  m.avanzar(1500);
-  assert.deepEqual(m.log,['crear','fundir','mostrada','perder','quitar']);
-  assert.equal(m.c.estado(),'respaldo');
+test('gráficos cortados con el libro abierto: al tocar ◀ se ve la tapa fija y hay un único reintento',async function(){
+  var M=mundo(),e=await M.viva();
+  M.c.abrir();M.c.enLaApp();M.c.perdida();
+  assert.equal(M.c.estado(),'viva','no pasa nada hasta que se vuelve');
+  assert.equal(M.c.volver(),'fotos');assert.ok(M.marcas[REINTENTO]);assert.ok(!M.marcas[SIN3D]);
+  assert.deepEqual(e.log.slice(-1),['liberar']);assert.equal(M.c.estado(),'cargando');
+  var e2=await M.llega();M.fundido();assert.equal(M.c.estado(),'viva');assert.deepEqual(e2.log,['seguir']);
+  assert.deepEqual(M.log,['crear','fundir','viva','fotos: se cortaron los gráficos con el libro abierto','crear','fundir','viva']);
 });
-
-test('regla 4: gráficos cortados en segundo plano → un único reintento con el mismo límite',async function(){
-  var m=montar(),e1=await m.mostrar();
-  m.ocultar();assert.ok(!e1.corre,'en segundo plano la animación se pausa');
-  m.avanzar(600000);
-  m.c.perdida();
-  assert.equal(m.c.estado(),'esperando');assert.ok(e1.libre);assert.equal(veces(m,'quitar'),1,'mientras tanto se ve la 2.62');
-  assert.equal(veces(m,'crear'),1,'no recrea nada hasta volver');
-  m.volver();
-  assert.equal(m.c.estado(),'cargando');assert.equal(veces(m,'crear'),2);
-  var e2=await m.llega();m.fundido();
-  assert.equal(m.c.estado(),'mostrada');assert.ok(e2.corre);
-  assert.ok(m.marcas[REINTENTO]);assert.ok(!m.marcas[SIN3D]);
-  /* se vuelven a perder los gráficos, otra vez en segundo plano: ya no hay reintento */
-  m.ocultar();m.c.perdida();m.volver();
-  assert.equal(m.c.estado(),'respaldo');assert.equal(veces(m,'crear'),2);assert.ok(m.marcas[SIN3D]);
+test('si el reintento no llega en 4 s, el resto de la sesión sigue en las fotos',async function(){
+  var M=mundo();await M.viva();M.c.enLaApp();M.c.perdida();M.c.volver();
+  M.pasar(LIMITE_MS);assert.equal(M.c.estado(),'fotos');assert.ok(M.marcas[SIN3D]);
 });
-
-test('regla 4: el iPhone avisa del corte recién al volver → también es «en segundo plano»',async function(){
-  var m=montar();await m.mostrar();
-  m.ocultar();m.avanzar(60000);m.volver();
-  m.avanzar(200);m.c.perdida();
-  assert.equal(m.c.estado(),'cargando');assert.equal(veces(m,'crear'),2);
+test('un segundo corte con el libro abierto ya no reintenta',async function(){
+  var m={};m[REINTENTO]=true;var M=mundo({marcas:m});await M.viva();M.c.enLaApp();M.c.perdida();
+  assert.equal(M.c.volver(),'fotos');assert.equal(M.c.estado(),'fotos');assert.ok(M.marcas[SIN3D]);
 });
-
-test('regla 4: si el reintento tarda más de 4 s o falla, queda la 2.62',async function(){
-  var m=montar();await m.mostrar();
-  m.ocultar();m.c.perdida();m.volver();
-  m.avanzar(LIMITE_MS);
-  assert.equal(m.c.estado(),'respaldo');assert.ok(m.marcas[SIN3D]);
-  var f=montar();await f.mostrar();
-  f.ocultar();f.c.perdida();f.volver();await f.falla();
-  assert.equal(f.c.estado(),'respaldo');
+test('corte en segundo plano con la estantería a la vista: un único reintento, con las fotos mientras tanto',async function(){
+  var M=mundo(),e=await M.viva();
+  M.visible=false;M.c.visibilidad();M.c.perdida();
+  assert.equal(M.c.estado(),'esperando');assert.ok(M.marcas[REINTENTO]);assert.deepEqual(e.log.slice(-1),['liberar']);
+  M.visible=true;M.c.visibilidad();assert.equal(M.c.estado(),'cargando');
+  await M.llega();M.fundido();assert.equal(M.c.estado(),'viva');
 });
-
-test('regla 4: el reintento es uno por sesión, aunque se haya vuelto a la estantería',async function(){
-  var m=montar({marcas:{[REINTENTO]:true}});await m.mostrar();
-  m.ocultar();m.c.perdida();m.volver();
-  assert.equal(m.c.estado(),'respaldo');assert.equal(veces(m,'crear'),1);
+test('el aviso del corte que llega apenas se vuelve a la app también cuenta como segundo plano',async function(){
+  var M=mundo();await M.viva();
+  M.visible=false;M.c.visibilidad();M.visible=true;M.c.visibilidad();M.pasar(GRACIA_MS-100);M.c.perdida();
+  assert.equal(M.c.estado(),'cargando');assert.ok(!M.marcas[SIN3D]);
 });
-
-test('regla 4: tocar un libro de la 2.62 mientras se reintenta cancela la 3D',async function(){
-  var m=montar();await m.mostrar();
-  m.ocultar();m.c.perdida();
-  assert.equal(m.c.tocar262(),true,'esperando el regreso');
-  m.volver();
-  assert.equal(m.c.estado(),'respaldo');assert.equal(veces(m,'crear'),1);
+test('corte con la app a la vista: fotos por toda la sesión',async function(){
+  var M=mundo();await M.viva();M.pasar(GRACIA_MS+10);M.c.perdida();
+  assert.equal(M.c.estado(),'fotos');assert.ok(M.marcas[SIN3D]);
 });
-
-test('gráficos perdidos durante la carga o el fundido: 2.62, sin reintento',async function(){
-  var m=montar();m.c.iniciar();await m.llega();
-  m.ocultar();m.c.perdida();
-  assert.equal(m.c.estado(),'respaldo','el reintento es solo si la 3D estaba mostrada');
+test('corte en medio de «Abrir»: se entra directo al libro, una sola vez',async function(){
+  var M=mundo(),e=await M.viva();M.pasar(5000);
+  M.c.abrir();M.c.perdida();M.c.perdida();
+  assert.equal(M.log.filter(function(x){return x==='entrar'}).length,1);
+  assert.equal(M.c.estado(),'fotos');assert.ok(M.marcas[SIN3D]);assert.deepEqual(e.log.slice(-1),['liberar']);
 });
-
-test('regla 5: gráficos perdidos en medio de la animación de abrir → entra directo a ese libro',async function(){
-  var m=montar(),e=await m.mostrar();
-  m.avanzar(GRACIA_MS+1);
-  m.c.tocar3d('duo');
-  m.c.perdida();
-  assert.deepEqual(m.log.slice(-1),['entrar:duo']);
-  assert.equal(veces(m,'quitar'),0,'no vuelve a la estantería');
-  e.fin(); /* la animación ya no importa */
-  m.c.cerrar();
-  e.fin();
-  assert.equal(m.log.filter(function(x){return /^(entrar|salir):/.test(x)}).length,1,'el libro abre una sola vez');
+test('error al dibujar en medio de «Abrir»: también entra directo',async function(){
+  var M=mundo();await M.viva();M.c.abrir();M.c.error(new Error('x'));
+  assert.ok(M.log.indexOf('entrar')>=0);assert.equal(M.c.estado(),'fotos');
 });
-
-test('regla 10: en segundo plano la animación se pausa y al volver se retoma',async function(){
-  var m=montar(),e=await m.mostrar();
-  assert.ok(e.corre);
-  m.ocultar();assert.ok(!e.corre);
-  m.volver();assert.ok(e.corre);
-  assert.equal(m.c.estado(),'mostrada');
+test('si «Abrir» se invirtió, un corte ya no entra al libro',async function(){
+  var M=mundo();await M.viva();M.pasar(5000);M.c.abrir();M.c.cancelar();M.c.perdida();
+  assert.ok(M.log.indexOf('entrar')<0);assert.equal(M.c.estado(),'fotos');
 });
-
-test('cerrar a mitad de la carga descarta la escena que llegue después',async function(){
-  var m=montar();m.c.iniciar();m.c.cerrar();
-  var e=await m.llega();
-  assert.ok(e.libre);assert.equal(veces(m,'fundir'),0);
-  m.avanzar(10000);assert.equal(m.c.estado(),'cerrado');
-  assert.ok(!m.marcas[SIN3D]);
+test('error al dibujar con la estantería a la vista: fotos',async function(){
+  var M=mundo();await M.viva();M.c.error(new Error('x'));assert.equal(M.c.estado(),'fotos');assert.ok(M.marcas[SIN3D]);
+});
+test('◀ desde la app sin escena armada (se abrió directo el último libro): tapa fija y la 3D se carga recién ahí',async function(){
+  var M=mundo();M.c.enLaApp();
+  assert.equal(M.c.volver(),'fotos');assert.equal(M.c.estado(),'cargando');
+  await M.llega();M.fundido();assert.equal(M.c.estado(),'viva');assert.ok(!M.marcas[REINTENTO],'no gasta el reintento');
+});
+test('◀ desde la app sin escena y sin WebGL: fotos',function(){
+  var M=mundo({webgl:false});M.c.enLaApp();assert.equal(M.c.volver(),'fotos');assert.equal(M.c.estado(),'fotos');assert.deepEqual(M.log,[]);
+});
+test('?forzar3d=perdida: a los 1,5 s de verse, la escena pierde los gráficos',async function(){
+  var M=mundo({forzar:'perdida'}),e=await M.viva();M.pasar(1500);assert.deepEqual(e.log.slice(-1),['perder']);
+});
+test('cerrar() suelta la escena',async function(){
+  var M=mundo(),e=await M.viva();M.c.cerrar();assert.deepEqual(e.log.slice(-1),['liberar']);assert.equal(M.c.estado(),'cerrado');
 });

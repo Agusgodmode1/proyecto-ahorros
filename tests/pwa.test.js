@@ -33,7 +33,7 @@ var THREE_DIR='vendor/three-r187';
 test('el service worker guarda toda la carpeta de Three.js',function(){
   var enSW=archivosSW();
   var js=listar(THREE_DIR).filter(function(f){return /\.js$/.test(f)});
-  assert.ok(js.length>=16,'la carpeta de Three.js está completa');
+  assert.deepEqual(js.map(function(f){return path.posix.basename(f)}).sort(),['three.core.js','three.module.js'],'solo el núcleo: la escena no usa complementos');
   js.forEach(function(f){assert.ok(enSW.indexOf(f)>=0,'falta en ARCHIVOS de sw.js: '+f)});
 });
 
@@ -51,7 +51,8 @@ test('todo lo que la app importa (también la escena 3D y sus complementos) est�
     importados(f).forEach(function(x){cola.push(x)});
   }
   assert.ok(vistos['js/ui/escena3d.js'],'la escena 3D se carga desde la app');
-  assert.ok(vistos[THREE_DIR+'/three.core.js']&&vistos[THREE_DIR+'/addons/shaders/CopyShader.js'],'se siguen los imports hasta Three.js');
+  assert.ok(vistos['js/ui/escena3d-texturas.js']&&vistos['js/ui/escena3d-libro.js']&&vistos['js/logica/cinematica.js'],'con sus piezas');
+  assert.ok(vistos[THREE_DIR+'/three.core.js'],'se siguen los imports hasta Three.js');
 });
 
 test('Three.js no depende de un importmap ni de internet',function(){
@@ -60,9 +61,11 @@ test('Three.js no depende de un importmap ni de internet',function(){
     assert.ok(!/from\s*['"]three['"/]/.test(txt),'import sin ruta relativa en '+f);
     assert.ok(!/['"]https?:\/\/[^'"]+\.(js|wasm|png|jpg|hdr|woff2?)['"]/.test(txt)||/three\.(core|module)\.js$/.test(f),'archivo de internet en '+f);
   });
-  var escena=fs.readFileSync(path.join(raiz,'js/ui/escena3d.js'),'utf8');
-  assert.ok(!/https?:\/\//.test(escena),'la escena no pide nada a internet');
-  assert.ok(!/TextureLoader|GLTFLoader|FontLoader|\.load\(/.test(escena),'la escena no descarga texturas, modelos ni fuentes: las genera');
+  ['js/ui/escena3d.js','js/ui/escena3d-texturas.js','js/ui/escena3d-libro.js'].forEach(function(f){
+    var escena=fs.readFileSync(path.join(raiz,f),'utf8');
+    assert.ok(!/https?:\/\//.test(escena),f+' no pide nada a internet');
+    assert.ok(!/TextureLoader|GLTFLoader|FontLoader|\.load\(/.test(escena),f+' no descarga texturas, modelos ni fuentes: las genera');
+  });
 });
 
 test('el manifest tiene lo que pide iOS y Android',function(){
@@ -72,4 +75,26 @@ test('el manifest tiene lo que pide iOS y Android',function(){
   assert.equal(m.display,'standalone');
   assert.ok(m.icons.some(function(i){return i.purpose==='maskable'}));
   m.icons.forEach(function(i){assert.ok(fs.existsSync(path.join(raiz,i.src)),i.src)});
+});
+
+/* (2.64) La cinemática única: una sola estantería, sin restos de la 2.62 ni de la tapa vieja */
+test('las 4 fotos de respaldo existen, pesan menos de 150 KB y están en ARCHIVOS',function(){
+  var enSW=archivosSW();
+  ['inicio','menu','tapa-solo','tapa-duo'].forEach(function(n){
+    var f='icons/escena/'+n+'.webp';
+    assert.ok(fs.existsSync(path.join(raiz,f)),'falta '+f);
+    assert.ok(fs.statSync(path.join(raiz,f)).size<150*1024,f+' pesa más de 150 KB');
+    assert.ok(enSW.indexOf(f)>=0,'falta en ARCHIVOS: '+f);
+  });
+});
+test('las fuentes de la escena (Fraunces) se guardan para usar sin internet',function(){
+  var enSW=archivosSW();
+  assert.ok(enSW.some(function(f){return /fraunces.*normal\.woff2$/.test(f)})&&enSW.some(function(f){return /fraunces.*italic\.woff2$/.test(f)}));
+});
+test('no quedan restos de la estantería 2.62 ni de la tapa vieja',function(){
+  assert.ok(!fs.existsSync(path.join(raiz,'js/ui/tapa.js')),'js/ui/tapa.js se eliminó');
+  var css=['css/app.css','css/libro.css','css/papel.css'].map(function(f){return fs.readFileSync(path.join(raiz,f),'utf8')}).join('\n');
+  ['.es-mueble','.es-lomo','.es-chispas','.es-vuelo','.e3-libro','.lb-tapa-f','.lb-broche','.lb-gal'].forEach(function(c){assert.ok(css.indexOf(c)<0,'queda CSS viejo: '+c)});
+  var js=listar('js').map(function(f){return fs.readFileSync(path.join(raiz,f),'utf8')}).join('\n');
+  ['es-mueble','moverLibro','htmlPortada','abrirSola','pedirEstante'].forEach(function(c){assert.ok(js.indexOf(c)<0,'queda código viejo: '+c)});
 });

@@ -77,7 +77,7 @@ export function initTour(){
 /* La primera vez: cuando no hay otra pantalla encima, arranca solo */
 export function tourSiPendiente(){
   if(corre||!tourPendiente()||!ctx.booted)return;
-  var tapa=['#wiz','#pin','#libro','#lb-hojas','#indice'].some(function(s){var x=$(s);return x&&!x.hidden});
+  var tapa=['#wiz','#pin','#estante','#lb-hojas','#indice'].some(function(s){var x=$(s);return x&&!x.hidden});
   /* el prólogo todavía se está cerrando (o hay algo encima): se prueba de nuevo en un rato, así arranca solo */
   if(tapa){clearTimeout(reint);reint=setTimeout(tourSiPendiente,900);return}
   setTimeout(function(){if(!corre&&tourPendiente())iniciarTour()},700);

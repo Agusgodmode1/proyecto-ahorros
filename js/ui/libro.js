@@ -1,16 +1,15 @@
-/* El Libro del Ahorro: la tapa en 3D (se abre y se cierra), el prólogo y el pacto.
+/* El prólogo y el pacto del libro. (2.64) La tapa ya no vive acá: es la de la estantería 3D (ui/estante.js).
    El prólogo son las primeras 5 páginas del libro (2.26): el propósito, las 3 preguntas (¿con cuánta plata empezás?,
    ¿cuánto querés guardar?, ¿qué día cobrás?) y el pacto. Cada página: una pregunta, una línea de ayuda y el botón.
    Los pagos fijos se cargan en Fijos; la plata apartada, en la letra chica del pacto (hojear, E.edit='qa').
    Modos:
-   - 'nuevo': la primera vez. Tapa (con importar o ver el ejemplo) → apertura → «¿Qué querés hacer?» (2.26: el pacto o una
-     herramienta suelta, o.alHerramienta) → las páginas del prólogo → «Sellar el pacto». En cada página hay un «Saltar»
-     (2.33, o.alSaltar(estado)): sin armar el pacto, la app abre directo el menú de Herramientas. Con o.sinTapa (armar el pacto
-     después de usar una herramienta) arranca directo en la primera página, con «Ahora no» para volver.
+   - 'nuevo': la primera vez que se abre un libro. «¿Qué querés hacer?» (2.26: el pacto o una herramienta suelta,
+     o.alHerramienta; y, 2.64, traer un respaldo o mirar el ejemplo: o.alImportar, o.alEjemplo) → las páginas del prólogo →
+     «Sellar el pacto». En cada página hay un «Saltar» (2.33, o.alSaltar(estado)): sin armar el pacto, la app abre directo
+     el menú de Herramientas. Con o.sinTapa (armar el pacto después de usar una herramienta) hay un «Ahora no» para volver.
    - 'ciclo': al cobrar. Solo las 3 preguntas y el pacto nuevo; o.antes(estado) cierra el ciclo justo antes de sellar.
    - 'hojear': ya hay datos. Las mismas páginas muestran tus valores de hoy, con «Cambiar» para corregirlos en el lugar.
-   - 'tapa': «Cerrar el libro». La tapa se cierra (la apertura al revés, más rápida) y al tocarla se abre de nuevo en Hoy.
-   La apertura completa (~2,5 s) se saltea con un toque. Las cuentas son puras (logica/pacto.js).
+   Las cuentas son puras (logica/pacto.js).
    Solo se animan transform y opacity (Web Animations). Con «reducir movimiento», solo fundidos. */
 import {num} from '../logica/util.js';
 import {parse,diffDays,MESL,DIAL} from '../logica/fechas.js';
@@ -29,12 +28,9 @@ import {sonar} from './sonido.js';
 import {girar,terminar as terminarPase} from './pase.js';
 import {libroDe} from '../logica/libros.js';
 import {libroEnUso} from '../estado.js';
-import {costuraHTML,bordadoHTML,tituloHTML,guardasHTML,montarTapa,soltarTapa,tapaQuieta,fueArrastre,avivar} from './tapa.js';
 
 export var TITULO='El Libro del Ahorro';
 /* (2.60) lo que dice la tapa según el libro de la estantería */
-var LB={get chico(){return libroDe(libroEnUso()).chico},get grande(){return libroDe(libroEnUso()).grande},get frase(){return libroDe(libroEnUso()).frase}};
-var T=22; /* grosor del libro en px (igual que --lb-t) */
 function quieto(){try{return matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){return false}}
 function fLarga(s){var d=parse(s);return DIAL[d.getDay()]+' '+d.getDate()+' de '+MESL[d.getMonth()]}
 
@@ -87,88 +83,7 @@ function broteHTML(e){
 }
 var ESTRELLA='<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 0l2.6 7.4L20 10l-7.4 2.6L10 20l-2.6-7.4L0 10l7.4-2.6Z" fill="#FFD27A"/><circle cx="10" cy="10" r="2.4" fill="#FFF7E0"/></svg>';
 
-/* ---------- Tapa ---------- */
-function htmlPortada(opciones){
-  var hojas='';for(var i=0;i<3;i++)hojas+='<div class="lb-hoja"><i></i><i></i></div>';
-  return '<button class="lb-link lb-saltar" type="button" data-lb="saltar" hidden>Saltar</button>'
-    +'<button class="lb-link lb-estante" type="button" data-lb="estante">‹ Estantería</button><div class="lb-escena"><div class="lb-cam"><div class="lb-gira"><div class="lb-libro" role="button" tabindex="0" aria-label="Abrir el libro" data-lb="abrir">'
-    +'<div class="lb-sombra"></div><div class="lb-contra"></div><div class="lb-bloque"></div>'
-    +'<div class="lb-canto lb-canto-d"></div><div class="lb-canto lb-canto-a"></div>'+hojas
-    +'<div class="lb-lomo"></div>'
-    /* la tela, de atrás para adelante: nebulosas, galaxia, estrellas lejanas y cercanas, la estrella fugaz, la trama,
-       la costura, las estrellas bordadas y el título (cada capa se mueve apenas distinto al arrastrar: data-k) */
-    +'<div class="lb-tapa"><div class="lb-tapa-f">'
-    +'<i class="lb-capa" data-k="3"><i class="lb-neb"></i><i class="lb-neb b"></i></i>'
-    +'<i class="lb-capa" data-k="4"><i class="lb-gal"><i class="lb-gal-gira"></i><i class="lb-gal-luz"></i></i></i>'
-    +'<i class="lb-capa" data-k="2"><i class="lb-astros b"></i></i>'
-    +'<i class="lb-capa" data-k="6"><i class="lb-astros a"></i><i class="lb-fugaz"></i></i>'
-    +'<i class="lb-trama"></i><i class="lb-velo"></i>'+costuraHTML()
-    +'<div class="lb-tapa-in"><div class="lb-bordado-w" data-k="8">'+bordadoHTML()+'</div>'
-    +'<div class="lb-tit-w" data-k="11"><h1 class="lb-tit"><small>'+LB.chico+'</small>'+tituloHTML().replace(/>Ahorro</g,'>'+LB.grande+'<')+'<span class="sr-only">'+LB.grande+'</span></h1><p class="lb-lema">'+LB.frase+'</p></div></div></div>'
-    +'<div class="lb-tapa-d">'+guardasHTML()+'</div></div>'
-    +'<div class="lb-broche"><b></b></div>'
-    +'</div></div></div></div>'
-    +'<p class="lb-toca">Tocá el libro para abrirlo</p>'
-    +(opciones?'<div class="lb-otros"><button class="lb-link" type="button" data-lb="importar">Ya tenía datos: importarlos</button><button class="lb-link" type="button" data-lb="ejemplo">Solo mirar, con datos de ejemplo</button></div>'
-      +'<p class="lb-nota">Lo que escribas queda solo en este teléfono: no hay cuentas ni servidores.</p>'
-      +'<div class="lb-imp" id="lb-imp" hidden role="dialog" aria-modal="true" aria-labelledby="lb-imp-t"><h2 id="lb-imp-t">Traer tus datos</h2><p class="lb-p">Elegí un archivo de respaldo exportado desde esta app, o pegá el texto que copiaste con <b>Copiar como texto</b>.</p><div id="lb-import"></div><div class="lb-acc"><button class="lb-btn" type="button" data-lb="imp-x">Volver al libro</button></div></div>'
-      :'');
-}
-
-/* La apertura: el libro se levanta, se abre el broche, la tapa gira sobre la bisagra (rebota y asienta),
-   pasan tres hojas en cascada y la cámara se acerca a la página. Con rev, lo mismo al revés y más rápido (el cierre). */
-var anims=[],D_ABRE=2500,K_CIERRE=1.7;
-function animar(el,kf,o,rev){
-  o=Object.assign({fill:'forwards',delay:0},o);
-  if(rev){var fin=o.delay+o.duration;o.delay=(D_ABRE-fin)/K_CIERRE;o.duration/=K_CIERRE;o.direction='reverse';o.fill='both'}
-  var a=el.animate(kf,o);anims.push(a);return a;
-}
-function moverLibro(mesa,listo,rev){
-  var L=mesa.querySelector('.lb-libro'),cam=mesa.querySelector('.lb-cam'),tapa=mesa.querySelector('.lb-tapa'),bro=mesa.querySelector('.lb-broche');
-  var W=L.offsetWidth,D=D_ABRE,hecho=false;
-  var saltar=mesa.querySelector('[data-lb="saltar"]');saltar.hidden=false;
-  mesa.querySelectorAll('.lb-toca,.lb-otros,.lb-nota').forEach(function(x){x.style.animation='none';x.style.visibility='hidden'});
-  function fin(){
-    if(hecho)return;hecho=true;
-    anims.forEach(function(a){try{a.finish()}catch(e){}});
-    if(rev){anims.forEach(function(a){a.cancel()});saltar.hidden=true;tapaQuieta(mesa);mesa.querySelectorAll('.lb-toca,.lb-otros,.lb-nota').forEach(function(x){x.style.animation='';x.style.visibility=''})}
-    anims=[];listo();
-  }
-  soltarTapa(mesa);
-  if(!rev){setTimeout(function(){sonar('broche')},300);avivar(mesa)}
-  var T0='rotateX(24deg) rotateY(-14deg) rotateZ(3deg)';
-  animar(L,[
-    {transform:T0+' translateZ(0)',offset:0},
-    {transform:T0+' translateZ(34px)',offset:.14,easing:'cubic-bezier(.3,.7,.3,1)'},
-    {transform:'rotateX(12deg) rotateY(0deg) rotateZ(0deg) translateZ(34px)',offset:.6,easing:'ease-in-out'},
-    {transform:'rotateX(0deg) rotateY(0deg) rotateZ(0deg) translateZ(0)',offset:1}
-  ],{duration:D},rev);
-  animar(bro,[{transform:'translateZ('+(T+1.5)+'px)',opacity:1},{transform:'translateZ('+(T+1.5)+'px) translateX(22px) rotateY(70deg)',opacity:0}],{duration:320,delay:300,easing:'cubic-bezier(.5,0,.7,.4)'},rev);
-  animar(tapa,[
-    {transform:'translateZ('+T+'px) rotateY(0deg)',offset:0,easing:'cubic-bezier(.42,0,.36,1)'},
-    {transform:'translateZ('+T+'px) rotateY(-186deg)',offset:.72,easing:'ease-out'},
-    {transform:'translateZ('+T+'px) rotateY(-176deg)',offset:.88,easing:'ease-in-out'},
-    {transform:'translateZ('+T+'px) rotateY(-180deg)',offset:1}
-  ],{duration:1050,delay:520},rev);
-  mesa.querySelectorAll('.lb-hoja').forEach(function(h,i){
-    var z=T-2.4+i*.6;
-    animar(h,[{transform:'translateZ('+z+'px) rotateY(0deg)'},{transform:'translateZ('+(T+.5+i*.4)+'px) rotateY(-178deg)'}],{duration:620,delay:1080+i*150,easing:'cubic-bezier(.45,.05,.35,1)'},rev);
-  });
-  animar(cam,[
-    {transform:'translateX(0) scale(1)',offset:0},
-    {transform:'translateX(0) scale(1)',offset:.2,easing:'ease-in-out'},
-    {transform:'translateX('+W*.35+'px) scale(.7)',offset:.55,easing:'ease-in-out'},
-    {transform:'translateX('+W*.35+'px) scale(.7)',offset:.74,easing:'cubic-bezier(.5,0,.3,1)'},
-    {transform:'translateX(0) scale(2.6)',offset:1}
-  ],{duration:D},rev);
-  var a=animar(mesa,[{opacity:1,offset:0},{opacity:1,offset:.86},{opacity:0,offset:1}],{duration:D},rev);
-  a.onfinish=fin;
-  saltar.onclick=function(e){e.stopPropagation();fin()};
-  mesa.addEventListener('pointerdown',function sk(e){if(e.target.closest('.lb-saltar'))return;mesa.removeEventListener('pointerdown',sk);fin()});
-}
-
-/* ---------- Páginas ---------- */
-var o=null,st=null,D=null,idx=0,PAGS=[],vista=null,E=null,broteVisto=0;
+var o=null,st=null,D=null,idx=0,PAGS=[],E=null,broteVisto=0;
 function hojear(){return o&&o.modo==='hojear'}
 /* Hasta dónde creció el brote en cada página (en hojear ya está todo contestado y el pacto, sellado) */
 function etapa(id){
@@ -208,7 +123,10 @@ function pagHTML(id){
     h='<h1 class="lb-h lb-tinta" id="lb-h">'+tinta('¿Qué querés hacer?')+'</h1>'
       +'<button class="lb-camino" type="button" data-lb="sig"><span><b>Armar mi pacto de ahorro</b><small>Cuánto podés gastar cada día hasta que cobres. Unos 2 minutos.</small></span><i aria-hidden="true">›</i></button>'
       +'<p class="lb-o">O usá una herramienta suelta, sin llenar nada más:</p>'
-      +listaHerrHTML('lb-herr','data-lb="herr"');
+      +listaHerrHTML('lb-herr','data-lb="herr"')
+      /* (2.64) antes estaban en la tapa: traer un respaldo o mirar el ejemplo */
+      +(o.alEjemplo?'<div class="lb-otros"><button class="lb-link" type="button" data-lb="importar">Ya tenía datos: importarlos</button><button class="lb-link" type="button" data-lb="ejemplo">Solo mirar, con datos de ejemplo</button></div>'
+        +'<div class="lb-imp" id="lb-imp" hidden role="dialog" aria-modal="true" aria-labelledby="lb-imp-t"><h2 id="lb-imp-t">Traer tus datos</h2><p class="lb-p">Elegí un archivo de respaldo exportado desde esta app, o pegá el texto que copiaste con <b>Copiar como texto</b>.</p><div id="lb-import"></div><div class="lb-acc"><button class="lb-btn" type="button" data-lb="imp-x">Volver</button></div></div>':'');
   }else if(id==='p1'){
     h=exLibrisHTML()+'<h1 class="lb-h lb-tinta" id="lb-h">'+tinta('Este libro tiene un solo propósito')+'</h1>'
       +'<p class="lb-cita">que generes un ahorro, por más mínimo que sea.</p>'+ORLA+acc;
@@ -540,10 +458,10 @@ export function polvo(donde,n,demora){
 }
 
 function cerrarTodo(dir){
-  var h=$('#lb-hojas'),m=$('#libro');
+  var h=$('#lb-hojas');
   devolverLetra();
   document.documentElement.classList.remove('voz-abierta','lb-abierto');
-  var fin=function(){h.hidden=true;h.innerHTML='';m.hidden=true;m.innerHTML=''};
+  var fin=function(){h.hidden=true;h.innerHTML=''};
   if(h.hidden||quieto()){fin();return}
   var pag=h.querySelector('.lb-pag:last-child');
   terminarPase();
@@ -576,56 +494,37 @@ function abrirHojas(pagina,dir){
       girar({padre:h,caja:cajaDe(pila),frente:fotoPag(pag),sentido:-1,z:3,alFinal:function(){h.classList.remove('lb-transp');pila.style.visibility=''}});
     }else h.animate([{opacity:0},{opacity:1}],{duration:260});
   }
-  $('#libro').hidden=true;
 }
 
 /* opt: {modo:'nuevo'|'hojear'|'ciclo'|'tapa', estado, pagina, editar, dir,
          listo(estado), alImportar(estado), alEjemplo(), alHerramienta(estado,id), alSaltar(estado), alCerrar(dir), alGuardar(v), alApartado(), antes(estado)} */
 export function abrirLibro(opt){
-  o=opt;st=opt.estado;vista='portada';E={edit:null};
+  o=opt;st=opt.estado;E={edit:null};
   aplicarFeriados(st);
   var sg=sugerirCobro(st,today()),c=parse(sg.fecha);
   D={nombre:null,pesos:'',usd:'',cotiz:cotizacion(st)?String(cotizacion(st)):'',conUsd:false,ahorro:null,cobro:sg.fecha,mes:[c.getFullYear(),c.getMonth()],hayAp:null,ap:[]};
   broteVisto=0;
   PAGS=o.modo==='ciclo'?PROLOGO.slice(1):(o.modo==='nuevo'&&o.alHerramienta?['que']:[]).concat(PROLOGO);
-  var m=$('#libro');
   document.documentElement.classList.add('voz-abierta','lb-abierto');
-  if(o.modo==='ciclo'){D.ap=JSON.parse(JSON.stringify((st.pacto&&st.pacto.apartado)||[]));D.hayAp=D.ap.length?true:null;D.pesos=String(Math.round(num(o.total))||'');D.ahorro=String(Math.round(num(st.plan.ahorro))||'');vista='hojas';abrirHojas();return}
-  if(o.modo==='nuevo'&&o.sinTapa){vista='hojas';abrirHojas(PAGS[0],1);return}
-  if(o.modo==='hojear'){vista='hojas';var pg=o.editar||o.pagina||'p1';if(pg==='qa')pg='pacto';broteVisto=Math.max(0,etapa(pg)-1);abrirHojas(pg,o.dir||1);if(o.editar)empezarEdicion(o.editar);return}
-  m.innerHTML=htmlPortada(!!o.alEjemplo);m.hidden=false;m.style.opacity='';
-  tapaQuieta(m);montarTapa(m);
-  if(o.alEjemplo)montarImportador($('#lb-import'),function(e){cerrarTodo();o.alImportar(e)},'Usar estos datos');
-  /* «Cerrar el libro»: la tapa se cierra (la apertura al revés) y queda esperando un toque */
-  if(o.modo==='tapa'){
-    if(quieto()||o.sinCierre)m.animate([{opacity:0},{opacity:1}],{duration:o.sinCierre&&!quieto()?420:250}); /* (2.60) recién sacado del estante: la tapa aparece ya cerrada */
-    else{vista='cerrando';moverLibro(m,function(){vista='portada'},true)}
-  }
+  if(o.modo==='ciclo'){D.ap=JSON.parse(JSON.stringify((st.pacto&&st.pacto.apartado)||[]));D.hayAp=D.ap.length?true:null;D.pesos=String(Math.round(num(o.total))||'');D.ahorro=String(Math.round(num(st.plan.ahorro))||'');abrirHojas();return}
+  if(o.modo==='hojear'){var pg=o.editar||o.pagina||'p1';if(pg==='qa')pg='pacto';broteVisto=Math.max(0,etapa(pg)-1);abrirHojas(pg,o.dir||1);if(o.editar)empezarEdicion(o.editar);return}
+  /* 'nuevo': directo a la primera página (2.64: la tapa es la de la estantería 3D) */
+  abrirHojas(PAGS[0],1);
 }
-/* ¿Está abierto el libro (tapa o prólogo)? */
+/* Cierra el prólogo ya mismo, sin animación (antes de volver a la estantería) */
+export function cerrarHojas(){
+  var h=$('#lb-hojas');if(!h||h.hidden)return;
+  devolverLetra();terminarPase();
+  document.documentElement.classList.remove('voz-abierta','lb-abierto');
+  h.hidden=true;h.innerHTML='';h.classList.remove('lb-transp');
+}
+/* ¿Está abierto el prólogo? */
 /* (2.58.4) Si el prólogo está abierto y sin nada a medio editar, vuelve a escribir la página que se ve (después de un «Deshacer», mostraba el valor viejo) */
 export function redibujarPrologo(){var h=$('#lb-hojas');if(h&&!h.hidden&&E&&!E.edit)irA(idx,0)}
-export function libroAbierto(){var h=$('#lb-hojas'),m=$('#libro');return (h&&!h.hidden)||(m&&!m.hidden)}
+export function libroAbierto(){var h=$('#lb-hojas');return !!h&&!h.hidden}
 
 export function initLibro(){
-  var m=$('#libro'),h=$('#lb-hojas');
-  function abrir(){
-    if(vista!=='portada')return;
-    if(fueArrastre())return; /* arrastrar el dedo sobre la tapa mueve la luz, no abre */
-    vista='abriendo';
-    var luego=function(){vista='hojas';if(o.modo==='tapa'){cerrarTodo();if(o.listo)o.listo();return}abrirHojas()};
-    if(quieto()){var an=m.animate([{opacity:1},{opacity:0}],{duration:250,fill:'forwards'});an.onfinish=function(){luego();an.cancel()};return}
-    moverLibro(m,luego);
-  }
-  m.addEventListener('click',function(e){
-    var b=e.target.closest('[data-lb]');if(!b)return;
-    var a=b.getAttribute('data-lb');
-    if(a==='abrir')abrir();
-    if(a==='importar'){$('#lb-imp').hidden=false}
-    if(a==='imp-x'){$('#lb-imp').hidden=true}
-    if(a==='ejemplo'){cerrarTodo();o.alEjemplo()}
-  });
-  m.addEventListener('keydown',function(e){if((e.key==='Enter'||e.key===' ')&&e.target.classList.contains('lb-libro')){e.preventDefault();abrir()}});
+  var h=$('#lb-hojas');
   h.addEventListener('input',function(e){
     var id=e.target.id;leer();
     if(id==='lb-pesos'||id==='lb-usd'||id==='lb-cotiz'){error('');vivoQ1()}
@@ -640,6 +539,9 @@ export function initLibro(){
   h.addEventListener('click',function(e){
     var b=e.target.closest('[data-lb]');if(!b||b.closest('[aria-hidden="true"]'))return;
     var a=b.getAttribute('data-lb');leer();
+    if(a==='importar'){var im=$('#lb-imp');if(im){im.hidden=false;if(!$('#lb-import').firstChild)montarImportador($('#lb-import'),function(e){cerrarTodo();o.alImportar(e)},'Usar estos datos')}return}
+    if(a==='imp-x'){var ix=$('#lb-imp');if(ix)ix.hidden=true;return}
+    if(a==='ejemplo'){cerrarTodo();o.alEjemplo();return}
     if(a==='sig'){if(!valida(PAGS[idx]))return;if(idx<PAGS.length-1)irA(idx+1,1);return}
     if(a==='atras'){if(idx>0){E.edit=null;irA(idx-1,-1)}else if(hojear()&&o.alTapa)aLaTapa();return}
     if(a==='cambiar'){empezarEdicion(PAGS[idx]);return}

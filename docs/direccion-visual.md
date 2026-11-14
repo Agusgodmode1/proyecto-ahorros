@@ -5,15 +5,13 @@ Cómo se quiere ver y sentir la app. Pedido de Agus: «un cambio grande, un camb
 ## Idea central
 **Un mundo normal y corriente donde de pronto aparece lo mágico.** Lo cotidiano va apagado y realista; lo mágico brilla y es lo único con color vivo.
 
-## La estantería (2.62)
-- **Escena:** una biblioteca común de noche, con luz de luna entrando por la izquierda (cian) y un resplandor de lámpara abajo a la derecha (naranja). Madera cálida, libros comunes en tonos apagados (marrones, verdes, bordó, azul grisáceo).
-- **Los dos libros mágicos:** zafiro vivo (El Libro del Ahorro) y ámbar/cobre vivo (El Pacto de los Dos). Cada uno tiene un halo que late despacio, polvo de luz que sube (puntos y estrellitas) y un flote casi imperceptible.
-- **Cámara y cine:** la escena entra como una cámara que se acerca (1,7 s), viñeta oscura en los bordes y grano de película fino.
-- **Al tocar un libro:** sale del estante, viaja al centro, gira de lomo a tapa, destello de luz + chispas, un brillo recorre la tapa; el resto de la biblioteca se apaga y se funde hacia la tapa del libro. Dura unos 2,2 s.
-- **Letra:** títulos en Fraunces (la de siempre), dorada con un resplandor suave; textos chicos en Nunito.
-
-## La estantería 3D (2.63)
-La misma idea, en 3D de verdad: es lo que se ve al abrir la app. Entra con un fundido por encima de la 2.62, que queda de respaldo. Se ve igual que el prototipo; los ajustes de aspecto se piden aparte.
+## La estantería (2.64): una sola cinemática
+- **Principio:** realista y sobria. Lo único «mágico» es una luz tenue y cálida que sale de atrás de los dos libros. Nada de chispas, estrellitas ni destellos grandes.
+- **Escena:** una biblioteca de noche. Mueble de madera oscura con veta, tres estantes, 20 libros comunes en tonos apagados y unas monedas. Luna fría desde la izquierda, luz cálida desde abajo a la derecha (sin lámpara a la vista), sombras suaves, viñeta.
+- **Los dos libros:** tapa dura de cuero con grano, zafiro profundo (El Libro del Ahorro) y ámbar cobrizo (El Pacto de los Dos). Lomo con nervios, título en Fraunces dorado con relieve, la galaxia estampada en oro, cinta marcapáginas y guardas con mapa de estrellas. Se distinguen por su cuero y su luz, no por tamaño.
+- **Cómo llaman:** asoman uno o dos centímetros del estante y se mecen muy despacio, cada uno a su tiempo.
+- **Movimiento:** entrada de la cámara en arco (2,6 s); al elegir, el libro se inclina, sale del lomo, sube en arco y gira de frente (2,2 s), con un destello suave del hueco y el fondo desenfocado; un brillo cruza la tapa una vez; al abrir, la tapa gira sobre el lomo y la cámara entra en la página (2,0 s). Nada se mueve en línea recta ni arranca de golpe.
+- **Letra:** los nombres bajo los libros son texto de la página (Fraunces, marfil) con una etiqueta corta en dorado («Solo» / «En pareja»).
 
 ## Reglas para todo lo visual
 - Un solo foco de color vivo por pantalla: lo mágico. Todo lo demás, apagado.

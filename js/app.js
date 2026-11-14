@@ -1,7 +1,8 @@
 /* Arranque, pestañas y render general. */
 import {curWeek} from './logica/plan.js';
 import {charNoPermitido,limpiarNumero} from './logica/util.js';
-import {elegirLibro,ultimoLibro,recordarLibro,directo,setDirecto,pedirEstante,estantePedido} from './ui/estante.js';
+import {elegirLibro,soltarEstante,volverAlEstante,ultimoLibro,recordarLibro,directo,setDirecto,pedirAbrir,abrirPedido} from './ui/estante.js';
+import {crearPendientes} from './logica/pendiente.js';
 import {libroValido,respaldoCompleto} from './logica/libros.js';
 import {usarLibro,leerLibro,libroEnUso} from './estado.js';
 import {renderDuoHoy,renderCuentas,initCuentas} from './ui/cuentas.js';
@@ -19,7 +20,7 @@ import {renderAjustes,renderAvisoRespaldo,initAjustes,renderCopias,exportar} fro
 import {registrarSW,buscarVersion} from './pwa.js';
 import {initVoz} from './ui/voz.js';
 import {abrirPerfil,initPerfil,resumenPerfil} from './ui/perfil.js';
-import {abrirLibro,initLibro,redibujarPrologo} from './ui/libro.js';
+import {abrirLibro,initLibro,redibujarPrologo,cerrarHojas} from './ui/libro.js';
 import {copiaVisible,girar,terminar as terminarPase} from './ui/pase.js';
 import {introCapitulo,olvidarIntros} from './ui/intro.js';
 import {initIndice,abrirIndice} from './ui/indice.js';
@@ -45,7 +46,7 @@ var timer=null,saving=false,pending=false,borrando=false,guardado={donde:null,pe
 var ultimo=null;
 function fijarUltimo(){ultimo=JSON.parse(JSON.stringify(ctx.state))}
 function setStatus(m){var el=$('#save-status');if(el)el.textContent=m}
-function persist(){if(borrando)return;setStatus('Guardando…');clearTimeout(timer);timer=setTimeout(flush,450)}
+function persist(){pend.guardado();if(borrando)return;setStatus('Guardando…');clearTimeout(timer);timer=setTimeout(flush,450)}
 async function flush(){
   clearTimeout(timer);timer=null;
   if(borrando)return;
@@ -204,7 +205,7 @@ function abrirPrologo(pagina,editar,dir){
     },
     alApartado:function(){persist();syncInputs();renderAll()},
     alCerrar:function(){if(ctx.tab!=='resumen'){ctx.tab='resumen';renderAll()}},
-    /* desde la primera página del prólogo, hacia atrás: la tapa cerrada (al tocarla se abre en Hoy) */
+    /* desde la primera página del prólogo, hacia atrás: se cierra el libro y queda la tapa */
     alTapa:function(){cerrarLibro()}});
 }
 /* (2.26) Armar el pacto después de usar una herramienta: el prólogo desde la primera página, con lo que ya cargaste
@@ -220,9 +221,41 @@ function arrancarCon(st,id){
   arrancar(st,h&&h.tab);flush();
   setTimeout(function(){mostrarHerramienta(id)},120);
 }
-/* «Cerrar el libro»: la tapa se cierra; al tocarla se abre de nuevo en Hoy */
-function cerrarLibro(){
-  abrirLibro({modo:'tapa',estado:ctx.state,listo:function(){ctx.tab='resumen';renderAll();window.scrollTo(0,0);entrada()}});
+/* ---------- Cerrar el libro (2.64) ---------- */
+/* Lo escrito sin guardar: se anota cada campo donde se escribe y se olvida todo cuando la app guarda (logica/pendiente.js) */
+var pend=crearPendientes();
+document.addEventListener('input',function(e){
+  var t=e.target;if(!t||!t.tagName||t.closest('#estante'))return;
+  if(t.tagName==='TEXTAREA'||(t.tagName==='INPUT'&&/^(text|number|tel|email|url|date|month|)$/.test(t.getAttribute('type')||'')))pend.tocar(t);
+},true);
+function haySinGuardar(){
+  var v=$('#voz');if(v&&!v.hidden)return true; /* una carga por voz esperando confirmación */
+  return pend.hay(function(c){return {visible:!!c.isConnected&&c.offsetParent!==null,valor:c.value}});
+}
+/* Antes de cerrar con algo a medio escribir: se pregunta, y si se cancela no se pierde nada */
+function preguntarCierre(){
+  return new Promise(function(ok){
+    var d=document.createElement('div');d.className='cerrar-preg';d.setAttribute('role','alertdialog');d.setAttribute('aria-modal','true');d.setAttribute('aria-labelledby','cerrar-preg-t');
+    d.innerHTML='<div><h2 id="cerrar-preg-t">Tenés algo sin guardar</h2><p>Si cerrás el libro ahora, lo que escribiste se pierde.</p>'
+      +'<div class="row-btns"><button class="btn primary" type="button" data-r="0">Seguir acá</button><button class="btn" type="button" data-r="1">Cerrar igual</button></div></div>';
+    d.addEventListener('click',function(e){var b=e.target.closest('[data-r]');if(!b)return;d.remove();ok(b.getAttribute('data-r')==='1')});
+    document.body.appendChild(d);try{d.querySelector('button').focus()}catch(x){}
+  });
+}
+/* ◀ junto a la ruedita: la app se desvanece, el libro se cierra y queda la tapa de frente (otro ◀ lleva a la estantería).
+   No toca los datos. Si después se abre otro libro, la app arranca de nuevo directo en ese. */
+var cerrando=false;
+async function cerrarLibro(hastaEstante){
+  if(cerrando||!ctx.state)return;
+  if(haySinGuardar()&&!(await preguntarCierre()))return;
+  cerrando=true;
+  try{await flush()}catch(e){}
+  cerrarHojas();
+  var actual=libroEnUso(),id=await volverAlEstante({libro:actual,hastaMenu:hastaEstante===true});
+  cerrando=false;
+  if(id!==actual){pedirAbrir(id);location.reload();return}
+  pend.guardado();ctx.tab='resumen';renderAll();window.scrollTo(0,0);
+  await soltarEstante();
 }
 /* Al abrir: una transición corta (< 600 ms) hasta la página del día */
 function entrada(){
@@ -392,15 +425,8 @@ function arrancar(st,tab){
 ctx.persist=persist;ctx.renderAll=renderAll;ctx.go=go;ctx.syncInputs=syncInputs;ctx.abrirPrologo=abrirPrologo;ctx.cerrarLibro=cerrarLibro;
 
 /* ---------- La estantería (2.60) ---------- */
-/* La tapa se abre sola a los 2,5 s si nadie la tocó */
-function abrirSola(){setTimeout(function(){var m=$('#libro'),b=m&&!m.hidden&&m.querySelector('[data-lb="abrir"]');if(b&&$('#lb-hojas').hidden)b.click()},2500)}
-/* Volver a la estantería: se guarda lo pendiente y la app arranca de nuevo mostrando los lomos */
-async function aEstante(){
-  try{if(ctx.state)await flush()}catch(e){}
-  pedirEstante();
-  var fin=function(){location.reload()};
-  try{document.body.animate([{opacity:1},{opacity:0}],{duration:260,fill:'forwards'}).onfinish=fin}catch(e){fin()}
-}
+/* «Cambiar de libro»: cierra el libro y sigue hasta la estantería */
+function aEstante(){cerrarLibro(true)}
 ctx.aEstante=aEstante;
 var estanteListo=false;
 function initEstante(){
@@ -409,6 +435,7 @@ function initEstante(){
   marcar();
   document.addEventListener('click',async function(e){
     if(e.target.closest('[data-estante]')){aEstante();return}
+    if(e.target.closest('#libro-cerrar')){cerrarLibro();return}
     var d=e.target.closest('[data-directo]');
     if(d){setDirecto(d.getAttribute('data-directo')==='1');marcar();toast(directo()?'Listo: la app abre directo tu último libro':'Listo: al abrir vas a ver la estantería');return}
     if(e.target.closest('#aj-completo')){
@@ -428,22 +455,22 @@ function initEstante(){
   if(bv)bv.addEventListener('click',async function(){bv.disabled=true;bv.textContent='Buscando…';var r=await buscarVersion();bv.disabled=false;bv.textContent='Buscar una versión nueva';
     toast(r==='nueva'?'Hay una versión nueva: tocá «Actualizar» arriba':r==='al-dia'?'Ya tenés la última versión':'No pude buscar: revisá la conexión')});
   pedirPersistencia().then(function(p){guardado.persistente=p});
-  /* (2.60) La estantería: primero se elige el libro (o se abre directo el último, si así lo pediste en Ajustes) */
-  var porEstante=estantePedido()||!directo()||!ultimoLibro();
-  var libro=porEstante?await elegirLibro():libroValido(ultimoLibro());
+  /* (2.64) La estantería: primero se elige y se abre el libro. Se saltea si pediste abrir directo el último,
+     o si venís de cerrar un libro y abrir el otro (la app arranca de nuevo, directo en ese). */
+  var pedido=abrirPedido(),porEstante=!pedido&&(!directo()||!ultimoLibro());
+  var libro=pedido?libroValido(pedido):porEstante?await elegirLibro():libroValido(ultimoLibro());
   recordarLibro(libro);usarLibro(libro);document.documentElement.setAttribute('data-libro',libro);
   initEstante();
   var d=await cargar();
   /* Antes de pasar los datos a la forma nueva, se guarda una copia tal cual estaban */
   if(necesitaMigrar(d))await guardarCopia(d,'antes de actualizar la app');
   /* Con PIN, primero el PIN: los datos no se muestran hasta ponerlo bien */
-  if(d&&pinActivo())await pedirPin();
-  /* Ya migrados, se guardan enseguida: así la copia «antes de actualizar» se hace una sola vez */
-  if(d){var mig=necesitaMigrar(d);arrancar(migrar(d));if(mig)flush();setStatus('Se guarda en este dispositivo.');
-    /* recién sacado del estante: se ve la tapa unos segundos y se abre sola (tocarla lo adelanta) */
-    if(porEstante){abrirLibro({modo:'tapa',sinCierre:true,estado:ctx.state,listo:function(){ctx.tab='resumen';renderAll();window.scrollTo(0,0);entrada()}});abrirSola()}
-    return}
-  /* Primera vez: el libro cerrado. Al abrirlo, el prólogo y las tres preguntas del pacto. */
+  if(d&&pinActivo()){await soltarEstante();await pedirPin()}
+  /* Ya migrados, se guardan enseguida: así la copia «antes de actualizar» se hace una sola vez.
+     Un libro que ya tiene algo guardado entra directo a Hoy: el prólogo es solo para la primera vez. */
+  if(d){var mig=necesitaMigrar(d);arrancar(migrar(d));if(mig)flush();setStatus('Se guarda en este dispositivo.');soltarEstante();return}
+  /* Primera vez que se abre este libro: el prólogo (con «Saltar») y las tres preguntas del pacto. */
+  soltarEstante();
   function listo(st){arrancar(st);flush()}
   abrirLibro({modo:'nuevo',estado:defaults(),listo:listo,alImportar:listo,alEjemplo:function(){listo(ejemplo())},alHerramienta:arrancarCon,
     /* (2.33) Saltar el prólogo: la app arranca sin pacto y se abre el menú de Herramientas */

@@ -1,9 +1,9 @@
-// La línea de tiempo de la cinemática única (prototipo/cinematica.js) y las cuentas de ?perf3d=1 (prototipo/perf.js).
+// La línea de tiempo de la cinemática única (js/logica/cinematica.js) y las cuentas de ?perf3d=1 (js/logica/perf3d.js).
 // Spec: docs/specs/spec-cinematica-unica.md (tablas de «Tiempos y movimiento» y Regla 3, Regla 5 y Regla 2).
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { crearCinematica, DUR, VUELTA, SALTO, suave, seda, frena } from '../prototipo/cinematica.js';
-import { resumen, crearMedidor, aparato, cumple, tope30 } from '../prototipo/perf.js';
+import { crearCinematica, DUR, VUELTA, SALTO, suave, seda, frena } from '../js/logica/cinematica.js';
+import { resumen, crearMedidor, aparato, cumple, tope30 } from '../js/logica/perf3d.js';
 
 const PASO = 1 / 120;
 function correr(c, tope = 20) { let t = 0, e = ''; while (!e && t < tope) { e = c.avanzar(PASO); t += PASO; } return { t, e }; }

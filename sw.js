@@ -1,7 +1,7 @@
 /* Service worker: guarda la app para que funcione sin internet y avisa cuando hay una versión nueva.
    CADA CAMBIO EN LA APP: subí VERSION (y la de js/version.js). Así cambia el nombre del caché y el
    teléfono descarga la versión nueva. Si agregás un archivo, sumalo a ARCHIVOS (una prueba lo controla). */
-var VERSION='2.63.0';
+var VERSION='2.64.0';
 var CACHE='ahorros-'+VERSION;
 var FUENTES='ahorros-fuentes';
 var ARCHIVOS=[
@@ -56,6 +56,7 @@ var ARCHIVOS=[
   'js/ui/estante.js',
   'js/ui/escena3d.js',
   'js/logica/estante3d.js',
+  'js/logica/cinematica.js','js/logica/perf3d.js','js/logica/recorte.js','js/logica/pendiente.js','js/logica/fotos-escena.js','js/ui/escena3d-texturas.js','js/ui/escena3d-libro.js','icons/escena/inicio.webp','icons/escena/menu.webp','icons/escena/tapa-solo.webp','icons/escena/tapa-duo.webp',
   'js/logica/saldo.js',
   'js/logica/planilla.js',
   'js/logica/horas-archivo.js',
@@ -86,7 +87,6 @@ var ARCHIVOS=[
   'js/ui/respaldo.js',
   'js/ui/semanas.js',
   'js/ui/sonido.js',
-  'js/ui/tapa.js',
   'js/ui/pase.js',
   'js/ui/intro.js',
   'js/ui/lector.js',
@@ -114,20 +114,6 @@ var ARCHIVOS=[
   'vendor/nunito-5.3.0/nunito-latin-wght-normal.woff2',
   'vendor/caveat-5.3.0/caveat-latin-wght-normal.woff2',
   /* La estantería 3D: Three.js y sus complementos (todo lo que importa js/ui/escena3d.js) */
-  'vendor/three-r187/addons/environments/RoomEnvironment.js',
-  'vendor/three-r187/addons/geometries/RoundedBoxGeometry.js',
-  'vendor/three-r187/addons/postprocessing/BokehPass.js',
-  'vendor/three-r187/addons/postprocessing/EffectComposer.js',
-  'vendor/three-r187/addons/postprocessing/MaskPass.js',
-  'vendor/three-r187/addons/postprocessing/OutputPass.js',
-  'vendor/three-r187/addons/postprocessing/Pass.js',
-  'vendor/three-r187/addons/postprocessing/RenderPass.js',
-  'vendor/three-r187/addons/postprocessing/ShaderPass.js',
-  'vendor/three-r187/addons/postprocessing/UnrealBloomPass.js',
-  'vendor/three-r187/addons/shaders/BokehShader.js',
-  'vendor/three-r187/addons/shaders/CopyShader.js',
-  'vendor/three-r187/addons/shaders/LuminosityHighPassShader.js',
-  'vendor/three-r187/addons/shaders/OutputShader.js',
   'vendor/three-r187/three.core.js',
   'vendor/three-r187/three.module.js'
 ];

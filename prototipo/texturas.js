@@ -333,6 +333,15 @@ export function texHalo() {
   gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.25, 'rgba(255,255,255,.42)'); gr.addColorStop(.6, 'rgba(255,255,255,.1)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
   g.fillStyle = gr; g.fillRect(0, 0, N, N); return tex(c);
 }
+/* una franja de luz en diagonal: el brillo que cruza la tapa */
+export function texBrillo() {
+  const N = 256, c = lienzo(N, N), g = c.getContext('2d');
+  g.fillStyle = '#000'; g.fillRect(0, 0, N, N); g.translate(N / 2, N / 2); g.rotate(-.42);
+  const gr = g.createLinearGradient(-46, 0, 46, 0);
+  gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(.5, 'rgba(255,255,255,.9)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = gr; g.fillRect(-46, -N, 92, N * 2);
+  const t = tex(c); t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; return t;
+}
 /* sombra de un estante sobre lo que tiene abajo: oscura arriba y a la izquierda (la luna entra desde ahí), y en el apoyo */
 export function texSombraNicho() {
   const N = 128, c = lienzo(N, N), g = c.getContext('2d'), im = g.createImageData(N, N), d = im.data;

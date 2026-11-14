@@ -174,19 +174,6 @@ export function tablon(w, h, d, semilla = 0) {
 }
 
 /* ---------- utilería ---------- */
-function torno(perfil, seg = 28) { return new THREE.LatheGeometry(perfil.map(p => new THREE.Vector2(p[0], p[1])), seg); }
-/* lámpara de aceite de bronce, con tubo de vidrio */
-export function crearLampara(texHalo) {
-  const g = new THREE.Group();
-  const bronce = new THREE.MeshStandardMaterial({ color: 0x9a6a2c, roughness: .34, metalness: 1, envMapIntensity: 1.3 });
-  const base = new THREE.Mesh(torno([[0, 0], [.036, 0], [.039, .004], [.036, .009], [.023, .014], [.013, .03], [.017, .043], [.03, .054], [.033, .068], [.026, .08], [.013, .087], [.013, .094], [.0175, .097], [.0175, .101], [0, .101]]), bronce);
-  const vidrio = new THREE.Mesh(torno([[.0165, .1], [.027, .118], [.031, .142], [.024, .176], [.0155, .214]]), new THREE.MeshStandardMaterial({ color: 0xffe2b0, roughness: .06, metalness: 0, transparent: true, opacity: .16, side: THREE.DoubleSide, depthWrite: false, envMapIntensity: 2.2 }));
-  const sm = c => new THREE.SpriteMaterial({ map: texHalo, color: c, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true });
-  const llama = new THREE.Sprite(sm(0xffc880)); llama.scale.set(.03, .058, 1); llama.position.y = .132;
-  const aura = new THREE.Sprite(sm(0xff8a3a)); aura.scale.set(.3, .3, 1); aura.position.y = .135; aura.material.opacity = .34;
-  g.add(base, vidrio, aura, llama); g.userData = { llama, aura, foco: new THREE.Vector3(0, .132, 0) };
-  return g;
-}
 /* unas monedas apiladas */
 export function crearMonedas() {
   const g = new THREE.Group(), oro = new THREE.MeshStandardMaterial({ color: 0xcfa24a, roughness: .36, metalness: 1, envMapIntensity: 1.4 });

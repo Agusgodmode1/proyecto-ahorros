@@ -1,14 +1,16 @@
-/* Cinemática única · la escena: una biblioteca de noche, una sola cámara y los dos libros.
-   Ronda 1 (escena quieta): estantería, materiales, luz y las dos tapas. El movimiento definitivo llega en la ronda 2.
-   Para ir a una toma fija: ?toma=menu | solo | duo  (y &abre=150 para ver el libro abierto). */
+/* Cinemática única · la escena: una biblioteca de noche, una sola cámara y los dos libros, de principio a fin
+   (estantería → libro de frente → libro abierto). Qué pasa en cada momento lo dice cinematica.js; acá solo se dibuja.
+   Ayudas para probar: ?toma=menu | solo | duo (arranca en esa toma) · ?perf3d=1 (tiempos de cuadro al terminar)
+   · ?reloj=manual (no avanza sola: window.__escena.paso(segundos), para sacar capturas cuadro a cuadro). */
 import * as THREE from 'three';
-import { azar, ponerAniso, tex, texHeroe, HEROES, texCanto, texGuarda, texMadera, texPared, texAtlas, texHalo, texSombraNicho, texSombraBlanda, texHaz, granoCSS } from './texturas.js';
-import { LIBRO, crearHeroe, crearComunes, tablon, crearLampara, crearMonedas } from './libro3d.js';
+import { azar, ponerAniso, tex, texHeroe, HEROES, texCanto, texGuarda, texMadera, texPared, texAtlas, texHalo, texBrillo, texSombraNicho, texSombraBlanda, texHaz, granoCSS } from './texturas.js';
+import { LIBRO, crearHeroe, crearComunes, tablon, crearMonedas } from './libro3d.js';
+import { crearCinematica, suave, seda, frena, tramo } from './cinematica.js';
+import { crearMedidor, aparato, mostrar } from './perf.js';
 
 const $ = s => document.querySelector(s);
 const Q = new URLSearchParams(location.search);
 const QUIETO = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const suave = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
 /* ---------- medidas de la biblioteca (metros) ---------- */
 const AN = .44, PARANTE = .03, TABLA = .028, NICHO = .30, PASO = NICHO + TABLA, FONDO = .24, Z_LOMO = -.012;
@@ -36,7 +38,7 @@ export async function iniciar() {
   /* ---------- texturas compartidas ---------- */
   const mad = texMadera(), halo = texHalo();
   const madera = (tinte, rug = .52) => new THREE.MeshStandardMaterial({ map: tex(mad.c, { rep: [1, 1] }), normalMap: tex(mad.n, { color: false, rep: [1, 1] }), color: tinte, roughness: rug, metalness: 0, envMapIntensity: .7, normalScale: new THREE.Vector2(.8, .8) });
-  const mMadera = madera(0xcbab90), mFondo = madera(0x5e5048, .75), mPiso = madera(0x4c423c, .6);
+  const mMadera = madera(0xcbab90), mFondo = madera(0x5e5048, .75), mPiso = madera(0x4c423c, .85); mPiso.envMapIntensity = .15;
   const C = { canto: texCanto(false), cantoH: texCanto(true), guarda: texGuarda() };
 
   /* ---------- el cuarto ---------- */
@@ -59,12 +61,12 @@ export async function iniciar() {
   /* ---------- los libros ---------- */
   const at = texAtlas();
   const mComunes = new THREE.MeshStandardMaterial({ map: at.map, roughnessMap: at.orm, metalnessMap: at.orm, roughness: 1, metalness: 1, vertexColors: true, envMapIntensity: .5 });
-  const c = (w, h, d, celda, extra) => Object.assign({ w, h, d, celda }, extra);
+  const lb = (w, h, d, celda, extra) => Object.assign({ w, h, d, celda }, extra);
   const X0 = -AN / 2 + .006;
   const filas = [
-    { y: PASO, z: Z_LOMO, x0: X0, items: [c(.031, .236, .16, 0), c(.044, .212, .15, 1, { dz: -.004 }), c(.027, .248, .165, 2), c(.038, .226, .155, 3, { dz: -.006 }), c(.033, .205, .15, 4), c(.03, .23, .16, 5, { inclinado: 9 })] },
-    { y: 0, z: Z_LOMO, x0: X0, items: [c(.035, .232, .16, 6), c(.042, .246, .165, 8), { heroe: 'solo' }, c(.027, .203, .15, 7, { dz: -.005 }), c(.036, .214, .15, 9, { dz: -.004 }), c(.029, .24, .16, 10), c(.044, .222, .155, 11, { dz: -.007 }), c(.026, .2, .15, 12), c(.037, .238, .16, 13), { heroe: 'duo' }, c(.031, .21, .15, 14, { inclinado: 11 })] },
-    { y: -PASO, z: Z_LOMO, x0: X0 + .004, items: [{ acostados: [c(.04, .205, .15, 15), c(.031, .196, .15, 16, { dx: -.006, dz: -.004 }), c(.036, .178, .14, 17, { dx: -.012, dz: .003 })] }, { hueco: .012 }, c(.039, .228, .16, 18), c(.03, .207, .15, 2, { dz: -.005 })] }
+    { y: PASO, z: Z_LOMO, x0: X0, items: [lb(.031, .236, .16, 0), lb(.044, .212, .15, 1, { dz: -.004 }), lb(.027, .248, .165, 2), lb(.038, .226, .155, 3, { dz: -.006 }), lb(.033, .205, .15, 4), lb(.03, .23, .16, 5, { inclinado: 9 })] },
+    { y: 0, z: Z_LOMO, x0: X0, items: [lb(.035, .232, .16, 6), lb(.042, .246, .165, 8), { heroe: 'solo' }, lb(.027, .203, .15, 7, { dz: -.005 }), lb(.036, .214, .15, 9, { dz: -.004 }), lb(.029, .24, .16, 10), lb(.044, .222, .155, 11, { dz: -.007 }), lb(.037, .238, .16, 13), { heroe: 'duo' }, lb(.031, .21, .15, 14, { inclinado: 13 })] },
+    { y: -PASO, z: Z_LOMO, x0: X0 + .004, items: [{ acostados: [lb(.04, .205, .15, 15), lb(.031, .196, .15, 16, { dx: -.006, dz: -.004 }), lb(.036, .178, .14, 17, { dx: -.012, dz: .003 })] }, { hueco: .05 }, lb(.039, .228, .16, 18), lb(.03, .207, .15, 2, { dz: -.005 }), lb(.026, .2, .15, 12, { inclinado: 12 })] }
   ];
   const comunes = crearComunes(filas, mComunes); mueble.add(comunes.malla);
 
@@ -75,13 +77,18 @@ export async function iniciar() {
     h.reposo = { pos: new THREE.Vector3(s.x, s.y + LIBRO.H / 2, s.z - LIBRO.comba - LIBRO.W / 2 + .002), rot: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI / 2, 0)) };
     h.grupo.position.copy(h.reposo.pos); h.grupo.quaternion.copy(h.reposo.rot); h.cinta.visible = false;
     escena.add(h.grupo); heroes[id] = h;
-    /* el brillo: un halo suave que respira */
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: halo, color: HEROES[id].halo, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: .3 }));
-    sp.scale.set(.2, .46, 1); sp.position.set(s.x, s.y + LIBRO.H / 2, s.z + .03); escena.add(sp); h.halo = sp; h.fase = id === 'solo' ? 0 : 2.1;
+    /* los dos libros «llaman»: asoman del estante, se mueven apenas y su cuero toma un poco de luz propia (sin halo) */
+    h.mats[1].emissive = new THREE.Color(0xffffff); h.mats[1].emissiveMap = h.mats[1].map; h.mats[1].emissiveIntensity = 0;
+    h.fase = id === 'solo' ? 0 : Math.PI; h.enCapa = 0;
+    /* el destello suave del hueco cuando el libro sale de la biblioteca */
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: halo, color: HEROES[id].halo, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0 }));
+    sp.scale.set(.34, .56, 1); sp.position.set(s.x, s.y + LIBRO.H / 2, s.z + .02); sp.visible = false; escena.add(sp); h.destello = sp;
+    /* el brillo que recorre la tapa una sola vez al llegar */
+    const wt = LIBRO.W - LIBRO.cajo, br = new THREE.Mesh(new THREE.PlaneGeometry(wt, LIBRO.H), new THREE.MeshBasicMaterial({ map: texBrillo(), color: 0xfff0d2, blending: THREE.AdditiveBlending, transparent: true, opacity: 0, depthWrite: false }));
+    br.position.set(wt / 2, LIBRO.H / 2, LIBRO.tabla / 2 + .0005); br.visible = false; h.bisagra.add(br); h.brillo = br;
   }
 
   /* ---------- utilería ---------- */
-  const lampara = crearLampara(halo); lampara.position.set(.142, -PASO, -.105); mueble.add(lampara);
   const monedas = crearMonedas(); monedas.position.set(.09, PASO, -.05); mueble.add(monedas);
 
   /* ---------- sombras horneadas ---------- */
@@ -93,7 +100,7 @@ export async function iniciar() {
     const a = new THREE.Mesh(new THREE.PlaneGeometry(AN, .05), mBlanda); a.rotation.x = -Math.PI / 2; a.position.set(0, k * PASO + .0006, Z_LOMO - .004); a.renderOrder = 1; mueble.add(a);
   }
   const blob = (x, y, z, w, d) => { const a = new THREE.Mesh(new THREE.PlaneGeometry(w, d), mBlanda); a.rotation.x = -Math.PI / 2; a.position.set(x, y + .0008, z); a.renderOrder = 1; mueble.add(a); };
-  blob(.142, -PASO, -.105, .13, .12); blob(.115, PASO, -.04, .12, .09);
+  blob(.115, PASO, -.04, .12, .09);
   const sPiso = new THREE.Mesh(new THREE.PlaneGeometry(.9, .5), mBlanda); sPiso.rotation.x = -Math.PI / 2; sPiso.position.set(.04, PISO + .001, .12); cuarto.add(sPiso);
 
   /* ---------- la luz ---------- */
@@ -101,7 +108,8 @@ export async function iniciar() {
   todos(new THREE.HemisphereLight(0x8c96b8, 0x3d2716, .55));
   const relleno = todos(new THREE.DirectionalLight(0xffb27a, .55)); relleno.position.set(1.3, -.7, 1.6);
   const luna = todos(new THREE.DirectionalLight(0xc2d1ff, 1.9)); luna.position.set(-1.5, 1.25, 1.9);
-  const lamp = todos(new THREE.PointLight(0xffa25a, .26, 1.8, 2)); lamp.position.copy(lampara.position).add(lampara.userData.foco).add(new THREE.Vector3(-.05, .02, .1));
+  /* la luz cálida de abajo a la derecha: ya no hay lámpara a la vista, solo su luz */
+  const lamp = todos(new THREE.PointLight(0xffa25a, .5, 2.4, 2)); lamp.position.set(.46, -.16, .5);
   /* cuando un libro está al frente, la lámpara lo alcanza desde abajo a la derecha */
   const calida = todos(new THREE.PointLight(0xffab66, 0, 2.2, 2));
   /* el haz de la luna, con unas pocas motas de polvo adentro */
@@ -136,49 +144,88 @@ export async function iniciar() {
   const cuadro = new THREE.Mesh(geoQ, mBorr), escQ = new THREE.Scene(); escQ.add(cuadro); cuadro.frustumCulled = false;
   function pasada(mat, destino) { cuadro.material = mat; R.setRenderTarget(destino); R.render(escQ, camQ); }
 
-  /* ---------- la cámara y las tomas ---------- */
-  const tan = Math.tan(15 * Math.PI / 180), MIRA_Y = .128;
-  const E = { dMenu: 2.3, dTapa: 1, camTapa: new THREE.Vector3(), libroTapa: new THREE.Vector3() };
+  /* ---------- la cámara: dónde está en cada reposo ---------- */
+  const tan = Math.tan(15 * Math.PI / 180), MIRA_Y = .128, V = (x, y, z) => new THREE.Vector3(x, y, z);
+  const E = { prMax: 2, lejos: V(0, 0, 0), miraLejos: V(.02, .2, 0), menu: V(0, 0, 0), miraMenu: V(0, MIRA_Y, 0), camTapa: V(0, 0, 0), libroTapa: V(0, 0, 0), camPag: V(0, 0, 0), pag: V(0, 0, 0) };
   function encuadre() {
-    const w = innerWidth, h = innerHeight, pr = Math.min(devicePixelRatio || 1, 2);
+    const w = innerWidth, h = innerHeight, pr = Math.min(devicePixelRatio || 1, E.prMax);
     R.setPixelRatio(pr); R.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix();
     const W2 = Math.max(2, Math.round(w * pr / 2)), H2 = Math.max(2, Math.round(h * pr / 2));
     rtFondo.setSize(W2, H2); rtA.setSize(Math.round(W2 / 2), Math.round(H2 / 2)); rtB.setSize(Math.round(W2 / 2), Math.round(H2 / 2));
     /* menú: entra todo el mueble, a lo ancho en vertical y a lo alto en horizontal */
-    E.dMenu = Math.max(.28 / (tan * cam.aspect), .6 / tan);
+    const dM = Math.max(.28 / (tan * cam.aspect), .6 / tan);
+    E.menu.set(0, MIRA_Y, dM); E.lejos.set(-.62, .5, dM * 1.75 + .5);
     /* tapa: el libro ocupa dos tercios del ancho (o poco más de la mitad del alto, si el teléfono está acostado) */
-    E.dTapa = Math.max(.118 / (tan * cam.aspect), .21 / tan);
-    const zc = Math.max(E.dMenu * .66, E.dTapa + .45);
-    E.camTapa.set(0, MIRA_Y + .05, zc); E.libroTapa.set(.004, MIRA_Y + .05 + E.dTapa * tan * .06, zc - E.dTapa);
+    const dT = Math.max(.118 / (tan * cam.aspect), .21 / tan), zc = Math.max(dM * .66, dT + .45);
+    E.camTapa.set(0, MIRA_Y + .05, zc); E.libroTapa.set(.004, MIRA_Y + .05 + dT * tan * .06, zc - dT);
+    /* abrir: la cámara se mete en la primera página hasta que el papel llena la pantalla */
+    const dP = Math.min(.0648 / (tan * cam.aspect), .0995 / tan);
+    E.pag.copy(E.libroTapa).add(v1.set(.003, 0, LIBRO.T / 2 - LIBRO.tabla)); E.camPag.copy(E.pag); E.camPag.z += dP;
   }
-  const giroTapa = new THREE.Quaternion().setFromEuler(new THREE.Euler(.17, -.25, .012));
+  const giroTapa = new THREE.Quaternion().setFromEuler(new THREE.Euler(.17, -.25, .012)), giroPlano = new THREE.Quaternion();
+  const ejeX = V(1, 0, 0), v1 = V(0, 0, 0), v2 = V(0, 0, 0), v3 = V(0, 0, 0), q1 = new THREE.Quaternion();
 
-  /* k = 0 en el menú, 1 con el libro «elegido» de frente. Ronda 1: un paso simple entre las dos tomas. */
-  const est = { k: 0, meta: 0, elegido: null, abre: +(Q.get('abre') || 0), t0: performance.now() };
-  const v1 = new THREE.Vector3(), v2 = new THREE.Vector3(), q1 = new THREE.Quaternion();
+  /* ---------- de la línea de tiempo a la escena ---------- */
+  const c = crearCinematica();
+  const est = { pausa: false, abre: +(Q.get('abre') || 0), tBrillo: -9, k: 0, velo: 0 };
   function posar(t) {
-    const k = suave(est.k);
-    cam.position.set(0, MIRA_Y, E.dMenu).lerp(E.camTapa, k);
-    cam.lookAt(v1.set(0, MIRA_Y, 0).lerp(v2.copy(E.libroTapa), k));
-    for (const id in heroes) {
-      const h = heroes[id], yo = est.elegido === id, kk = yo ? k : 0;
-      /* sale del estante hacia adelante, sube en arco y gira de frente */
-      const sale = Math.min(1, kk * 3.2), vuelo = Math.max(0, (kk - .16) / .84);
-      v1.copy(h.reposo.pos); v1.z += sale * .19;
-      h.grupo.position.copy(v1).lerp(E.libroTapa, suave(vuelo)); h.grupo.position.y += Math.sin(Math.PI * vuelo) * .05;
-      if (yo && !QUIETO) h.grupo.position.y += Math.sin(t * .9) * .0035 * k;
-      h.grupo.quaternion.copy(h.reposo.rot).slerp(giroTapa, suave(Math.max(0, (kk - .3) / .7)));
-      h.cinta.visible = kk > .25; h.cinta.scale.y = Math.min(1, Math.max(.001, (kk - .25) * 3));
-      h.abrir(yo ? est.abre * k : 0);
-      h.capa(yo && est.k > 0 ? 1 : 0);
-      h.halo.material.opacity = (.6 + .16 * Math.sin(t * (6.283 / 5) + h.fase)) * (yo ? 1 - k : 1 - .4 * k);
+    const seg = c.seg, p = c.p, id = c.libro, arco = Math.sin;
+    /* cámara: siempre en curva, nunca en línea recta */
+    if (seg === 'foto' || seg === 'entrada') {
+      const k = seg === 'foto' ? 0 : frena(p), a = arco(Math.PI * k);
+      cam.position.copy(E.lejos).lerp(E.menu, k); cam.position.x += a * .2; cam.position.y -= a * .07;
+      cam.lookAt(v1.copy(E.miraLejos).lerp(E.miraMenu, k));
+    } else if (seg === 'elegir') {
+      const k = seda(tramo(p, .06, 1)), a = arco(Math.PI * k), lado = id === 'duo' ? 1 : -1;
+      cam.position.copy(E.menu).lerp(E.camTapa, k); cam.position.x += lado * a * .07; cam.position.y += a * .025;
+      cam.lookAt(v1.copy(E.miraMenu).lerp(E.libroTapa, k));
+    } else {
+      const k = seda(tramo(p, .3, .9)), a = arco(Math.PI * k);
+      cam.position.copy(E.camTapa).lerp(E.camPag, k); cam.position.y += a * .012;
+      cam.lookAt(v1.copy(E.libroTapa).lerp(E.pag, k));
     }
-    calida.intensity = .9 * k; calida.position.set(E.libroTapa.x + .55, E.libroTapa.y - .42, E.libroTapa.z + .5);
-    lampara.userData.llama.scale.y = .058 * (1 + .05 * Math.sin(t * 9.1) * Math.sin(t * 3.7));
+    /* cuánto está «al frente» el libro elegido: desenfoca y oscurece el resto */
+    est.k = seg === 'elegir' ? seda(tramo(p, .3, .96)) : seg === 'abrir' ? 1 : 0;
+    est.velo = seg === 'abrir' ? tramo(p, .85, 1) : 0;
+    const enEstante = seg === 'foto' || seg === 'entrada' || seg === 'elegir';
+    for (const hid in heroes) {
+      const h = heroes[hid], yo = id === hid, pe = yo && seg === 'elegir' ? p : yo ? 1 : 0;
+      /* elegir, por partes que se pisan un poco para que no haya cortes: se inclina y sale del lomo, sube en arco, gira de frente */
+      const tira = suave(tramo(pe, 0, .27)), sale = seda(tramo(pe, .17, .74)), gira = seda(tramo(pe, .46, 1));
+      /* el llamado: asoma del estante y se mece muy despacio; cada libro a su tiempo */
+      const late = QUIETO ? .5 : .5 + .5 * Math.sin(t * (6.283 / 5.2) + h.fase), llama = (1 - sale) * (yo ? 1 : 1 - .6 * est.k);
+      v1.copy(h.reposo.pos); v1.z += llama * (.011 + .007 * late) + tira * .055;
+      h.grupo.position.copy(v1).lerp(E.libroTapa, sale);
+      const a = Math.sin(Math.PI * sale); h.grupo.position.y += a * .06; h.grupo.position.z += a * .05;
+      q1.setFromAxisAngle(ejeX, llama * (.012 + .022 * late) + tira * (1 - sale) * .15).multiply(h.reposo.rot);
+      h.grupo.quaternion.copy(q1).slerp(giroTapa, gira);
+      let abre = 0;
+      if (yo && seg === 'abrir') {
+        h.grupo.quaternion.slerp(giroPlano, seda(tramo(p, .1, .8)));
+        abre = 150 * seda(tramo(p, 0, .55));
+      }
+      /* en reposo de frente: un vaivén casi imperceptible (ciclo de 7 s, menos de 1 cm) */
+      if (yo && !QUIETO) {
+        const quieto = seg === 'elegir' ? tramo(p, .86, 1) : 1 - tramo(p, 0, .25), w = 6.283 / 7;
+        h.grupo.position.y += Math.sin(t * w) * .0036 * quieto; h.grupo.position.x += Math.sin(t * w * .5 + 1) * .0018 * quieto;
+        h.grupo.rotateY(Math.sin(t * w + .6) * .012 * quieto);
+      }
+      h.abrir(est.abre && yo && seg === 'elegir' ? est.abre * gira : abre);
+      h.cinta.visible = sale > .2; h.cinta.scale.y = Math.max(.001, tramo(sale, .2, .7));
+      h.mats[1].emissiveIntensity = (.05 + .17 * late) * llama * (enEstante ? 1 : 0);
+      const capa = yo && est.k > 0 ? 1 : 0; if (capa !== h.enCapa) { h.capa(capa); h.enCapa = capa; }
+      /* el destello del hueco al salir: aparece y se apaga, sin chispas */
+      const d = yo && seg === 'elegir' ? Math.pow(Math.sin(Math.PI * tramo(p, .03, .6)), 2) : 0;
+      h.destello.visible = d > .004; h.destello.material.opacity = d * .8;
+      /* el brillo que cruza la tapa una vez (0,9 s) */
+      const b = (t - est.tBrillo) / .9, pasa = yo && b > 0 && b < 1 && seg === 'elegir' && !c.dir;
+      h.brillo.visible = pasa; if (pasa) { h.brillo.material.map.offset.x = .95 - b * 1.9; h.brillo.material.opacity = .26 * Math.sin(Math.PI * b); }
+    }
+    calida.intensity = .9 * Math.max(est.k, c.seg === 'elegir' ? seda(tramo(c.p, .17, .6)) : 0); calida.position.set(E.libroTapa.x + .55, E.libroTapa.y - .42, E.libroTapa.z + .5);
   }
   function dibujar(t) {
     posar(t); moverMotas(t);
-    const k = suave(est.k);
+    const k = est.k;
     if (k <= .001) { cam.layers.enableAll(); R.setRenderTarget(null); R.autoClear = true; R.render(escena, cam); return; }
     cam.layers.set(0); R.autoClear = true;
     if (k < .999) { R.setRenderTarget(null); R.render(escena, cam); }
@@ -192,49 +239,106 @@ export async function iniciar() {
     R.clearDepth(); cam.layers.set(1); R.render(escena, cam); R.autoClear = true;
   }
 
-  /* ---------- lo que es HTML: nombres, etiquetas y zonas de toque ---------- */
+  /* ---------- lo que es HTML: nombres, zonas de toque, flechas y el velo ---------- */
   const rot = [...document.querySelectorAll('.rotulo')], toq = [...document.querySelectorAll('.toque')];
+  const bAtras = $('#atras'), bAdelante = $('#adelante'), velo = $('#velo'), app = $('#app');
+  const aPantalla = (v) => { v.project(cam); v.x = (v.x * .5 + .5) * innerWidth; v.y = (-v.y * .5 + .5) * innerHeight; return v; };
+  /* los nombres y las zonas de toque siguen a su libro: se recalculan al llegar al menú y cada vez que cambia el tamaño */
   function ubicar() {
     const cxs = [];
     ['solo', 'duo'].forEach((id, i) => {
       const s = comunes.sitios[id];
-      const a = v1.set(s.x - LIBRO.T / 2, s.y, 0).project(cam), ax = (a.x * .5 + .5) * innerWidth, ay = (-a.y * .5 + .5) * innerHeight;
-      const b = v2.set(s.x + LIBRO.T / 2, s.y + LIBRO.H, 0).project(cam), bx = (b.x * .5 + .5) * innerWidth, by = (-b.y * .5 + .5) * innerHeight;
-      const cx = (ax + bx) / 2, w = Math.max(44, bx - ax + 14), h = Math.max(44, ay - by + 10);
-      rot[i].style.transform = `translate(${Math.round(cx)}px,${Math.round(ay + innerHeight * .012)}px) translateX(-50%)`;
-      toq[i].style.cssText = `left:${cx - w / 2}px;top:${(ay + by) / 2 - h / 2}px;width:${w}px;height:${h}px`;
+      const a = aPantalla(v1.set(s.x - LIBRO.T / 2, s.y, 0)), b = aPantalla(v2.set(s.x + LIBRO.T / 2, s.y + LIBRO.H, 0));
+      const cx = (a.x + b.x) / 2, w = Math.max(44, b.x - a.x + 14), h = Math.max(44, a.y - b.y + 10);
+      rot[i].style.transform = `translate(${Math.round(cx)}px,${Math.round(a.y + innerHeight * .012)}px) translateX(-50%)`;
+      toq[i].style.cssText = `left:${cx - w / 2}px;top:${(a.y + b.y) / 2 - h / 2}px;width:${w}px;height:${h}px`;
       cxs.push(cx);
     });
     /* si los dos libros quedan muy juntos (teléfono chico o acostado), el nombre va en dos renglones */
     for (const r of rot) r.classList.toggle('angosto', Math.abs(cxs[1] - cxs[0]) < 150);
   }
+  function ubicarEnMenu() { cam.position.copy(E.menu); cam.lookAt(E.miraMenu); cam.updateMatrixWorld(); ubicar(); }
+  const ui = { atras: -1, adelante: -1, rot: null, toc: null, velo: -1, app: null };
   function interfaz() {
-    const menu = est.meta === 0;
-    for (const r of rot) r.classList.toggle('ver', menu && est.k < .02);
-    for (const b of toq) b.hidden = !menu;
-    $('#volver').classList.toggle('ver', !menu);
+    const f = c.flechas(), r = c.rotulos(), tc = c.tocable(), e = c.estado();
+    if (f.atras !== ui.atras) { ui.atras = f.atras; bAtras.style.opacity = f.atras; bAtras.classList.toggle('viva', f.atras > 0); }
+    if (f.adelante !== ui.adelante) { ui.adelante = f.adelante; bAdelante.style.opacity = f.adelante; bAdelante.classList.toggle('viva', f.adelante > 0); }
+    if (r !== ui.rot) { ui.rot = r; for (const x of rot) x.classList.toggle('ver', r); }
+    if (tc !== ui.toc) { ui.toc = tc; for (const b of toq) b.hidden = !tc; }
+    if (est.velo !== ui.velo) { ui.velo = est.velo; velo.style.opacity = est.velo; }
+    const enApp = e === 'app'; if (enApp !== ui.app) { ui.app = enApp; app.classList.toggle('ver', enApp); }
   }
-  toq.forEach((b, i) => b.addEventListener('click', () => { est.elegido = i ? 'duo' : 'solo'; est.meta = 1; interfaz(); }));
-  $('#volver').addEventListener('click', () => { est.meta = 0; interfaz(); });
+  /* con «reducir movimiento» no hay recorrido: un fundido corto y aparece el reposo que sigue */
+  function fundido(hacer) { lienzo3d.style.opacity = 0; setTimeout(() => { hacer(); lienzo3d.style.opacity = ''; }, 180); }
+  const sig = () => c.estado() === 'tapa' ? 'app' : 'tapa';
+  function elegir(id) { if (QUIETO) { if (c.tocable()) fundido(() => { c.poner('tapa', id); est.tBrillo = -9; }); } else c.elegir(id); }
+  function atras() { if (QUIETO) { const e = c.estado(); if (e === 'tapa' || e === 'app') fundido(() => { c.poner(e === 'app' ? 'tapa' : 'menu'); if (e === 'tapa') ubicarEnMenu(); }); } else c.atras(); }
+  function adelante() { if (QUIETO) { if (c.estado() === 'tapa') fundido(() => c.poner(sig())); } else c.adelante(); }
+  toq.forEach((b, i) => b.addEventListener('click', () => elegir(i ? 'duo' : 'solo')));
+  bAtras.addEventListener('click', atras); bAdelante.addEventListener('click', adelante);
+  /* desde la «app»: primero se desvanece la pantalla (0,3 s) y después el libro se cierra */
+  $('#app-atras').addEventListener('click', () => { app.classList.add('saliendo'); setTimeout(() => { app.classList.remove('saliendo'); atras(); interfaz(); }, 300); });
+  /* toques sueltos: en la entrada, saltar al final; con la tapa de frente, tocar el libro lo abre, tocar afuera o deslizar hacia abajo lo devuelve */
+  function cajaLibro() {
+    const h = heroes[c.libro]; if (!h) return null;
+    let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+    for (const sx of [-1, 1]) for (const sy of [-1, 1]) { const p = aPantalla(h.grupo.localToWorld(v3.set(sx * LIBRO.W / 2, sy * LIBRO.H / 2, LIBRO.T / 2))); x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); y0 = Math.min(y0, p.y); y1 = Math.max(y1, p.y); }
+    return { x0, y0, x1, y1 };
+  }
+  let dedo = null;
+  addEventListener('pointerdown', e => { dedo = e.target.closest('button') ? null : { x: e.clientX, y: e.clientY }; });
+  addEventListener('pointerup', e => {
+    if (!dedo) return; const dx = e.clientX - dedo.x, dy = e.clientY - dedo.y, x = dedo.x, y = dedo.y; dedo = null;
+    const es = c.estado();
+    if (es === 'entrada') { c.tocar(); return; }
+    if (es !== 'tapa') return;
+    if (dy > 50 && dy > Math.abs(dx) * 1.4) { atras(); return; }
+    if (Math.hypot(dx, dy) > 12) return;
+    const b = cajaLibro(); if (b && x >= b.x0 && x <= b.x1 && y >= b.y0 && y <= b.y1) adelante(); else atras();
+  });
+  addEventListener('pointercancel', () => { dedo = null; });
 
-  /* ---------- arranque ---------- */
-  encuadre();
+  /* ---------- arranque y bucle ---------- */
+  encuadre(); ubicarEnMenu();
+  /* al girar el teléfono o cambiar el tamaño: se reencuadra todo sin cortar ni reiniciar la cinemática */
+  addEventListener('resize', () => { encuadre(); ubicarEnMenu(); });
   const toma = Q.get('toma');
-  if (toma === 'solo' || toma === 'duo') { est.elegido = toma; est.k = est.meta = 1; }
-  addEventListener('resize', () => { encuadre(); posar(0); cam.updateMatrixWorld(); if (est.k < .02) { const kk = est.k; est.k = 0; posar(0); cam.updateMatrixWorld(); ubicar(); est.k = kk; } });
-  est.k && (est.k = 0, posar(0), cam.updateMatrixWorld(), ubicar(), est.k = 1) || (posar(0), cam.updateMatrixWorld(), ubicar());
-  interfaz();
+  if (toma === 'menu') c.poner('menu'); else if (toma === 'solo' || toma === 'duo') c.poner('tapa', toma);
   $('.grano').style.backgroundImage = `url(${granoCSS()})`;
-  let antes = performance.now();
-  function cuadroAnim(ahora) {
-    const dt = Math.min(.05, (ahora - antes) / 1000); antes = ahora;
-    if (est.k !== est.meta) { const paso = dt / (QUIETO ? .3 : 1.5); est.k = est.meta > est.k ? Math.min(est.meta, est.k + paso) : Math.max(est.meta, est.k - paso); if (est.k === est.meta) interfaz(); }
-    if (!est.pausa) dibujar((ahora - est.t0) / 1000);
-    requestAnimationFrame(cuadroAnim);
+  const medidor = crearMedidor(), PERF = Q.get('perf3d') === '1', MANUAL = Q.get('reloj') === 'manual';
+  let reloj = 0, cuadros = 0, suma = 0, mostrado = false;
+  function paso(dt, real) {
+    const antes = c.seg, momento = c.estado();
+    const llego = c.avanzar(dt);
+    if (llego === 'tapa' && antes === 'elegir') est.tBrillo = reloj + dt;
+    if (llego === 'menu') ubicarEnMenu();
+    /* con el libro abierto, la escena queda en pausa: no dibuja ni gasta batería, pero sigue en memoria para poder volver */
+    if (c.estado() === 'app' && !llego) { interfaz(); return; }
+    reloj += dt; dibujar(reloj); interfaz();
+    if (real) {
+      medidor.anotar(momento, real);
+      /* si los primeros 60 cuadros vienen pesados, se baja la resolución de 2 a 1,5 */
+      if (cuadros < 60) { suma += real; if (++cuadros === 60 && suma / 60 > 19 && E.prMax > 1.5) { E.prMax = 1.5; est.bajo = true; encuadre(); } }
+    }
+    if (llego === 'app' && PERF && !mostrado) {
+      mostrado = true; let placa = '';
+      try { const gl = R.getContext(), x = gl.getExtension('WEBGL_debug_renderer_info'); placa = x ? String(gl.getParameter(x.UNMASKED_RENDERER_WEBGL)).replace(/^ANGLE \(|\)$/g, '').slice(0, 44) : ''; } catch (e2) { }
+      mostrar(medidor.tabla(), aparato(navigator.userAgent, innerWidth, innerHeight, R.getPixelRatio(), placa), est.bajo ? 'Se bajó la resolución a 1,5x por cuadros pesados.' : '');
+    }
   }
-  dibujar(0);
+  let ult = 0;
+  function tic(ahora) {
+    const real = ult ? ahora - ult : 0; ult = ahora;
+    if (!est.pausa) paso(Math.min(.05, real / 1000), real);
+    requestAnimationFrame(tic);
+  }
+  /* primer cuadro (la toma lejana, la misma de la foto de inicio), fundido de 0,4 s y arranca la entrada */
+  dibujar(0); interfaz();
   document.body.classList.add('lista');
-  window.__escena = { R, info: () => R.info.render, est };
-  requestAnimationFrame(cuadroAnim);
+  window.__escena = { R, c, est, info: () => R.info.render, paso: dt => paso(dt, 0), empezar: () => c.empezar() };
+  if (!MANUAL) {
+    if (c.seg === 'foto') { if (QUIETO) { c.poner('menu'); ubicarEnMenu(); } else setTimeout(() => c.empezar(), 400); }
+    requestAnimationFrame(tic);
+  }
 }
 iniciar().catch(e => { console.error(e); const p = document.createElement('p'); p.className = 'falla'; p.textContent = 'No se pudo encender la escena: ' + e.message; document.body.appendChild(p); });

@@ -74,19 +74,33 @@ Capturas de hoy guardadas en `prototipo/antes/` (app, respaldo 2.62 y prototipo 
 - Archivos: crear `prototipo/cinematica.js` (puro, sin Three.js) y `tests/cinematica.test.js`.
 - Hace: estados `foto → entrada → menu → elegir → tapa → abrir → app`, con duraciones de la spec, vuelta a 0,8× y **inversión desde donde está** al tocar ◀. Curvas suaves y trayectorias de cámara curvas. Qué flechas se ven en cada momento (Regla 3). Tocar en la entrada salta al final sin elegir.
 - Prueba: `tests/cinematica.test.js`, una prueba por fila de las tablas de la spec.
-- [ ] Hecho
+- [x] Hecho
 
 #### Tarea 6: animar la escena con la línea de tiempo
 - Archivos: modificar `prototipo/escena.js`, `prototipo/index.html`.
 - Hace: entrada, elegir (tirar del lomo, salir en arco, girar), tapa en reposo (vaivén y un brillo que pasa una vez), abrir (tapa a 150°, cámara a la página, fundido a negro). Flechas doradas de 44 px. Tocar afuera y deslizar hacia abajo vuelven al estante. Los nombres se van al elegir y vuelven al regresar. Girar el teléfono reencuadra sin reiniciar. `pixelRatio` 2 que baja a 1,5.
 - Prueba: secuencia de capturas cada 200 ms a 390 y 320 px, ida y vuelta, y una inversión a mitad de «Elegir» y de «Abrir».
-- [ ] Hecho
+- [x] Hecho
 
 #### Tarea 7: `?perf3d=1`
 - Archivos: crear `prototipo/perf.js`; modificar `prototipo/index.html`.
 - Hace: mide el tiempo de cada cuadro por momento y al terminar muestra mediana, p95, máximo y el nombre del aparato. Sin el parámetro no se ve nada.
 - Prueba: prueba de las cuentas (mediana, p95) en `tests/cinematica.test.js`; captura del cuadro. **Frenar y esperar a Agus (y su captura del iPhone).**
-- [ ] Hecho
+- [x] Hecho
+
+#### Decisiones de la ronda 2
+- Decisión: respuesta de Agus a la ronda 1 — colores y galaxia en oro aprobados; la estantería está bien de luz; **sin lámpara** (queda solo su luz cálida, desde abajo a la derecha, fuera de cuadro); **sin halo** en los libros del estante.
+- Decisión: los dos libros «llaman» de otra forma — asoman 1 a 2 cm del estante, se mecen muy despacio (ciclo de 5,2 s, cada uno a su tiempo) y su cuero toma un poco de luz propia. Con reducir movimiento, solo la luz.
+- Decisión: al sacar la lámpara, un libro del estante del medio bajó al de abajo — siguen siendo 20 comunes.
+- Decisión: las partes de «Elegir» (inclinarse y salir del lomo, subir en arco, girar) se pisan un poco entre sí en vez de ir una atrás de la otra — así no hay cortes de velocidad. Los tiempos totales son los de la spec.
+- Decisión: la cámara de la entrada usa una curva que arranca suave, toma velocidad pronto y frena largo (`frena`).
+- Decisión: el destello al salir es un resplandor del color del libro en el hueco del estante, que aparece y se apaga en 1,2 s — pedido de Agus, sin chispas.
+- Decisión: con la tapa de frente, tocar el libro también lo abre (igual que ▶) — hoy ya se abre tocándolo.
+- Decisión: las flechas van abajo, al centro, con círculo fino dorado y 48 px de toque — no tapan el libro ni los nombres.
+- Decisión: con reducir movimiento, el prototipo pasa de un reposo al otro con un fundido corto (en la app, ese caso usa el respaldo de fotos).
+- Decisión: `?reloj=manual` (solo para capturas) deja avanzar la escena a mano, cuadro por cuadro.
+- Decisión: la línea de tiempo (`prototipo/cinematica.js`) y las cuentas de la medición (`prototipo/perf.js`) son puras y tienen 16 pruebas en `tests/cinematica.test.js`.
+- Capturas: `prototipo/ronda2/` (secuencia cada 200 ms a 390 y 320 px, e inversiones a mitad de «Elegir» y de «Abrir»).
 
 ### Ronda 3: integración en la app (rama; a `main` con el OK de Agus)
 

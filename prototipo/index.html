@@ -10,7 +10,7 @@
   @font-face{font-family:'Fraunces';font-style:normal;font-weight:100 900;font-display:swap;src:url(../vendor/fraunces-5.3.0/fraunces-latin-full-normal.woff2) format('woff2')}
   html,body{margin:0;height:100%;background:#05060b;color:#f3ead6;overflow:hidden;
     font-family:'Fraunces','Iowan Old Style',Georgia,serif;-webkit-tap-highlight-color:transparent;touch-action:manipulation;-webkit-user-select:none;user-select:none}
-  #escena{display:block;position:fixed;inset:0;width:100%;height:100%;opacity:0;transition:opacity .6s ease}
+  #escena{display:block;position:fixed;inset:0;width:100%;height:100%;opacity:0;transition:opacity .4s ease}
   .lista #escena{opacity:1}
   /* viñeta y grano: fijos, por encima de la escena (no parpadean ni le cuestan a la placa de video) */
   .vineta,.grano{position:fixed;inset:0;pointer-events:none;z-index:1}
@@ -26,9 +26,20 @@
   .rotulo i{display:block;margin-top:3px;font:600 9.5px/1 -apple-system,'Nunito',system-ui,sans-serif;font-style:normal;letter-spacing:.16em;text-transform:uppercase;color:#d9b76a}
   .toque{position:fixed;z-index:3;border:0;padding:0;background:none;cursor:pointer}
   .toque:focus-visible{outline:2px solid #d9b76a;outline-offset:2px;border-radius:6px}
-  #volver{position:fixed;z-index:3;left:calc(10px + env(safe-area-inset-left));top:calc(10px + env(safe-area-inset-top));width:44px;height:44px;border:0;background:none;color:#d9b76a;
-    font-size:20px;opacity:0;pointer-events:none;transition:opacity .3s ease;cursor:pointer}
-  #volver.ver{opacity:.9;pointer-events:auto}
+  /* flechas: chicas, doradas, abajo, sin tapar el libro; el área de toque mide 48 px */
+  .flecha{position:fixed;z-index:4;bottom:calc(22px + env(safe-area-inset-bottom));width:48px;height:48px;border:0;padding:0;border-radius:50%;background:none;color:#d9b76a;
+    opacity:0;pointer-events:none;transition:opacity .3s ease;cursor:pointer;display:grid;place-items:center}
+  .flecha.viva{pointer-events:auto}
+  .flecha::before{content:'';position:absolute;inset:6px;border-radius:50%;border:1px solid rgba(217,183,106,.38);background:rgba(8,9,14,.28)}
+  .flecha svg{position:relative}
+  #atras{left:calc(50% - 74px)} #adelante{left:calc(50% + 26px)}
+  /* el fundido del final de «Abrir» y la pantalla que hace de app en el prototipo */
+  #velo{position:fixed;inset:0;z-index:5;background:#05060b;opacity:0;pointer-events:none}
+  #app{position:fixed;inset:0;z-index:6;background:#05060b;display:grid;place-items:center;opacity:0;pointer-events:none;transition:opacity .3s ease}
+  #app.ver{opacity:1;pointer-events:auto} #app.saliendo{opacity:0}
+  #app p{margin:0;padding:0 32px;text-align:center;font-style:italic;color:#a9a394;font-size:15px;line-height:1.5}
+  #app-atras{position:absolute;right:calc(64px + env(safe-area-inset-right));top:calc(10px + env(safe-area-inset-top));width:44px;height:44px;border:0;background:none;color:#d9b76a;cursor:pointer;display:grid;place-items:center}
+  #app .rueda{position:absolute;right:calc(14px + env(safe-area-inset-right));top:calc(10px + env(safe-area-inset-top));width:44px;height:44px;display:grid;place-items:center;color:#6f6a5e}
   .falla{position:fixed;inset:auto 0 40% 0;text-align:center;padding:0 24px;font-style:italic;z-index:5}
 </style>
 <script type="importmap">
@@ -42,7 +53,10 @@
 <div class="rotulo"><b>El Pacto <br>de los Dos</b><i>En pareja</i></div>
 <button class="toque" type="button" aria-label="Abrir El Libro del Ahorro, para usar solo"></button>
 <button class="toque" type="button" aria-label="Abrir El Pacto de los Dos, para usar en pareja"></button>
-<button id="volver" type="button" aria-label="Volver a la estantería"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+<button id="atras" class="flecha" type="button" aria-label="Volver"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+<button id="adelante" class="flecha" type="button" aria-label="Abrir el libro"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+<div id="velo"></div>
+<div id="app"><button id="app-atras" type="button" aria-label="Cerrar el libro"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="rueda" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span><p>Acá se abre la app, en Hoy.<br>La flecha de arriba cierra el libro.</p></div>
 <script type="module" src="./escena.js"></script>
 </body>
 </html>

@@ -35,25 +35,38 @@ Capturas de hoy guardadas en `prototipo/antes/` (app, respaldo 2.62 y prototipo 
 - Archivos: crear `prototipo/texturas.js`.
 - Hace: genera en canvas (con semilla, siempre iguales) cuero con grano (color, rugosidad, relieve), madera oscura con veta, papel crema, canto de hojas con líneas finas, tela de las guardas. Tamaño máximo 1024 px.
 - Prueba: captura de cada material de cerca.
-- [ ] Hecho
+- [x] Hecho
 
 #### Tarea 2: el libro
-- Archivos: crear `prototipo/libro3d.js`; guardar Fraunces en `prototipo/fuentes/`; crear `docs/creditos.md`.
+- Archivos: crear `prototipo/libro3d.js`; crear `docs/creditos.md`.
 - Hace: `crearLibro(op)` arma un libro de tapa dura con piezas separadas (tapa que gira sobre el lomo, lomo con nervios, contratapa, bloque de hojas, guardas, cinta marcapáginas, esquinas gastadas). Título en Fraunces dorado con relieve y brillo especular. Zafiro y ámbar. Motivo de cada libro estampado en dorado.
 - Prueba: capturas de la tapa de cada libro, de frente y en ángulo.
-- [ ] Hecho
+- [x] Hecho
 
 #### Tarea 3: la biblioteca y la luz
 - Archivos: reescribir `prototipo/escena.js` y `prototipo/index.html`.
 - Hace: estantes con grosor, 10 a 20 libros comunes (instanciados), 2 o 3 objetos, luna fría desde la izquierda, lámpara cálida abajo a la derecha, sombras de contacto horneadas, halo que respira (4 a 6 s), hasta 20 motas en el haz, viñeta y grano fijo. Nombres y etiquetas («Solo» / «En pareja») en HTML, siguiendo a su libro. Menos de 100.000 triángulos.
 - Prueba: capturas a 390 y 320 px; conteo de triángulos en consola.
-- [ ] Hecho
+- [x] Hecho
 
 #### Tarea 4: comparación «hoy / nuevo»
 - Archivos: crear `prototipo/comparar.html` (usa `prototipo/antes/`).
 - Hace: muestra lado a lado, con el mismo encuadre, la estantería y las dos tapas de hoy contra las nuevas.
 - Prueba: captura de la página. **Frenar y esperar a Agus.**
-- [ ] Hecho
+- [x] Hecho
+
+#### Decisiones de la ronda 1
+- Decisión: respuestas de Agus a la Regla 0 — las preferencias del teléfono siguen compartidas entre los dos libros; «importar» y «ver el ejemplo» se mudan a la primera página del prólogo; OK para publicar `prototipo/` en `main` al terminar cada ronda.
+- Decisión: Agus quiere conservar un destello suave cuando el libro sale de la biblioteca (le gusta el de hoy) — se suma en la ronda 2, sobrio, sin chispas.
+- Decisión: un mueble de tres estantes con 20 libros comunes, una lámpara de aceite (la luz cálida de abajo a la derecha) y unas monedas — entra entero en la pantalla vertical y deja lugar para los nombres.
+- Decisión: todos los libros comunes van fundidos en una sola malla con un solo atlas de lomos — un solo dibujo para la placa de video. La escena entera usa unos 14.000 triángulos y 69 dibujos por cuadro (el tope de la spec es 100.000).
+- Decisión: sin sombras dinámicas — las sombras son texturas (bajo cada estante y donde apoyan los libros).
+- Decisión: el desenfoque del fondo se hace a un cuarto de resolución y solo cuando hay un libro al frente; viñeta y grano van por CSS, fijos — más barato que un posprocesado completo.
+- Decisión: el motivo de la galaxia queda estampado en oro (puntitos en espiral) con la constelación de cada libro encima — a confirmar por Agus en las capturas.
+- Decisión: Fraunces se toma de `vendor/fraunces-5.3.0/`, que ya estaba en el repo (no hizo falta `prototipo/fuentes/`).
+- Decisión: el nombre bajo cada libro pasa a dos renglones cuando los libros quedan a menos de 150 px (teléfono de 320 px o acostado) — así nunca se pisan.
+- Decisión: en la ronda 1 tocar un libro lo trae al frente con un paso simple, solo para poder ver las tapas; el movimiento definitivo es la ronda 2.
+- Capturas: `prototipo/ronda1/` y la comparación en `prototipo/comparar.html`.
 
 ### Ronda 2: movimiento completo (solo `prototipo/`)
 

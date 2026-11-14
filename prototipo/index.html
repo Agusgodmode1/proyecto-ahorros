@@ -3,43 +3,46 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#06070d">
-<title>La biblioteca · prototipo 3D</title>
+<meta name="theme-color" content="#05060b">
+<title>La biblioteca · cinemática única (prototipo)</title>
 <style>
-  html,body{margin:0;height:100%;background:#06070d;color:#f1e6cc;overflow:hidden;
-    font-family:Georgia,'Times New Roman',serif;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
-  canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
-  #carga{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
-    background:radial-gradient(ellipse at 50% 40%,#1a1426 0%,#06070d 70%);z-index:5;transition:opacity 1.2s ease}
-  #carga p{margin:0;font-style:italic;letter-spacing:.06em;opacity:.85}
-  #carga .linea{width:180px;height:2px;background:#ffffff1a;border-radius:2px;overflow:hidden}
-  #barra{height:100%;width:0;background:linear-gradient(90deg,#b8862e,#ffe2a6);transition:width .3s ease}
-  .etq{position:fixed;left:0;top:0;font-style:italic;font-size:13px;color:#e9d3a0;opacity:0;pointer-events:none;
-    text-shadow:0 1px 6px #000;white-space:nowrap;transition:opacity .8s ease;z-index:2}
-  #panel{position:fixed;left:0;right:0;bottom:0;padding:22px 24px calc(26px + env(safe-area-inset-bottom));
-    text-align:center;z-index:3;opacity:0;transform:translateY(16px);transition:opacity .9s ease,transform .9s ease;
-    pointer-events:none;background:linear-gradient(transparent,#06070dcc 40%)}
-  #panel.ver{opacity:1;transform:none;pointer-events:auto}
-  #panel h1{margin:0 0 6px;font-weight:normal;font-size:24px;color:#ffe9b8}
-  #panel p{margin:0 0 18px;font-style:italic;opacity:.8;font-size:15px}
-  #panel button{font:inherit;font-size:16px;min-height:44px;padding:0 22px;margin:0 6px;border-radius:22px;cursor:pointer;
-    border:1px solid #e9d3a066;background:#ffffff0d;color:#f1e6cc}
-  #panel button.prin{background:linear-gradient(#e7c27a,#b8862e);color:#1b1206;border:0}
-  #pista{position:fixed;left:0;right:0;top:calc(18px + env(safe-area-inset-top));text-align:center;font-style:italic;
-    font-size:14px;opacity:0;transition:opacity 1.2s ease;z-index:2;color:#e9d3a0}
-  @media (prefers-reduced-motion:reduce){#panel,#carga,.etq,#pista{transition:opacity .4s ease}}
+  @font-face{font-family:'Fraunces';font-style:italic;font-weight:100 900;font-display:swap;src:url(../vendor/fraunces-5.3.0/fraunces-latin-full-italic.woff2) format('woff2')}
+  @font-face{font-family:'Fraunces';font-style:normal;font-weight:100 900;font-display:swap;src:url(../vendor/fraunces-5.3.0/fraunces-latin-full-normal.woff2) format('woff2')}
+  html,body{margin:0;height:100%;background:#05060b;color:#f3ead6;overflow:hidden;
+    font-family:'Fraunces','Iowan Old Style',Georgia,serif;-webkit-tap-highlight-color:transparent;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+  #escena{display:block;position:fixed;inset:0;width:100%;height:100%;opacity:0;transition:opacity .6s ease}
+  .lista #escena{opacity:1}
+  /* viñeta y grano: fijos, por encima de la escena (no parpadean ni le cuestan a la placa de video) */
+  .vineta,.grano{position:fixed;inset:0;pointer-events:none;z-index:1}
+  .vineta{background:radial-gradient(ellipse 85% 70% at 50% 46%,transparent 52%,rgba(2,3,8,.5) 100%)}
+  .grano{opacity:.03;background-size:128px 128px}
+  /* nombres y etiquetas: texto real de la página, nunca parte de la imagen */
+  .rotulo{position:fixed;left:0;top:0;z-index:2;text-align:center;pointer-events:none;opacity:0;transition:opacity .6s ease;white-space:nowrap;text-shadow:0 1px 5px #000,0 0 14px #000}
+  .rotulo.ver{opacity:1}
+  .rotulo br{display:none}
+  .rotulo.angosto br{display:inline}
+  .rotulo.angosto b{font-size:12px;line-height:1.15}
+  .rotulo b{display:block;font-weight:500;font-size:13px;letter-spacing:.01em;color:#f3ead6}
+  .rotulo i{display:block;margin-top:3px;font:600 9.5px/1 -apple-system,'Nunito',system-ui,sans-serif;font-style:normal;letter-spacing:.16em;text-transform:uppercase;color:#d9b76a}
+  .toque{position:fixed;z-index:3;border:0;padding:0;background:none;cursor:pointer}
+  .toque:focus-visible{outline:2px solid #d9b76a;outline-offset:2px;border-radius:6px}
+  #volver{position:fixed;z-index:3;left:calc(10px + env(safe-area-inset-left));top:calc(10px + env(safe-area-inset-top));width:44px;height:44px;border:0;background:none;color:#d9b76a;
+    font-size:20px;opacity:0;pointer-events:none;transition:opacity .3s ease;cursor:pointer}
+  #volver.ver{opacity:.9;pointer-events:auto}
+  .falla{position:fixed;inset:auto 0 40% 0;text-align:center;padding:0 24px;font-style:italic;z-index:5}
 </style>
 <script type="importmap">
 {"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/addons/"}}
 </script>
 </head>
 <body>
-<div id="carga"><p>Encendiendo la lámpara…</p><div class="linea"><div id="barra"></div></div></div>
-<div id="pista">Tocá un libro</div>
-<div class="etq" id="e0">Modo Lobo Solitario</div>
-<div class="etq" id="e1">Ahorro en Dúo</div>
-<div id="panel">
-  <button id="volver">Volver</button><button class="prin" id="abrir">Abrir</button></div>
+<canvas id="escena" aria-hidden="true"></canvas>
+<div class="vineta"></div><div class="grano"></div>
+<div class="rotulo"><b>El Libro <br>del Ahorro</b><i>Solo</i></div>
+<div class="rotulo"><b>El Pacto <br>de los Dos</b><i>En pareja</i></div>
+<button class="toque" type="button" aria-label="Abrir El Libro del Ahorro, para usar solo"></button>
+<button class="toque" type="button" aria-label="Abrir El Pacto de los Dos, para usar en pareja"></button>
+<button id="volver" type="button" aria-label="Volver a la estantería"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 <script type="module" src="./escena.js"></script>
 </body>
 </html>

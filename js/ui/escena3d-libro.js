@@ -62,7 +62,8 @@ function rayasCabezada(c1, c2) {
 export function crearHeroe(L, X, C) {
   const { W, H, T, tabla, cajo } = LIBRO, wt = W - cajo;
   const cuero = t => new THREE.MeshStandardMaterial({ map: t.map, normalMap: t.normalMap, roughnessMap: t.orm, metalnessMap: t.orm, roughness: 1, metalness: 1, envMapIntensity: 1.15, normalScale: new THREE.Vector2(1.1, 1.1) });
-  const mTapa = cuero(X.tapa), mLomo = cuero(X.lomo), mContra = cuero(X.contra);
+  /* la tapa y la contratapa arrancan con el cuero del lomo y se visten después (vestir), cuando su textura está lista */
+  const mTapa = cuero(X.tapa || X.lomo), mLomo = cuero(X.lomo), mContra = cuero(X.contra || X.lomo);
   mLomo.side = THREE.DoubleSide;
   const mGuarda = new THREE.MeshStandardMaterial({ map: C.guarda, roughness: .86, metalness: 0, envMapIntensity: .3 });
   const mCanto = new THREE.MeshStandardMaterial({ map: C.canto, roughness: .9, metalness: 0, envMapIntensity: .25 });
@@ -93,6 +94,7 @@ export function crearHeroe(L, X, C) {
   return {
     id: L.id, grupo, bisagra, cinta, lomo, mats: [mTapa, mLomo, mContra, mGuarda, mCanto, mCantoH, mCinta, mCab],
     abrir(grados) { bisagra.rotation.y = -grados * Math.PI / 180; },
+    vestir(X2) { for (const [m, t] of [[mTapa, X2.tapa], [mContra, X2.contra]]) { m.map = t.map; m.normalMap = t.normalMap; m.roughnessMap = t.orm; m.metalnessMap = t.orm; m.needsUpdate = true; } },
     capa(n) { grupo.traverse(o => o.layers.set(n)); }
   };
 }

@@ -1950,3 +1950,5 @@ html[data-libro="duo"] #aj-pareja .seg:has([data-pareja]){display:none}
 .cerrar-preg>div{max-width:340px;padding:var(--e4);border-radius:var(--r-lg,18px);background:var(--surface);border:1px solid var(--line);color:var(--ink)}
 .cerrar-preg h2{margin:0 0 var(--e2);font:700 var(--t5)/1.2 var(--f-libro)}
 .cerrar-preg p{margin:0 0 var(--e3);color:var(--muted)}
+/* (2.64.1) con ?perf3d=1: por qué no se ve la 3D */
+.es-aviso3d{position:fixed;z-index:80;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top));margin:0;padding:12px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--tapa-oro);color:var(--ink);font:14px/1.4 var(--f-body)}

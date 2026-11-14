@@ -149,3 +149,11 @@ Capturas de hoy guardadas en `prototipo/antes/` (app, respaldo 2.62 y prototipo 
 - Decisión: `prototipo/` queda como estaba en la ronda 2 (la spec pide no borrarlo); la app usa su propia copia en `js/`.
 - Decisión: las fotos de las tapas muestran el título grabado en el cuero: es parte del libro, no un rótulo. Los nombres y etiquetas del menú sí son texto de la página.
 - Pendiente de comprobar en el iPhone de Agus: fluidez real (`?perf3d=1` sin bajo consumo), toques con el dedo y giro del teléfono.
+
+#### Después del pase a `main`
+- 2.64.0 publicada con el OK de Agus. En su iPhone la cinemática se vio «estática» y sin cuadro de tiempos: la app había quedado en las fotos de respaldo. No se sabe con certeza el motivo (en el iPhone no hay consola); las dos causas probables son que la escena tardó más de 4 s en armarse y que quedó una marca de sesión de la versión anterior.
+- Decisión (2.64.1): las texturas de las tapas y el calentamiento pasan a después del primer cuadro, y el ruido del cuero se lee de baldosas ya calculadas — en la máquina de pruebas, el armado bajó a unos 2,2 s (con placa de video por software).
+- Decisión (2.64.1): las marcas de sesión llevan la versión de la app — una caída de una versión anterior no deja sin 3D a la nueva.
+- Decisión (2.64.1): con `?perf3d=1` se ve en pantalla por qué quedaron las fotos y cuánto tardó — para poder diagnosticar desde una captura del iPhone.
+- El límite de 4 s de la spec no se tocó.
+

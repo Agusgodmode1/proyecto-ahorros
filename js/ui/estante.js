@@ -14,6 +14,7 @@ import {crearCinematica,tramo} from '../logica/cinematica.js';
 import {recorte,caja} from '../logica/recorte.js';
 import {FOTOS,FOTO_W,FOTO_H} from '../logica/fotos-escena.js';
 import {crearMedidor,aparato,mostrar,tope30} from '../logica/perf3d.js';
+import {VERSION} from '../version.js';
 
 var UL='pa-libro',DI='pa-directo',AB='pa-abrir';
 function ls(k){try{return localStorage.getItem(k)}catch(e){return null}}
@@ -33,17 +34,22 @@ function hayWebgl(){
     return true;
   }catch(e){return false}
 }
+/* Las marcas de la sesión llevan la versión: una marca de una versión anterior de la app no vale para esta */
 var sesion={
-  leer:function(k){try{return sessionStorage.getItem(k)==='1'}catch(e){return false}},
-  poner:function(k){try{sessionStorage.setItem(k,'1')}catch(e){}}
+  leer:function(k){try{return sessionStorage.getItem(k)===VERSION}catch(e){return false}},
+  poner:function(k){try{sessionStorage.setItem(k,VERSION)}catch(e){}}
 };
+function aviso3d(t){
+  var a=document.getElementById('es-aviso3d');if(!a){a=document.createElement('p');a.id='es-aviso3d';a.className='es-aviso3d';a.addEventListener('click',function(){a.remove()});document.body.appendChild(a)}
+  a.textContent=t+' Tocá para cerrar.';
+}
 var FLECHA='<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="D" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 var FUNDIDO=300,T_FOTO_A_3D=400;
 
 /* ---------- el estado de la pantalla (una sola estantería para toda la app) ---------- */
 var el=null,c=null,control=null,escena=null,lienzo=null,P={};
 var w=0,h=0,vista='fotos',corriendo=false,ult=0,reloj=0,espera=null,hastaMenu=false,fotoActual='',capaFoto=0,dedo=null;
-var medidor=null,primeros=[],bajo=false,perfMostrado=false,PERF=false;
+var medidor=null,primeros=[],bajo=false,perfMostrado=false,PERF=false,tiempos={t0:0,lista:0};
 var ui={atras:-1,adelante:-1,rot:null,toc:null,velo:-1,abrir:null};
 
 function montar(){
@@ -76,6 +82,8 @@ function montar(){
     fundir:function(listo){
       var mio=lienzo;
       mio.animate([{opacity:0},{opacity:1}],{duration:T_FOTO_A_3D,easing:'ease-in-out',fill:'forwards'}).onfinish=function(){if(lienzo===mio)listo()};
+      /* mientras funde (la foto y la escena muestran lo mismo), se termina de preparar lo que falta */
+      if(escena)try{escena.completar()}catch(e){control.error(e)}
     },
     viva:function(){
       vista='3d';lienzo.style.opacity='1';el.classList.add('es-3d');
@@ -111,6 +119,7 @@ function montar(){
 function crear(){
   /* un lienzo nuevo en cada intento: uno que perdió los gráficos no se puede volver a usar */
   if(lienzo)lienzo.remove();
+  tiempos={t0:performance.now(),lista:0};
   var mio=lienzo=document.createElement('canvas');mio.className='es-lienzo';mio.setAttribute('aria-hidden','true');
   el.insertBefore(mio,el.querySelector('.es-luz'));
   var fuentes=Promise.resolve();
@@ -120,8 +129,12 @@ function crear(){
     var e=r[0].crearEscena({lienzo:mio,c:c,quieto:quieto(),
       alPerder:function(){if(lienzo===mio)control.perdida()},
       alError:function(err){if(lienzo===mio)control.error(err)}});
-    e.encuadre(w,h);e.calentar();e.dibujar(reloj);
-    escena=e;
+    e.encuadre(w,h);
+    /* al arrancar, primero el primer cuadro (lo que se ve en la foto de inicio); el resto se completa durante el fundido.
+       Si la escena se arma con un libro ya de frente (◀ desde la app), va todo de una */
+    if(c.estado()!=='foto')e.completar();
+    e.dibujar(reloj);
+    escena=e;tiempos.lista=Math.round(performance.now()-tiempos.t0);
     return {
       seguir:function(){if(corriendo)return;corriendo=true;ult=0;requestAnimationFrame(tic)},
       pausar:function(){corriendo=false},
@@ -156,7 +169,7 @@ function paso(dt,real){
     if(PERF&&!perfMostrado){
       perfMostrado=true;
       mostrar(medidor.tabla(),aparato(navigator.userAgent,w,h,escena.escala(),escena.placa()),
-        tope30(primeros)?'Tu iPhone está limitando a 30 cuadros por segundo (modo de bajo consumo): sacalo y repetí la medición.':bajo?'Se bajó la resolución a 1,5x por cuadros pesados.':'');
+        'La escena tardó '+tiempos.lista+' ms en armarse. '+(tope30(primeros)?'Tu iPhone está limitando a 30 cuadros por segundo (modo de bajo consumo): sacalo y repetí la medición.':bajo?'Se bajó la resolución a 1,5x por cuadros pesados.':''));
     }
     abierto();
   }
@@ -200,6 +213,8 @@ function aFotos(motivo,detalle){
   ponerFoto(true);ubicar();interfaz();
   if(c.estado()==='tapa'&&hastaMenu){hastaMenu=false;atras()}
   try{console.info('Estantería: quedan las fotos ('+motivo+')',detalle||'')}catch(x){}
+  /* con ?perf3d=1 se ve en pantalla por qué no hay 3D (en el iPhone no hay consola a mano) */
+  if(PERF)aviso3d('No se ve la 3D: '+motivo+(detalle&&detalle.message?' ('+detalle.message+')':'')+'. Pasaron '+Math.round(performance.now()-tiempos.t0)+' ms.');
 }
 
 /* ---------- nombres, zonas de toque, flechas y velo ---------- */
@@ -279,9 +294,13 @@ export function elegirLibro(){
   medir();ponerFoto(false);interfaz();
   return new Promise(function(ok){
     espera=ok;
+    tiempos.t0=performance.now();
     control.iniciar();
     /* sin 3D: el respaldo, que ya se puede tocar */
-    if(!control.viva()&&control.estado()==='fotos'){c.poner('menu');ponerFoto(true);ubicar();interfaz()}
+    if(!control.viva()&&control.estado()==='fotos'){
+      c.poner('menu');ponerFoto(true);ubicar();interfaz();
+      if(PERF)aviso3d('No se ve la 3D: '+(quieto()?'el teléfono tiene «reducir movimiento» activado':sesion.leer('pa-3d-no')?'falló antes en esta sesión (cerrá la app del todo y volvé a abrirla)':'este navegador no tiene WebGL 2')+'.');
+    }
   });
 }
 /* La app ya está lista debajo: la estantería se va con un fundido y queda guardada (en pausa) para poder volver */

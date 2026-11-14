@@ -19,6 +19,21 @@ const cl = v => v < 0 ? 0 : v > 1 ? 1 : v;
 const ss = (a, b, v) => { const t = cl((v - a) / (b - a)); return t * t * (3 - 2 * t); };
 const mz = (a, b, t) => a + (b - a) * t;
 
+/* Ruido ya calculado (2.64.1): dos baldosas que se repiten, una de manchas grandes y otra de grano fino.
+   Leerlas es mucho más rápido que calcular el ruido en cada punto, y la escena tiene que estar lista en menos de 4 s. */
+const NB = 256; let BAJA = null, ALTA = null;
+function baldosas() {
+  if (BAJA) return;
+  BAJA = new Float32Array(NB * NB); ALTA = new Float32Array(NB * NB);
+  for (let y = 0, i = 0; y < NB; y++) for (let x = 0; x < NB; x++, i++) { BAJA[i] = fbm(x / 32, y / 32, 4, 8); ALTA[i] = fbm(x / 4, y / 4, 2, 64); }
+}
+function leer(B, u, v) {
+  const x0 = Math.floor(u), y0 = Math.floor(v), fx = u - x0, fy = v - y0, xa = x0 & 255, xb = (x0 + 1) & 255, ya = (y0 & 255) << 8, yb = ((y0 + 1) & 255) << 8;
+  return (B[ya + xa] * (1 - fx) + B[ya + xb] * fx) * (1 - fy) + (B[yb + xa] * (1 - fx) + B[yb + xb] * fx) * fy;
+}
+/* manchas grandes (como fbm de 4 capas) y grano fino (como fbm de 2 capas), en las mismas unidades que fbm */
+const baja = (u, v) => leer(BAJA, u * 32, v * 32), alta = (u, v) => leer(ALTA, u * 4, v * 4);
+
 export function lienzo(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
 let ANISO = 4;
 export function ponerAniso(n) { ANISO = Math.min(8, n || 4); }
@@ -77,7 +92,7 @@ export function texGranoNormal(rep) {
 /* ---------- cuero teñido con arte dorado ----------
    o = { W, H, base:[r,g,b] 0..255, semilla, arte(g, W, H) dorado, ciego(g, W, H) gofrado sin oro, desgaste 0..1, sombraLados } */
 export function cuero(o) {
-  const W = o.W, H = o.H, G = grano();
+  const W = o.W, H = o.H, G = grano(); baldosas();
   const cA = lienzo(W, H), gA = cA.getContext('2d'); gA.fillStyle = '#fff'; gA.strokeStyle = '#fff'; if (o.arte) o.arte(gA, W, H);
   const cB = lienzo(W, H), gB = cB.getContext('2d'); gB.fillStyle = '#fff'; gB.strokeStyle = '#fff'; if (o.ciego) o.ciego(gB, W, H);
   const A = gA.getImageData(0, 0, W, H).data, B = gB.getImageData(0, 0, W, H).data;
@@ -91,14 +106,14 @@ export function cuero(o) {
   const esc = 1024 / H * 1.15; /* cuántos px del grano por px de la textura */
   for (let y = 0, i = 0; y < H; y++) for (let x = 0; x < W; x++, i++) {
     const gx = (x * esc) | 0, gy = (y * esc) | 0, gr = G[(gy % NG) * NG + (gx % NG)];
-    const man = fbm(x / 150 + s0, y / 150 + s0 * 2, 4), fino = fbm(x / 9 + s0, y / 9, 2);
+    const man = baja(x / 150 + s0, y / 150 + s0 * 2), fino = alta(x / 9 + s0, y / 9);
     /* pátina: más oscuro hacia los bordes, donde se junta la mugre y la mano */
     const bx = Math.min(x, W - 1 - x), by = Math.min(y, H - 1 - y), bd = Math.min(bx, by);
     const lados = o.sombraLados ? 1 - o.sombraLados * (1 - ss(0, W * .3, bx)) : 1;
     const pat = (.62 + .38 * ss(0, 90, bd + man * 50)) * lados;
     /* desgaste: en las esquinas y el filo el tinte se gasta y asoma el cuero más claro */
     const esq = Math.hypot(bx, by);
-    let roz = des * Math.max(ss(46 + man * 60, 0, esq) * .9, ss(7, 0, bd - fino * 5) * .7, ss(.74, .9, fbm(x / 60 + 9 + s0, y / 60, 3) * (1 - ss(60, 240, bd)) * 1.25) * .45);
+    let roz = des * Math.max(ss(46 + man * 60, 0, esq) * .9, ss(7, 0, bd - fino * 5) * .7, ss(.74, .9, baja(x / 60 + 9 + s0, y / 60) * (1 - ss(60, 240, bd)) * 1.25) * .45);
     roz = cl(roz) * (.55 + .45 * gr);
     const sh = (.72 + .5 * man) * (.8 + .2 * gr) * pat;
     let r = o.base[0] * sh, g = o.base[1] * sh, b = o.base[2] * sh;
@@ -108,8 +123,8 @@ export function cuero(o) {
     /* el oro: una hoja fina, con poros donde no terminó de pegar y gastada en los bordes */
     let m = oro[i];
     if (m > 0) {
-      m *= ss(.1, .22, fbm(x / 3.1 + 40, y / 3.1, 2) + .2 * gr) * (1 - .8 * roz);
-      const t = .78 + .3 * fbm(x / 26, y / 13 + 7, 2) + .1 * (gr - .5);
+      m *= ss(.1, .22, alta(x / 3.1 + 40, y / 3.1) + .2 * gr) * (1 - .8 * roz);
+      const t = .78 + .3 * alta(x / 26, y / 13 + 7) + .1 * (gr - .5);
       r = mz(r, 246 * t, m); g = mz(g, 200 * t, m); b = mz(b, 112 * t, m);
     }
     const j = i * 4;
@@ -203,11 +218,13 @@ export const HEROES = {
   solo: { id: 'solo', titulo: 'El Libro del Ahorro', chico: 'el libro del', grande: 'Ahorro', base: [20, 42, 108], cinta: 0x7a1626, halo: 0x5c8dff },
   duo: { id: 'duo', titulo: 'El Pacto de los Dos', chico: 'el pacto de los', grande: 'Dos', base: [172, 92, 24], cinta: 0x1f4a36, halo: 0xff9a3c }
 };
-export function texHeroe(id) {
+/* En dos partes (2.64.1): el lomo hace falta para el primer cuadro; la tapa y la contratapa, que son lo más pesado,
+   recién se ven cuando el libro sale del estante, así que se dibujan después. */
+export function texHeroe(id, parte) {
   const L = HEROES[id], s = id === 'solo' ? 3 : 17;
+  if (parte === 'lomo') return { lomo: cuero({ W: 192, H: 1024, base: L.base, semilla: s + 5, arte: arteLomo(L), ciego: ciegoLomo, desgaste: .7 }) };
   return {
     tapa: cuero({ W: 664, H: 1024, base: L.base, semilla: s, arte: arteTapa(L), ciego: ciegoTapa }),
-    lomo: cuero({ W: 192, H: 1024, base: L.base, semilla: s + 5, arte: arteLomo(L), ciego: ciegoLomo, desgaste: .7 }),
     contra: cuero({ W: 352, H: 512, base: L.base, semilla: s + 9, ciego: (g, W, H) => { g.lineWidth = 5; g.strokeRect(11, 11, W - 22, H - 22); } })
   };
 }
@@ -275,7 +292,7 @@ export function celda(i, x0 = 0, y0 = 0, x1 = 1, y1 = 1) {
 }
 export const PALETA = ['#6e4630', '#35573f', '#7a2e2a', '#40526e', '#806a3c', '#30505c', '#5e3f2a', '#5a3340', '#3e5a50', '#7a5c3e', '#5c2c2a', '#3a4e30', '#694a34', '#34486a', '#84402e', '#4c5c3c', '#4a4254', '#6e5426', '#58423a'];
 export function texAtlas() {
-  const N = 1024, cC = lienzo(N, N), g = cC.getContext('2d'), cO = lienzo(N, N), o = cO.getContext('2d'), r = azar(91), G = grano();
+  const N = 1024, cC = lienzo(N, N), g = cC.getContext('2d'), cO = lienzo(N, N), o = cO.getContext('2d'), r = azar(91), G = grano(); baldosas();
   g.fillStyle = '#000'; g.fillRect(0, 0, N, N); o.fillStyle = 'rgb(255,178,0)'; o.fillRect(0, 0, N, N);
   const ORO = '#c9a45c', ORO_O = 'rgb(255,92,255)';
   const lomos = [];
@@ -313,7 +330,7 @@ export function texAtlas() {
     let k;
     if (ci === 19 && ly >= 256) k = raya[lx | 0] * (.88 + .12 * ruido(lx, ly / 30));
     else {
-      const gr = G[((y * 1.6) % NG | 0) * NG + ((x * 1.6) % NG | 0)], man = fbm(x / 60, y / 90, 3);
+      const gr = G[((y * 1.6) % NG | 0) * NG + ((x * 1.6) % NG | 0)], man = baja(x / 60, y / 90);
       /* lomo redondeado: se oscurece hacia los dos lados (sombra horneada), más gastado arriba y abajo */
       const red = ci === 19 ? 1 : .5 + .5 * Math.sin(Math.PI * cl(lx / 102.4));
       const punta = ci === 19 ? 0 : ss(26, 0, Math.min(ly, 511 - ly) + man * 22) * .5;

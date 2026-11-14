@@ -17,7 +17,7 @@ export function crearEscena(op) {
   const R = new THREE.WebGLRenderer({ canvas: lienzo3d, antialias: true, powerPreference: 'high-performance' });
   R.toneMapping = THREE.ACESFilmicToneMapping; R.toneMappingExposure = 1.12; R.outputColorSpace = THREE.SRGBColorSpace;
   ponerAniso(R.capabilities.getMaxAnisotropy());
-  let rota = false;
+  let rota = false, completa = false;
   const alCorte = e => { e.preventDefault(); rota = true; op.alPerder && op.alPerder(); };
   lienzo3d.addEventListener('webglcontextlost', alCorte);
 
@@ -70,7 +70,7 @@ export function crearEscena(op) {
 
   const heroes = {};
   for (const id of ['solo', 'duo']) {
-    const h = crearHeroe(HEROES[id], texHeroe(id), C), s = comunes.sitios[id];
+    const h = crearHeroe(HEROES[id], texHeroe(id, 'lomo'), C), s = comunes.sitios[id];
     /* en el estante: el lomo mira hacia afuera */
     h.reposo = { pos: new THREE.Vector3(s.x, s.y + LIBRO.H / 2, s.z - LIBRO.comba - LIBRO.W / 2 + .002), rot: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI / 2, 0)) };
     h.grupo.position.copy(h.reposo.pos); h.grupo.quaternion.copy(h.reposo.rot); h.cinta.visible = false;
@@ -268,6 +268,12 @@ export function crearEscena(op) {
     brillo(t) { est.tBrillo = t; },
     /* calentar: se dibuja una vez, sin mostrarlo, lo que recién aparece más adelante (desenfoque, destello, brillo de la tapa),
        para que la placa de video prepare todo ahora y no haya un tirón la primera vez que se elige un libro */
+    /* lo que no hace falta para el primer cuadro: las tapas de los dos libros y el calentamiento. Va después de ese
+       primer cuadro (mientras la foto de inicio se funde hacia la escena), para que la escena aparezca cuanto antes */
+    completar() {
+      if (!completa) { completa = true; for (const id in heroes) heroes[id].vestir(texHeroe(id, 'tapas')); }
+      this.calentar();
+    },
     calentar() {
       const g = { seg: c.seg, p: c.p, libro: c.libro };
       est.calentar = true; c.poner('tapa', 'solo'); dibujar(0); c.poner('tapa', 'duo'); dibujar(0); est.calentar = false;

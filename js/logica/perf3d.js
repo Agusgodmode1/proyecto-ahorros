@@ -31,7 +31,7 @@ export function aparato(ua, ancho, alto, dpr, placa) {
 export function mostrar(tabla, quien, nota) {
   let c = document.getElementById('perf3d'); if (c) c.remove();
   c = document.createElement('div'); c.id = 'perf3d';
-  c.style.cssText = 'position:fixed;z-index:20;left:12px;right:12px;top:calc(60px + env(safe-area-inset-top));padding:14px 14px 12px;border-radius:12px;background:rgba(8,9,14,.94);border:1px solid #d9b76a66;color:#f3ead6;font:13px/1.5 ui-monospace,Menlo,monospace';
+  c.style.cssText = 'position:fixed;z-index:200;left:12px;right:12px;top:calc(60px + env(safe-area-inset-top));padding:14px 14px 12px;border-radius:12px;background:rgba(8,9,14,.94);border:1px solid #d9b76a66;color:#f3ead6;font:13px/1.5 ui-monospace,Menlo,monospace';
   const f = v => v.toFixed(1).padStart(6, ' ');
   c.innerHTML = '<b style="color:#d9b76a">Tiempo de cada cuadro (ms)</b><pre style="margin:8px 0;font:inherit;white-space:pre">' +
     'momento   mediana    p95    máx\n' + tabla.map(t => t.momento.padEnd(8, ' ') + f(t.mediana) + ' ' + f(t.p95) + ' ' + f(t.max) + '  ' + (cumple(t) ? 'bien' : 'ALTO')).join('\n') +

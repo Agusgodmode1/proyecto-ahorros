@@ -3,7 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { crearCinematica, DUR, VUELTA, SALTO, suave, seda, frena } from '../prototipo/cinematica.js';
-import { resumen, crearMedidor, aparato, cumple } from '../prototipo/perf.js';
+import { resumen, crearMedidor, aparato, cumple, tope30 } from '../prototipo/perf.js';
 
 const PASO = 1 / 120;
 function correr(c, tope = 20) { let t = 0, e = ''; while (!e && t < tope) { e = c.avanzar(PASO); t += PASO; } return { t, e }; }
@@ -98,3 +98,11 @@ test('perf: el nombre del aparato', () => {
   assert.equal(aparato('Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X)', 390, 844, 3, 'Apple GPU'), 'iPhone · iOS 18.1 · 390×844 @3x · Apple GPU');
   assert.equal(aparato('', 800, 600, 1), 'Otro · 800×600 @1x');
 });
+test('perf: reconoce el tope de 30 cuadros por segundo del modo de bajo consumo (no es una escena pesada)', () => {
+  const tope = []; for (let i = 0; i < 60; i++) tope.push(i % 2 ? 33 : 34); tope[7] = 132;
+  assert.equal(tope30(tope), true);
+  const fluido = []; for (let i = 0; i < 60; i++) fluido.push(16.7); assert.equal(tope30(fluido), false);
+  const pesado = []; for (let i = 0; i < 60; i++) pesado.push(22 + (i * 7) % 30); assert.equal(tope30(pesado), false);
+  assert.equal(tope30([33, 33, 33]), false, 'con pocos cuadros no se sabe');
+});
+test('poner(foto) vuelve al arranque', () => { const c = crearCinematica(); c.poner('tapa', 'solo'); c.poner('foto'); assert.equal(c.estado(), 'foto'); assert.equal(c.libro, null); });

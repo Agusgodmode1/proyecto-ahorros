@@ -70,7 +70,8 @@ export function crearCinematica() {
     /* ir directo a un reposo, sin recorrido (reducir movimiento, pruebas, tomas fijas) */
     poner(e, id) {
       dir = 0; vel = 0;
-      if (e === 'menu') { seg = 'elegir'; p = 0; libro = null; }
+      if (e === 'foto') { seg = 'foto'; p = 0; libro = null; }
+      else if (e === 'menu') { seg = 'elegir'; p = 0; libro = null; }
       else if (e === 'tapa') { seg = 'elegir'; p = 1; libro = id || libro; }
       else if (e === 'app') { seg = 'abrir'; p = 1; libro = id || libro; }
     }

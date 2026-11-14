@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { azar, ponerAniso, tex, texHeroe, HEROES, texCanto, texGuarda, texMadera, texPared, texAtlas, texHalo, texBrillo, texSombraNicho, texSombraBlanda, texHaz, granoCSS } from './texturas.js';
 import { LIBRO, crearHeroe, crearComunes, tablon, crearMonedas } from './libro3d.js';
 import { crearCinematica, suave, seda, frena, tramo } from './cinematica.js';
-import { crearMedidor, aparato, mostrar } from './perf.js';
+import { crearMedidor, aparato, mostrar, tope30 } from './perf.js';
 
 const $ = s => document.querySelector(s);
 const Q = new URLSearchParams(location.search);
@@ -65,7 +65,7 @@ export async function iniciar() {
   const X0 = -AN / 2 + .006;
   const filas = [
     { y: PASO, z: Z_LOMO, x0: X0, items: [lb(.031, .236, .16, 0), lb(.044, .212, .15, 1, { dz: -.004 }), lb(.027, .248, .165, 2), lb(.038, .226, .155, 3, { dz: -.006 }), lb(.033, .205, .15, 4), lb(.03, .23, .16, 5, { inclinado: 9 })] },
-    { y: 0, z: Z_LOMO, x0: X0, items: [lb(.035, .232, .16, 6), lb(.042, .246, .165, 8), { heroe: 'solo' }, lb(.027, .203, .15, 7, { dz: -.005 }), lb(.036, .214, .15, 9, { dz: -.004 }), lb(.029, .24, .16, 10), lb(.044, .222, .155, 11, { dz: -.007 }), lb(.037, .238, .16, 13), { heroe: 'duo' }, lb(.031, .21, .15, 14, { inclinado: 13 })] },
+    { y: 0, z: Z_LOMO, x0: X0, items: [lb(.035, .232, .16, 6), lb(.042, .204, .165, 8), { heroe: 'solo' }, lb(.027, .192, .15, 7, { dz: -.005 }), lb(.036, .214, .15, 9, { dz: -.004 }), lb(.029, .24, .16, 10), lb(.044, .222, .155, 11, { dz: -.007 }), lb(.037, .2, .16, 13), { heroe: 'duo' }, lb(.031, .21, .15, 14, { inclinado: 13 })] },
     { y: -PASO, z: Z_LOMO, x0: X0 + .004, items: [{ acostados: [lb(.04, .205, .15, 15), lb(.031, .196, .15, 16, { dx: -.006, dz: -.004 }), lb(.036, .178, .14, 17, { dx: -.012, dz: .003 })] }, { hueco: .05 }, lb(.039, .228, .16, 18), lb(.03, .207, .15, 2, { dz: -.005 }), lb(.026, .2, .15, 12, { inclinado: 12 })] }
   ];
   const comunes = crearComunes(filas, mComunes); mueble.add(comunes.malla);
@@ -80,6 +80,10 @@ export async function iniciar() {
     /* los dos libros «llaman»: asoman del estante, se mueven apenas y su cuero toma un poco de luz propia (sin halo) */
     h.mats[1].emissive = new THREE.Color(0xffffff); h.mats[1].emissiveMap = h.mats[1].map; h.mats[1].emissiveIntensity = 0;
     h.fase = id === 'solo' ? 0 : Math.PI; h.enCapa = 0;
+    /* la luz que sale de atrás de cada libro: tenue y cálida, como si su lugar en el estante estuviera encendido.
+       Una mancha queda detrás de los libros (asoma por arriba de ellos) y otra apenas baña a los vecinos de los costados. */
+    const luzAtras = (w, a, x, y, z, orden) => { const g = new THREE.Sprite(new THREE.SpriteMaterial({ map: halo, color: 0xffa24e, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0 })); g.scale.set(w, a, 1); g.position.set(x, y, z); g.renderOrder = orden; escena.add(g); return g; };
+    h.luces = [luzAtras(.17, .46, s.x, s.y + LIBRO.H * .7, s.z - .035, 3), luzAtras(.115, .3, s.x, s.y + LIBRO.H * .5, s.z + .0085, 3)];
     /* el destello suave del hueco cuando el libro sale de la biblioteca */
     const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: halo, color: HEROES[id].halo, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0 }));
     sp.scale.set(.34, .56, 1); sp.position.set(s.x, s.y + LIBRO.H / 2, s.z + .02); sp.visible = false; escena.add(sp); h.destello = sp;
@@ -212,13 +216,15 @@ export async function iniciar() {
       }
       h.abrir(est.abre && yo && seg === 'elegir' ? est.abre * gira : abre);
       h.cinta.visible = sale > .2; h.cinta.scale.y = Math.max(.001, tramo(sale, .2, .7));
-      h.mats[1].emissiveIntensity = (.05 + .17 * late) * llama * (enEstante ? 1 : 0);
+      h.mats[1].emissiveIntensity = (.04 + .06 * late) * llama * (enEstante ? 1 : 0);
+      const luz = (.82 + .18 * late) * (1 - sale) * (yo ? 1 : 1 - .5 * est.k);
+      h.luces[0].material.opacity = .95 * luz; h.luces[1].material.opacity = .34 * luz;
       const capa = yo && est.k > 0 ? 1 : 0; if (capa !== h.enCapa) { h.capa(capa); h.enCapa = capa; }
       /* el destello del hueco al salir: aparece y se apaga, sin chispas */
       const d = yo && seg === 'elegir' ? Math.pow(Math.sin(Math.PI * tramo(p, .03, .6)), 2) : 0;
-      h.destello.visible = d > .004; h.destello.material.opacity = d * .8;
+      h.destello.visible = est.calentar || d > .004; h.destello.material.opacity = d * .8;
       /* el brillo que cruza la tapa una vez (0,9 s) */
-      const b = (t - est.tBrillo) / .9, pasa = yo && b > 0 && b < 1 && seg === 'elegir' && !c.dir;
+      const b = (t - est.tBrillo) / .9, pasa = est.calentar || (yo && b > 0 && b < 1 && seg === 'elegir' && !c.dir);
       h.brillo.visible = pasa; if (pasa) { h.brillo.material.map.offset.x = .95 - b * 1.9; h.brillo.material.opacity = .26 * Math.sin(Math.PI * b); }
     }
     calida.intensity = .9 * Math.max(est.k, c.seg === 'elegir' ? seda(tramo(c.p, .17, .6)) : 0); calida.position.set(E.libroTapa.x + .55, E.libroTapa.y - .42, E.libroTapa.z + .5);
@@ -306,7 +312,7 @@ export async function iniciar() {
   if (toma === 'menu') c.poner('menu'); else if (toma === 'solo' || toma === 'duo') c.poner('tapa', toma);
   $('.grano').style.backgroundImage = `url(${granoCSS()})`;
   const medidor = crearMedidor(), PERF = Q.get('perf3d') === '1', MANUAL = Q.get('reloj') === 'manual';
-  let reloj = 0, cuadros = 0, suma = 0, mostrado = false;
+  let reloj = 0, cuadros = 0, mostrado = false; const primeros = [];
   function paso(dt, real) {
     const antes = c.seg, momento = c.estado();
     const llego = c.avanzar(dt);
@@ -318,12 +324,16 @@ export async function iniciar() {
     if (real) {
       medidor.anotar(momento, real);
       /* si los primeros 60 cuadros vienen pesados, se baja la resolución de 2 a 1,5 */
-      if (cuadros < 60) { suma += real; if (++cuadros === 60 && suma / 60 > 19 && E.prMax > 1.5) { E.prMax = 1.5; est.bajo = true; encuadre(); } }
+      if (cuadros < 60) {
+        primeros.push(real);
+        /* si el teléfono está limitando a 30 cuadros por segundo (modo de bajo consumo) no son cuadros pesados: no se baja */
+        if (++cuadros === 60 && !tope30(primeros) && primeros.reduce((a, b) => a + b, 0) / 60 > 19 && E.prMax > 1.5) { E.prMax = 1.5; est.bajo = true; encuadre(); }
+      }
     }
     if (llego === 'app' && PERF && !mostrado) {
       mostrado = true; let placa = '';
       try { const gl = R.getContext(), x = gl.getExtension('WEBGL_debug_renderer_info'); placa = x ? String(gl.getParameter(x.UNMASKED_RENDERER_WEBGL)).replace(/^ANGLE \(|\)$/g, '').slice(0, 44) : ''; } catch (e2) { }
-      mostrar(medidor.tabla(), aparato(navigator.userAgent, innerWidth, innerHeight, R.getPixelRatio(), placa), est.bajo ? 'Se bajó la resolución a 1,5x por cuadros pesados.' : '');
+      mostrar(medidor.tabla(), aparato(navigator.userAgent, innerWidth, innerHeight, R.getPixelRatio(), placa), tope30(primeros) ? 'Tu iPhone está limitando a 30 cuadros por segundo (modo de bajo consumo): sacalo y repetí la medición.' : est.bajo ? 'Se bajó la resolución a 1,5x por cuadros pesados.' : '');
     }
   }
   let ult = 0;
@@ -333,6 +343,10 @@ export async function iniciar() {
     requestAnimationFrame(tic);
   }
   /* primer cuadro (la toma lejana, la misma de la foto de inicio), fundido de 0,4 s y arranca la entrada */
+  /* calentar: se dibuja una vez, sin mostrarlo, lo que recién aparece más adelante (desenfoque, destello, brillo de la tapa),
+     para que la placa de video prepare todo ahora y no haya un tirón la primera vez que se elige un libro */
+  est.calentar = true; c.poner('tapa', 'solo'); dibujar(0); c.poner('tapa', 'duo'); dibujar(0); est.calentar = false; c.poner(toma === 'solo' || toma === 'duo' ? 'tapa' : toma === 'menu' ? 'menu' : 'foto', toma);
+  for (const id in heroes) { heroes[id].capa(0); heroes[id].enCapa = 0; }
   dibujar(0); interfaz();
   document.body.classList.add('lista');
   window.__escena = { R, c, est, info: () => R.info.render, paso: dt => paso(dt, 0), empezar: () => c.empezar() };

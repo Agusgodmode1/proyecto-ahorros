@@ -100,6 +100,9 @@ Capturas de hoy guardadas en `prototipo/antes/` (app, respaldo 2.62 y prototipo 
 - Decisión: con reducir movimiento, el prototipo pasa de un reposo al otro con un fundido corto (en la app, ese caso usa el respaldo de fotos).
 - Decisión: `?reloj=manual` (solo para capturas) deja avanzar la escena a mano, cuadro por cuadro.
 - Decisión: la línea de tiempo (`prototipo/cinematica.js`) y las cuentas de la medición (`prototipo/perf.js`) son puras y tienen 16 pruebas en `tests/cinematica.test.js`.
+- Decisión: pedido de Agus tras probar la ronda 2 — una luz tenue y cálida que sale **de atrás** de cada uno de los dos libros (dos manchas de luz por libro: una detrás, que asoma por arriba, y otra que apenas baña a los vecinos). Se bajó la altura de los libros vecinos para que la luz se vea. El movimiento leve de los libros queda.
+- Decisión: la primera medición de Agus dio 33 ms parejos en todos los momentos: es el tope de 30 cuadros por segundo del modo de bajo consumo del iPhone, no una escena pesada. Ahora la escena lo reconoce (`tope30` en `prototipo/perf.js`, con prueba): no baja la resolución por eso y lo avisa en el cuadro de tiempos. Falta repetir la medición sin bajo consumo.
+- Decisión: los picos de esa medición (132 ms al elegir, 57 ms en la tapa) eran la placa de video preparando por primera vez el desenfoque, el destello y el brillo. Ahora eso se «calienta» antes de mostrar la escena.
 - Capturas: `prototipo/ronda2/` (secuencia cada 200 ms a 390 y 320 px, e inversiones a mitad de «Elegir» y de «Abrir»).
 
 ### Ronda 3: integración en la app (rama; a `main` con el OK de Agus)

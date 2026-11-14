@@ -13,6 +13,13 @@ export function crearMedidor() {
     tabla() { return MOMENTOS.filter(k => m[k]).map(k => Object.assign({ momento: k }, resumen(m[k]))); }
   };
 }
+/* ¿el teléfono está limitando a 30 cuadros por segundo? (en el iPhone, el modo de bajo consumo lo hace):
+   casi todos los cuadros duran lo mismo, unos 33 ms. Eso no es una escena pesada: una escena pesada da tiempos desparejos. */
+export function tope30(ms) {
+  if (!ms || ms.length < 20) return false;
+  let n = 0; for (const v of ms) if (v >= 31 && v <= 36) n++;
+  return n / ms.length >= .8;
+}
 /* objetivo de la spec: p95 de 20 ms o menos y ningún cuadro de más de 50 ms */
 export const cumple = f => f.p95 <= 20 && f.max <= 50;
 export function aparato(ua, ancho, alto, dpr, placa) {

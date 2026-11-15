@@ -156,4 +156,5 @@ Capturas de hoy guardadas en `prototipo/antes/` (app, respaldo 2.62 y prototipo 
 - Decisión (2.64.1): las marcas de sesión llevan la versión de la app — una caída de una versión anterior no deja sin 3D a la nueva.
 - Decisión (2.64.1): con `?perf3d=1` se ve en pantalla por qué quedaron las fotos y cuánto tardó — para poder diagnosticar desde una captura del iPhone.
 - El límite de 4 s de la spec no se tocó.
+- Medición de Agus con la 2.64.1 (iPhone, iOS 18.7, 390×699 a 2x, sin bajo consumo): la escena se armó en 664 ms y corre a 60 cuadros por segundo (mediana de 17 ms en todos los momentos). p95: entrada 17, menú 22, elegir 20, tapa 17, abrir 18. Máximos: 29, 38, 24, 37 y 18. Cumple el objetivo en todo salvo el p95 del menú, que queda 2 ms arriba de 20. Agus lo dio por bueno.
 

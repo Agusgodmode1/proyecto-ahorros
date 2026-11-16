@@ -12,5 +12,5 @@ Todo lo que la app usa y no escribimos nosotros, con su origen y su licencia. El
 ## Hoy a la luz de la vela (`prototipo/hoy/`, en prueba)
 - **El fondo (mesa, libro abierto y vela):** imagen renderizada por nosotros desde una escena hecha por código (`prototipo/hoy/escena-hoy.js`), con el mismo cuero y los mismos materiales de la cinemática. No se usó ninguna foto: las imágenes que Agus mandó como referencia de ambiente no están en el repositorio.
 - **Letra:** Charm 5.3.0 (The Charm Project Authors), la elegida por Agus, con SIL Open Font License 1.1; copia y licencia en `prototipo/hoy/fuentes/`. Bajada del paquete `@fontsource/charm`. (Fondamento, la otra candidata de la ronda 1, se descartó y se quitó.)
-- **La capital iluminada (la «H»):** pintada por código en `prototipo/hoy/capital.html` (pigmento y pan de oro); de ahí salen `capital-h-pigmento.webp` y `capital-h-oro.webp`.
+- **La capital (la «H»):** dibujada por código en `prototipo/hoy/taller/capital.html` (pan de oro y filigrana a pluma); de ahí salen `capital-h-tinta.webp` y `capital-h-oro.webp`. La forma de la letra es de Almendra 700 (Ana Sanfelippo), SIL Open Font License 1.1; la fuente se usa solo en el taller (copia y licencia en `prototipo/hoy/taller/`).
 

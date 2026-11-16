@@ -10,9 +10,10 @@
   @font-face{font-family:'Charm';font-weight:400;font-display:block;src:url(fuentes/charm-latin-400-normal.woff2) format('woff2')}
   @font-face{font-family:'Charm';font-weight:700;font-display:block;src:url(fuentes/charm-latin-700-normal.woff2) format('woff2')}
   :root{
-    /* tintas (el mismo significado de colores que hoy). Son el color de reserva: en pantalla cada trazo se rellena con una
+    /* tintas. Pedido de Agus: sin verde. La plata va en la misma tinta sepia del escriba, más cargada y más grande;
+     oro para el tiempo y lo guardado; rojo para «te pasaste». Son el color de reserva: en pantalla cada trazo se rellena con una
        textura de tinta (más cargada en unos lugares que en otros) y se multiplica sobre el papel, así se ven sus fibras. */
-    --sepia:#2a180b; --verde:#0f4229; --rojo:#6f1810; --oro-osc:#6a4a0b;
+    --sepia:#2a180b; --rojo:#6f1810; --oro-osc:#6a4a0b;
     --pluma:'Charm','Iowan Old Style',Georgia,serif;
   }
   html,body{margin:0;height:100%;background:#050302;overflow:hidden;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
@@ -46,8 +47,8 @@
   .ren .w{display:inline-block;padding:.3em .06em .34em;margin:-.3em -.06em -.34em;background-position:var(--bx,0) var(--by,0);transform:translateY(var(--dy,0)) rotate(var(--g,0deg))}
   .ren{padding-bottom:.3em;margin-bottom:-.3em}
   .ren.suave,.ren.suave .w,.ren .suave{background-image:var(--t-sepia-s)}
-  .ren.verde,.ren.verde .w,.ren .verde,.ren .verde .w{background-image:var(--t-verde)}
   .ren.rojo,.ren.rojo .w,.ren .rojo{background-image:var(--t-rojo)}
+  .ren.fuerte,.ren.fuerte .w,.ren .fuerte{background-image:var(--t-fuerte)}
   /* oro: pan de oro bruñido, con el bol rojizo asomando en el filo. No se multiplica: va encima del papel */
   .oro,.oro .w{background-image:var(--t-oro);background-size:120px 120px;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;-webkit-text-stroke:.45px rgba(84,44,14,.85)}
   .oro{filter:drop-shadow(.5px .8px .3px rgba(40,20,6,.5))}
@@ -56,12 +57,13 @@
   /* arriba: la fecha y tres palabras chicas */
   .cab{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:calc(var(--u)*4.3)}
   .cab .fecha{font-style:italic}
+  .doble{display:block;width:100%;height:calc(var(--u)*2.2);margin-top:calc(var(--u)*1.2);mix-blend-mode:multiply}
   .cab nav{display:flex;gap:calc(var(--u)*1.4)}
   .pal{all:unset;position:relative;cursor:pointer;font:inherit;padding:0 1px}
   .pal::after{content:"";position:absolute;left:-6px;right:-6px;top:50%;height:44px;transform:translateY(-50%)}
   .punto{opacity:.75}
   /* Cobrás en */
-  .cobro{margin-top:calc(var(--u)*5.4);display:grid;grid-template-columns:auto 1fr;column-gap:calc(var(--u)*3);align-items:end}
+  .cobro{margin-top:calc(var(--u)*4);display:grid;grid-template-columns:auto 1fr;column-gap:calc(var(--u)*3);align-items:end}
   .cobro .et{grid-column:1/-1;display:flex;justify-content:space-between;font-size:calc(var(--u)*4.8)}
   .dias{font-size:calc(var(--u)*13);line-height:1.05;white-space:nowrap}
   .dias small{font-size:.5em;margin-left:.14em}
@@ -72,18 +74,23 @@
   .renglon .guia{flex:1;height:calc(var(--u)*2);align-self:flex-end;margin-bottom:.32em;background:radial-gradient(circle,rgba(42,24,11,.8) 0,rgba(42,24,11,.8) .55px,transparent .9px) 0 50%/calc(var(--u)*1.7) 100% repeat-x;-webkit-background-clip:border-box;background-clip:border-box}
   .renglon b{font-weight:700;font-size:1.5em;white-space:nowrap}
   /* Hoy podés gastar: la capital iluminada, pintada */
-  .hoy{margin-top:calc(var(--u)*5.6);display:flex;align-items:flex-start;gap:calc(var(--u)*.2)}
-  .capital{position:relative;flex:none;width:calc(var(--u)*19.5);aspect-ratio:360/520;margin:calc(var(--u)*-2) 0 calc(var(--u)*-13) calc(var(--u)*-2.4)}
-  .capital img{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;-webkit-user-select:none;user-select:none}
+  .hoy{margin-top:calc(var(--u)*11);display:flex;align-items:flex-start;gap:calc(var(--u)*2.6)}
+  /* la capital ocupa el lugar de su recuadro (21 de ancho); la filigrana y el zarcillo se salen hacia el margen.
+     Medidas de la imagen (taller/capital.html): 440×760, con el recuadro de 250 en (96,150) */
+  .capital{position:relative;flex:none;width:calc(var(--u)*21);height:calc(var(--u)*21);--e:calc(var(--u)*21/250)}
+  .capital img{position:absolute;left:calc(var(--e)*-96);top:calc(var(--e)*-150);width:calc(var(--e)*440);height:calc(var(--e)*760);max-width:none;display:block;pointer-events:none;-webkit-user-select:none;user-select:none}
   .capital .pig{mix-blend-mode:multiply}
-  .hoy .tit{flex:1;display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding-top:calc(var(--u)*3.6)}
-  .hoy h1{font-weight:400;font-size:calc(var(--u)*6.5);line-height:1.1}
+  .hoy .cuerpo{flex:1;min-width:0;padding-top:calc(var(--u)*.4)}
+  .cierre{display:flex;align-items:center;gap:calc(var(--u)*3);margin-top:calc(var(--u)*-2.6)}
+  .hoy h1{font-weight:400;font-size:calc(var(--u)*6.5);line-height:1.1;white-space:nowrap}
   .enlace{all:unset;position:relative;cursor:pointer;font:inherit;font-size:calc(var(--u)*4.8)}
   .enlace .raya{position:absolute;left:-1%;right:-1%;bottom:-.16em;height:.5em;width:102%}
   .enlace::after{content:"";position:absolute;left:-8px;right:-8px;top:50%;height:44px;transform:translateY(-50%)}
-  .monto{margin:calc(var(--u)*.4) 0 0 calc(var(--u)*14.5);font-weight:700;font-size:calc(var(--u)*22.5);line-height:1.04;white-space:nowrap}
+  .monto{margin:calc(var(--u)*.2) 0 0;font-weight:700;font-size:calc(var(--u)*19.5);line-height:1.04;white-space:nowrap}
+  /* la rúbrica: el rasgo de pluma con que el escriba cierra una cifra importante */
+  .rubrica{display:block;flex:1;min-width:0;height:calc(var(--u)*7);mix-blend-mode:multiply}
   .monto .peso{font-size:.6em;margin-right:.16em;vertical-align:.2em;font-weight:400}
-  .nota{margin-top:calc(var(--u)*2.4);font-size:calc(var(--u)*4.8);line-height:1.34}
+  .nota{margin-top:calc(var(--u)*6.4);font-size:calc(var(--u)*4.8);line-height:1.34}
   .nota b{font-weight:700}
   /* la semana: tres trazos de pluma */
   .semana{margin-top:calc(var(--u)*3.8);display:grid;grid-template-columns:repeat(3,1fr);gap:calc(var(--u)*2.2);text-align:center;font-size:calc(var(--u)*4.2)}
@@ -107,6 +114,8 @@
         <nav class="ren suave" aria-label="Acciones"><button class="pal" type="button">ocultar</button><span class="punto" aria-hidden="true">·</span><button class="pal" type="button">volver</button><span class="punto" aria-hidden="true">·</span><button class="pal" type="button">ajustes</button></nav>
       </div>
 
+      <svg class="doble" viewBox="0 0 300 8" preserveAspectRatio="none" aria-hidden="true"><path d="M1 2.6 C 60 1.8, 150 3.2, 299 2.2 C 200 3.8, 80 3.2, 1 2.6z" fill="#3a2412"/><path d="M1 5.8 C 90 5.2, 200 6.2, 299 5.6 C 210 6.4, 90 6.2, 1 5.8z" fill="#3a2412" opacity=".7"/></svg>
+
       <section class="cobro" aria-label="Cuándo cobrás">
         <p class="et"><span class="ren" data-pluma>Cobrás en</span><span class="ren suave" data-pluma>lun 7 dic</span></p>
         <p class="dias oro">21<small>días</small></p>
@@ -114,26 +123,31 @@
         <svg class="camino" viewBox="0 0 200 40" preserveAspectRatio="none" aria-hidden="true">
           <path d="M4 27 C 30 15, 52 33, 80 23 S 132 12, 176 21" fill="none" stroke="#3a2412" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="0.4 5.4" vector-effect="non-scaling-stroke"/>
           <path d="M3 27.6 C 12 22.6, 21 21.6, 31 23.4 C 22 23.4, 12 25.2, 3 27.6z" fill="#2a180b"/>
-          <circle cx="31.5" cy="23.4" r="2.5" fill="#0f4229"/>
+          <circle cx="31.5" cy="23.4" r="2.6" fill="#22130a"/>
           <path d="M186 10.5l2.5 7 7.3.2-5.8 4.5 2.1 7.1-6.1-4.2-6.1 4.2 2.1-7.1-5.8-4.5 7.3-.2z" fill="#8a6414" stroke="#4a3006" stroke-width=".7" vector-effect="non-scaling-stroke"/>
         </svg>
       </section>
 
       <svg class="adorno" viewBox="0 0 220 24" aria-hidden="true"><use href="#floritura"/></svg>
 
-      <p class="renglon"><span class="ren" data-pluma>Para gastar hasta el cobro</span><span class="guia" aria-hidden="true"></span><b class="ren verde">$ 12.226</b></p>
+      <p class="renglon"><span class="ren" data-pluma>Para gastar hasta el cobro</span><span class="guia" aria-hidden="true"></span><b class="ren fuerte">$ 12.226</b></p>
 
       <section class="hoy" aria-label="Hoy podés gastar">
-        <!-- la capital iluminada: pintada como una miniatura (pigmento azul que deja ver el papel, y pan de oro encima) -->
-        <span class="capital" role="img" aria-label="H"><img class="pig" src="capital-h-pigmento.webp" alt=""><img class="oro-img" src="capital-h-oro.webp" alt=""></span>
-        <div class="tit"><h1 class="ren" aria-hidden="true" data-pluma>oy podés gastar</h1>
-          <button class="enlace ren" type="button">actualizar<svg class="raya" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><path d="M1 6.2 C 20 3.4, 44 7.4, 66 5 S 92 4.6, 99 6.4 C 80 6.8, 50 8.6, 28 7.4 S 8 7.2, 1 6.2z" fill="#2a180b"/></svg></button></div>
+        <!-- la capital: una inicial de filigrana de códice. La letra en pan de oro, directo sobre el papel, y alrededor un
+             dibujo fino a pluma en la misma tinta del texto, con un zarcillo que corre por el margen -->
+        <span class="capital" role="img" aria-label="H"><img class="pig" src="capital-h-tinta.webp?v=4" alt=""><img class="oro-img" src="capital-h-oro.webp?v=4" alt=""></span>
+        <div class="cuerpo">
+          <h1 class="ren" aria-hidden="true" data-pluma>oy podés gastar</h1>
+          <p class="monto ren fuerte" id="monto"><span class="peso">$</span>967</p>
+          <!-- la rúbrica: el rasgo de pluma con que el escriba cierra una cifra importante; al final, «actualizar» -->
+          <div class="cierre"><svg class="rubrica" viewBox="0 0 240 32" preserveAspectRatio="none" aria-hidden="true"><path d="M3 12 C 40 6.4, 96 6, 150 9.6 C 184 11.8, 214 14.8, 236 10.4 C 216 17.6, 184 15.6, 150 13 C 100 9.4, 42 10.6, 3 12z" fill="#22130a"/><path d="M236 10.4 C 244 6, 240 1.6, 232 3.6 C 224 5.6, 222 12.6, 228 14.6 C 221 14.2, 218.4 6.4, 226 2.6 C 236 -1.6, 246 5.6, 236 10.4z" fill="#22130a"/><path d="M150 13 C 132 20, 112 27.6, 92 26 C 82 25, 80 19, 88 18.4 C 83.6 20.4, 86 24, 93 24.4 C 110 25.4, 130 18.6, 150 13z" fill="#22130a"/></svg>
+            <button class="enlace ren" type="button">actualizar<svg class="raya" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><path d="M1 6.2 C 20 3.4, 44 7.4, 66 5 S 92 4.6, 99 6.4 C 80 6.8, 50 8.6, 28 7.4 S 8 7.2, 1 6.2z" fill="#2a180b"/></svg></button></div>
+        </div>
       </section>
-      <p class="monto ren verde" id="monto"><span class="peso">$</span>967</p>
       <p class="nota ren" data-pluma>Esta semana te quedan <b>$ 3.387</b> hasta el mié 18 nov · hoy gastaste <b>$ 50</b></p>
 
       <div class="semana" aria-label="Los días que quedan de la semana">
-        <p><svg viewBox="0 0 100 12" preserveAspectRatio="none" aria-hidden="true"><path d="M1 6.4 C 22 3, 46 7.6, 70 4.8 S 92 4.2, 99 6 C 84 8.4, 52 10.4, 30 8.6 S 8 8.4, 1 6.4z" fill="#0f4229"/></svg><span class="ren verde es-hoy">hoy</span></p>
+        <p><svg viewBox="0 0 100 12" preserveAspectRatio="none" aria-hidden="true"><path d="M1 6.4 C 22 3, 46 7.6, 70 4.8 S 92 4.2, 99 6 C 84 8.4, 52 10.4, 30 8.6 S 8 8.4, 1 6.4z" fill="#22130a"/></svg><span class="ren fuerte es-hoy">hoy</span></p>
         <p><svg viewBox="0 0 100 12" preserveAspectRatio="none" aria-hidden="true"><path d="M1 6 C 24 7.4, 50 4.6, 74 6.2 S 94 6.4, 99 5.6 C 78 7.6, 46 6.8, 22 8 S 6 7.2, 1 6z" fill="#5a4026"/></svg><span class="ren suave">mar</span></p>
         <p><svg viewBox="0 0 100 12" preserveAspectRatio="none" aria-hidden="true"><path d="M1 6.4 C 20 4.8, 52 7, 72 5.4 S 92 6, 99 6.4 C 80 7.8, 50 8.2, 26 7.2 S 8 7.6, 1 6.4z" fill="#5a4026"/></svg><span class="ren suave">mié</span></p>
       </div>
@@ -176,14 +190,14 @@ function baldosaOro(){
   const N=120,c=document.createElement('canvas');c.width=c.height=N;const g=c.getContext('2d'),im=g.createImageData(N,N),d=im.data;
   for(let y=0;y<N;y++)for(let x=0;x<N;x++){
     const bru=Math.pow(.5+.5*Math.sin((x*.7+y)/19*6.283/3.2+ruido(x/30,y/30,4)*3),2.4),mate=ruido(x/9,y/9,13),salta=ruido(x/3.2,y/3.2,37)>.86?1:0,i=(y*N+x)*4;
-    let R=150+92*bru+22*(mate-.5),G=106+104*bru+20*(mate-.5),B=26+104*bru;
+    let R=128+96*bru+22*(mate-.5),G=88+98*bru+20*(mate-.5),B=20+84*bru;
     if(salta){R=118;G=52;B=26}
     d[i]=Math.min(255,R);d[i+1]=Math.min(255,G);d[i+2]=Math.min(255,B);d[i+3]=255}
   g.putImageData(im,0,0);return 'url('+c.toDataURL('image/png')+')'}
 raiz.style.setProperty('--t-sepia',baldosa([30,16,7],[92,62,36],1));
 raiz.style.setProperty('--t-sepia-s',baldosa([58,36,18],[118,88,58],.9));
-raiz.style.setProperty('--t-verde',baldosa([7,52,30],[52,104,70],1));
 raiz.style.setProperty('--t-rojo',baldosa([98,16,10],[150,62,44],1));
+raiz.style.setProperty('--t-fuerte',baldosa([20,10,4],[70,44,24],.9)); /* la pluma bien cargada: para los montos */
 raiz.style.setProperty('--t-oro',baldosaOro());
 
 /* ---- la mano: cada palabra queda apenas más arriba o más abajo y un pelo torcida, como escritas una por una ---- */

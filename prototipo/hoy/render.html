@@ -8,23 +8,39 @@
 import * as THREE from 'three';
 import { armar, camara, VISTAS, M } from './escena-hoy.js';
 import { azar } from '../texturas.js';
-const Q = new URLSearchParams(location.search), vista = Q.get('v') || 'alto', N = +(Q.get('n') || 16), V = VISTAS[vista];
+const Q = new URLSearchParams(location.search), vista = Q.get('v') || 'alto', N = +(Q.get('n') || 16), V = VISTAS[vista], SS = +(Q.get('ss') || 1);
 const lienzo = document.createElement('canvas');
 const R = new THREE.WebGLRenderer({ canvas: lienzo, antialias: true, preserveDrawingBuffer: true });
-R.setPixelRatio(1); R.setSize(V.w, V.h, false); R.toneMapping = THREE.ACESFilmicToneMapping; R.toneMappingExposure = +(Q.get('exp') || 1.05); R.outputColorSpace = THREE.SRGBColorSpace;
+R.setPixelRatio(1); R.setSize(V.w * SS, V.h * SS, false); R.toneMapping = THREE.ACESFilmicToneMapping; R.toneMappingExposure = +(Q.get('exp') || 1.05); R.outputColorSpace = THREE.SRGBColorSpace;
 R.shadowMap.enabled = true; R.shadowMap.type = THREE.PCFSoftShadowMap; R.setClearColor(0x020101, 1);
 const E = armar(R), cam = camara(vista, E.alturaPagina), fin = document.getElementById('final'), g = fin.getContext('2d'), r = azar(3);
 fin.width = V.w; fin.height = V.h; fin.style.width = V.w + 'px'; fin.style.height = V.h + 'px';
-/* varias pasadas con la llama apenas corrida de lugar y promediadas: da sombras de borde suave, como las de una vela */
+/* varias pasadas con la llama apenas corrida de lugar y promediadas: da sombras de borde suave, como las de una vela.
+   Se dibuja más grande (ss) y después se achica: bordes más finos, como en una foto */
+const ac = document.createElement('canvas'); ac.width = V.w * SS; ac.height = V.h * SS; const ga = ac.getContext('2d');
 for (let i = 0; i < N; i++) {
   const a = r() * 6.283, d = Math.sqrt(r()) * .006;
   E.luz.position.set(E.foco.x + Math.cos(a) * d, E.foco.y + (r() - .5) * .012, E.foco.z + Math.sin(a) * d);
-  R.render(E.escena, cam); g.globalAlpha = 1 / (i + 1); g.drawImage(lienzo, 0, 0);
+  R.render(E.escena, cam); ga.globalAlpha = 1 / (i + 1); ga.drawImage(lienzo, 0, 0);
+}
+g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high'; g.drawImage(ac, 0, 0, V.w, V.h);
+/* foco de cámara: la hoja nítida; lo que está más lejos (arriba) y más cerca (abajo) se desenfoca, como en una foto con poca luz */
+{
+  const b = document.createElement('canvas'); b.width = V.w; b.height = V.h; const gb = b.getContext('2d');
+  const pTop = (-M.altoHoja / 2 - (-M.altoHoja / 2 - (vista === 'alto' ? .268 : .3) * ((V.x1 - V.x0) * V.h / V.w))) / ((V.x1 - V.x0) * V.h / V.w);
+  for (const [px, y0, y1] of [[3.2, 0, pTop * .5], [1.8, 0, pTop * .88]]) {
+    gb.clearRect(0, 0, V.w, V.h); gb.filter = 'blur(' + px + 'px)'; gb.drawImage(fin, 0, 0); gb.filter = 'none';
+    gb.globalCompositeOperation = 'destination-in'; const m = gb.createLinearGradient(0, V.h * y0, 0, V.h * y1); m.addColorStop(0, 'rgba(0,0,0,1)'); m.addColorStop(.55, 'rgba(0,0,0,.85)'); m.addColorStop(1, 'rgba(0,0,0,0)'); gb.fillStyle = m; gb.fillRect(0, 0, V.w, V.h); gb.globalCompositeOperation = 'source-over';
+    g.drawImage(b, 0, 0);
+  }
+  if (vista === 'alto') { gb.clearRect(0, 0, V.w, V.h); gb.filter = 'blur(3.2px)'; gb.drawImage(fin, 0, 0); gb.filter = 'none'; gb.globalCompositeOperation = 'destination-in'; const m = gb.createLinearGradient(0, V.h * .87, 0, V.h); m.addColorStop(0, 'rgba(0,0,0,0)'); m.addColorStop(1, 'rgba(0,0,0,1)'); gb.fillStyle = m; gb.fillRect(0, 0, V.w, V.h); gb.globalCompositeOperation = 'source-over'; g.drawImage(b, 0, 0); }
 }
 g.globalAlpha = 1;
 /* viñeta: todo lo que no es la hoja se pierde en la sombra */
 const vg = g.createRadialGradient(V.w * .52, V.h * .5, V.w * .42, V.w * .52, V.h * .5, V.h * .68);
-vg.addColorStop(0, 'rgba(4,2,1,0)'); vg.addColorStop(1, 'rgba(4,2,1,.78)'); g.fillStyle = vg; g.fillRect(0, 0, V.w, V.h);
+vg.addColorStop(0, 'rgba(4,2,1,0)'); vg.addColorStop(.55, 'rgba(4,2,1,.42)'); vg.addColorStop(1, 'rgba(4,2,1,.86)'); g.fillStyle = vg; g.fillRect(0, 0, V.w, V.h);
+/* grano fino de película: saca el aspecto «de computadora» */
+{ const im = g.getImageData(0, 0, V.w, V.h), d = im.data; for (let i = 0; i < d.length; i += 4) { const lum = (d[i] + d[i + 1] + d[i + 2]) / 765, k = (r() - .5) * (9 + 13 * (1 - lum)); d[i] += k; d[i + 1] += k; d[i + 2] += k * .9; } g.putImageData(im, 0, 0); }
 /* dónde quedó cada cosa, en fracciones de la imagen (para escribir encima con HTML) */
 const px = (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(cam); return [+(v.x * .5 + .5).toFixed(4), +(-v.y * .5 + .5).toFixed(4)]; };
 const h = E.alturaPagina, x0 = E.xPagina, a = px(x0, h, -M.altoHoja / 2), b = px(x0 + M.hoja, h, M.altoHoja / 2), ll = px(E.foco.x, E.foco.y, E.foco.z);

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>Taller del fondo de Hoy</title>
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"../vendor/three.module.js"}}</script></head>
+<body><canvas id="final"></canvas>
+<script type="module">
+/* Taller: dibuja el fondo de Hoy. ?v=alto|corto · ?n=cuántas pasadas (sombras suaves) · ?exp=exposición */
+import * as THREE from 'three';
+import { armar, camara, VISTAS, M } from './escena-hoy.js';
+import { azar } from '../texturas.js';
+const Q = new URLSearchParams(location.search), vista = Q.get('v') || 'alto', N = +(Q.get('n') || 16), V = VISTAS[vista];
+const lienzo = document.createElement('canvas');
+const R = new THREE.WebGLRenderer({ canvas: lienzo, antialias: true, preserveDrawingBuffer: true });
+R.setPixelRatio(1); R.setSize(V.w, V.h, false); R.toneMapping = THREE.ACESFilmicToneMapping; R.toneMappingExposure = +(Q.get('exp') || 1.05); R.outputColorSpace = THREE.SRGBColorSpace;
+R.shadowMap.enabled = true; R.shadowMap.type = THREE.PCFSoftShadowMap; R.setClearColor(0x020101, 1);
+const E = armar(R), cam = camara(vista, E.alturaPagina), fin = document.getElementById('final'), g = fin.getContext('2d'), r = azar(3);
+fin.width = V.w; fin.height = V.h; fin.style.width = V.w + 'px'; fin.style.height = V.h + 'px';
+/* varias pasadas con la llama apenas corrida de lugar y promediadas: da sombras de borde suave, como las de una vela */
+for (let i = 0; i < N; i++) {
+  const a = r() * 6.283, d = Math.sqrt(r()) * .006;
+  E.luz.position.set(E.foco.x + Math.cos(a) * d, E.foco.y + (r() - .5) * .012, E.foco.z + Math.sin(a) * d);
+  R.render(E.escena, cam); g.globalAlpha = 1 / (i + 1); g.drawImage(lienzo, 0, 0);
+}
+g.globalAlpha = 1;
+/* viñeta: todo lo que no es la hoja se pierde en la sombra */
+const vg = g.createRadialGradient(V.w * .52, V.h * .5, V.w * .42, V.w * .52, V.h * .5, V.h * .68);
+vg.addColorStop(0, 'rgba(4,2,1,0)'); vg.addColorStop(1, 'rgba(4,2,1,.78)'); g.fillStyle = vg; g.fillRect(0, 0, V.w, V.h);
+/* dónde quedó cada cosa, en fracciones de la imagen (para escribir encima con HTML) */
+const px = (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(cam); return [+(v.x * .5 + .5).toFixed(4), +(-v.y * .5 + .5).toFixed(4)]; };
+const h = E.alturaPagina, x0 = E.xPagina, a = px(x0, h, -M.altoHoja / 2), b = px(x0 + M.hoja, h, M.altoHoja / 2), ll = px(E.foco.x, E.foco.y, E.foco.z);
+window.__datos = { vista, w: V.w, h: V.h, pagina: { x0: a[0], y0: a[1], x1: b[0], y1: b[1] }, llama: { x: ll[0], y: ll[1] } };
+document.body.classList.add('lista');
+</script></body></html>

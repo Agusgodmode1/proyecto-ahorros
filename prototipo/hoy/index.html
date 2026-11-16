@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050302">
+<title>Hoy a la luz de la vela · prototipo</title>
+<style>
+  /* Las dos letras candidatas (ronda 1). Guardadas en el repo: se ven sin internet. Licencia OFL (ver fuentes/). */
+  @font-face{font-family:'Charm';font-weight:400;font-display:block;src:url(fuentes/charm-latin-400-normal.woff2) format('woff2')}
+  @font-face{font-family:'Charm';font-weight:700;font-display:block;src:url(fuentes/charm-latin-700-normal.woff2) format('woff2')}
+  @font-face{font-family:'Fondamento';font-weight:400;font-style:normal;font-display:block;src:url(fuentes/fondamento-latin-400-normal.woff2) format('woff2')}
+  @font-face{font-family:'Fondamento';font-weight:400;font-style:italic;font-display:block;src:url(fuentes/fondamento-latin-400-italic.woff2) format('woff2')}
+  :root{
+    /* tintas: el mismo significado de colores que hoy */
+    --sepia:rgba(38,21,9,.93); --sepia-suave:rgba(58,36,18,.86);
+    --verde:rgba(9,66,38,.95);          /* la plata disponible */
+    --rojo:rgba(122,22,14,.94);         /* te pasaste y la nota al margen */
+    --oro-osc:#6a4a0b;                  /* oro en letra chica (se lee sobre el papel) */
+    --pluma:'Charm','Iowan Old Style',Georgia,serif; --peso:400; --peso-n:700; --k:1;
+  }
+  html[data-letra="b"]{--pluma:'Fondamento','Iowan Old Style',Georgia,serif;--peso-n:400;--k:.88}
+  html,body{margin:0;height:100%;background:#050302;overflow:hidden;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+  .mesa{position:fixed;inset:0;overflow:hidden;background:#050302}
+  /* el fondo: una imagen quieta sacada de la escena 3D (mesa, libro y vela). Nada de 3D mientras se usa Hoy */
+  #fondo{position:absolute;left:0;top:0;transform-origin:0 0;max-width:none;display:block;user-select:none;-webkit-user-select:none;pointer-events:none}
+  /* el resplandor de la vela: una capa encima que solo cambia de opacidad, muy despacio */
+  .resplandor{position:absolute;width:10px;height:10px;border-radius:50%;pointer-events:none;
+    background:radial-gradient(circle,rgba(255,206,140,.5) 0%,rgba(255,170,90,.2) 30%,rgba(255,150,70,0) 70%);
+    transform:translate(-50%,-50%) scale(var(--r,30));opacity:.55;animation:titila 5.3s ease-in-out infinite}
+  @keyframes titila{0%,100%{opacity:.5}18%{opacity:.62}31%{opacity:.46}47%{opacity:.6}63%{opacity:.52}80%{opacity:.66}}
+  @media (prefers-reduced-motion:reduce){.resplandor{animation:none}}
+  /* la hoja: acá va todo lo escrito. Ocupa exactamente la página derecha de la imagen */
+  .hoja{position:absolute;overflow:hidden;font-family:var(--pluma);font-weight:var(--peso);color:var(--sepia)}
+  .tinta{height:100%;box-sizing:border-box;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+    padding:calc(var(--u)*6.6) calc(var(--u)*6.2) calc(var(--u)*9) calc(var(--u)*11.5);
+    -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 4.5%,#000 91%,transparent 99%);mask-image:linear-gradient(180deg,transparent 0,#000 4.5%,#000 91%,transparent 99%)}
+  .tinta::-webkit-scrollbar{display:none}
+  p{margin:0}
+  /* arriba: la fecha y tres palabras chicas a pluma */
+  .cab{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:calc(var(--u)*4.25*var(--k));color:var(--sepia-suave)}
+  .cab .fecha{font-style:italic}
+  .cab nav{display:flex;gap:calc(var(--u)*1.2)}
+  .pal{all:unset;position:relative;cursor:pointer;font:inherit;color:var(--sepia-suave);padding:0 1px}
+  .pal::after{content:"";position:absolute;left:-6px;right:-6px;top:50%;height:44px;transform:translateY(-50%)}
+  .pal+.pal::before{content:"·";margin-right:calc(var(--u)*1.2);opacity:.7}
+  /* Cobrás en */
+  .cobro{margin-top:calc(var(--u)*5);display:grid;grid-template-columns:auto 1fr;column-gap:calc(var(--u)*3);align-items:end}
+  .cobro .et{grid-column:1/-1;display:flex;justify-content:space-between;font-size:calc(var(--u)*4.7*var(--k))}
+  .cobro .et span:last-child{color:var(--sepia-suave);font-size:.9em}
+  .dias{font-size:calc(var(--u)*12.5*var(--k));line-height:1.05;white-space:nowrap}
+  .dias small{font-size:.5em;margin-left:.12em}
+  .camino{display:block;width:100%;height:calc(var(--u)*9);margin-bottom:calc(var(--u)*1.4)}
+  /* oro: como pan de oro, con un filo oscuro para que se lea sobre el papel */
+  .oro{background:linear-gradient(172deg,#b98a1d 0%,#8a6410 34%,#d9b04a 52%,#7a560c 70%,#a87a16 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+    -webkit-text-stroke:.35px rgba(74,48,6,.9);filter:drop-shadow(0 .6px 0 rgba(255,236,170,.55))}
+  .adorno{display:block;width:62%;height:calc(var(--u)*5.2);margin:calc(var(--u)*3.4) auto calc(var(--u)*3.2);color:var(--sepia-suave)}
+  /* Para gastar hasta el cobro: renglón con puntos de pluma */
+  .renglon{display:flex;align-items:baseline;gap:calc(var(--u)*1.6);font-size:calc(var(--u)*4.7*var(--k))}
+  .renglon i{flex:1;border-bottom:1.5px dotted rgba(58,36,18,.5);transform:translateY(-.25em)}
+  .renglon b{font-weight:var(--peso-n);font-size:1.5em;color:var(--verde);white-space:nowrap}
+  /* Hoy podés gastar: la capital iluminada */
+  .hoy{margin-top:calc(var(--u)*5.2);display:flex;align-items:center;gap:calc(var(--u)*2.2)}
+  .capital{flex:none;width:calc(var(--u)*15);height:calc(var(--u)*15)}
+  .hoy h1{margin:0;flex:1;font-weight:var(--peso);font-size:calc(var(--u)*6.4*var(--k));line-height:1.1}
+  .enlace{all:unset;position:relative;cursor:pointer;font:inherit;font-size:calc(var(--u)*4.7*var(--k));color:var(--sepia);
+    background:linear-gradient(90deg,rgba(38,21,9,.85),rgba(38,21,9,.6) 60%,rgba(38,21,9,.9)) 0 100%/100% 1.6px no-repeat;padding-bottom:1px}
+  .enlace::after{content:"";position:absolute;left:-8px;right:-8px;top:50%;height:44px;transform:translateY(-50%)}
+  .monto{margin-top:calc(var(--u)*.6);font-weight:var(--peso-n);font-size:calc(var(--u)*25*var(--k));line-height:1.02;color:var(--verde);white-space:nowrap;letter-spacing:-.005em}
+  .monto .peso{font-size:.62em;margin-right:.14em;vertical-align:.18em}
+  .nota{margin-top:calc(var(--u)*1.4);font-size:calc(var(--u)*4.7*var(--k));line-height:1.32;color:var(--sepia)}
+  .nota b{font-weight:var(--peso-n)}
+  /* la semana: tres trazos de pluma */
+  .semana{margin-top:calc(var(--u)*3.6);display:grid;grid-template-columns:repeat(3,1fr);gap:calc(var(--u)*2.2);text-align:center;font-size:calc(var(--u)*4.1*var(--k));color:var(--sepia-suave)}
+  .semana svg{display:block;width:100%;height:calc(var(--u)*2.6);margin-bottom:calc(var(--u)*.6)}
+  .semana .es-hoy{color:var(--verde);font-weight:var(--peso-n)}
+  .sigue{margin-top:calc(var(--u)*5);text-align:center;font-style:italic;font-size:calc(var(--u)*4*var(--k));color:var(--sepia-suave);opacity:.85}
+  /* solo del prototipo: cambiar de letra, sobre la mesa */
+  .probar{position:fixed;left:0;right:0;bottom:calc(8px + env(safe-area-inset-bottom));display:flex;justify-content:center;gap:10px;z-index:5;font:600 13px/1 -apple-system,system-ui,sans-serif}
+  .probar button{all:unset;cursor:pointer;min-height:44px;padding:0 16px;border-radius:22px;display:grid;place-items:center;color:#e9d7ae;background:rgba(10,6,3,.72);border:1px solid rgba(233,215,174,.28)}
+  .probar button[aria-pressed="true"]{background:#e9d7ae;color:#1b1206}
+  html[data-captura] .probar{display:none}
+</style>
+</head>
+<body>
+<div class="mesa" id="mesa">
+  <img id="fondo" alt="" aria-hidden="true">
+  <div class="resplandor" aria-hidden="true"></div>
+  <main class="hoja" id="hoja">
+    <div class="tinta">
+      <div class="cab">
+        <p class="fecha">lunes 16 de noviembre</p>
+        <nav aria-label="Acciones"><button class="pal" type="button">ocultar</button><button class="pal" type="button">volver</button><button class="pal" type="button">ajustes</button></nav>
+      </div>
+
+      <section class="cobro" aria-label="Cuándo cobrás">
+        <p class="et"><span>Cobrás en</span><span>lun 7 dic</span></p>
+        <p class="dias oro">21<small>días</small></p>
+        <!-- el camino al cobro: una línea de puntos de pluma, con dónde estás hoy y la estrella del cobro -->
+        <svg class="camino" viewBox="0 0 200 40" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M4 27 C 30 15, 52 33, 80 23 S 132 12, 176 21" fill="none" stroke="rgba(58,36,18,.78)" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="0.4 5.4" vector-effect="non-scaling-stroke"/>
+          <path d="M4 27 C 14 22.5, 22 22, 31 23.4" fill="none" stroke="rgba(38,21,9,.9)" stroke-width="1.7" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+          <circle cx="31" cy="23.4" r="2.6" fill="#0d4a2c"/>
+          <path d="M186 10.5l2.5 7 7.3.2-5.8 4.5 2.1 7.1-6.1-4.2-6.1 4.2 2.1-7.1-5.8-4.5 7.3-.2z" fill="#9a7216" stroke="#5a3d08" stroke-width=".7" vector-effect="non-scaling-stroke"/>
+        </svg>
+      </section>
+
+      <svg class="adorno" viewBox="0 0 200 20" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.1"><path d="M6 10 C 30 10, 44 4, 58 10 S 78 15, 88 10"/><path d="M194 10 C 170 10, 156 4, 142 10 S 122 15, 112 10"/><path d="M58 10 c 4 -7, 12 -6, 10 0 c -1 4, -7 3, -5 -1"/><path d="M142 10 c -4 -7, -12 -6, -10 0 c 1 4, 7 3, 5 -1"/></g><path d="M100 4.6l4.4 5.4-4.4 5.4-4.4-5.4z" fill="#9a7216" stroke="#5a3d08" stroke-width=".6"/><circle cx="90" cy="10" r="1.1" fill="currentColor"/><circle cx="110" cy="10" r="1.1" fill="currentColor"/></svg>
+
+      <p class="renglon"><span>Para gastar hasta el cobro</span><i></i><b>$ 12.226</b></p>
+
+      <section class="hoy" aria-label="Hoy podés gastar">
+        <!-- la capital iluminada: oro sobre zafiro (el color del libro), con una enredadera fina -->
+        <svg class="capital" viewBox="0 0 60 60" role="img" aria-label="H">
+          <defs><linearGradient id="oro" x1="0" y1="0" x2=".5" y2="1"><stop offset="0" stop-color="#f1d58a"/><stop offset=".42" stop-color="#c2922a"/><stop offset=".6" stop-color="#f4dc98"/><stop offset="1" stop-color="#9a6f14"/></linearGradient>
+          <radialGradient id="zafiro" cx=".38" cy=".3" r=".9"><stop offset="0" stop-color="#22397e"/><stop offset="1" stop-color="#0e1a44"/></radialGradient></defs><defs></defs>
+          <rect x="2.2" y="2.2" width="55.6" height="55.6" rx="2.4" fill="url(#zafiro)"/>
+          <rect x="2.2" y="2.2" width="55.6" height="55.6" rx="2.4" fill="none" stroke="url(#oro)" stroke-width="2.2"/>
+          <rect x="6.2" y="6.2" width="47.6" height="47.6" rx="1.2" fill="none" stroke="#e7cf8f" stroke-width=".5" opacity=".75"/>
+          <g fill="none" stroke="#dcc27c" stroke-width=".85" stroke-linecap="round" opacity=".92">
+            <path d="M9 51 C 9 38, 17 39, 15.5 30 S 8.5 20, 12.5 12.5 S 23 8.5, 27 12"/><path d="M51 9 C 51 22, 43 21, 44.5 30 S 51.5 40, 47.5 47.5 S 37 51.5, 33 48"/>
+            <path d="M15.5 30 c 4 -1, 5.5 -4.5, 3 -6"/><path d="M12.5 12.5 c 3.5 1.2, 6 -.5, 5.5 -3.2"/><path d="M44.5 30 c -4 1, -5.5 4.5, -3 6"/><path d="M47.5 47.5 c -3.5 -1.2, -6 .5, -5.5 3.2"/>
+          </g>
+          <g fill="#e7cf8f" opacity=".95"><path d="M18.5 24 q3.6 -2.6 5.2 .6 q-3.2 2 -5.2 -.6z"/><path d="M18 9.3 q2.8 -3 5.2 -.4 q-2.8 2.4 -5.2 .4z"/><path d="M41.5 36 q-3.6 2.6 -5.2 -.6 q3.2 -2 5.2 .6z"/><path d="M42 50.7 q-2.8 3 -5.2 .4 q2.8 -2.4 5.2 -.4z"/><circle cx="27.6" cy="12.4" r="1.2"/><circle cx="32.4" cy="47.6" r="1.2"/></g>
+          <text x="29.4" y="43.6" text-anchor="middle" font-family="Charm,Fondamento,Georgia,serif" font-weight="700" font-size="42" fill="url(#oro)" stroke="#5a3d08" stroke-width=".55" id="letra-capital">H</text>
+        </svg>
+        <h1 aria-hidden="true">oy podés gastar</h1>
+        <button class="enlace" type="button">actualizar</button>
+      </section>
+      <p class="monto" id="monto"><span class="peso">$</span>967</p>
+      <p class="nota">Esta semana te quedan <b>$ 3.387</b> hasta el mié 18 nov · hoy gastaste <b>$ 50</b></p>
+
+      <div class="semana" aria-label="Los días que quedan de la semana">
+        <p class="es-hoy"><svg viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><path d="M2 5.6 C 22 3.6, 46 6.4, 70 4.6 S 92 4.4, 98 5.4" fill="none" stroke="#0d4a2c" stroke-width="3.4" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>hoy</p>
+        <p><svg viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><path d="M2 5 C 24 6.4, 50 3.8, 74 5.4 S 94 5.6, 98 4.8" fill="none" stroke="rgba(58,36,18,.6)" stroke-width="2" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>mar</p>
+        <p><svg viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><path d="M2 5.4 C 20 4, 52 6.2, 72 4.6 S 92 5.2, 98 5.6" fill="none" stroke="rgba(58,36,18,.6)" stroke-width="2" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>mié</p>
+      </div>
+
+      <svg class="adorno" viewBox="0 0 200 20" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.1"><path d="M6 10 C 30 10, 44 4, 58 10 S 78 15, 88 10"/><path d="M194 10 C 170 10, 156 4, 142 10 S 122 15, 112 10"/><path d="M58 10 c 4 -7, 12 -6, 10 0 c -1 4, -7 3, -5 -1"/><path d="M142 10 c -4 -7, -12 -6, -10 0 c 1 4, 7 3, 5 -1"/></g><path d="M100 4.6l4.4 5.4-4.4 5.4-4.4-5.4z" fill="#9a7216" stroke="#5a3d08" stroke-width=".6"/><circle cx="90" cy="10" r="1.1" fill="currentColor"/><circle cx="110" cy="10" r="1.1" fill="currentColor"/></svg>
+      <p class="sigue">En la ronda 2 sigue acá el resto de Hoy:<br>Tenés y Guardás, Tus semanas, la nota al margen…</p>
+    </div>
+  </main>
+</div>
+<div class="probar" role="group" aria-label="Probar las dos letras"><button type="button" data-letra="a">Letra A</button><button type="button" data-letra="b">Letra B</button><button type="button" data-monto>$ 967 ⇄ $ 6.767</button></div>
+<script type="module">
+/* Dónde va la imagen y dónde cae la página: la misma cuenta de recorte que usan las fotos de la estantería */
+import {recorte} from '../../js/logica/recorte.js';
+const FONDOS={
+  alto:{src:'fondo-alto.webp',w:780,h:1688,pagina:{x0:.0744,y0:.216,x1:.9317,y1:.8187},llama:{x:.6414,y:.0378}},
+  corto:{src:'fondo-corto.webp',w:640,h:1136,pagina:{x0:.0744,y0:.2366,x1:.9317,y1:.9714},llama:{x:.6414,y:.0194}}
+};
+const Q=new URLSearchParams(location.search),raiz=document.documentElement,img=document.getElementById('fondo'),hoja=document.getElementById('hoja'),luz=document.querySelector('.resplandor'),mesa=document.getElementById('mesa');
+let actual='';
+function acomodar(){
+  const w=mesa.clientWidth,h=mesa.clientHeight,k=h/w>1.92?'alto':'corto',F=FONDOS[k];
+  if(k!==actual){actual=k;img.src=F.src}
+  /* la zona que nunca puede quedar afuera: la página y la llama */
+  const r=recorte(w,h,F.w,F.h,{x0:F.pagina.x0-.03,y0:Math.max(0,F.llama.y-.03),x1:F.pagina.x1+.03,y1:F.pagina.y1});
+  img.style.width=F.w+'px';img.style.height=F.h+'px';img.style.transform=`translate(${r.x.toFixed(2)}px,${r.y.toFixed(2)}px) scale(${r.escala.toFixed(5)})`;
+  const px=r.x+F.pagina.x0*r.ancho,py=r.y+F.pagina.y0*r.alto,pw=(F.pagina.x1-F.pagina.x0)*r.ancho,ph=(F.pagina.y1-F.pagina.y0)*r.alto;
+  hoja.style.cssText=`left:${px.toFixed(1)}px;top:${py.toFixed(1)}px;width:${pw.toFixed(1)}px;height:${Math.min(ph,h-py).toFixed(1)}px;--u:${(pw/100).toFixed(3)}px`;
+  luz.style.left=(r.x+F.llama.x*r.ancho).toFixed(1)+'px';luz.style.top=(r.y+F.llama.y*r.alto).toFixed(1)+'px';luz.style.setProperty('--r',(r.ancho/22).toFixed(1));
+}
+function letra(l){raiz.dataset.letra=l;document.querySelectorAll('[data-letra]').forEach(b=>{if(b.tagName==='BUTTON')b.setAttribute('aria-pressed',String(b.dataset.letra===l))});
+  document.getElementById('letra-capital').setAttribute('font-family',l==='b'?'Fondamento,Georgia,serif':'Charm,Georgia,serif');document.getElementById('letra-capital').setAttribute('font-weight',l==='b'?'400':'700')}
+letra(Q.get('letra')==='b'?'b':'a');
+if(Q.get('captura'))raiz.dataset.captura='1';
+const monto=document.getElementById('monto');let grande=Q.get('monto')==='6767';
+const pintar=()=>{monto.innerHTML='<span class="peso">$</span>'+(grande?'6.767':'967')};pintar();
+document.querySelector('.probar').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.letra)letra(b.dataset.letra);else{grande=!grande;pintar()}});
+addEventListener('resize',acomodar);addEventListener('orientationchange',()=>setTimeout(acomodar,60));
+acomodar();
+/* para comprobar en las capturas que se ve la letra correcta y no una de reemplazo */
+document.fonts.ready.then(()=>{window.__fuentes={charm:document.fonts.check("700 20px Charm"),fondamento:document.fonts.check("20px Fondamento")};document.body.classList.add('lista')});
+</script>
+</body>
+</html>

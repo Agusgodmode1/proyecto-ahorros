@@ -39,6 +39,18 @@ function texPagina(semilla, espejo, escrita) {
     alt[i] = fibra * .5 + fina * .5;
   }
   g.putImageData(im, 0, 0);
+  if (!espejo) {
+    /* la esquina de abajo, apenas doblada: se ve el dorso de la hoja, su sombra, y la hoja de abajo donde quedó destapada */
+    const a = 82, x0 = W - a, y0 = H - a;
+    g.fillStyle = '#b8996a'; g.beginPath(); g.moveTo(x0, H); g.lineTo(W, y0); g.lineTo(W, H); g.closePath(); g.fill();
+    let gr = g.createLinearGradient(W - a / 2, H - a / 2, W, H); gr.addColorStop(0, 'rgba(46,26,10,.62)'); gr.addColorStop(1, 'rgba(46,26,10,.08)');
+    g.fillStyle = gr; g.beginPath(); g.moveTo(x0, H); g.lineTo(W, y0); g.lineTo(W, H); g.closePath(); g.fill();
+    g.save(); g.shadowColor = 'rgba(46,26,10,.5)'; g.shadowBlur = 18; g.shadowOffsetX = -5; g.shadowOffsetY = -5;
+    gr = g.createLinearGradient(W - a / 2, H - a / 2, x0, y0); gr.addColorStop(0, '#cdb98c'); gr.addColorStop(.25, '#e6d8b2'); gr.addColorStop(1, '#efe4c6');
+    g.fillStyle = gr; g.beginPath(); g.moveTo(x0, H); g.lineTo(W, y0); g.lineTo(x0 - 3, y0 - 3); g.closePath(); g.fill(); g.restore();
+    g.strokeStyle = 'rgba(96,66,34,.55)'; g.lineWidth = 1.4; g.beginPath(); g.moveTo(x0, H); g.lineTo(W, y0); g.stroke();
+    g.strokeStyle = 'rgba(120,90,52,.35)'; g.lineWidth = 1; g.beginPath(); g.moveTo(x0, H); g.lineTo(x0 - 3, y0 - 3); g.lineTo(W, y0); g.stroke();
+  }
   if (escrita) {
     /* la página de al lado ya está escrita: renglones a pluma, que no llegan a leerse */
     g.strokeStyle = 'rgba(46,28,14,.62)'; g.lineCap = 'round';
@@ -240,7 +252,7 @@ export function armar(R) {
   /* relleno: lo que rebota en el cuarto; mantiene pareja la zona de lectura sin borrar las sombras */
   const relleno = new THREE.DirectionalLight(0xffdcb8, .36); relleno.position.set(.1, 1, -.25); escena.add(relleno);
   escena.add(new THREE.HemisphereLight(0x5a4636, 0x0c0806, .34));
-  const cerca = new THREE.PointLight(0xff9a48, .012, .22, 2); cerca.position.copy(foco); escena.add(cerca);
+  const cerca = new THREE.PointLight(0xffa85a, .045, .34, 2); cerca.position.copy(foco); escena.add(cerca);
   return { escena, luz, foco, vela: v, alturaPagina: der.alto(.5, .5), xPagina: 0 };
 }
 

@@ -4,7 +4,7 @@
 <script type="importmap">{"imports":{"three":"../vendor/three.module.js"}}</script></head>
 <body><canvas id="final"></canvas>
 <script type="module">
-/* Taller: dibuja el fondo de Hoy. ?v=alto|corto · ?n=cuántas pasadas (sombras suaves) · ?exp=exposición */
+/* Taller: dibuja el fondo de Hoy (el libro abierto con sus dos páginas). ?v=alto|corto · ?n=pasadas · ?ss=sobremuestreo */
 import * as THREE from 'three';
 import { armar, camara, VISTAS, M } from './escena-hoy.js';
 import { azar } from '../texturas.js';
@@ -12,10 +12,11 @@ const Q = new URLSearchParams(location.search), vista = Q.get('v') || 'alto', N 
 const lienzo = document.createElement('canvas');
 const R = new THREE.WebGLRenderer({ canvas: lienzo, antialias: true, preserveDrawingBuffer: true });
 R.setPixelRatio(1); R.setSize(V.w * SS, V.h * SS, false); R.toneMapping = THREE.ACESFilmicToneMapping; R.toneMappingExposure = +(Q.get('exp') || 1.05); R.outputColorSpace = THREE.SRGBColorSpace;
-R.shadowMap.enabled = true; R.shadowMap.type = THREE.PCFSoftShadowMap; R.setClearColor(0x020101, 1);
-const E = armar(R), cam = camara(vista, E.alturaPagina), fin = document.getElementById('final'), g = fin.getContext('2d'), r = azar(3);
+R.shadowMap.enabled = true; R.shadowMap.type = THREE.PCFSoftShadowMap; R.setClearColor(0x010101, 1);
+const E = armar(R), cam = camara(vista), fin = document.getElementById('final'), g = fin.getContext('2d', { willReadFrequently: true }), r = azar(3);
 fin.width = V.w; fin.height = V.h; fin.style.width = V.w + 'px'; fin.style.height = V.h + 'px';
-/* varias pasadas con la llama apenas corrida de lugar y promediadas: da sombras de borde suave, como las de una vela.
+const px = (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(cam); return [+(v.x * .5 + .5).toFixed(4), +(-v.y * .5 + .5).toFixed(4)]; };
+/* varias pasadas con la llama apenas corrida de lugar y promediadas: sombras de borde suave, como las de una vela.
    Se dibuja más grande (ss) y después se achica: bordes más finos, como en una foto */
 const ac = document.createElement('canvas'); ac.width = V.w * SS; ac.height = V.h * SS; const ga = ac.getContext('2d');
 for (let i = 0; i < N; i++) {
@@ -24,26 +25,34 @@ for (let i = 0; i < N; i++) {
   R.render(E.escena, cam); ga.globalAlpha = 1 / (i + 1); ga.drawImage(lienzo, 0, 0);
 }
 g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high'; g.drawImage(ac, 0, 0, V.w, V.h);
-/* foco de cámara: la hoja nítida; lo que está más lejos (arriba) y más cerca (abajo) se desenfoca, como en una foto con poca luz */
-{
-  const b = document.createElement('canvas'); b.width = V.w; b.height = V.h; const gb = b.getContext('2d');
-  const pTop = (-M.altoHoja / 2 - (-M.altoHoja / 2 - (vista === 'alto' ? .268 : .3) * ((V.x1 - V.x0) * V.h / V.w))) / ((V.x1 - V.x0) * V.h / V.w);
-  for (const [px, y0, y1] of [[3.2, 0, pTop * .5], [1.8, 0, pTop * .88]]) {
-    gb.clearRect(0, 0, V.w, V.h); gb.filter = 'blur(' + px + 'px)'; gb.drawImage(fin, 0, 0); gb.filter = 'none';
-    gb.globalCompositeOperation = 'destination-in'; const m = gb.createLinearGradient(0, V.h * y0, 0, V.h * y1); m.addColorStop(0, 'rgba(0,0,0,1)'); m.addColorStop(.55, 'rgba(0,0,0,.85)'); m.addColorStop(1, 'rgba(0,0,0,0)'); gb.fillStyle = m; gb.fillRect(0, 0, V.w, V.h); gb.globalCompositeOperation = 'source-over';
-    g.drawImage(b, 0, 0);
-  }
-  if (vista === 'alto') { gb.clearRect(0, 0, V.w, V.h); gb.filter = 'blur(3.2px)'; gb.drawImage(fin, 0, 0); gb.filter = 'none'; gb.globalCompositeOperation = 'destination-in'; const m = gb.createLinearGradient(0, V.h * .87, 0, V.h); m.addColorStop(0, 'rgba(0,0,0,0)'); m.addColorStop(1, 'rgba(0,0,0,1)'); gb.fillStyle = m; gb.fillRect(0, 0, V.w, V.h); gb.globalCompositeOperation = 'source-over'; g.drawImage(b, 0, 0); }
-}
-g.globalAlpha = 1;
-/* viñeta: todo lo que no es la hoja se pierde en la sombra */
-const vg = g.createRadialGradient(V.w * .52, V.h * .5, V.w * .42, V.w * .52, V.h * .5, V.h * .68);
-vg.addColorStop(0, 'rgba(4,2,1,0)'); vg.addColorStop(.55, 'rgba(4,2,1,.42)'); vg.addColorStop(1, 'rgba(4,2,1,.86)'); g.fillStyle = vg; g.fillRect(0, 0, V.w, V.h);
-/* grano fino de película: saca el aspecto «de computadora» */
-{ const im = g.getImageData(0, 0, V.w, V.h), d = im.data; for (let i = 0; i < d.length; i += 4) { const lum = (d[i] + d[i + 1] + d[i + 2]) / 765, k = (r() - .5) * (9 + 13 * (1 - lum)); d[i] += k; d[i + 1] += k; d[i + 2] += k * .9; } g.putImageData(im, 0, 0); }
-/* dónde quedó cada cosa, en fracciones de la imagen (para escribir encima con HTML) */
-const px = (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(cam); return [+(v.x * .5 + .5).toFixed(4), +(-v.y * .5 + .5).toFixed(4)]; };
-const h = E.alturaPagina, x0 = E.xPagina, a = px(x0, h, -M.altoHoja / 2), b = px(x0 + M.hoja, h, M.altoHoja / 2), ll = px(E.foco.x, E.foco.y, E.foco.z);
-window.__datos = { vista, w: V.w, h: V.h, pagina: { x0: a[0], y0: a[1], x1: b[0], y1: b[1] }, llama: { x: ll[0], y: ll[1] } };
+const ll = px(E.foco.x, E.foco.y, E.foco.z), W = V.w, H = V.h;
+/* el halo de la vela: un resplandor ancho alrededor de la llama */
+{ g.globalCompositeOperation = 'lighter'; const h = g.createRadialGradient(ll[0] * W, ll[1] * H, 0, ll[0] * W, ll[1] * H, W * .42); h.addColorStop(0, 'rgba(255,190,110,.26)'); h.addColorStop(.12, 'rgba(255,160,80,.13)'); h.addColorStop(.4, 'rgba(255,130,60,.045)'); h.addColorStop(1, 'rgba(255,120,50,0)'); g.fillStyle = h; g.fillRect(0, 0, W, H); g.globalCompositeOperation = 'source-over'; }
+/* revelado: más contraste (sombras más hondas, luces más vivas) y un poco más de color, como en una foto */
+{ const im = g.getImageData(0, 0, W, H), d = im.data, cv = x => x < .5 ? .5 * Math.pow(2 * x, 1.14) : 1 - .5 * Math.pow(2 * (1 - x), 1.1);
+  for (let i = 0; i < d.length; i += 4) { let a = cv(d[i] / 255), b = cv(d[i + 1] / 255), c = cv(d[i + 2] / 255); const l = .3 * a + .59 * b + .11 * c, s = 1.04; a = l + (a - l) * s; b = l + (b - l) * s; c = l + (c - l) * s; d[i] = a * 255; d[i + 1] = b * 255; d[i + 2] = c * 255; }
+  g.putImageData(im, 0, 0); }
+/* foco de cámara: el libro nítido; el tintero, la pluma, la vela y los bordes de la mesa, desenfocados */
+const ex = M.lomo + M.anchoTabla, ez = M.H / 2, esq = [px(-ex, 0, -ez), px(ex, 0, -ez), px(ex, 0, ez), px(-ex, 0, ez)];
+const bx0 = Math.min(esq[0][0], esq[3][0]) * W, bx1 = Math.max(esq[1][0], esq[2][0]) * W, by0 = Math.min(esq[0][1], esq[1][1]) * H, by1 = Math.max(esq[2][1], esq[3][1]) * H;
+{ const b = document.createElement('canvas'); b.width = W; b.height = H; const gb = b.getContext('2d');
+  for (const [desen, sale, pluma] of [[1.1, 6, 10], [2.2, 60, 36], [3.8, 150, 60]]) {
+    gb.globalCompositeOperation = 'source-over'; gb.clearRect(0, 0, W, H); gb.filter = 'blur(' + desen + 'px)'; gb.drawImage(fin, 0, 0); gb.filter = 'none';
+    const m = document.createElement('canvas'); m.width = W; m.height = H; const gm = m.getContext('2d'); gm.fillStyle = '#000'; gm.fillRect(0, 0, W, H);
+    gm.globalCompositeOperation = 'destination-out'; gm.filter = 'blur(' + pluma + 'px)'; gm.fillRect(bx0 - sale, by0 - sale, bx1 - bx0 + 2 * sale, by1 - by0 + 2 * sale + 400); gm.filter = 'none';
+    gb.globalCompositeOperation = 'destination-in'; gb.drawImage(m, 0, 0); g.drawImage(b, 0, 0);
+  } }
+/* viñeta: negros profundos alrededor. Sobre el libro casi no actúa: ahí el papel tiene que quedar claro para que el texto se lea */
+{ const v = document.createElement('canvas'); v.width = W; v.height = H; const gv = v.getContext('2d');
+  const cx = W * .52, cy = (by0 + by1) / 2 - H * .05, vg = gv.createRadialGradient(cx, cy, W * .5, cx, cy, Math.hypot(W, H) * .56);
+  vg.addColorStop(0, 'rgba(2,1,0,.12)'); vg.addColorStop(.5, 'rgba(2,1,0,.62)'); vg.addColorStop(1, 'rgba(2,1,0,.97)'); gv.fillStyle = vg; gv.fillRect(0, 0, W, H);
+  gv.globalCompositeOperation = 'destination-out'; gv.filter = 'blur(26px)'; gv.fillStyle = 'rgba(0,0,0,.94)'; gv.fillRect(bx0 + 6, by0 + 10, bx1 - bx0 - 12, by1 - by0 + 300); gv.filter = 'none';
+  g.drawImage(v, 0, 0); }
+/* grano fino de película */
+{ const im = g.getImageData(0, 0, W, H), d = im.data; for (let i = 0; i < d.length; i += 4) { const lum = (d[i] + d[i + 1] + d[i + 2]) / 765, k = (r() - .5) * (8 + 12 * (1 - lum)); d[i] += k; d[i + 1] += k; d[i + 2] += k * .9; } g.putImageData(im, 0, 0); }
+/* dónde quedó cada página (sus cuatro esquinas: arriba-izq, arriba-der, abajo-der, abajo-izq) y la llama, en fracciones de la imagen */
+const zt = -M.altoHoja / 2, zb = M.altoHoja / 2, hd = E.alturaPagina, hi = E.alturaIzq;
+window.__datos = { vista, w: W, h: H, llama: { x: ll[0], y: ll[1] },
+  izq: [px(-M.hoja, hi, zt), px(0, hi, zt), px(0, hi, zb), px(-M.hoja, hi, zb)], der: [px(0, hd, zt), px(M.hoja, hd, zt), px(M.hoja, hd, zb), px(0, hd, zb)] };
 document.body.classList.add('lista');
 </script></body></html>

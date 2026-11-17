@@ -10,7 +10,6 @@ Todo lo que la app usa y no escribimos nosotros, con su origen y su licencia. El
 - **Fotos de respaldo (`icons/escena/*.webp`):** capturas de esa misma escena, hechas por nosotros.
 
 ## Hoy a la luz de la vela (`prototipo/hoy/`, en prueba)
-- **El fondo (mesa, libro abierto y vela):** imagen renderizada por nosotros desde una escena hecha por código (`prototipo/hoy/escena-hoy.js`), con el mismo cuero y los mismos materiales de la cinemática. No se usó ninguna foto: las imágenes que Agus mandó como referencia de ambiente no están en el repositorio.
-- **Letra:** Charm 5.3.0 (The Charm Project Authors), la elegida por Agus, con SIL Open Font License 1.1; copia y licencia en `prototipo/hoy/fuentes/`. Bajada del paquete `@fontsource/charm`. (Fondamento, la otra candidata de la ronda 1, se descartó y se quitó.)
-- **La capital (la «H»):** dibujada por código en `prototipo/hoy/taller/capital.html` (pan de oro y filigrana a pluma); de ahí salen `capital-h-tinta.webp` y `capital-h-oro.webp`. La forma de la letra es de Almendra 700 (Ana Sanfelippo), SIL Open Font License 1.1; la fuente se usa solo en el taller (copia y licencia en `prototipo/hoy/taller/`).
-
+- **El fondo (mesa, libro abierto con sus dos páginas, tintero y vela):** imagen renderizada por nosotros desde una escena hecha por código (`prototipo/hoy/escena-hoy.js` y `render.html`), con el mismo cuero de la cinemática. No se usó ninguna foto: las imágenes que Agus mandó como referencia de ambiente no están en el repositorio.
+- **Letra:** Charm 5.3.0, peso 400 (The Charm Project Authors), la elegida por Agus, con SIL Open Font License 1.1; copia y licencia en `prototipo/hoy/fuentes/`. Bajada del paquete `@fontsource/charm`.
+- **Tinta, trazos de pluma, manchas y el papel de la hoja suelta:** dibujados por código en `prototipo/hoy/index.html`.

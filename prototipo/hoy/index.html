@@ -3,348 +3,344 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#050302">
+<meta name="theme-color" content="#030201">
 <title>Hoy a la luz de la vela · prototipo</title>
 <style>
-  /* La letra elegida por Agus: Charm (cursiva de pluma). Guardada en el repo: se ve sin internet. Licencia OFL (ver fuentes/). */
+  /* La letra: Charm (cursiva de pluma), un solo peso: nada de negrita digital. Guardada en el repo: se ve sin internet. */
   @font-face{font-family:'Charm';font-weight:400;font-display:block;src:url(fuentes/charm-latin-400-normal.woff2) format('woff2')}
-  @font-face{font-family:'Charm';font-weight:700;font-display:block;src:url(fuentes/charm-latin-700-normal.woff2) format('woff2')}
-  :root{
-    /* tintas. Pedido de Agus: sin verde. La plata va en la misma tinta sepia del escriba, más cargada y más grande;
-     oro para el tiempo y lo guardado; rojo para «te pasaste». Son el color de reserva: en pantalla cada trazo se rellena con una
-       textura de tinta (más cargada en unos lugares que en otros) y se multiplica sobre el papel, así se ven sus fibras. */
-    --sepia:#2a180b; --rojo:#6f1810; --oro-osc:#6a4a0b;
-    --pluma:'Charm','Iowan Old Style',Georgia,serif;
-  }
-  html,body{margin:0;height:100%;background:#050302;overflow:hidden;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
-  .mesa{position:fixed;inset:0;overflow:hidden;background:#050302}
-  /* el fondo: una imagen quieta sacada de la escena 3D (mesa, libro, tintero y vela). Nada de 3D mientras se usa Hoy */
+  :root{--pluma:'Charm','Iowan Old Style',Georgia,serif;--sepia:#4a2c14;--rojo:#7a2014}
+  html,body{margin:0;height:100%;background:#030201;overflow:hidden;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+  .mesa{position:fixed;inset:0;overflow:hidden;background:#030201}
+  /* el fondo: una imagen quieta sacada de la escena 3D (la mesa, el libro abierto, el tintero y la vela) */
   #fondo{position:absolute;left:0;top:0;transform-origin:0 0;max-width:none;display:block;user-select:none;-webkit-user-select:none;pointer-events:none}
   /* el resplandor de la vela: una capa encima que solo cambia de opacidad, muy despacio */
   .resplandor{position:absolute;width:10px;height:10px;border-radius:50%;pointer-events:none;
-    background:radial-gradient(circle,rgba(255,206,140,.42) 0%,rgba(255,170,90,.16) 30%,rgba(255,150,70,0) 70%);
+    background:radial-gradient(circle,rgba(255,200,130,.5) 0%,rgba(255,165,85,.2) 28%,rgba(255,150,70,0) 70%);
     transform:translate(-50%,-50%) scale(var(--r,30));opacity:.5;animation:titila 5.3s ease-in-out infinite}
-  @keyframes titila{0%,100%{opacity:.42}18%{opacity:.56}31%{opacity:.38}47%{opacity:.54}63%{opacity:.46}80%{opacity:.6}}
+  @keyframes titila{0%,100%{opacity:.4}18%{opacity:.58}31%{opacity:.36}47%{opacity:.55}63%{opacity:.45}80%{opacity:.62}}
   @media (prefers-reduced-motion:reduce){.resplandor{animation:none}}
 
-  /* la hoja: ocupa exactamente la página derecha de la imagen */
-  .hoja{position:absolute;overflow:hidden;font-family:var(--pluma);font-weight:400;color:var(--sepia)}
-  /* adentro vuelve a estar pintado el mismo papel (el mismo recorte de la imagen): así la tinta se puede multiplicar
-     contra él, y el borde de arriba y de abajo se funde con la hoja de atrás sin que se note */
-  .tinta{height:100%;box-sizing:border-box;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;background-repeat:no-repeat;
-    padding:calc(var(--u)*7.4) calc(var(--u)*6.6) calc(var(--u)*18) calc(var(--u)*12);
-    -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 4.5%,#000 91%,transparent 99%);mask-image:linear-gradient(180deg,transparent 0,#000 4.5%,#000 91%,transparent 99%)}
-  .tinta::-webkit-scrollbar{display:none}
-  /* el pautado: las rayas de plomo con que el escriba marcó los márgenes antes de escribir */
-  .pauta{position:absolute;inset:0;pointer-events:none;mix-blend-mode:multiply;opacity:.5;
-    background:linear-gradient(90deg,transparent calc(var(--u)*10.2),rgba(96,70,44,.5) calc(var(--u)*10.2),rgba(96,70,44,.5) calc(var(--u)*10.2 + .7px),transparent calc(var(--u)*10.2 + .7px),transparent calc(var(--u)*10.9),rgba(96,70,44,.36) calc(var(--u)*10.9),rgba(96,70,44,.36) calc(var(--u)*10.9 + .6px),transparent calc(var(--u)*10.9 + .6px),transparent calc(var(--u)*95),rgba(96,70,44,.4) calc(var(--u)*95),rgba(96,70,44,.4) calc(var(--u)*95 + .7px),transparent calc(var(--u)*95 + .7px))}
-  p,h1{margin:0}
+  /* ---- las dos páginas ----
+     Cada una es una caja del tamaño que la página tiene en pantalla, deformada para calzar justo sobre la página de la
+     foto (su perspectiva y su inclinación). Todo lo escrito se MULTIPLICA sobre la foto: la tinta oscurece el papel y
+     se ven sus fibras y sus manchas a través del trazo. Un desenfoque mínimo corre apenas los bordes de la tinta. */
+  .pag{position:absolute;left:0;top:0;transform-origin:0 0;box-sizing:border-box;mix-blend-mode:multiply;filter:blur(.28px);
+    font-family:var(--pluma);font-weight:400;color:var(--sepia);font-size:calc(var(--u)*10.4*var(--k,1));line-height:var(--lh,1.22)}
+  .pag.izq{padding:calc(var(--u)*5) calc(var(--u)*12) calc(var(--u)*8.5) calc(var(--u)*7.5)}
+  .pag.der{padding:calc(var(--u)*5) calc(var(--u)*7.5) calc(var(--u)*5) calc(var(--u)*12)}
+  :where(.pag) :where(p,h1,h2,ol){margin:0;padding:0;font:inherit;list-style:none}
+  /* la tinta: cada palabra lleva una textura de tinta despareja (más cargada en unos lugares, más aguada en otros) */
+  .w,.m{display:inline-block;background-image:var(--tt,var(--t-sepia));background-size:160px 160px;background-position:var(--bx,0) var(--by,0);
+    -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;
+    padding:.3em .05em .34em;margin:-.3em -.05em -.34em;white-space:nowrap;
+    /* la mano (cada palabra un pelo corrida y torcida) + la curva de la página hacia el lomo */
+    transform:translateY(calc(var(--dy,0px) + var(--cy,0px))) rotate(calc(var(--g,0deg) + var(--cg,0deg)))}
+  .suave{--tt:var(--t-suave)} .fuerte{--tt:var(--t-fuerte)} .rojo{--tt:var(--t-rojo)} .oro{--tt:var(--t-oro)}
+  .chico{font-size:calc(var(--u)*10*var(--k,1))}
+  .cur{font-style:italic}
+  button{all:unset;position:relative;cursor:pointer;font:inherit}
+  .toc::after{content:"";position:absolute;left:-7px;right:-7px;top:50%;height:48px;transform:translateY(-50%)}
+  button:focus-visible{outline:1.5px solid var(--sepia);outline-offset:3px;border-radius:3px}
+  svg.trazo{position:absolute;left:-3%;bottom:-.2em;width:106%;height:.5em;overflow:visible;pointer-events:none}
+  .sep{display:block;width:74%;height:calc(var(--u)*5);margin:calc(var(--u)*3*var(--a,1)) auto calc(var(--u)*2.6*var(--a,1))}
+  .fila{display:flex;justify-content:space-between;align-items:baseline;gap:calc(var(--u)*2)}
+  .monto-ch{font-size:calc(var(--u)*12.4*var(--k,1));white-space:nowrap}
 
-  /* ---- la tinta ---- cada renglón es un grupo que se multiplica sobre el papel; adentro, cada palabra lleva su textura */
-  .ren{mix-blend-mode:multiply}
-  .ren,.ren .w,.ren b,.ren i{background-image:var(--t-sepia);background-size:160px 160px;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
-  /* (el relleno de arriba y abajo es para que no se corten los rabos de la g, la p y la q) */
-  .ren .w{display:inline-block;padding:.3em .06em .34em;margin:-.3em -.06em -.34em;background-position:var(--bx,0) var(--by,0);transform:translateY(var(--dy,0)) rotate(var(--g,0deg))}
-  .ren{padding-bottom:.3em;margin-bottom:-.3em}
-  .ren.suave,.ren.suave .w,.ren .suave{background-image:var(--t-sepia-s)}
-  .ren.rojo,.ren.rojo .w,.ren .rojo{background-image:var(--t-rojo)}
-  .ren.fuerte,.ren.fuerte .w,.ren .fuerte{background-image:var(--t-fuerte)}
-  /* oro: pan de oro bruñido, con el bol rojizo asomando en el filo. No se multiplica: va encima del papel */
-  .oro,.oro .w{background-image:var(--t-oro);background-size:120px 120px;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;-webkit-text-stroke:.45px rgba(84,44,14,.85)}
-  .oro{filter:drop-shadow(.5px .8px .3px rgba(40,20,6,.5))}
-  .oro .w{display:inline-block}
+  /* página izquierda */
+  .cobro{margin-top:calc(var(--u)*3.2*var(--a,1))}
+  .dias{display:flex;align-items:flex-end;gap:calc(var(--u)*2.5)}
+  .dias b{font-weight:400;font-size:calc(var(--u)*17.5);line-height:1.02;white-space:nowrap}
+  .dias b small{font-size:.62em}
+  .camino{flex:1;min-width:0;height:calc(var(--u)*9);margin-bottom:calc(var(--u)*2)}
+  .gastar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;column-gap:calc(var(--u)*2)}
+  .gastar .monto-ch{margin-left:auto}
+  .hoy{margin-top:calc(var(--u)*4.6*var(--a,1))}
+  .tit{font-size:calc(var(--u)*12.6*var(--k,1));line-height:1.1}
+  .grande{font-size:calc(var(--u)*33);line-height:1.02;white-space:nowrap;margin-top:calc(var(--u)*.6)}
+  .grande .peso{font-size:.58em;margin-right:.14em;vertical-align:.24em}
+  .cierre{display:flex;align-items:center;gap:calc(var(--u)*3);margin-top:calc(var(--u)*-.6)}
+  .rubrica{flex:1;min-width:0;height:calc(var(--u)*7)}
+  .nota{margin-top:calc(var(--u)*3*var(--a,1))}
+  .semana{margin-top:calc(var(--u)*3.2*var(--a,1));display:grid;grid-template-columns:repeat(3,1fr);gap:calc(var(--u)*3);text-align:center}
+  .semana svg{display:block;width:100%;height:calc(var(--u)*3)}
+  .haber{display:grid;grid-template-columns:1fr 1fr;gap:calc(var(--u)*4)}
+  .haber>div{display:grid;justify-items:start;row-gap:calc(var(--u)*.4)}
+  .haber>div:last-child{justify-items:end;text-align:right}
+  /* página derecha */
+  .acciones{display:flex;justify-content:space-between;align-items:baseline}
+  .semanas{margin-top:calc(var(--u)*3.6*var(--a,1))}
+  .modo{display:flex;align-items:baseline;gap:calc(var(--u)*3);margin-top:calc(var(--u)*2*var(--a,1))}
+  .opcion[aria-pressed="false"] svg.trazo{display:none}
+  .ayuda{margin-top:calc(var(--u)*2.4*var(--a,1))}
+  .lista{margin-top:calc(var(--u)*1.6*var(--a,1))}
+  .sem{display:block;width:100%;padding:calc(var(--u)*1.5*var(--a,1)) 0}
+  .sem .monto-ch{font-size:calc(var(--u)*11*var(--k,1))}
+  .sem .fila{gap:calc(var(--u)*1)}
+  .sem .l2{display:flex;flex-wrap:wrap;justify-content:space-between;column-gap:calc(var(--u)*2)}
+  .sem .l2>span{white-space:nowrap}
+  .sem .l2>span:last-child{margin-left:auto}
+  .fila>span:first-child{white-space:nowrap}
+  .margen{display:flex;gap:calc(var(--u)*2);align-items:stretch}
+  .llave{flex:none;width:calc(var(--u)*2.4)}
+  .margen .ya{display:inline-block;margin-top:calc(var(--u)*2.4*var(--a,1))}
+  .indice{display:grid;justify-items:start;row-gap:calc(var(--u)*2.2*var(--a,1));margin-top:calc(var(--u)*5*var(--a,1))}
 
-  /* arriba: la fecha y tres palabras chicas */
-  .cab{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:calc(var(--u)*4.3)}
-  .cab .fecha{font-style:italic}
-  .doble{display:block;width:100%;height:calc(var(--u)*2.2);margin-top:calc(var(--u)*1.2);mix-blend-mode:multiply}
-  .cab nav{display:flex;gap:calc(var(--u)*1.4)}
-  .pal{all:unset;position:relative;cursor:pointer;font:inherit;padding:0 1px}
-  .pal::after{content:"";position:absolute;left:-6px;right:-6px;top:50%;height:44px;transform:translateY(-50%)}
-  .punto{opacity:.75}
-  /* Cobrás en */
-  .cobro{margin-top:calc(var(--u)*4);display:grid;grid-template-columns:auto 1fr;column-gap:calc(var(--u)*3);align-items:end}
-  .cobro .et{grid-column:1/-1;display:flex;justify-content:space-between;font-size:calc(var(--u)*4.8)}
-  .dias{font-size:calc(var(--u)*13);line-height:1.05;white-space:nowrap}
-  .dias small{font-size:.5em;margin-left:.14em}
-  .camino{display:block;width:100%;height:calc(var(--u)*9);margin-bottom:calc(var(--u)*1.6);mix-blend-mode:multiply}
-  .adorno{display:block;width:70%;height:calc(var(--u)*6.4);margin:calc(var(--u)*3.6) auto calc(var(--u)*3.4);mix-blend-mode:multiply}
-  /* Para gastar hasta el cobro: renglón con puntos de pluma */
-  .renglon{display:flex;align-items:baseline;gap:calc(var(--u)*1.6);font-size:calc(var(--u)*4.8)}
-  .renglon .guia{flex:1;height:calc(var(--u)*2);align-self:flex-end;margin-bottom:.32em;background:radial-gradient(circle,rgba(42,24,11,.8) 0,rgba(42,24,11,.8) .55px,transparent .9px) 0 50%/calc(var(--u)*1.7) 100% repeat-x;-webkit-background-clip:border-box;background-clip:border-box}
-  .renglon b{font-weight:700;font-size:1.5em;white-space:nowrap}
-  /* Hoy podés gastar: la capital iluminada, pintada */
-  .hoy{margin-top:calc(var(--u)*11);display:flex;align-items:flex-start;gap:calc(var(--u)*2.6)}
-  /* la capital ocupa el lugar de su recuadro (21 de ancho); la filigrana y el zarcillo se salen hacia el margen.
-     Medidas de la imagen (taller/capital.html): 440×760, con el recuadro de 250 en (96,150) */
-  .capital{position:relative;flex:none;width:calc(var(--u)*21);height:calc(var(--u)*21);--e:calc(var(--u)*21/250)}
-  .capital img{position:absolute;left:calc(var(--e)*-96);top:calc(var(--e)*-150);width:calc(var(--e)*440);height:calc(var(--e)*760);max-width:none;display:block;pointer-events:none;-webkit-user-select:none;user-select:none}
-  .capital .pig{mix-blend-mode:multiply}
-  .hoy .cuerpo{flex:1;min-width:0;padding-top:calc(var(--u)*.4)}
-  .cierre{display:flex;align-items:center;gap:calc(var(--u)*3);margin-top:calc(var(--u)*-2.6)}
-  .hoy h1{font-weight:400;font-size:calc(var(--u)*6.5);line-height:1.1;white-space:nowrap}
-  .enlace{all:unset;position:relative;cursor:pointer;font:inherit;font-size:calc(var(--u)*4.8)}
-  .enlace .raya{position:absolute;left:-1%;right:-1%;bottom:-.16em;height:.5em;width:102%}
-  .enlace::after{content:"";position:absolute;left:-8px;right:-8px;top:50%;height:44px;transform:translateY(-50%)}
-  .monto{margin:calc(var(--u)*.2) 0 0;font-weight:700;font-size:calc(var(--u)*19.5);line-height:1.04;white-space:nowrap}
-  /* la rúbrica: el rasgo de pluma con que el escriba cierra una cifra importante */
-  .rubrica{display:block;flex:1;min-width:0;height:calc(var(--u)*7);mix-blend-mode:multiply}
-  .monto .peso{font-size:.6em;margin-right:.16em;vertical-align:.2em;font-weight:400}
-  .nota{margin-top:calc(var(--u)*6.4);font-size:calc(var(--u)*4.8);line-height:1.34}
-  .nota b{font-weight:700}
-  /* la semana: tres trazos de pluma */
-  .semana{margin-top:calc(var(--u)*3.8);display:grid;grid-template-columns:repeat(3,1fr);gap:calc(var(--u)*2.2);text-align:center;font-size:calc(var(--u)*4.2)}
-  .semana svg{display:block;width:100%;height:calc(var(--u)*3);margin-bottom:calc(var(--u)*.5);mix-blend-mode:multiply}
-  .semana .es-hoy{font-weight:700}
-  .ren .m,.oro .m{display:inline-block;white-space:nowrap;background-image:inherit;background-size:inherit;-webkit-background-clip:text;background-clip:text;padding:.3em .04em .34em;margin:-.3em -.04em -.34em}
-  .enlace .raya{color:#2a180b}
-  .enlace.rojo .raya{color:#6f1810}
-  .enlace.chico{font-size:calc(var(--u)*4.2);margin-left:calc(var(--u)*1.2)}
-  /* Tenés y Guardás */
-  .haber{display:grid;gap:calc(var(--u)*3.2)}
-  .haber .renglon b{font-size:1.36em}
-  /* Tus semanas */
-  .titulo{font-weight:400;font-size:calc(var(--u)*6.5);line-height:1.1;margin:0}
-  .modo{display:flex;align-items:baseline;gap:calc(var(--u)*2.4);margin-top:calc(var(--u)*2.6);font-size:calc(var(--u)*5)}
-  .opcion{all:unset;position:relative;cursor:pointer;font:inherit}
-  .opcion::after{content:"";position:absolute;left:-8px;right:-8px;top:50%;height:44px;transform:translateY(-50%)}
-  .opcion .raya{position:absolute;left:-2%;bottom:-.14em;width:104%;height:.5em;color:#22130a;display:none}
-  .opcion[aria-pressed="true"]{font-weight:700}
-  .opcion[aria-pressed="true"] .raya{display:block}
-  .ayuda{margin-top:calc(var(--u)*2.6);font-style:italic;font-size:calc(var(--u)*4.3)}
-  .lista{list-style:none;margin:calc(var(--u)*2) 0 0;padding:0}
-  .sem{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:auto auto 1fr auto;column-gap:calc(var(--u)*1.6);align-items:baseline;width:100%;min-height:44px;padding:calc(var(--u)*1.7) 0}
-  .lista li+li .sem{background:radial-gradient(circle,rgba(58,36,18,.42) 0,rgba(58,36,18,.42) .5px,transparent .9px) 0 0/calc(var(--u)*2.6) 2px repeat-x}
-  .s-n{font-size:calc(var(--u)*5)} .sem b{font-weight:700;font-size:calc(var(--u)*6.2);white-space:nowrap}
-  .s-hoy{font-style:normal;font-size:calc(var(--u)*4.3)}
-  .sem .guia{height:calc(var(--u)*2);align-self:end;margin-bottom:.5em;background:radial-gradient(circle,rgba(42,24,11,.8) 0,rgba(42,24,11,.8) .55px,transparent .9px) 0 50%/calc(var(--u)*1.7) 100% repeat-x;mix-blend-mode:multiply}
-  .sem:not(:has(.s-hoy)) .guia{grid-column:2/4}
-  .s-f{grid-column:1/3;font-size:calc(var(--u)*4.1);font-style:italic} .s-p{grid-column:3/5;justify-self:end;font-size:calc(var(--u)*4.1)}
-  /* la nota al margen: en tinta roja, con su llave de pluma */
-  .margen{display:flex;gap:calc(var(--u)*2.2);align-items:stretch;font-size:calc(var(--u)*4.7);line-height:1.34}
-  .margen .llave{flex:none;width:calc(var(--u)*2.6);mix-blend-mode:multiply}
-  .margen b{font-weight:700}
-  .margen .enlace{display:inline-block;margin-top:calc(var(--u)*2.2);font-size:calc(var(--u)*4.9)}
-  /* lo que sigue en el libro */
-  .indice{display:grid;gap:calc(var(--u)*1)}
-  .entrada{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:1fr auto;column-gap:calc(var(--u)*2);align-items:center;width:100%;min-height:44px;padding:calc(var(--u)*1.6) 0}
-  .e-t{font-size:calc(var(--u)*5.6)} .e-d{grid-column:1;font-size:calc(var(--u)*4.1);font-style:italic}
-  .e-f{grid-column:2;grid-row:1/3;font-style:normal;font-size:calc(var(--u)*7)}
-  .colofon{display:block;width:26%;height:calc(var(--u)*7);margin:calc(var(--u)*6) auto 0;mix-blend-mode:multiply}
-  /* los botones se «desvisten» con all:unset; acá vuelven a tomar la tinta de su renglón */
-  button.ren{background-image:var(--t-sepia);background-size:160px 160px;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;mix-blend-mode:multiply}
-  button.ren.suave{background-image:var(--t-sepia-s)} button.ren.fuerte{background-image:var(--t-fuerte)} button.ren.rojo{background-image:var(--t-rojo)}
-  /* ---- modo discreto: cada monto queda tapado por una mancha de tinta ---- */
-  html[data-discreto] .m{position:relative}
-  html[data-discreto] .m,html[data-discreto] .m *{background-image:none!important;-webkit-text-stroke:0!important}
-  html[data-discreto] .m::after{content:"";position:absolute;left:-5%;right:-5%;top:16%;bottom:10%;background:var(--mancha) center/100% 100% no-repeat;mix-blend-mode:multiply}
-  html[data-discreto] .oro{filter:none}
-  /* solo del prototipo */
-  .probar{position:fixed;left:0;right:0;bottom:calc(8px + env(safe-area-inset-bottom));display:flex;justify-content:center;gap:10px;z-index:5;font:600 13px/1 -apple-system,system-ui,sans-serif}
-  .probar button{all:unset;cursor:pointer;min-height:44px;padding:0 16px;border-radius:22px;display:grid;place-items:center;color:#e9d7ae;background:rgba(10,6,3,.72);border:1px solid rgba(233,215,174,.28)}
-  html[data-captura] .probar{display:none}
+  /* ---- modo discreto: el monto se saca de la página y queda una mancha de tinta en su lugar ---- */
+  html[data-discreto] .m{position:relative;background-image:none}
+  html[data-discreto] .m::after{content:"";position:absolute;left:-5%;right:-5%;top:16%;bottom:10%;background:var(--mancha) center/100% 100% no-repeat}
+
+  /* ---- la hoja suelta: «Tu plan» y «Consejos para ahorrar» se abren en un papel viejo apoyado encima del libro ---- */
+  .velo{position:fixed;inset:0;z-index:5;display:grid;place-items:center;background:rgba(2,1,0,.5);opacity:0;pointer-events:none;transition:opacity .28s ease}
+  .velo.abierta{opacity:1;pointer-events:auto}
+  .suelta{position:relative;box-sizing:border-box;width:min(84vw,380px);max-height:76vh;overflow:auto;padding:26px 24px 28px;transform:rotate(-1.4deg);
+    font-family:var(--pluma);color:#3a2110;font-size:17px;line-height:1.38;
+    background:var(--papel) 0 0/220px 220px,#dcc59a;box-shadow:inset 0 0 46px rgba(120,74,30,.5),inset 0 0 8px rgba(70,40,14,.5),0 22px 44px rgba(0,0,0,.75),0 3px 8px rgba(0,0,0,.6);
+    clip-path:polygon(0 1.2%,6% 0,19% .9%,34% 0,52% .7%,71% 0,88% 1%,100% .3%,99.2% 14%,100% 31%,99.3% 52%,100% 70%,99.1% 88%,100% 100%,84% 99.2%,66% 100%,47% 99.1%,29% 100%,12% 99.3%,0 100%,.8% 82%,0 63%,.9% 41%,0 22%)}
+  .suelta h2{margin:0 0 4px;font:400 26px/1.1 var(--pluma)}
+  .suelta p{margin:0 0 12px}
+  .suelta .pie{margin:16px 0 0;font-style:italic;font-size:15px;opacity:.8}
+  .falla{position:fixed;left:8px;top:8px;z-index:9;font:12px monospace;color:#fc8;background:#000a;padding:4px 6px}
 </style>
 </head>
 <body>
 <div class="mesa" id="mesa">
   <img id="fondo" alt="" aria-hidden="true">
   <div class="resplandor" aria-hidden="true"></div>
-  <main class="hoja" id="hoja">
-    <div class="tinta" id="tinta">
-      <div class="cab">
-        <p class="ren suave fecha" data-pluma>lunes 16 de noviembre</p>
-        <nav class="ren suave" aria-label="Acciones"><button class="pal" type="button" id="ocultar" aria-pressed="false">ocultar</button><span class="punto" aria-hidden="true">·</span><button class="pal" type="button" id="volver">volver</button><span class="punto" aria-hidden="true">·</span><button class="pal" type="button">ajustes</button></nav>
-      </div>
 
-      <svg class="doble" viewBox="0 0 300 8" preserveAspectRatio="none" aria-hidden="true"><path d="M1 2.6 C 60 1.8, 150 3.2, 299 2.2 C 200 3.8, 80 3.2, 1 2.6z" fill="#3a2412"/><path d="M1 5.8 C 90 5.2, 200 6.2, 299 5.6 C 210 6.4, 90 6.2, 1 5.8z" fill="#3a2412" opacity=".7"/></svg>
+  <!-- ============ página izquierda ============ -->
+  <main class="pag izq" id="izq" data-lado="izq">
+    <p class="chico cur suave">lunes 16 de noviembre</p>
 
-      <section class="cobro" aria-label="Cuándo cobrás">
-        <p class="et"><span class="ren" data-pluma>Cobrás en</span><span class="ren suave" data-pluma>lun 7 dic</span></p>
-        <p class="dias oro">21<small>días</small></p>
-        <!-- el camino al cobro: una línea de puntos de pluma, con dónde estás hoy y la estrella del cobro -->
+    <section class="cobro" aria-label="Cuándo cobrás">
+      <p class="fila"><span>Cobrás en</span><span class="chico suave">lun 7 dic</span></p>
+      <p class="dias"><b class="oro">21 <small>días</small></b>
+        <!-- el camino al cobro: puntos de pluma, dónde estás hoy y la estrella del cobro -->
         <svg class="camino" viewBox="0 0 200 40" preserveAspectRatio="none" aria-hidden="true">
-          <path d="M4 27 C 30 15, 52 33, 80 23 S 132 12, 176 21" fill="none" stroke="#3a2412" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="0.4 5.4" vector-effect="non-scaling-stroke"/>
-          <path d="M3 27.6 C 12 22.6, 21 21.6, 31 23.4 C 22 23.4, 12 25.2, 3 27.6z" fill="#2a180b"/>
-          <circle cx="31.5" cy="23.4" r="2.6" fill="#22130a"/>
-          <path d="M186 10.5l2.5 7 7.3.2-5.8 4.5 2.1 7.1-6.1-4.2-6.1 4.2 2.1-7.1-5.8-4.5 7.3-.2z" fill="#8a6414" stroke="#4a3006" stroke-width=".7" vector-effect="non-scaling-stroke"/>
-        </svg>
-      </section>
+          <g fill="#4a2c14"><circle cx="44" cy="23.6" r=".9"/><circle cx="53" cy="25.4" r="1"/><circle cx="62" cy="25.8" r=".8"/><circle cx="71" cy="24.6" r="1"/><circle cx="80" cy="22.8" r=".9"/><circle cx="89" cy="20.6" r="1.1"/><circle cx="98" cy="18.8" r=".8"/><circle cx="107" cy="17.6" r="1"/><circle cx="116" cy="17" r=".9"/><circle cx="125" cy="17.2" r="1"/><circle cx="134" cy="18" r=".8"/><circle cx="143" cy="19.2" r="1"/><circle cx="152" cy="20.2" r=".9"/><circle cx="161" cy="20.8" r="1"/></g>
+          <path d="M3 28 C 12 23, 22 21.4, 33 23.6 C 23 23.6, 12 25.4, 3 28z" fill="#3a2110"/>
+          <ellipse cx="34" cy="23.6" rx="3" ry="2.6" fill="#3a2110"/>
+          <path d="M184 9.5l2.7 7.4 7.6.3-6 4.7 2.2 7.4-6.5-4.4-6.5 4.4 2.2-7.4-6-4.7 7.6-.3z" fill="#9a6c14"/>
+        </svg></p>
+    </section>
 
-      <svg class="adorno" viewBox="0 0 220 24" aria-hidden="true"><use href="#floritura"/></svg>
+    <svg class="sep" viewBox="0 0 220 24" aria-hidden="true"><use href="#floritura"/></svg>
 
-      <p class="renglon"><span class="ren" data-pluma>Para gastar hasta el cobro</span><span class="guia" aria-hidden="true"></span><b class="ren fuerte"><span class="m">$ 12.226</span></b></p>
+    <p class="gastar"><span>Para gastar hasta el cobro</span><span class="monto-ch fuerte"><span class="m">$ 12.226</span></span></p>
 
-      <section class="hoy" aria-label="Hoy podés gastar">
-        <!-- la capital: una inicial de filigrana de códice. La letra en pan de oro, directo sobre el papel, y alrededor un
-             dibujo fino a pluma en la misma tinta del texto, con un zarcillo que corre por el margen -->
-        <span class="capital" role="img" aria-label="H"><img class="pig" src="capital-h-tinta.webp?v=6" alt=""><img class="oro-img" src="capital-h-oro.webp?v=6" alt=""></span>
-        <div class="cuerpo">
-          <h1 class="ren" aria-hidden="true" data-pluma>oy podés gastar</h1>
-          <p class="monto ren fuerte" id="monto"><span class="peso">$</span>967</p>
-          <!-- la rúbrica: el rasgo de pluma con que el escriba cierra una cifra importante; al final, «actualizar» -->
-          <div class="cierre"><svg class="rubrica" viewBox="0 0 240 32" preserveAspectRatio="none" aria-hidden="true"><path d="M3 12 C 40 6.4, 96 6, 150 9.6 C 184 11.8, 214 14.8, 236 10.4 C 216 17.6, 184 15.6, 150 13 C 100 9.4, 42 10.6, 3 12z" fill="#22130a"/><path d="M236 10.4 C 244 6, 240 1.6, 232 3.6 C 224 5.6, 222 12.6, 228 14.6 C 221 14.2, 218.4 6.4, 226 2.6 C 236 -1.6, 246 5.6, 236 10.4z" fill="#22130a"/><path d="M150 13 C 132 20, 112 27.6, 92 26 C 82 25, 80 19, 88 18.4 C 83.6 20.4, 86 24, 93 24.4 C 110 25.4, 130 18.6, 150 13z" fill="#22130a"/></svg>
-            <button class="enlace ren" type="button">actualizar<svg class="raya" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><path d="M1 6.2 C 20 3.4, 44 7.4, 66 5 S 92 4.6, 99 6.4 C 80 6.8, 50 8.6, 28 7.4 S 8 7.2, 1 6.2z" fill="currentColor"/></svg></button></div>
-        </div>
-      </section>
-      <p class="nota ren" data-pluma>Esta semana te quedan <b><span class="m">$ 3.387</span></b> hasta el mié 18 nov · hoy gastaste <b><span class="m">$ 50</span></b></p>
+    <section class="hoy">
+      <h1 class="tit">Hoy podés gastar</h1>
+      <p class="grande fuerte" id="monto"></p>
+      <!-- la rúbrica: el rasgo de pluma con que se cierra una cifra importante; al final, «actualizar» -->
+      <div class="cierre"><svg class="rubrica" viewBox="0 0 240 32" preserveAspectRatio="none" aria-hidden="true"><path d="M3 13 C 38 6, 92 8.4, 148 9.4 C 186 10.2, 212 15.6, 236 10.4 C 214 18.6, 186 14.4, 150 13.2 C 98 11.6, 44 9.6, 3 13z" fill="#3a2110"/><path d="M236 10.4 C 244 6, 240 1.6, 232 3.6 C 224 5.6, 222 12.6, 228 14.6 C 221 14.2, 218.4 6.4, 226 2.6 C 236 -1.6, 246 5.6, 236 10.4z" fill="#3a2110"/><path d="M150 13.2 C 132 20, 112 27.6, 92 26 C 82 25, 80 19, 88 18.4 C 83.6 20.4, 86 24, 93 24.4 C 110 25.4, 130 18.6, 150 13.2z" fill="#3a2110"/></svg>
+        <button class="toc sub chico" type="button">actualizar</button></div>
+    </section>
 
-      <div class="semana" aria-label="Los días que quedan de la semana">
-        <p><svg viewBox="0 0 100 12" preserveAspectRatio="none" aria-hidden="true"><path d="M1 6.4 C 22 3, 46 7.6, 70 4.8 S 92 4.2, 99 6 C 84 8.4, 52 10.4, 30 8.6 S 8 8.4, 1 6.4z" fill="#22130a"/></svg><span class="ren fuerte es-hoy">hoy</span></p>
-        <p><svg viewBox="0 0 100 12" preserveAspectRatio="none" aria-hidden="true"><path d="M1 6 C 24 7.4, 50 4.6, 74 6.2 S 94 6.4, 99 5.6 C 78 7.6, 46 6.8, 22 8 S 6 7.2, 1 6z" fill="#5a4026"/></svg><span class="ren suave">mar</span></p>
-        <p><svg viewBox="0 0 100 12" preserveAspectRatio="none" aria-hidden="true"><path d="M1 6.4 C 20 4.8, 52 7, 72 5.4 S 92 6, 99 6.4 C 80 7.8, 50 8.2, 26 7.2 S 8 7.6, 1 6.4z" fill="#5a4026"/></svg><span class="ren suave">mié</span></p>
-      </div>
+    <p class="nota">Esta semana te quedan <span class="fuerte"><span class="m">$ 3.387</span></span> hasta el mié 18 nov · hoy gastaste <span class="fuerte"><span class="m">$ 50</span></span></p>
 
-      <svg class="adorno" viewBox="0 0 220 24" aria-hidden="true"><use href="#floritura"/></svg>
-
-      <!-- Tenés y Guardás: dos asientos del libro, cada uno con su «actualizar» -->
-      <section class="haber" aria-label="Lo que tenés y lo que guardás">
-        <p class="renglon"><span class="ren" data-pluma>Tenés</span><span class="guia" aria-hidden="true"></span><b class="ren fuerte"><span class="m">$ 13.950</span></b><button class="enlace chico ren" type="button">actualizar<svg class="raya" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><path d="M1 6.2 C 20 3.4, 44 7.4, 66 5 S 92 4.6, 99 6.4 C 80 6.8, 50 8.6, 28 7.4 S 8 7.2, 1 6.2z" fill="currentColor"/></svg></button></p>
-        <p class="renglon"><span class="ren" data-pluma>Guardás</span><span class="guia" aria-hidden="true"></span><b class="oro"><span class="m">$ 9.000</span></b><button class="enlace chico ren" type="button">actualizar<svg class="raya" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><path d="M1 6.2 C 20 3.4, 44 7.4, 66 5 S 92 4.6, 99 6.4 C 80 6.8, 50 8.6, 28 7.4 S 8 7.2, 1 6.2z" fill="currentColor"/></svg></button></p>
-      </section>
-
-      <svg class="adorno" viewBox="0 0 220 24" aria-hidden="true"><use href="#floritura"/></svg>
-
-      <!-- Tus semanas -->
-      <section class="semanas" aria-label="Tus semanas">
-        <h2 class="titulo ren" data-pluma>Tus semanas</h2>
-        <div class="modo" role="group" aria-label="Cómo repartir"><button class="opcion ren fuerte" type="button" aria-pressed="true" data-modo="parejo">Parejo<svg class="raya" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><path d="M1 6.2 C 20 3.4, 44 7.4, 66 5 S 92 4.6, 99 6.4 C 80 6.8, 50 8.6, 28 7.4 S 8 7.2, 1 6.2z" fill="currentColor"/></svg></button><span class="ren suave punto" aria-hidden="true">·</span><button class="opcion ren suave" type="button" aria-pressed="false" data-modo="optimizado">Optimizado<svg class="raya" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><path d="M1 6.2 C 20 3.4, 44 7.4, 66 5 S 92 4.6, 99 6.4 C 80 6.8, 50 8.6, 28 7.4 S 8 7.2, 1 6.2z" fill="currentColor"/></svg></button></div>
-        <p class="ayuda ren suave" id="ayuda-modo">Igual todos los días. Tocá una para verla.</p>
-        <ol class="lista">
-        <li><button class="sem" type="button" aria-label="Semana 1, 12–18 nov"><span class="s-n ren fuerte">Semana 1</span><i class="oro s-hoy">hoy</i><span class="guia" aria-hidden="true"></span><b class="ren fuerte"><span class="m">$ 3.437</span></b><span class="s-f ren suave">12–18 nov · 28 %</span><span class="s-p ren suave">te quedan <span class="m">$ 3.387</span></span></button></li>
-        <li><button class="sem" type="button" aria-label="Semana 2, 19–25 nov"><span class="s-n ren">Semana 2</span><span class="guia" aria-hidden="true"></span><b class="ren fuerte"><span class="m">$ 3.437</span></b><span class="s-f ren suave">19–25 nov · 28 %</span><span class="s-p ren suave"><span class="m">$ 491</span> por día</span></button></li>
-        <li><button class="sem" type="button" aria-label="Semana 3, 26 nov–2 dic"><span class="s-n ren">Semana 3</span><span class="guia" aria-hidden="true"></span><b class="ren fuerte"><span class="m">$ 3.437</span></b><span class="s-f ren suave">26 nov–2 dic · 28 %</span><span class="s-p ren suave"><span class="m">$ 491</span> por día</span></button></li>
-        <li><button class="sem" type="button" aria-label="Semana 4, 3–6 dic"><span class="s-n ren">Semana 4</span><span class="guia" aria-hidden="true"></span><b class="ren fuerte"><span class="m">$ 1.964</span></b><span class="s-f ren suave">3–6 dic · 16 %</span><span class="s-p ren suave"><span class="m">$ 491</span> por día</span></button></li>
-        </ol>
-      </section>
-
-      <svg class="adorno" viewBox="0 0 220 24" aria-hidden="true"><use href="#floritura"/></svg>
-
-      <!-- la nota al margen, en tinta roja -->
-      <aside class="margen" aria-label="Nota">
-        <svg class="llave" viewBox="0 0 12 100" preserveAspectRatio="none" aria-hidden="true"><path d="M9.6 1 C 4 4, 7.6 30, 5.4 44 C 4.6 48, 2 49.4, 1 50 C 2 50.6, 4.6 52, 5.4 56 C 7.6 70, 4 96, 9.6 99 C 2.4 95, 5.6 70, 3.6 57 C 3 53, 1.4 51, .4 50 C 1.4 49, 3 47, 3.6 43 C 5.6 30, 2.4 5, 9.6 1z" fill="#6f1810"/></svg>
-        <div><p class="ren rojo" data-pluma><b>Separá tu ahorro hoy:</b> pasá <span class="m">$ 9.000</span> a otra cuenta, así no se mezcla.</p>
-        <button class="enlace ren rojo" type="button">Ya lo pasé<svg class="raya" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><path d="M1 6.2 C 20 3.4, 44 7.4, 66 5 S 92 4.6, 99 6.4 C 80 6.8, 50 8.6, 28 7.4 S 8 7.2, 1 6.2z" fill="currentColor"/></svg></button></div>
-      </aside>
-
-      <svg class="adorno" viewBox="0 0 220 24" aria-hidden="true"><use href="#floritura"/></svg>
-
-      <!-- lo que sigue en el libro -->
-      <nav class="indice" aria-label="Seguir leyendo">
-        <button class="entrada" type="button"><span class="e-t ren" data-pluma>Tu plan</span><span class="e-d ren suave" data-pluma>en qué se reparte tu plata y cuando cobres</span><i class="e-f ren suave" aria-hidden="true">›</i></button>
-        <button class="entrada" type="button"><span class="e-t ren" data-pluma>Consejos para ahorrar</span><span class="e-d ren suave" data-pluma>el reparto del mes y 6 ideas rápidas</span><i class="e-f ren suave" aria-hidden="true">›</i></button>
-      </nav>
-      <svg class="colofon" viewBox="0 0 60 24" aria-hidden="true"><g fill="#3a2412"><path d="M30 3 C 33 8, 36 10, 41 12 C 36 14, 33 16, 30 21 C 27 16, 24 14, 19 12 C 24 10, 27 8, 30 3z" fill="#8a6414" stroke="#4a3006" stroke-width=".5"/><circle cx="12" cy="12" r="1.5"/><circle cx="48" cy="12" r="1.5"/><circle cx="5" cy="12" r="1"/><circle cx="55" cy="12" r="1"/></g></svg>
+    <div class="semana chico" aria-label="Los días que quedan de la semana">
+      <p class="fuerte"><svg viewBox="0 0 100 12" preserveAspectRatio="none" aria-hidden="true"><path d="M1 6.6 C 22 2.6, 46 8, 70 4.6 S 92 4, 99 6.2 C 84 9, 52 10.8, 30 8.8 S 8 8.6, 1 6.6z" fill="#3a2110"/></svg>hoy</p>
+      <p class="suave"><svg viewBox="0 0 100 12" preserveAspectRatio="none" aria-hidden="true"><path d="M1 6 C 24 7.6, 50 4.4, 74 6.4 S 94 6.4, 99 5.4 C 78 7.4, 46 6.6, 22 7.8 S 6 7, 1 6z" fill="#553618"/></svg>mar</p>
+      <p class="suave"><svg viewBox="0 0 100 12" preserveAspectRatio="none" aria-hidden="true"><path d="M1 6.6 C 20 4.6, 52 7.2, 72 5.2 S 92 6, 99 6.6 C 80 7.6, 50 8, 26 7 S 8 7.4, 1 6.6z" fill="#553618"/></svg>mié</p>
     </div>
-    <div class="pauta" aria-hidden="true"></div>
+
+    <svg class="sep" viewBox="0 0 220 24" aria-hidden="true"><use href="#floritura"/></svg>
+
+    <section class="haber" aria-label="Lo que tenés y lo que guardás">
+      <div><span>Tenés</span><span class="monto-ch fuerte"><span class="m">$ 13.950</span></span><button class="toc sub chico fuerte" type="button" aria-label="Actualizar lo que tenés">actualizar</button></div>
+      <div><span>Guardás</span><span class="monto-ch oro"><span class="m">$ 9.000</span></span><button class="toc sub chico fuerte" type="button" aria-label="Actualizar lo que guardás">actualizar</button></div>
+    </section>
   </main>
+
+  <!-- ============ página derecha ============ -->
+  <section class="pag der" id="der" data-lado="der" aria-label="Tus semanas y tu plan">
+    <nav class="acciones chico suave" aria-label="Acciones"><button class="toc" type="button" id="ocultar" aria-pressed="false">ocultar</button><span aria-hidden="true">·</span><button class="toc" type="button" id="volver">volver</button><span aria-hidden="true">·</span><button class="toc" type="button">ajustes</button></nav>
+
+    <div class="semanas">
+      <h2 class="tit">Tus semanas</h2>
+      <div class="modo" role="group" aria-label="Cómo repartir"><button class="toc sub opcion fuerte" type="button" aria-pressed="true" data-modo="parejo">Parejo</button><span class="suave" aria-hidden="true">·</span><button class="toc sub opcion suave" type="button" aria-pressed="false" data-modo="optimizado">Optimizado</button></div>
+      <p class="ayuda chico cur suave" id="ayuda-modo">Igual todos los días. Tocá una para verla.</p>
+      <ol class="lista">
+        <li><button class="sem toc" type="button"><span class="fila"><span>Semana 1 <span class="oro chico">hoy</span></span><span class="monto-ch fuerte"><span class="m">$ 3.437</span></span></span><span class="l2 chico suave"><span class="cur">12–18 nov · 28 %</span><span>te quedan <span class="m">$ 3.387</span></span></span></button></li>
+        <li><button class="sem toc" type="button"><span class="fila"><span>Semana 2</span><span class="monto-ch fuerte"><span class="m">$ 3.437</span></span></span><span class="l2 chico suave"><span class="cur">19–25 nov · 28 %</span><span><span class="m">$ 491</span> por día</span></span></button></li>
+        <li><button class="sem toc" type="button"><span class="fila"><span>Semana 3</span><span class="monto-ch fuerte"><span class="m">$ 3.437</span></span></span><span class="l2 chico suave"><span class="cur">26 nov–2 dic · 28 %</span><span><span class="m">$ 491</span> por día</span></span></button></li>
+      </ol>
+    </div>
+
+    <svg class="sep" viewBox="0 0 220 24" aria-hidden="true"><use href="#floritura"/></svg>
+
+    <!-- la nota al margen, en tinta roja -->
+    <aside class="margen rojo" aria-label="Nota">
+      <svg class="llave" viewBox="0 0 12 100" preserveAspectRatio="none" aria-hidden="true"><path d="M9.6 1 C 4 4, 7.6 30, 5.4 44 C 4.6 48, 2 49.4, 1 50 C 2 50.6, 4.6 52, 5.4 56 C 7.6 70, 4 96, 9.6 99 C 2.4 95, 5.6 70, 3.6 57 C 3 53, 1.4 51, .4 50 C 1.4 49, 3 47, 3.6 43 C 5.6 30, 2.4 5, 9.6 1z" fill="#7a2014"/></svg>
+      <div><p>Separá tu ahorro hoy: pasá <span class="m">$ 9.000</span> a otra cuenta, así no se mezcla.</p>
+        <button class="toc sub ya" type="button">Ya lo pasé</button></div>
+    </aside>
+
+    <nav class="indice" aria-label="Seguir leyendo">
+      <button class="toc sub" type="button" data-hoja="plan">Tu plan</button>
+      <button class="toc sub" type="button" data-hoja="consejos">Consejos para ahorrar</button>
+    </nav>
+  </section>
 </div>
-<!-- la floritura de pluma que separa las secciones: trazos que engrosan y adelgazan, como los de un plumín -->
+
+<!-- la hoja suelta -->
+<div class="velo" id="velo"><div class="suelta" id="suelta" role="dialog" aria-modal="true" aria-labelledby="suelta-t" tabindex="-1"><h2 id="suelta-t"></h2><div id="suelta-c"></div></div></div>
+
+<!-- la floritura de pluma que separa las secciones: trazos que engrosan y adelgazan -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
-  <g id="floritura" fill="#3a2412">
-    <path d="M4 12.4 C 26 11.6, 44 6.2, 62 9.6 C 72 11.6, 80 15.6, 90 13.4 C 82 17.4, 71 14.6, 61 11.6 C 44 7.8, 26 13, 4 12.4z"/>
-    <path d="M216 12.4 C 194 11.6, 176 6.2, 158 9.6 C 148 11.6, 140 15.6, 130 13.4 C 138 17.4, 149 14.6, 159 11.6 C 176 7.8, 194 13, 216 12.4z"/>
+  <g id="floritura" fill="#4a2c14">
+    <path d="M4 12.8 C 26 11, 44 5.6, 62 9.6 C 72 11.8, 80 16, 90 13.4 C 82 17.8, 71 14.8, 61 11.8 C 44 7.4, 26 13.6, 4 12.8z"/>
+    <path d="M216 11.6 C 194 12.4, 176 6.8, 158 9.4 C 148 11.2, 140 15.2, 130 13.6 C 138 17.2, 149 14.2, 159 11.4 C 176 8.4, 194 12.6, 216 11.6z"/>
     <path d="M62 9.6 C 64 3.2, 74 2.6, 75 8 C 75.6 12, 69.6 12.6, 69.4 9 C 69.4 7.4, 71.2 6.8, 71.8 8 C 71.2 7.6, 70.4 8, 70.6 9 C 71 11, 74 10.4, 73.8 8 C 73.4 4.4, 66 4.6, 62 9.6z"/>
-    <path d="M158 9.6 C 156 3.2, 146 2.6, 145 8 C 144.4 12, 150.4 12.6, 150.6 9 C 150.6 7.4, 148.8 6.8, 148.2 8 C 148.8 7.6, 149.6 8, 149.4 9 C 149 11, 146 10.4, 146.2 8 C 146.6 4.4, 154 4.6, 158 9.6z"/>
-    <path d="M110 5.4 C 112.4 9, 114.4 10.6, 117.4 12 C 114.4 13.4, 112.4 15, 110 18.6 C 107.6 15, 105.6 13.4, 102.6 12 C 105.6 10.6, 107.6 9, 110 5.4z" fill="#8a6414" stroke="#4a3006" stroke-width=".5"/>
-    <circle cx="97" cy="12.6" r="1.3"/><circle cx="123" cy="12.6" r="1.3"/>
+    <path d="M158 9.4 C 156 3.2, 146 2.6, 145 8 C 144.4 12, 150.4 12.6, 150.6 9 C 150.6 7.4, 148.8 6.8, 148.2 8 C 148.8 7.6, 149.6 8, 149.4 9 C 149 11, 146 10.4, 146.2 8 C 146.6 4.4, 154 4.6, 158 9.4z"/>
+    <path d="M110 5.4 C 112.4 9, 114.4 10.6, 117.4 12 C 114.4 13.4, 112.4 15, 110 18.6 C 107.6 15, 105.6 13.4, 102.6 12 C 105.6 10.6, 107.6 9, 110 5.4z" fill="#9a6c14"/>
+    <circle cx="97" cy="12.8" r="1.3"/><circle cx="123" cy="12.4" r="1.2"/>
   </g>
 </defs></svg>
-<div class="probar" role="group" aria-label="Probar"><button type="button" data-monto>$ 967 ⇄ $ 6.767</button></div>
+
 <script type="module">
-/* Dónde va la imagen y dónde cae la página: la misma cuenta de recorte que usan las fotos de la estantería */
 import {recorte} from '../../js/logica/recorte.js';
 import {FONDOS} from './fondos.js';
-const Q=new URLSearchParams(location.search),raiz=document.documentElement,img=document.getElementById('fondo'),hoja=document.getElementById('hoja'),tinta=document.getElementById('tinta'),luz=document.querySelector('.resplandor'),mesa=document.getElementById('mesa');
+const Q=new URLSearchParams(location.search),raiz=document.documentElement,img=document.getElementById('fondo'),luz=document.querySelector('.resplandor'),mesa=document.getElementById('mesa');
+const PAGS=[document.getElementById('izq'),document.getElementById('der')];
+function azar(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
-/* ---- las tintas: baldosas chicas de tinta despareja (más cargada en unos lugares, más aguada en otros) ---- */
+/* ---- las tintas: baldosas de tinta sepia despareja ---- */
 function hash(x,y){let h=(Math.imul(x,374761393)+Math.imul(y,668265263))|0;h=Math.imul(h^(h>>>13),1274126177);return((h^(h>>>16))>>>0)/4294967296}
 function ruido(x,y,p){const xi=Math.floor(x),yi=Math.floor(y),xf=x-xi,yf=y-yi,u=xf*xf*(3-2*xf),v=yf*yf*(3-2*yf),m=n=>((n%p)+p)%p;const a=hash(m(xi),m(yi)),b=hash(m(xi+1),m(yi)),c=hash(m(xi),m(yi+1)),d=hash(m(xi+1),m(yi+1));return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v}
 function baldosa(base,agua,contraste){
   const N=160,c=document.createElement('canvas');c.width=c.height=N;const g=c.getContext('2d'),im=g.createImageData(N,N),d=im.data;
   for(let y=0;y<N;y++)for(let x=0;x<N;x++){
-    /* manchas grandes (la carga de la pluma) + grano fino (la fibra que no tomó tinta) */
-    const v=Math.min(1,Math.max(0,.5+contraste*((ruido(x/40,y/40,4)-.5)*1.5+(ruido(x/11,y/11,14)-.5)*.7)+ (ruido(x/2.2,y/2.2,72)>.82?-.22:0))),i=(y*N+x)*4;
+    const v=Math.min(1,Math.max(0,.5+contraste*((ruido(x/40,y/40,4)-.5)*1.5+(ruido(x/11,y/11,14)-.5)*.7)+(ruido(x/2.2,y/2.2,72)>.82?-.2:0))),i=(y*N+x)*4;
     d[i]=agua[0]+(base[0]-agua[0])*v;d[i+1]=agua[1]+(base[1]-agua[1])*v;d[i+2]=agua[2]+(base[2]-agua[2])*v;d[i+3]=255}
   g.putImageData(im,0,0);return 'url('+c.toDataURL('image/png')+')'}
-function baldosaOro(){
-  const N=120,c=document.createElement('canvas');c.width=c.height=N;const g=c.getContext('2d'),im=g.createImageData(N,N),d=im.data;
-  for(let y=0;y<N;y++)for(let x=0;x<N;x++){
-    const bru=Math.pow(.5+.5*Math.sin((x*.7+y)/19*6.283/3.2+ruido(x/30,y/30,4)*3),2.4),mate=ruido(x/9,y/9,13),salta=ruido(x/3.2,y/3.2,37)>.86?1:0,i=(y*N+x)*4;
-    let R=128+96*bru+22*(mate-.5),G=88+98*bru+20*(mate-.5),B=20+84*bru;
-    if(salta){R=118;G=52;B=26}
-    d[i]=Math.min(255,R);d[i+1]=Math.min(255,G);d[i+2]=Math.min(255,B);d[i+3]=255}
-  g.putImageData(im,0,0);return 'url('+c.toDataURL('image/png')+')'}
-raiz.style.setProperty('--t-sepia',baldosa([30,16,7],[92,62,36],1));
-raiz.style.setProperty('--t-sepia-s',baldosa([50,30,14],[98,70,44],.9)); /* la tinta «suave»: más clara, pero que se lea */
-raiz.style.setProperty('--t-rojo',baldosa([98,16,10],[150,62,44],1));
-raiz.style.setProperty('--t-fuerte',baldosa([20,10,4],[70,44,24],.9)); /* la pluma bien cargada: para los montos */
-raiz.style.setProperty('--t-oro',baldosaOro());
+/* (los colores son los de la tinta antes de multiplicarse con el papel; sobre la hoja quedan más oscuros) */
+raiz.style.setProperty('--t-sepia',baldosa([60,34,15],[100,62,32],1));
+raiz.style.setProperty('--t-suave',baldosa([70,42,20],[108,70,38],.9));
+raiz.style.setProperty('--t-fuerte',baldosa([46,24,9],[86,50,24],.9));   /* la pluma bien cargada: los montos */
+raiz.style.setProperty('--t-rojo',baldosa([104,18,10],[138,46,30],1));
+raiz.style.setProperty('--t-oro',baldosa([78,46,2],[126,80,8],1.3));    /* oro viejo: el tiempo y lo guardado */
+raiz.style.setProperty('--papel',baldosa([196,170,122],[232,214,172],.7));  /* el papel de la hoja suelta */
 
-/* ---- la mano: cada palabra queda apenas más arriba o más abajo y un pelo torcida, como escritas una por una ---- */
-function azar(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
-function aPluma(el,semilla){
-  const r=azar(semilla),quieto=el.dataset.pluma==='quieta';
-  const pasar=n=>{
-    if(n.nodeType===3){
-      const f=document.createDocumentFragment();
-      n.textContent.split(/(\s+)/).forEach(t=>{if(!t)return;if(/^\s+$/.test(t)){f.appendChild(document.createTextNode(' '));return}
-        const s=document.createElement('span');s.className='w';s.textContent=t;
-        s.style.setProperty('--dy',((r()-.5)*(quieto?.5:1.3)).toFixed(2)+'px');s.style.setProperty('--g',((r()-.5)*(quieto?.5:1.5)).toFixed(2)+'deg');
-        s.style.setProperty('--bx',Math.round(r()*160)+'px');s.style.setProperty('--by',Math.round(r()*160)+'px');f.appendChild(s)});
-      n.parentNode.replaceChild(f,n)}
-    else if(n.nodeType===1&&n.tagName!=='SVG')[...n.childNodes].forEach(pasar)};
-  [...el.childNodes].forEach(pasar)}
-document.querySelectorAll('[data-pluma]').forEach((el,i)=>aPluma(el,17+i*7));
+/* ---- la mano: se separa cada palabra para poder moverla un pelo, como escritas una por una ---- */
+let nPal=0;const rPal=azar(17);
+function aPluma(n){
+  if(n.nodeType===3){
+    if(!n.textContent.trim())return;
+    const f=document.createDocumentFragment();
+    n.textContent.split(/(\s+)/).forEach(t=>{if(!t)return;if(/^\s+$/.test(t)){f.appendChild(document.createTextNode(' '));return}
+      const s=document.createElement('span');s.className='w';s.textContent=t;vestir(s);f.appendChild(s)});
+    n.parentNode.replaceChild(f,n)}
+  else if(n.nodeType===1&&n.tagName.toLowerCase()!=='svg'){if(n.classList.contains('m')){vestir(n);return}[...n.childNodes].forEach(aPluma)}}
+function vestir(s){s.style.setProperty('--dy',((rPal()-.5)*1.5).toFixed(2)+'px');s.style.setProperty('--g',((rPal()-.5)*1.7).toFixed(2)+'deg');s.style.setProperty('--bx',Math.round(rPal()*160)+'px');s.style.setProperty('--by',Math.round(rPal()*160)+'px');nPal++}
 
-/* ---- las manchas de tinta del modo discreto: borrones de borde irregular, con alguna gota suelta ---- */
+/* ---- trazos de pluma irregulares para los subrayados (cada uno distinto) ---- */
+function trazo(semilla,color){
+  const r=azar(semilla),n=5,arr=[],aba=[];
+  for(let i=0;i<=n;i++){const x=1+98*i/n,y=5+(r()-.5)*3.4,g=(.5+1.5*Math.sin(Math.PI*(i/n))**.7)*(.7+r()*.6);arr.push([x,y-g/2]);aba.push([x,y+g/2])}
+  const curva=p=>p.map((q,i)=>i?`S ${(q[0]-8).toFixed(1)} ${(q[1]+(r()-.5)*1.6).toFixed(1)}, ${q[0].toFixed(1)} ${q[1].toFixed(1)}`:`M ${q[0].toFixed(1)} ${q[1].toFixed(1)}`).join(' ');
+  const vuelta=aba.reverse().map(q=>`L ${q[0].toFixed(1)} ${q[1].toFixed(1)}`).join(' ');
+  return `<svg class="trazo" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><path d="${curva(arr)} ${vuelta}z" fill="${color}"/></svg>`}
+
+/* ---- las manchas de tinta del modo discreto ---- */
 function mancha(semilla){
   const r=azar(semilla),n=22,pts=[];
   for(let i=0;i<n;i++){const a=i/n*6.283,rad=.78+r()*.22+(r()<.16?.16:0);pts.push([50+Math.cos(a)*46*rad,50+Math.sin(a)*42*rad])}
   let d='M'+((pts[0][0]+pts[n-1][0])/2).toFixed(1)+' '+((pts[0][1]+pts[n-1][1])/2).toFixed(1);
   for(let i=0;i<n;i++){const p=pts[i],q=pts[(i+1)%n];d+=' Q'+p[0].toFixed(1)+' '+p[1].toFixed(1)+' '+((p[0]+q[0])/2).toFixed(1)+' '+((p[1]+q[1])/2).toFixed(1)}
   let gotas='';for(let i=0;i<3;i++){const a=r()*6.283;gotas+=`<ellipse cx="${(50+Math.cos(a)*49).toFixed(1)}" cy="${(50+Math.sin(a)*47).toFixed(1)}" rx="${(1+r()*1.6).toFixed(1)}" ry="${(2+r()*3).toFixed(1)}"/>`}
-  const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><defs><radialGradient id="g"><stop offset=".55" stop-color="#1a0d05"/><stop offset="1" stop-color="#3a2210"/></radialGradient></defs><g fill="url(#g)"><path d="${d}z"/>${gotas}</g></svg>`;
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><defs><radialGradient id="g"><stop offset=".5" stop-color="#2e1a0c"/><stop offset="1" stop-color="#5a3a1e"/></radialGradient></defs><g fill="url(#g)"><path d="${d}z"/>${gotas}</g></svg>`;
   return 'url("data:image/svg+xml,'+encodeURIComponent(svg)+'")'}
 const MANCHAS=[3,11,19,29,41].map(mancha);
 function manchar(){document.querySelectorAll('.m').forEach((el,i)=>el.style.setProperty('--mancha',MANCHAS[i%MANCHAS.length]))}
-const bOcultar=document.getElementById('ocultar');
-/* En modo discreto el número NO queda escrito debajo de la mancha: se saca de la página y queda solo su lugar.
-   (En la app es igual: money() ya devuelve el monto tapado, así que el número real nunca llega a la pantalla.) */
-function tapar(el,v){
-  if(v&&el.dataset.t===undefined){const w=el.getBoundingClientRect().width;el.dataset.t=el.innerHTML;el.style.width=w.toFixed(1)+'px';el.innerHTML='&nbsp;';el.setAttribute('role','img');el.setAttribute('aria-label','monto oculto')}
-  else if(!v&&el.dataset.t!==undefined){el.innerHTML=el.dataset.t;delete el.dataset.t;el.style.width='';el.removeAttribute('role');el.removeAttribute('aria-label')}
-}
-function discreto(v){if(v)raiz.dataset.discreto='1';else delete raiz.dataset.discreto;bOcultar.textContent=v?'mostrar':'ocultar';bOcultar.setAttribute('aria-pressed',String(v));document.querySelectorAll('.m').forEach(el=>tapar(el,v))}
-bOcultar.addEventListener('click',()=>discreto(!raiz.dataset.discreto));
-/* «volver» cierra el libro: si esta página está dentro de la demostración del fundido, le avisa */
-document.getElementById('volver').addEventListener('click',()=>{if(parent!==window)parent.postMessage('hoy:volver','*')});
-/* Parejo / Optimizado: en el prototipo solo cambia cuál queda subrayado */
-document.querySelector('.modo').addEventListener('click',e=>{const b=e.target.closest('.opcion');if(!b)return;document.querySelectorAll('.opcion').forEach(x=>{const si=x===b;x.setAttribute('aria-pressed',String(si));x.classList.toggle('fuerte',si);x.classList.toggle('suave',!si)});
-  document.getElementById('ayuda-modo').textContent=b.dataset.modo==='parejo'?'Igual todos los días. Tocá una para verla.':'Más plata los fines de semana. Tocá una para verla.'});
+
+/* ---- la página deformada: de un rectángulo a los cuatro puntos de la página en la foto ---- */
+function homografia(w,h,q){
+  const src=[[0,0],[w,0],[w,h],[0,h]],A=[],b=[];
+  for(let i=0;i<4;i++){const [x,y]=src[i],[X,Y]=q[i];A.push([x,y,1,0,0,0,-x*X,-y*X]);b.push(X);A.push([0,0,0,x,y,1,-x*Y,-y*Y]);b.push(Y)}
+  for(let i=0;i<8;i++){let p=i;for(let j=i+1;j<8;j++)if(Math.abs(A[j][i])>Math.abs(A[p][i]))p=j;[A[i],A[p]]=[A[p],A[i]];[b[i],b[p]]=[b[p],b[i]];
+    for(let j=i+1;j<8;j++){const f=A[j][i]/A[i][i];for(let k=i;k<8;k++)A[j][k]-=f*A[i][k];b[j]-=f*b[i]}}
+  const s=new Array(8);for(let i=7;i>=0;i--){let t=b[i];for(let k=i+1;k<8;k++)t-=A[i][k]*s[k];s[i]=t/A[i][i]}
+  const [a,bb,c,d,e,f,g,hh]=s;return `matrix3d(${a},${d},0,${g},${bb},${e},0,${hh},0,0,1,0,${c},${f},0,1)`}
+
+/* ---- la curva: cerca del lomo la hoja se hunde, y el renglón baja y se inclina con ella ---- */
+function curvar(pag,w){
+  const izq=pag.dataset.lado==='izq',A=.034*w,S=.17;
+  pag.querySelectorAll('.w,.m').forEach(el=>{
+    let x=el.offsetWidth/2,n=el;while(n&&n!==pag){x+=n.offsetLeft;n=n.offsetParent}
+    const s=Math.max(0,izq?1-x/w:x/w),dy=A*Math.exp(-((s/S)**2)),pend=-2*s/(S*S)*dy/w*(izq?-1:1);
+    el.style.setProperty('--cy',dy.toFixed(2)+'px');el.style.setProperty('--cg',(Math.atan(pend)*57.3).toFixed(2)+'deg')})}
+
+/* ---- que todo entre sin deslizar: primero se achica el aire entre bloques; la letra, solo hasta 14 px en pantalla ---- */
+function ajustar(pag,w,h,escalaMin){
+  const u=w/100,kMin=Math.min(1,14.3/(10*u*escalaMin));let a=1,k=1,lh=1.22;
+  const sobra=()=>{pag.style.height='auto';const s=pag.scrollHeight;pag.style.height=h+'px';return s-h};
+  const pon=()=>{pag.style.setProperty('--a',a.toFixed(2));pag.style.setProperty('--k',k.toFixed(3));pag.style.setProperty('--lh',lh.toFixed(2))};
+  pon();
+  while(sobra()>0&&a>.3){a-=.07;pon()}
+  while(sobra()>0&&lh>1.09){lh-=.02;pon()}   /* después, los renglones un poco más juntos */
+  while(sobra()>0&&a>.1){a-=.05;pon()}
+  while(sobra()>0&&k>kMin+.001){k=Math.max(kMin,k-.02);pon()}
+  return {a:+a.toFixed(2),lh:+lh.toFixed(2),k:+k.toFixed(3),sobra:Math.round(sobra()),minPx:+(10*u*k*escalaMin).toFixed(1)}}
 
 let actual='';
 function acomodar(){
   const w=mesa.clientWidth,h=mesa.clientHeight,k=h/w>1.92?'alto':'corto',F=FONDOS[k];
   if(k!==actual){actual=k;img.src=F.src}
-  /* la zona que nunca puede quedar afuera: la página y la llama */
-  const r=recorte(w,h,F.w,F.h,{x0:F.pagina.x0-.03,y0:Math.max(0,F.llama.y-.03),x1:F.pagina.x1+.03,y1:F.pagina.y1});
+  /* la zona que nunca puede quedar afuera: las dos páginas y la llama */
+  const xs=[...F.izq,...F.der].map(p=>p[0]),ys=[...F.izq,...F.der].map(p=>p[1]);
+  const r=recorte(w,h,F.w,F.h,{x0:Math.min(...xs),y0:Math.max(0,F.llama.y-.05),x1:Math.max(...xs),y1:Math.min(1,Math.max(...ys)+.01)});
   img.style.width=F.w+'px';img.style.height=F.h+'px';img.style.transform=`translate(${r.x.toFixed(2)}px,${r.y.toFixed(2)}px) scale(${r.escala.toFixed(5)})`;
-  const px=r.x+F.pagina.x0*r.ancho,py=r.y+F.pagina.y0*r.alto,pw=(F.pagina.x1-F.pagina.x0)*r.ancho,ph=(F.pagina.y1-F.pagina.y0)*r.alto;
-  hoja.style.cssText=`left:${px.toFixed(1)}px;top:${py.toFixed(1)}px;width:${pw.toFixed(1)}px;height:${Math.min(ph,h-py).toFixed(1)}px;--u:${(pw/100).toFixed(3)}px`;
-  /* el mismo papel, adentro de la hoja y calzado al píxel con el de atrás */
-  tinta.style.backgroundImage=`url(${F.src})`;tinta.style.backgroundSize=`${r.ancho.toFixed(2)}px ${r.alto.toFixed(2)}px`;tinta.style.backgroundPosition=`${(r.x-px).toFixed(2)}px ${(r.y-py).toFixed(2)}px`;
-  luz.style.left=(r.x+F.llama.x*r.ancho).toFixed(1)+'px';luz.style.top=(r.y+F.llama.y*r.alto).toFixed(1)+'px';luz.style.setProperty('--r',(r.ancho/22).toFixed(1));
+  luz.style.left=(r.x+F.llama.x*r.ancho).toFixed(1)+'px';luz.style.top=(r.y+F.llama.y*r.alto).toFixed(1)+'px';luz.style.setProperty('--r',(r.ancho/16).toFixed(1));
+  const info={};
+  PAGS.forEach(pag=>{
+    const q=F[pag.dataset.lado].map(p=>[r.x+p[0]*r.ancho,r.y+p[1]*r.alto]);
+    const arriba=q[1][0]-q[0][0],abajo=q[2][0]-q[3][0],pw=(arriba+abajo)/2,ph=((q[3][1]-q[0][1])+(q[2][1]-q[1][1]))/2;
+    pag.style.width=pw.toFixed(1)+'px';pag.style.height=ph.toFixed(1)+'px';pag.style.setProperty('--u',(pw/100).toFixed(3)+'px');
+    pag.style.transform=homografia(pw,ph,q);
+    info[pag.dataset.lado]=ajustar(pag,pw,ph,arriba/pw);
+    curvar(pag,pw)});
+  window.__ajuste=info;
 }
-if(Q.get('captura'))raiz.dataset.captura='1';
-if(Q.get('y'))requestAnimationFrame(()=>{tinta.scrollTop=+Q.get('y')*tinta.clientWidth/100});
-const monto=document.getElementById('monto');let grande=Q.get('monto')==='6767';
-const pintar=()=>{const d=!!raiz.dataset.discreto;monto.innerHTML='<span class="m"><span class="peso">$</span>'+(grande?'6.767':'967')+'</span>';manchar();if(d)tapar(monto.querySelector('.m'),true)};pintar();
-document.fonts.ready.then(()=>{if(Q.get('discreto'))discreto(true)});
-document.querySelector('.probar').addEventListener('click',e=>{if(e.target.closest('button')){grande=!grande;pintar()}});
+
+/* ---- armado ---- */
+const monto=document.getElementById('monto');
+monto.innerHTML='<span class="m"><span class="peso">$</span>'+(Q.get('monto')==='6767'?'6.767':'967')+'</span>';
+PAGS.forEach(p=>[...p.childNodes].forEach(aPluma));
+document.querySelectorAll('.sub').forEach((b,i)=>b.insertAdjacentHTML('beforeend',trazo(50+i*13,b.closest('.rojo')?'#7a2014':'#4a2c14')));
+manchar();
+
+/* modo discreto: el número NO queda escrito debajo de la mancha; se saca de la página y queda solo su lugar.
+   (En la app es igual: money() ya devuelve el monto tapado.) */
+function tapar(el,v){
+  if(v&&el.dataset.t===undefined){const w=el.offsetWidth;el.dataset.t=el.innerHTML;el.style.width=w+'px';el.innerHTML='&nbsp;';el.setAttribute('role','img');el.setAttribute('aria-label','monto oculto')}
+  else if(!v&&el.dataset.t!==undefined){el.innerHTML=el.dataset.t;delete el.dataset.t;el.style.width='';el.removeAttribute('role');el.removeAttribute('aria-label')}}
+const bOcultar=document.getElementById('ocultar');
+function discreto(v){if(v)raiz.dataset.discreto='1';else delete raiz.dataset.discreto;bOcultar.querySelector('.w').textContent=v?'mostrar':'ocultar';bOcultar.setAttribute('aria-pressed',String(v));document.querySelectorAll('.m').forEach(el=>tapar(el,v))}
+bOcultar.addEventListener('click',()=>discreto(!raiz.dataset.discreto));
+/* «volver» cierra el libro: si esta página está dentro de la demostración del fundido, le avisa */
+document.getElementById('volver').addEventListener('click',()=>{if(parent!==window)parent.postMessage('hoy:volver','*')});
+/* Parejo / Optimizado: en el prototipo solo cambia cuál queda subrayado */
+document.querySelector('.modo').addEventListener('click',e=>{const b=e.target.closest('.opcion');if(!b)return;
+  document.querySelectorAll('.opcion').forEach(x=>{const si=x===b;x.setAttribute('aria-pressed',String(si));x.classList.toggle('fuerte',si);x.classList.toggle('suave',!si)})});
+
+/* la hoja suelta */
+const velo=document.getElementById('velo'),suelta=document.getElementById('suelta'),HOJAS={
+  plan:['Tu plan','<p>En qué se reparte tu plata y cuando cobres.</p><p class="pie">En la app, acá va «Tu plan» completo, igual que hoy. Tocá afuera de la hoja para cerrarla.</p>'],
+  consejos:['Consejos para ahorrar','<p>El reparto del mes y 6 ideas rápidas.</p><p class="pie">En la app, acá van los consejos completos, igual que hoy. Tocá afuera de la hoja para cerrarla.</p>']};
+let quien=null;
+function abrirHoja(id,desde){quien=desde;document.getElementById('suelta-t').textContent=HOJAS[id][0];document.getElementById('suelta-c').innerHTML=HOJAS[id][1];velo.classList.add('abierta');try{suelta.focus({preventScroll:true})}catch(e){}}
+function cerrarHoja(){velo.classList.remove('abierta');if(quien)try{quien.focus({preventScroll:true})}catch(e){}quien=null}
+document.querySelector('.indice').addEventListener('click',e=>{const b=e.target.closest('[data-hoja]');if(b)abrirHoja(b.dataset.hoja,b)});
+velo.addEventListener('click',e=>{if(!e.target.closest('.suelta'))cerrarHoja()});
+addEventListener('keydown',e=>{if(e.key==='Escape'&&velo.classList.contains('abierta'))cerrarHoja()});
+
 addEventListener('resize',acomodar);addEventListener('orientationchange',()=>setTimeout(acomodar,60));
-acomodar();
-/* para comprobar en las capturas que se ve la letra correcta y no una de reemplazo */
-document.fonts.ready.then(()=>{window.__fuentes={charm400:document.fonts.check("400 20px Charm"),charm700:document.fonts.check("700 20px Charm")};document.body.classList.add('lista')});
+/* se acomoda con la letra ya cargada (si no, las medidas salen con la letra de reemplazo) */
+document.fonts.load('400 20px Charm').catch(()=>{}).then(()=>document.fonts.ready).then(()=>{
+  acomodar();
+  if(Q.get('discreto'))discreto(true);
+  if(Q.get('hoja'))abrirHoja(Q.get('hoja'));
+  window.__fuentes={charm:document.fonts.check('400 20px Charm')};document.body.classList.add('lista')});
 </script>
 </body>
 </html>

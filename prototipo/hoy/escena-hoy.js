@@ -14,28 +14,30 @@ function ruido(x, y) { const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi
 function fbm(x, y, o = 4) { let s = 0, a = .5, f = 1; for (let i = 0; i < o; i++) { s += a * ruido(x * f, y * f); f *= 2; a *= .5; } return s; }
 
 /* ---------- medidas (metros). x: derecha · z: hacia quien lee · y: arriba. El lomo abierto corre por x = 0 ---------- */
-export const M = { H: .225, tabla: .0034, anchoTabla: .1445, lomo: .019, hoja: .140, altoHoja: .213, grIzq: .0065, grDer: .021 };
+/* (pulido) El libro de Hoy es un libro de cuentas: alto y angosto, para que las dos páginas abiertas entren en una pantalla
+   vertical con letra de 14 px o más. Abierto por el medio: las dos mitades tienen casi el mismo grosor. */
+export const M = { H: .433, tabla: .0034, anchoTabla: .128, lomo: .016, hoja: .140, altoHoja: .42, grIzq: .012, grDer: .015 };
 
 /* ---------- el papel: amarillento, con fibra, bordes tostados y manchas de humedad lejos de donde van los números ---------- */
 function texPagina(semilla, espejo, escrita) {
-  const W = 1024, H = 1536, c = lienzo(W, H), g = c.getContext('2d'), im = g.createImageData(W, H), d = im.data, alt = new Float32Array(W * H), r = azar(semilla);
+  const W = 704, H = 2112, c = lienzo(W, H), g = c.getContext('2d'), im = g.createImageData(W, H), d = im.data, alt = new Float32Array(W * H), r = azar(semilla);
   /* manchas de humedad: aureolas con el borde más marcado, siempre contra los bordes */
   const aureolas = [];
-  for (let i = 0; i < 4; i++) { const lado = Math.floor(r() * 4), t = r(); aureolas.push({ x: lado === 0 ? .02 + r() * .1 : lado === 1 ? .9 + r() * .1 : t, y: lado === 2 ? .0 + r() * .06 : lado === 3 ? .95 + r() * .05 : t, R: .07 + r() * .09, s: r() * 9 }); }
+  for (let i = 0; i < 7; i++) { const lado = Math.floor(r() * 4), t = r(); aureolas.push({ x: lado === 0 ? .02 + r() * .1 : lado === 1 ? .9 + r() * .1 : t, y: lado === 2 ? .0 + r() * .06 : lado === 3 ? .95 + r() * .05 : t, R: .07 + r() * .09, s: r() * 9 }); }
   for (let y = 0, i = 0; y < H; y++) for (let x = 0; x < W; x++, i++) {
     const u = (espejo ? W - 1 - x : x) / W, v = y / H, px = u * W, py = y;
     const fibra = ruido(px / 1.6, py / 5.5) * .5 + ruido(px / 7, py / 2.2) * .5, mancha = fbm(px / 190 + semilla, py / 190, 4), fina = fbm(px / 24, py / 24 + 3, 3);
     /* distancia al borde, con el contorno irregular */
     const bx = Math.min(u, 1 - u) * W, by = Math.min(v, 1 - v) * H, bd = Math.min(bx, by) + (mancha - .5) * 70 + (fina - .5) * 22;
-    const tostado = ss(150, 0, bd), quemado = ss(26, 0, bd);
+    const tostado = ss(64, 0, bd), quemado = ss(20, 0, bd), lomoS = Math.pow(ss(.15, 0, u), 1.4); /* lomoS: la sombra donde la hoja se hunde en el lomo */
     let hum = 0;
-    for (const a of aureolas) { const dd = Math.hypot(u - a.x, (v - a.y) * 1.5) / a.R + (fbm(px / 60 + a.s, py / 60, 3) - .5) * .5; hum = Math.max(hum, ss(1.06, .9, dd) * .035 + ss(.07, 0, Math.abs(dd - 1)) * .05); }
+    for (const a of aureolas) { const dd = Math.hypot(u - a.x, (v - a.y) * 1.5) / a.R + (fbm(px / 60 + a.s, py / 60, 3) - .5) * .5; hum = Math.max(hum, ss(1.06, .9, dd) * .03 + ss(.07, 0, Math.abs(dd - 1)) * .045); }
     /* puntitos de óxido (foxing), más cerca de los bordes */
     const fox = ss(.73, .8, fbm(px / 9 + 50, py / 9, 2)) * ss(300, 30, bd) * .55;
-    let k = .95 + .06 * mancha + .035 * (fibra - .5) - .2 * tostado * tostado - .16 * quemado - hum - fox * .22;
-    const cal = 1 - .2 * tostado - .1 * quemado - hum * 1.2 - fox * .4; /* hacia el borde, más marrón */
+    let k = .95 + .11 * (mancha - .45) + .04 * (fibra - .5) - .26 * tostado * tostado - .2 * quemado - hum - fox * .28 - .2 * lomoS;
+    const cal = 1 - .2 * tostado - .1 * quemado - hum * 1.1 - fox * .4 - .06 * lomoS - .05 * ss(.5, .2, mancha); /* hacia el borde y en las manchas, más marrón */
     const j = i * 4;
-    d[j] = 236 * k; d[j + 1] = (226 * cal + 4) * k; d[j + 2] = (196 * cal * cal + 4) * k; d[j + 3] = 255;
+    d[j] = 238 * k; d[j + 1] = (229 * cal + 4) * k; d[j + 2] = (204 * cal * cal + 4) * k; d[j + 3] = 255;
     alt[i] = fibra * .5 + fina * .5;
   }
   g.putImageData(im, 0, 0);
@@ -203,7 +205,7 @@ export function armar(R) {
   const lomo = new THREE.Mesh(new THREE.BoxGeometry(M.lomo * 2, M.tabla * .8, M.H), mCuero); lomo.position.set(0, M.tabla * .4, 0); lomo.receiveShadow = true; libro.add(lomo);
   const mats = { canto: new THREE.MeshStandardMaterial({ map: texCanto(false), roughness: .92, envMapIntensity: .2, side: THREE.DoubleSide }) };
   const pap = (t) => new THREE.MeshStandardMaterial({ map: t.map, normalMap: t.normalMap, roughness: .93, metalness: 0, envMapIntensity: .12, normalScale: new THREE.Vector2(.5, .5) });
-  const der = bloque(1, M.grDer, { pagina: pap(texPagina(7, false, false)), canto: mats.canto }), izq = bloque(-1, M.grIzq, { pagina: pap(texPagina(23, true, true)), canto: mats.canto });
+  const der = bloque(1, M.grDer, { pagina: pap(texPagina(7, false, false)), canto: mats.canto }), izq = bloque(-1, M.grIzq, { pagina: pap(texPagina(23, true, false)), canto: mats.canto });
   der.grupo.position.x = 0; izq.grupo.position.x = 0; libro.add(der.grupo, izq.grupo);
   /* cabezada y cinta marcapáginas */
   const cab = new THREE.Mesh(new THREE.CylinderGeometry(.0026, .0026, .013, 12), new THREE.MeshStandardMaterial({ color: 0xb08a3c, roughness: .6 })); cab.rotation.z = Math.PI / 2; cab.position.set(0, .006, -M.altoHoja / 2 - .0005); libro.add(cab);
@@ -235,38 +237,34 @@ export function armar(R) {
       gp.beginPath(); gp.moveTo(128, y); gp.quadraticCurveTo(128 + lado * an * .55, y - 26, 128 + lado * an, y - 64 - rp2() * 12); gp.stroke();
     }
     gp.strokeStyle = 'rgba(92,70,44,.45)'; gp.lineWidth = 1; for (let i = 0; i < 40; i++) { const y = 140 + rp2() * 820, l = rp2() < .5 ? 1 : -1; gp.beginPath(); gp.moveTo(128 + l * 18, y); gp.lineTo(128 + l * (50 + rp2() * 40), y - 46); gp.stroke(); }
-    const tp = tex(cp), ej = new THREE.Vector3(-.82, .27, -.2).normalize(), aCam = new THREE.Vector3(0, .84, .54), an = new THREE.Vector3().crossVectors(ej, aCam).normalize(), nm = new THREE.Vector3().crossVectors(an, ej).normalize();
+    const tp = tex(cp), ej = new THREE.Vector3(-.5, .3, -.8).normalize(), aCam = new THREE.Vector3(0, .96, .28), an = new THREE.Vector3().crossVectors(ej, aCam).normalize(), nm = new THREE.Vector3().crossVectors(an, ej).normalize();
     const base = new THREE.Vector3(0, .016, 0), largo = .2, pl = new THREE.PlaneGeometry(.05, .16, 1, 10), Pp = pl.attributes.position;
     for (let i = 0; i < Pp.count; i++) { const x = Pp.getX(i), y = Pp.getY(i) + .08 + .03, cur = .012 * Math.pow(y / largo, 2); const p = base.clone().addScaledVector(ej, y).addScaledVector(an, x + cur).addScaledVector(nm, .0004 + Math.abs(x) * .12); Pp.setXYZ(i, p.x, p.y, p.z); }
     pl.computeVertexNormals();
     const barbas = new THREE.Mesh(pl, new THREE.MeshStandardMaterial({ map: tp, emissiveMap: tp, emissive: 0x6a5a48, emissiveIntensity: .55, transparent: true, alphaTest: .12, side: THREE.DoubleSide, roughness: .8, envMapIntensity: .2 })); barbas.castShadow = true;
     const canon = new THREE.Mesh(new THREE.CylinderGeometry(.0005, .0015, largo, 8), new THREE.MeshStandardMaterial({ color: 0xe6dcc0, roughness: .4, envMapIntensity: .5 }));
     canon.position.copy(base).addScaledVector(ej, largo / 2); canon.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), ej); canon.castShadow = true;
-    t.add(barbas, canon); t.position.set(.047, 0, -.152); escena.add(t);
+    t.add(barbas, canon); t.scale.setScalar(1.35); t.position.set(-.066, 0, -.268); escena.add(t);
   }
   /* la vela, arriba de la página, un poco a la derecha */
-  const v = vela(halo); v.position.set(.107, 0, -.151); escena.add(v);
-  const foco = v.position.clone().add(v.userData.llama);
-  const luz = new THREE.SpotLight(0xffdcb4, .34, 1.4, 1.22, .9, 1.9); luz.castShadow = true; luz.shadow.mapSize.set(4096, 4096); luz.shadow.camera.near = .02; luz.shadow.camera.far = 1.2; luz.shadow.bias = -.0006; luz.shadow.normalBias = .0012;
-  luz.target.position.set(.05, 0, .02); escena.add(luz, luz.target);
+  const v = vela(halo); v.scale.setScalar(1.45); v.position.set(.082, 0, -.275); escena.add(v);
+  const foco = v.position.clone().add(v.userData.llama.clone().multiplyScalar(1.45));
+  const luz = new THREE.SpotLight(0xffe4c4, .36, 1.6, 1.3, .9, 1.9); luz.castShadow = true; luz.shadow.mapSize.set(4096, 4096); luz.shadow.camera.near = .02; luz.shadow.camera.far = 1.2; luz.shadow.bias = -.0006; luz.shadow.normalBias = .0012;
+  luz.target.position.set(0, 0, 0); escena.add(luz, luz.target);
   /* relleno: lo que rebota en el cuarto; mantiene pareja la zona de lectura sin borrar las sombras */
-  const relleno = new THREE.DirectionalLight(0xffdcb8, .36); relleno.position.set(.1, 1, -.25); escena.add(relleno);
-  escena.add(new THREE.HemisphereLight(0x5a4636, 0x0c0806, .34));
+  const relleno = new THREE.DirectionalLight(0xffe2c2, .95); relleno.position.set(.3, 1, -.5); escena.add(relleno);
+  escena.add(new THREE.HemisphereLight(0x5a4a3c, 0x060403, .2));
   const cerca = new THREE.PointLight(0xffa85a, .045, .34, 2); cerca.position.copy(foco); escena.add(cerca);
-  return { escena, luz, foco, vela: v, alturaPagina: der.alto(.5, .5), xPagina: 0 };
+  return { escena, luz, foco, vela: v, alturaPagina: der.alto(.6, .5), alturaIzq: izq.alto(.6, .5) };
 }
 
-/* la ventana de mesa que se ve en cada formato: x0..x1 a lo ancho y z0 (arriba) .. z1 (abajo) */
-export const VISTAS = {
-  alto: { w: 780, h: 1688, x0: -.0145, x1: .1535 },
-  corto: { w: 640, h: 1136, x0: -.0145, x1: .1535 }
-};
-export function camara(vista, alturaPagina) {
-  const V = VISTAS[vista], Hc = .85, zn = .55, ancho = V.x1 - V.x0, alto = ancho * V.h / V.w;
-  /* la página ocupa el mismo lugar en todos: su borde de arriba queda a un 27 % (alto) o 22 % (corto) de la pantalla */
-  const arriba = vista === 'alto' ? .268 : .3, z0 = -M.altoHoja / 2 - arriba * alto, z1 = z0 + alto, cx = (V.x0 + V.x1) / 2;
-  const cam = new THREE.PerspectiveCamera(30, V.w / V.h, .05, 5); cam.position.set(cx, Hc, zn); cam.up.set(0, 0, -1); cam.lookAt(cx, 0, zn); cam.updateMatrixWorld();
-  const n = .05, k = n / Hc;
-  cam.projectionMatrix.makePerspective((V.x0 - cx) * k, (V.x1 - cx) * k, (zn - z0) * k, (zn - z1) * k, n, 5); cam.projectionMatrixInverse.copy(cam.projectionMatrix).invert();
+/* La cámara: apenas inclinada hacia quien lee (no cenital), para que se vea el volumen del libro y de la mesa.
+   Lejos y con lente larga, así la parte de arriba de la página no queda mucho más chica que la de abajo.
+   zc = el punto de la mesa que cae en el centro de la pantalla (corre el libro más arriba o más abajo). */
+export const VISTAS = { alto: { w: 780, h: 1688, zc: -.068 }, corto: { w: 640, h: 1136, zc: -.05 } };
+export function camara(vista) {
+  const V = VISTAS[vista], ang = 16 * Math.PI / 180, dist = 1.7, ancho = .304;
+  const cam = new THREE.PerspectiveCamera(2 * Math.atan(ancho * V.h / V.w / 2 / dist) * 180 / Math.PI, V.w / V.h, .05, 6);
+  cam.position.set(0, dist * Math.cos(ang), V.zc + dist * Math.sin(ang)); cam.lookAt(0, .008, V.zc); cam.updateMatrixWorld();
   return cam;
 }

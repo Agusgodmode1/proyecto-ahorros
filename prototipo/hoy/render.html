@@ -8,12 +8,12 @@
 import * as THREE from 'three';
 import { armar, camara, VISTAS, M } from './escena-hoy.js';
 import { azar } from '../texturas.js';
-const Q = new URLSearchParams(location.search), vista = Q.get('v') || 'alto', N = +(Q.get('n') || 16), V = VISTAS[vista], SS = +(Q.get('ss') || 1);
+const Q = new URLSearchParams(location.search), vista = Q.get('v') || 'alto', enc = Q.get('e') || 'doble', N = +(Q.get('n') || 16), V = VISTAS[vista], SS = +(Q.get('ss') || 1);
 const lienzo = document.createElement('canvas');
 const R = new THREE.WebGLRenderer({ canvas: lienzo, antialias: true, preserveDrawingBuffer: true });
 R.setPixelRatio(1); R.setSize(V.w * SS, V.h * SS, false); R.toneMapping = THREE.ACESFilmicToneMapping; R.toneMappingExposure = +(Q.get('exp') || 1.05); R.outputColorSpace = THREE.SRGBColorSpace;
 R.shadowMap.enabled = true; R.shadowMap.type = THREE.PCFSoftShadowMap; R.setClearColor(0x010101, 1);
-const E = armar(R), cam = camara(vista), fin = document.getElementById('final'), g = fin.getContext('2d', { willReadFrequently: true }), r = azar(3);
+const E = armar(R), cam = camara(vista, enc), fin = document.getElementById('final'), g = fin.getContext('2d', { willReadFrequently: true }), r = azar(3);
 fin.width = V.w; fin.height = V.h; fin.style.width = V.w + 'px'; fin.style.height = V.h + 'px';
 const px = (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(cam); return [+(v.x * .5 + .5).toFixed(4), +(-v.y * .5 + .5).toFixed(4)]; };
 /* varias pasadas con la llama apenas corrida de lugar y promediadas: sombras de borde suave, como las de una vela.
@@ -52,7 +52,7 @@ const bx0 = Math.min(esq[0][0], esq[3][0]) * W, bx1 = Math.max(esq[1][0], esq[2]
 { const im = g.getImageData(0, 0, W, H), d = im.data; for (let i = 0; i < d.length; i += 4) { const lum = (d[i] + d[i + 1] + d[i + 2]) / 765, k = (r() - .5) * (8 + 12 * (1 - lum)); d[i] += k; d[i + 1] += k; d[i + 2] += k * .9; } g.putImageData(im, 0, 0); }
 /* dónde quedó cada página (sus cuatro esquinas: arriba-izq, arriba-der, abajo-der, abajo-izq) y la llama, en fracciones de la imagen */
 const zt = -M.altoHoja / 2, zb = M.altoHoja / 2, hd = E.alturaPagina, hi = E.alturaIzq;
-window.__datos = { vista, w: W, h: H, llama: { x: ll[0], y: ll[1] },
+window.__datos = { vista, enc, w: W, h: H, llama: { x: ll[0], y: ll[1] },
   izq: [px(-M.hoja, hi, zt), px(0, hi, zt), px(0, hi, zb), px(-M.hoja, hi, zb)], der: [px(0, hd, zt), px(M.hoja, hd, zt), px(M.hoja, hd, zb), px(0, hd, zb)] };
 document.body.classList.add('lista');
 </script></body></html>

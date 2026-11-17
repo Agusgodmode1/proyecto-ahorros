@@ -14,13 +14,13 @@ function ruido(x, y) { const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi
 function fbm(x, y, o = 4) { let s = 0, a = .5, f = 1; for (let i = 0; i < o; i++) { s += a * ruido(x * f, y * f); f *= 2; a *= .5; } return s; }
 
 /* ---------- medidas (metros). x: derecha · z: hacia quien lee · y: arriba. El lomo abierto corre por x = 0 ---------- */
-/* (pulido) El libro de Hoy es un libro de cuentas: alto y angosto, para que las dos páginas abiertas entren en una pantalla
-   vertical con letra de 14 px o más. Abierto por el medio: las dos mitades tienen casi el mismo grosor. */
-export const M = { H: .433, tabla: .0034, anchoTabla: .128, lomo: .016, hoja: .140, altoHoja: .42, grIzq: .012, grDer: .015 };
+/* El libro de Hoy: el mismo tamaño y la misma proporción del de la cinemática. Cada página mide 2:3 (alto = 1,5 × ancho).
+   Abierto por el medio: las dos mitades tienen casi el mismo grosor. */
+export const M = { H: .222, tabla: .0034, anchoTabla: .1445, lomo: .016, hoja: .140, altoHoja: .21, grIzq: .012, grDer: .015 };
 
 /* ---------- el papel: amarillento, con fibra, bordes tostados y manchas de humedad lejos de donde van los números ---------- */
 function texPagina(semilla, espejo, escrita) {
-  const W = 704, H = 2112, c = lienzo(W, H), g = c.getContext('2d'), im = g.createImageData(W, H), d = im.data, alt = new Float32Array(W * H), r = azar(semilla);
+  const W = 1024, H = 1536, c = lienzo(W, H), g = c.getContext('2d'), im = g.createImageData(W, H), d = im.data, alt = new Float32Array(W * H), r = azar(semilla);
   /* manchas de humedad: aureolas con el borde más marcado, siempre contra los bordes */
   const aureolas = [];
   for (let i = 0; i < 7; i++) { const lado = Math.floor(r() * 4), t = r(); aureolas.push({ x: lado === 0 ? .02 + r() * .1 : lado === 1 ? .9 + r() * .1 : t, y: lado === 2 ? .0 + r() * .06 : lado === 3 ? .95 + r() * .05 : t, R: .07 + r() * .09, s: r() * 9 }); }
@@ -244,10 +244,10 @@ export function armar(R) {
     const barbas = new THREE.Mesh(pl, new THREE.MeshStandardMaterial({ map: tp, emissiveMap: tp, emissive: 0x6a5a48, emissiveIntensity: .55, transparent: true, alphaTest: .12, side: THREE.DoubleSide, roughness: .8, envMapIntensity: .2 })); barbas.castShadow = true;
     const canon = new THREE.Mesh(new THREE.CylinderGeometry(.0005, .0015, largo, 8), new THREE.MeshStandardMaterial({ color: 0xe6dcc0, roughness: .4, envMapIntensity: .5 }));
     canon.position.copy(base).addScaledVector(ej, largo / 2); canon.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), ej); canon.castShadow = true;
-    t.add(barbas, canon); t.scale.setScalar(1.35); t.position.set(-.066, 0, -.268); escena.add(t);
+    t.add(barbas, canon); t.scale.setScalar(1.35); t.position.set(-.07, 0, -.17); escena.add(t);
   }
   /* la vela, arriba de la página, un poco a la derecha */
-  const v = vela(halo); v.scale.setScalar(1.45); v.position.set(.082, 0, -.275); escena.add(v);
+  const v = vela(halo); v.scale.setScalar(1.45); v.position.set(.088, 0, -.172); escena.add(v);
   const foco = v.position.clone().add(v.userData.llama.clone().multiplyScalar(1.45));
   const luz = new THREE.SpotLight(0xffe4c4, .36, 1.6, 1.3, .9, 1.9); luz.castShadow = true; luz.shadow.mapSize.set(4096, 4096); luz.shadow.camera.near = .02; luz.shadow.camera.far = 1.2; luz.shadow.bias = -.0006; luz.shadow.normalBias = .0012;
   luz.target.position.set(0, 0, 0); escena.add(luz, luz.target);
@@ -260,11 +260,17 @@ export function armar(R) {
 
 /* La cámara: apenas inclinada hacia quien lee (no cenital), para que se vea el volumen del libro y de la mesa.
    Lejos y con lente larga, así la parte de arriba de la página no queda mucho más chica que la de abajo.
-   zc = el punto de la mesa que cae en el centro de la pantalla (corre el libro más arriba o más abajo). */
-export const VISTAS = { alto: { w: 780, h: 1688, zc: -.068 }, corto: { w: 640, h: 1136, zc: -.05 } };
-export function camara(vista) {
-  const V = VISTAS[vista], ang = 16 * Math.PI / 180, dist = 1.7, ancho = .304;
-  const cam = new THREE.PerspectiveCamera(2 * Math.atan(ancho * V.h / V.w / 2 / dist) * 180 / Math.PI, V.w / V.h, .05, 6);
-  cam.position.set(0, dist * Math.cos(ang), V.zc + dist * Math.sin(ang)); cam.lookAt(0, .008, V.zc); cam.updateMatrixWorld();
+   Dos encuadres: «doble» (las dos páginas a la vista) y «izq» / «der» (una página casi de borde a borde, con el lomo
+   y una franja de la otra). ancho = cuánta mesa entra de lado a lado; zc = el punto de la mesa en el centro de la pantalla. */
+export const VISTAS = { alto: { w: 780, h: 1688 }, corto: { w: 640, h: 1136 } };
+export const ENCUADRES = {
+  doble: { ancho: .31, cx: 0, zc: { alto: -.024, corto: -.022 } },
+  izq: { ancho: .168, cx: -.066, zc: { alto: -.025, corto: -.022 } },
+  der: { ancho: .168, cx: .066, zc: { alto: -.025, corto: -.022 } }
+};
+export function camara(vista, enc = 'doble') {
+  const V = VISTAS[vista], E = ENCUADRES[enc], ang = 16 * Math.PI / 180, dist = 1.7, zc = E.zc[vista];
+  const cam = new THREE.PerspectiveCamera(2 * Math.atan(E.ancho * V.h / V.w / 2 / dist) * 180 / Math.PI, V.w / V.h, .05, 6);
+  cam.position.set(E.cx, dist * Math.cos(ang), zc + dist * Math.sin(ang)); cam.lookAt(E.cx, .008, zc); cam.updateMatrixWorld();
   return cam;
 }

@@ -1,9 +1,3 @@
-/* Los fondos de Hoy: imágenes sacadas de la escena (render.html) y dónde quedó cada cosa en ellas, en fracciones de la
-   imagen (0 = borde izquierdo o de arriba, 1 = derecho o de abajo). De cada página, sus cuatro esquinas:
-   arriba-izquierda, arriba-derecha, abajo-derecha y abajo-izquierda. */
-export const FONDOS={
-  alto:{src:'fondo-alto.webp?v=9',w:780,h:1688,llama:{x:0.7706,y:0.1725},
-    izq:[[0.0462,0.2929],[0.5,0.2929],[0.5,0.9261],[0.0134,0.9261]],der:[[0.5,0.2913],[0.9546,0.2913],[0.9875,0.9255],[0.5,0.9255]]},
-  corto:{src:'fondo-corto.webp?v=9',w:640,h:1136,llama:{x:0.7698,y:0.0698},
-    izq:[[0.0475,0.2167],[0.5,0.2167],[0.5,0.9841],[0.0149,0.9841]],der:[[0.5,0.2147],[0.9532,0.2147],[0.986,0.9833],[0.5,0.9833]]}
-};
+/* Los fondos de Hoy (borradores para elegir encuadre): imágenes sacadas de la escena (render.html) y dónde quedó cada
+   página (sus cuatro esquinas: arriba-izq, arriba-der, abajo-der, abajo-izq) y la llama, en fracciones de la imagen. */
+export const FONDOS={"doble":{"alto":{"src":"fondo-doble-alto.webp?v=b","w":780,"h":1688,"llama":{"x":0.7875,"y":0.2613},"izq":[[0.0506,0.3818],[0.5,0.3818],[0.5,0.6875],[0.0348,0.6875]],"der":[[0.5,0.3804],[0.9502,0.3804],[0.9661,0.6866],[0.5,0.6866]]},"corto":{"src":"fondo-doble-corto.webp?v=b","w":640,"h":1136,"llama":{"x":0.7875,"y":0.2056},"izq":[[0.0507,0.3525],[0.5,0.3525],[0.5,0.7249],[0.0349,0.7249]],"der":[[0.5,0.3507],[0.95,0.3507],[0.9659,0.7238],[0.5,0.7238]]}},"izq":{"alto":{"src":"fondo-izq-alto.webp?v=b","w":780,"h":1688,"llama":{"x":1.4287,"y":0.0622},"izq":[[0.0616,0.2845],[0.891,0.2845],[0.9048,0.8488],[0.0461,0.8488]],"der":[[0.8917,0.2819],[1.7225,0.2819],[1.7656,0.847],[0.9055,0.847]]},"corto":{"src":"fondo-izq-corto.webp?v=b","w":640,"h":1136,"llama":{"x":1.4282,"y":-0.0433},"izq":[[0.0618,0.2278],[0.8908,0.2278],[0.9046,0.9151],[0.0464,0.9151]],"der":[[0.8915,0.2245],[1.7219,0.2245],[1.765,0.9129],[0.9053,0.9129]]}},"der":{"alto":{"src":"fondo-izq-alto.webp?v=b","w":780,"h":1688,"llama":{"x":1.4287,"y":0.0622},"izq":[[0.0616,0.2845],[0.891,0.2845],[0.9048,0.8488],[0.0461,0.8488]],"der":[[0.8917,0.2819],[1.7225,0.2819],[1.7656,0.847],[0.9055,0.847]]},"corto":{"src":"fondo-izq-corto.webp?v=b","w":640,"h":1136,"llama":{"x":1.4282,"y":-0.0433},"izq":[[0.0618,0.2278],[0.8908,0.2278],[0.9046,0.9151],[0.0464,0.9151]],"der":[[0.8915,0.2245],[1.7219,0.2245],[1.765,0.9129],[0.9053,0.9129]]}}};

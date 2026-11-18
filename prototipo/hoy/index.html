@@ -92,6 +92,13 @@
   /* la nota al margen: tinta roja, itálica, con una línea vertical roja al costado */
   .margen{margin:calc(4px*var(--s)) auto 0;padding-left:calc(14px*var(--s));text-align:left;font-style:italic;position:relative;width:max-content;max-width:100%}
   .margen::before{content:"";position:absolute;left:0;top:.2em;bottom:.2em;width:1.6px;background:#7a2014;border-radius:1px;transform:rotate(.4deg)}
+  /* listas numeradas con romanos: el mes optimizado y las seis ideas */
+  .mes,.ideas{margin-top:calc(12px*var(--s)*var(--a,1));text-align:left;display:grid;row-gap:calc(14px*var(--s)*var(--a,1))}
+  .mes{width:max-content;margin-left:auto;margin-right:auto}
+  .mes li,.ideas li{display:grid;grid-template-columns:calc(34px*var(--s)) 1fr;align-items:baseline}
+  .rom2{font-size:max(13.8px,calc(15px*var(--s)));text-align:left}
+  /* en las páginas de la derecha, el lomo queda a la izquierda: la lista se corre un poco para no caer en su sombra */
+  .pag[data-lado="der"] .ideas{padding-left:calc(18px*var(--s))!important}
   .indice{margin-top:calc(10px*var(--s)*var(--a,1));text-align:left}
   .entrada{display:flex;justify-content:space-between;align-items:baseline;width:100%;padding:calc(6px*var(--s)) 0}
   .entrada .libro{font-size:max(13.4px,calc(15px*var(--s)))}
@@ -177,29 +184,82 @@
       <svg class="adornito" viewBox="0 0 100 18" aria-hidden="true"><use href="#adornito"/></svg>
       <nav class="indice" aria-label="Índice">
         <button class="entrada toc" type="button" data-ir="5"><span>Tu plan</span><span class="libro suave">v</span></button>
-        <button class="entrada toc" type="button" data-ir="6"><span>Consejos para ahorrar</span><span class="libro suave">vi</span></button>
+        <button class="entrada toc" type="button" data-ir="7"><span>Consejos para ahorrar</span><span class="libro suave">vii</span></button>
       </nav>
       <p class="folio libro suave">— iv —</p>
     </article>
 
-    <!-- ============ v · Tu plan (en la app va el contenido completo, con este mismo estilo) ============ -->
+    <!-- ============ v · Tu plan: ahora ============ -->
     <article class="pag" data-n="5" aria-label="Página v: Tu plan">
       <h2 class="titulo rojo">Tu plan</h2>
       <svg class="adornito" viewBox="0 0 100 18" aria-hidden="true"><use href="#adornito"/></svg>
-      <p class="renglon">En qué se reparte tu plata y cuando cobres.</p>
+      <p class="nota cur suave">en qué se reparte tu plata del pacto</p>
+      <p class="renglon bloque"><span class="cifra fuerte"><span class="m">$ 36.000</span></span> en total</p>
       <svg class="adorno" viewBox="0 0 220 24" aria-hidden="true"><use href="#floritura"/></svg>
-      <p class="nota cur suave">En la app, acá se escribe «Tu plan» completo, con este mismo estilo. Si es largo, sigue en la página de al lado.</p>
+      <p class="renglon"><span class="cifra fuerte"><span class="m">$ 14.724</span></span> para los fijos</p>
+      <p class="nota suave">faltan pagar <span class="m">$ 3.724</span> · <button class="toc sub" type="button">ver fijos</button></p>
+      <p class="renglon bloque"><span class="cifra oro"><span class="m">$ 9.000</span></span> que guardás</p>
+      <p class="nota suave">hasta el 7 de diciembre</p>
+      <p class="renglon bloque"><span class="cifra fuerte"><span class="m">$ 12.276</span></span> para gastar</p>
+      <p class="nota suave">ya gastaste <span class="m">$ 50</span></p>
       <p class="folio libro suave">— v —</p>
     </article>
 
-    <!-- ============ vi · Consejos para ahorrar ============ -->
-    <article class="pag" data-n="6" aria-label="Página vi: Consejos para ahorrar">
+    <!-- ============ vi · Tu plan: cuando cobres ============ -->
+    <article class="pag" data-n="6" aria-label="Página vi: Cuando cobres">
+      <h2 class="titulo rojo">Cuando cobres</h2>
+      <svg class="adornito" viewBox="0 0 100 18" aria-hidden="true"><use href="#adornito"/></svg>
+      <p class="nota cur suave">estimado, con aguinaldo</p>
+      <p class="renglon bloque">Vas a cobrar <span class="cifra fuerte"><span class="m">$ 59.439</span></span></p>
+      <svg class="adorno" viewBox="0 0 220 24" aria-hidden="true"><use href="#floritura"/></svg>
+      <p class="renglon"><span class="cifra fuerte"><span class="m">$ 14.724</span></span> para los fijos del mes</p>
+      <p class="renglon bloque"><span class="cifra oro"><span class="m">$ 9.000</span></span> para tu meta</p>
+      <p class="renglon bloque"><span class="cifra fuerte"><span class="m">$ 35.715</span></span> para gastar</p>
+      <p class="nota suave"><span class="m">$ 7.813</span> por semana</p>
+      <svg class="adorno" viewBox="0 0 220 24" aria-hidden="true"><use href="#floritura"/></svg>
+      <p class="nota cur suave">Este mes llevás <span class="m">+ $ 4.598</span> de horas extra.</p>
+      <p class="nota bloque"><button class="toc sub" type="button">ver tu cobro</button></p>
+      <p class="folio libro suave">— vi —</p>
+    </article>
+
+    <!-- ============ vii · Consejos: un mes optimizado ============ -->
+    <article class="pag" data-n="7" aria-label="Página vii: Consejos para ahorrar">
       <h2 class="titulo rojo">Consejos para ahorrar</h2>
       <svg class="adornito" viewBox="0 0 100 18" aria-hidden="true"><use href="#adornito"/></svg>
-      <p class="renglon">El reparto del mes y 6 ideas rápidas.</p>
+      <p class="nota cur suave">un mes optimizado, semana por semana</p>
+      <ol class="mes" aria-label="Cómo repartir el mes">
+        <li><span class="libro rom2">I</span><span>liviana, <span class="cifra fuerte">20 %</span></span></li>
+        <li><span class="libro rom2">II</span><span>compras, <span class="cifra fuerte">25 %</span></span></li>
+        <li><span class="libro rom2">III</span><span>compras, <span class="cifra fuerte">25 %</span></span></li>
+        <li><span class="libro rom2">IV</span><span>colchón, <span class="cifra fuerte">30 %</span></span></li>
+      </ol>
       <svg class="adorno" viewBox="0 0 220 24" aria-hidden="true"><use href="#floritura"/></svg>
-      <p class="nota cur suave">En la app, acá se escriben los consejos completos, con este mismo estilo. Si son largos, siguen en más páginas.</p>
-      <p class="folio libro suave">— vi —</p>
+      <p class="nota cur suave">Con «optimizado», tus semanas<br>se reparten así.</p>
+      <p class="folio libro suave">— vii —</p>
+    </article>
+
+    <!-- ============ viii y ix · Consejos: seis ideas (repartidas en dos páginas, nunca con scroll) ============ -->
+    <article class="pag" data-n="8" aria-label="Página viii: Seis ideas rápidas">
+      <h2 class="titulo rojo">Seis ideas rápidas</h2>
+      <svg class="adornito" viewBox="0 0 100 18" aria-hidden="true"><use href="#adornito"/></svg>
+      <ol class="ideas">
+        <li><span class="libro rom2 fuerte">I</span><span>Al cobrar, separá el ahorro.</span></li>
+        <li><span class="libro rom2 fuerte">II</span><span>Primero pagá los fijos.</span></li>
+        <li><span class="libro rom2 fuerte">III</span><span>Actualizá cada vez que entrás.</span></li>
+      </ol>
+      <p class="nota cur suave bloque">sigue en la página de al lado</p>
+      <p class="folio libro suave">— viii —</p>
+    </article>
+
+    <article class="pag" data-n="9" aria-label="Página ix: Seis ideas rápidas, sigue">
+      <h2 class="titulo rojo">Seis ideas rápidas</h2>
+      <svg class="adornito" viewBox="0 0 100 18" aria-hidden="true"><use href="#adornito"/></svg>
+      <ol class="ideas" start="4">
+        <li><span class="libro rom2 fuerte">IV</span><span>¿Compra no planeada? Esperá un día.</span></li>
+        <li><span class="libro rom2 fuerte">V</span><span>Al súper, con lista.</span></li>
+        <li><span class="libro rom2 fuerte">VI</span><span>El domingo, mirá cuánto sobró.</span></li>
+      </ol>
+      <p class="folio libro suave">— ix —</p>
     </article>
   </div>
 

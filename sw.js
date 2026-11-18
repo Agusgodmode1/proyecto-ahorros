@@ -1,7 +1,7 @@
 /* Service worker: guarda la app para que funcione sin internet y avisa cuando hay una versión nueva.
    CADA CAMBIO EN LA APP: subí VERSION (y la de js/version.js). Así cambia el nombre del caché y el
    teléfono descarga la versión nueva. Si agregás un archivo, sumalo a ARCHIVOS (una prueba lo controla). */
-var VERSION='2.64.1';
+var VERSION='2.65.0';
 var CACHE='ahorros-'+VERSION;
 var FUENTES='ahorros-fuentes';
 var ARCHIVOS=[
@@ -56,6 +56,8 @@ var ARCHIVOS=[
   'js/ui/estante.js',
   'js/ui/escena3d.js',
   'js/logica/estante3d.js',
+  'js/ui/hoy-libro.js','js/logica/hoy-libro.js','js/logica/fondos-hoy.js',
+  'icons/hoy/fondo-izq-alto.webp','icons/hoy/fondo-izq-corto.webp','icons/hoy/fondo-der-alto.webp','icons/hoy/fondo-der-corto.webp',
   'js/logica/cinematica.js','js/logica/perf3d.js','js/logica/recorte.js','js/logica/pendiente.js','js/logica/fotos-escena.js','js/ui/escena3d-texturas.js','js/ui/escena3d-libro.js','icons/escena/inicio.webp','icons/escena/menu.webp','icons/escena/tapa-solo.webp','icons/escena/tapa-duo.webp',
   'js/logica/saldo.js',
   'js/logica/planilla.js',
@@ -111,6 +113,8 @@ var ARCHIVOS=[
   'vendor/pdfjs-6.3.289/pdf.worker.min.js',
   'vendor/fraunces-5.3.0/fraunces-latin-full-normal.woff2',
   'vendor/fraunces-5.3.0/fraunces-latin-full-italic.woff2',
+  'vendor/charm-5.3.0/charm-latin-400-normal.woff2',
+  'vendor/im-fell-english-sc-5.3.0/im-fell-english-sc-latin-400-normal.woff2',
   'vendor/nunito-5.3.0/nunito-latin-wght-normal.woff2',
   'vendor/caveat-5.3.0/caveat-latin-wght-normal.woff2',
   /* La estantería 3D: Three.js y sus complementos (todo lo que importa js/ui/escena3d.js) */

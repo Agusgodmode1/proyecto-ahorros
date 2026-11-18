@@ -13,6 +13,13 @@ Cómo se quiere ver y sentir la app. Pedido de Agus: «un cambio grande, un camb
 - **Movimiento:** entrada de la cámara en arco (2,6 s); al elegir, el libro se inclina, sale del lomo, sube en arco y gira de frente (2,2 s), con un destello suave del hueco y el fondo desenfocado; un brillo cruza la tapa una vez; al abrir, la tapa gira sobre el lomo y la cámara entra en la página (2,0 s). Nada se mueve en línea recta ni arranca de golpe.
 - **Letra:** los nombres bajo los libros son texto de la página (Fraunces, marfil) con una etiqueta corta en dorado («Solo» / «En pareja»).
 
+## Hoy del libro individual (2.65): a la luz de una vela
+- **Principio:** el libro abierto sobre una mesa vieja, de noche; la hoja clara dentro de una escena oscura. Lo único que brilla es la vela (en las páginas impares, a la derecha).
+- **La hoja:** papel viejo en proporción 2:3, una página por pantalla, con su número en romanos («— i —»). Fondos renderizados de nuestra escena (`icons/hoy/`), uno por lado y por alto de pantalla.
+- **La letra:** a mano en Charm, cinco tamaños (72/24/20/17/13 px a 390; nunca menos de 13), cada letra con su pluma un poco distinta; encabezados y romanos en IM Fell English SC. La plata en sepia cargada, títulos y notas en rojo, el tiempo y lo guardado en oro (tonos `--hl-*` de `css/papel.css`).
+- **Movimiento:** la hoja se pasa siguiendo el dedo (16 franjas que se curvan, 0,45 a 0,7 s al soltar). Con «reducir movimiento», un fundido.
+- **Modo discreto:** cada monto queda tapado con una mancha de tinta.
+
 ## Reglas para todo lo visual
 - Un solo foco de color vivo por pantalla: lo mágico. Todo lo demás, apagado.
 - Movimiento lento y suave (ciclos de 4 a 11 s en lo ambiental, 0,4 a 2 s en lo que responde a un toque); nada brusco ni que parpadee.

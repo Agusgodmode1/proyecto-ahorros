@@ -21,6 +21,7 @@ import {registrarSW,buscarVersion} from './pwa.js';
 import {initVoz} from './ui/voz.js';
 import {abrirPerfil,initPerfil,resumenPerfil} from './ui/perfil.js';
 import {abrirLibro,initLibro,redibujarPrologo,cerrarHojas} from './ui/libro.js';
+import {initHoyLibro} from './ui/hoy-libro.js';
 import {copiaVisible,girar,terminar as terminarPase} from './ui/pase.js';
 import {introCapitulo,olvidarIntros} from './ui/intro.js';
 import {initIndice,abrirIndice} from './ui/indice.js';
@@ -447,7 +448,7 @@ function initEstante(){
   });
 }
 (async function boot(){
-  initPerfil();initTour();initPin();initLibro();initIndice();
+  initPerfil();initTour();initPin();initLibro();initIndice();initHoyLibro();
   initFlechas({ir:function(d){go(d)},capitulos:function(){return {}}});
   registrarSW(function(){return ctx.state?flush():null});
   /* (2.52) Ajustes → Sobre la app → «Buscar una versión nueva» */

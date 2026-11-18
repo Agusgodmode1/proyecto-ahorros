@@ -23,6 +23,7 @@ Una línea por decisión. Lo nuevo va arriba. El detalle técnico de cada una es
 - **Cómo «llaman» los dos libros (2.64):** una luz tenue y cálida que sale de atrás de cada uno y un movimiento apenas visible. Descartado: el halo de color y la lámpara a la vista.
 - **La galaxia de la tapa (2.64):** queda estampada en oro, con la constelación de cada libro encima.
 - **Excepción de colores:** los colores de la escena 3D (madera, luces, cueros) los pone Three.js y no salen de `:root`; lo de afuera (nombres, flechas, velo) sí.
+- **Dentro del libro, la plata disponible va en tinta sepia, no en jade (pedido de Agus, en prueba en `prototipo/hoy/`):** excepción a la regla de colores de `CLAUDE.md`. En las páginas escritas a mano, «Hoy podés gastar $ 967» se destaca por el tamaño y por llevar la pluma más cargada, no por el color. El rojo sigue para títulos, notas y «te pasaste»; el oro, para el tiempo y lo guardado. Fuera del libro, la regla de siempre.
 - **Papel «Noche dorada»:** un solo tema oscuro; no hay claro ni selector de apariencia.
 - **Menos texto:** máximo 2 líneas por bloque, el resto en desplegables.
 

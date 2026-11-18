@@ -12,7 +12,9 @@
   @font-face{font-family:'IM Fell SC';font-weight:400;font-display:block;src:url(fuentes/im-fell-english-sc-latin-400-normal.woff2) format('woff2')}
   :root{--pluma:'Charm','Iowan Old Style',Georgia,serif;--libro:'IM Fell SC','Iowan Old Style',Georgia,serif;--sepia:#4a2c14}
   html,body{margin:0;height:100%;background:#030201;overflow:hidden;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
-  .mesa{position:fixed;inset:0;overflow:hidden;background:#030201;touch-action:pan-y;perspective:1600px}
+  .mesa{position:fixed;inset:0;overflow:hidden;background:#030201;touch-action:none;perspective:1700px}
+  /* arrastrar la hoja no tiene que seleccionar texto */
+  .mesa,.mesa *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   /* la vista: la foto de la mesa con el libro (renderizada desde la escena 3D) y, encima, la página escrita */
   .vista{position:absolute;inset:0;isolation:isolate}
   .fondo{position:absolute;left:0;top:0;transform-origin:0 0;max-width:none;display:block;user-select:none;-webkit-user-select:none;pointer-events:none}
@@ -24,7 +26,7 @@
 
   /* ---- arriba, sobre la mesa: tres palabras en versalitas, a la luz de la vela ---- */
   .acciones{position:absolute;z-index:6;left:0;right:0;top:calc(4px + env(safe-area-inset-top));display:flex;justify-content:center;align-items:center;
-    font:400 calc(13px*var(--s,1))/1 var(--libro);letter-spacing:.06em;color:#e6cd9c;text-shadow:0 1px 3px #000,0 0 10px rgba(0,0,0,.9)}
+    font:400 max(13.4px,calc(13px*var(--s,1)))/1 var(--libro);letter-spacing:.06em;color:#e6cd9c;text-shadow:0 1px 3px #000,0 0 10px rgba(0,0,0,.9)}
   .acciones button{all:unset;cursor:pointer;min-width:44px;min-height:44px;padding:0 10px;display:grid;place-items:center}
   .acciones button:focus-visible{outline:1.5px solid #e6cd9c;outline-offset:-6px;border-radius:6px}
   .acciones .pt{opacity:.7}
@@ -41,6 +43,13 @@
     -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;
     padding:.3em .05em .34em;margin:-.3em -.05em -.34em;white-space:nowrap;
     transform:translateY(calc(var(--dy,0px) + var(--cy,0px))) rotate(calc(var(--g,0deg) + var(--cg,0deg)))}
+  /* letra por letra: cada una un poco girada, corrida y de otro tamaño (fijo, sale siempre igual) */
+  .l{display:inline-block;background-image:var(--tt,var(--t-sepia));background-size:160px 160px;background-position:var(--bx,0) var(--by,0);
+    -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;padding:.3em .16em .34em;margin:-.3em -.16em -.34em;
+    /* (el margen de cada lado es para la letra inclinada: si no, su tinta se recorta) */
+    transform:translateY(var(--ly,0)) rotate(var(--lr,0deg)) scale(var(--le,1))}
+  .w.conl,.m.conl{background-image:none}
+  .w,.m{opacity:var(--carga,1)}
   .suave{--tt:var(--t-suave)} .fuerte{--tt:var(--t-fuerte)} .rojo{--tt:var(--t-rojo)} .oro{--tt:var(--t-oro)} .verde{--tt:var(--t-verde)}
   button{all:unset;position:relative;cursor:pointer;font:inherit}
   .toc::after{content:"";position:absolute;left:50%;top:50%;width:max(calc(100% + 16px),48px);height:48px;transform:translate(-50%,-50%)}
@@ -48,10 +57,15 @@
   svg.trazo{position:absolute;left:-3%;bottom:-.24em;width:106%;height:.5em;overflow:visible;pointer-events:none}
 
   /* ---- los cinco tamaños (a 390 px; a 320 px todo al 85 %) ---- */
-  .heroe{font-size:calc(72px*var(--s));line-height:1.02;white-space:nowrap}
+  .heroe{font-size:calc(72px*var(--s));line-height:1.02;white-space:nowrap;position:relative}
+  /* el héroe: la misma tinta, pero más cargada; cada letra con el trazo un poco más grueso donde arranca la pluma */
+  .cargada{--tt:var(--t-cargada)}
+  .heroe .l{-webkit-text-stroke:var(--sk,.5px) rgba(34,16,5,.5)}
+  .grande.oro .l{-webkit-text-stroke:calc(var(--sk,.5px)*.5) rgba(110,70,8,.35)}
+  .gota{position:absolute;border-radius:50%;background:radial-gradient(circle at 40% 35%,#3a1c08,#24110500 72%);pointer-events:none}
   .titulo{font-size:calc(24px*var(--s));line-height:1.15}
   .cifra{font-size:calc(20px*var(--s))}
-  .nota{font-size:calc(13px*var(--s));line-height:1.4}
+  .nota{font-size:max(13.4px,calc(13px*var(--s)));line-height:1.4}
   .libro{font-family:var(--libro);letter-spacing:.05em}
   .cur{font-style:italic}
 
@@ -61,7 +75,7 @@
   .adornito{display:block;width:30%;height:calc(10px*var(--s));margin:calc(4px*var(--s)) auto calc(14px*var(--s)*var(--a,1))}
   .renglon+.renglon{margin-top:calc(6px*var(--s)*var(--a,1))}
   .bloque{margin-top:calc(8px*var(--s)*var(--a,1))}
-  .folio{position:absolute;left:0;right:0;bottom:calc(16px*var(--s));font-size:calc(13px*var(--s))}
+  .folio{position:absolute;left:0;right:0;bottom:calc(16px*var(--s));font-size:max(13.4px,calc(13px*var(--s)))}
   .dias{display:flex;justify-content:center;gap:calc(18px*var(--s));margin-top:calc(10px*var(--s)*var(--a,1))}
   .hoydia svg.trazo path{fill:#0f4a2a}
   /* la lista de semanas: la única con dos columnas, como un libro de cuentas */
@@ -80,7 +94,7 @@
   .margen::before{content:"";position:absolute;left:0;top:.2em;bottom:.2em;width:1.6px;background:#7a2014;border-radius:1px;transform:rotate(.4deg)}
   .indice{margin-top:calc(10px*var(--s)*var(--a,1));text-align:left}
   .entrada{display:flex;justify-content:space-between;align-items:baseline;width:100%;padding:calc(6px*var(--s)) 0}
-  .entrada .libro{font-size:calc(15px*var(--s))}
+  .entrada .libro{font-size:max(13.4px,calc(15px*var(--s)))}
 
   /* ---- modo discreto: el monto se saca de la página y queda una mancha de tinta en su lugar ---- */
   html[data-discreto] .m{position:relative;background-image:none}
@@ -90,13 +104,17 @@
   .esquina{position:absolute;z-index:5;width:56px;height:56px;cursor:pointer;background:none;border:0;padding:0}
   .esquina:focus-visible{outline:1.5px solid #e6cd9c;border-radius:50%}
   .esquina[hidden]{display:none}
-  /* la hoja que da vuelta (una copia de la vista anterior, recortada a la página) */
+  /* ---- la vuelta de hoja: la hoja (una copia de la vista anterior) cortada en 16 franjas verticales que giran de a poco ---- */
   .giro{position:absolute;inset:0;z-index:4;pointer-events:none;transform-style:preserve-3d}
-  .giro .cara,.giro .dorso{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden}
-  .giro .dorso{transform:rotateY(180deg);background:linear-gradient(90deg,#b49466,#d9c39a 30%,#e2cfa9 60%,#c4a77a)}
-  .giro .luz{position:absolute;inset:0;opacity:0}
-  .velo-viejo{position:absolute;inset:0;z-index:3;pointer-events:none}
-  .sombra-giro{position:absolute;inset:0;z-index:3;pointer-events:none;opacity:0;background:linear-gradient(90deg,rgba(10,5,2,.55),rgba(10,5,2,0) 60%)}
+  .franja{position:absolute;transform-style:preserve-3d;will-change:transform}
+  .franja>div{position:absolute;inset:0;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+  .franja .reves{transform:rotateY(180deg)}
+  .franja .copia{position:absolute;isolation:isolate}
+  .franja .lavado{position:absolute;inset:0;background:#e2cfa4;opacity:.8}
+  .franja .tono{position:absolute;inset:0;background:#120802;opacity:0;will-change:opacity}
+  .franja .brillo{position:absolute;inset:0;background:#fff3dc;opacity:0;will-change:opacity}
+  .velo-viejo{position:absolute;inset:0;z-index:3;pointer-events:none;will-change:opacity}
+  .sombra-giro{position:absolute;z-index:3;pointer-events:none;opacity:0;will-change:transform,opacity}
 </style>
 </head>
 <body>
@@ -109,10 +127,10 @@
     <article class="pag" data-n="1" aria-label="Página i: Hoy">
       <p class="encab nota libro suave">Lunes 16 de noviembre</p>
       <p>Hoy podés gastar</p>
-      <p class="heroe verde"><span class="m" id="monto">$ 967</span></p>
+      <p class="heroe cargada" id="heroe"><span class="m" id="monto">$ 967</span></p>
       <p class="nota"><button class="toc sub" type="button">actualizar</button></p>
       <svg class="adorno" viewBox="0 0 220 24" aria-hidden="true"><use href="#floritura"/></svg>
-      <p class="renglon">Cobrás en <span class="cifra oro">21 días</span></p>
+      <p class="renglon">Cobrás en <span class="cifra oro grande" id="dias21" style="position:relative">21 días</span></p>
       <p class="nota suave">el lunes 7 de diciembre</p>
       <p class="renglon bloque">Hasta el cobro, <span class="cifra fuerte"><span class="m">$ 12.226</span></span></p>
       <svg class="adorno" viewBox="0 0 220 24" aria-hidden="true"><use href="#floritura"/></svg>
@@ -238,10 +256,19 @@ function aPluma(n){
     if(!n.textContent.trim())return;
     const f=document.createDocumentFragment();
     n.textContent.split(/(\s+)/).forEach(t=>{if(!t)return;if(/^\s+$/.test(t)){f.appendChild(document.createTextNode(' '));return}
-      const s=document.createElement('span');s.className='w';s.textContent=t;vestir(s);f.appendChild(s)});
+      const s=document.createElement('span');s.className='w';s.textContent=t;vestir(s);letras(s);f.appendChild(s)});
     n.parentNode.replaceChild(f,n)}
-  else if(n.nodeType===1&&n.tagName.toLowerCase()!=='svg'){if(n.classList.contains('m')){vestir(n);return}[...n.childNodes].forEach(aPluma)}}
-function vestir(s){s.style.setProperty('--dy',((rPal()-.5)*1.5).toFixed(2)+'px');s.style.setProperty('--g',((rPal()-.5)*1.7).toFixed(2)+'deg');s.style.setProperty('--bx',Math.round(rPal()*160)+'px');s.style.setProperty('--by',Math.round(rPal()*160)+'px');nPal++}
+  else if(n.nodeType===1&&n.tagName.toLowerCase()!=='svg'){if(n.classList.contains('m')){vestir(n);letras(n);return}[...n.childNodes].forEach(aPluma)}}
+/* cada letra, con una variación chica y fija: ±1,2° de giro, ±0,8 px de altura y ±3 % de tamaño */
+const rLet=azar(91);
+function letras(el){
+  if(el.children.length||!el.textContent.trim())return;
+  const t=el.textContent;el.textContent='';el.classList.add('conl');
+  for(const ch of t){if(ch===' '){el.appendChild(document.createTextNode(' '));continue}
+    const l=document.createElement('span');l.className='l';l.textContent=ch;
+    l.style.setProperty('--lr',((rLet()-.5)*2.4).toFixed(2)+'deg');l.style.setProperty('--ly',((rLet()-.5)*1.6).toFixed(2)+'px');l.style.setProperty('--le',(.97+rLet()*.06).toFixed(3));
+    l.style.setProperty('--sk',(.25+rLet()*.7).toFixed(2)+'px');el.appendChild(l)}}
+function vestir(s){s.style.setProperty('--carga',(.86+rPal()*.14).toFixed(2));s.style.setProperty('--dy',((rPal()-.5)*1.5).toFixed(2)+'px');s.style.setProperty('--g',((rPal()-.5)*1.7).toFixed(2)+'deg');s.style.setProperty('--bx',Math.round(rPal()*160)+'px');s.style.setProperty('--by',Math.round(rPal()*160)+'px');nPal++}
 
 /* ---- trazos de pluma irregulares para los subrayados (cada uno distinto) ---- */
 function trazo(semilla,color){
@@ -280,11 +307,12 @@ function curvar(pag,w){
     const s=Math.max(0,izq?1-x/w:x/w),dy=A*Math.exp(-((s/S)**2)),pend=-2*s/(S*S)*dy/w*(izq?-1:1);
     el.style.setProperty('--cy',dy.toFixed(2)+'px');el.style.setProperty('--cg',(Math.atan(pend)*57.3).toFixed(2)+'deg')})}
 
-raiz.style.setProperty('--t-verde',baldosa([10,58,32],[44,96,62],1));   /* la plata disponible */
+raiz.style.setProperty('--t-verde',baldosa([10,58,32],[44,96,62],1));   /* el subrayado de «hoy» */
+raiz.style.setProperty('--t-cargada',baldosa([26,12,4],[74,42,17],1.5)); /* el héroe: la pluma bien cargada, más oscura donde se junta la tinta */
 
-/* ---- qué página está a la vista. Las impares van en la página izquierda del libro y las pares en la derecha ---- */
+/* ---- qué página está a la vista. Las impares van en la página derecha del libro (con la vela) y las pares en la izquierda (con el tintero) ---- */
 let n=Math.min(PAGS.length,Math.max(1,+(Q.get('p')||1)));
-const ladoDe=k=>k%2?'izq':'der';
+const ladoDe=k=>k%2?'der':'izq';
 let geo=null;
 function escala(w){return Math.min(1,Math.max(.85,.85+(w-320)/70*.15))}
 function acomodar(){
@@ -315,49 +343,126 @@ function acomodar(){
 function ajustar(pag,h){
   let a=1;const sobra=()=>{pag.style.height='auto';const s=pag.scrollHeight;pag.style.height=h+'px';return s-h};
   pag.style.setProperty('--a','1');
-  while(sobra()>0&&a>.2){a-=.08;pag.style.setProperty('--a',a.toFixed(2))}
+  while(sobra()>0&&a>.04){a-=.06;pag.style.setProperty('--a',a.toFixed(2))}
   return {a:+a.toFixed(2),sobra:Math.round(sobra())}}
 
-/* ---- pasar la hoja: una vuelta de hoja de 0,6 s. La vista anterior se copia; la hoja (recortada a la página) gira
-   sobre su borde y muestra el dorso, mientras la mesa de antes se desvanece sobre la nueva. Con «reducir movimiento», un fundido ---- */
-let girando=false;
+/* ---- la vuelta de hoja ----
+   La hoja es una copia de la vista anterior cortada en 16 franjas verticales. Cada franja gira sobre su borde un poco
+   más que la anterior, así la hoja se curva (no gira rígida): queda plana hasta el doblez y después se enrolla sobre un
+   cilindro. En el doblez, una luz suave; del otro lado, el dorso con el texto de atrás apenas visible y espejado; abajo,
+   una sombra que sigue al doblez. Sigue al dedo; al soltar termina o vuelve. Solo se animan transform y opacity.
+   Con «reducir movimiento», solo un fundido. */
+const NF=16,PI=Math.PI;
 function quieto(){try{return matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){return false}}
-function ir(destino){
-  if(girando||destino<1||destino>PAGS.length||destino===n)return;
-  const dir=destino>n?1:-1,viejo=vista.cloneNode(true);viejo.removeAttribute('id');viejo.querySelectorAll('[id]').forEach(e=>e.removeAttribute('id'));
-  const g0=geo;n=destino;acomodar();girando=true;
-  const fin=()=>{girando=false;[base,giro,sombra].forEach(e=>e&&e.remove())};
-  let base=null,giro=null,sombra=null;
-  if(quieto()||!viejo.animate){base=viejo;base.className='vista velo-viejo';mesa.appendChild(base);
-    if(!base.animate){fin();return}base.animate([{opacity:1},{opacity:0}],{duration:300,easing:'ease-in-out'}).onfinish=fin;return}
-  const poli='polygon('+g0.q.map(p=>p[0].toFixed(1)+'px '+p[1].toFixed(1)+'px').join(',')+')';
-  /* lo que queda atrás de la hoja que gira: solo la mesa de antes, sin letras (así nunca se ven dos textos encimados) */
-  base=viejo.cloneNode(true);base.className='vista velo-viejo';base.querySelectorAll('.pag').forEach(e=>e.remove());mesa.appendChild(base);
-  giro=document.createElement('div');giro.className='giro';
-  const eje=dir>0?Math.min(g0.q[0][0],g0.q[3][0]):Math.max(g0.q[1][0],g0.q[2][0]);
-  giro.style.transformOrigin=eje.toFixed(1)+'px 50%';
-  viejo.className='vista cara';viejo.style.clipPath=poli;
-  const dorso=document.createElement('div');dorso.className='dorso';dorso.style.clipPath=poli;
-  const luzG=document.createElement('div');luzG.className='luz';luzG.style.clipPath=poli;luzG.style.background=`linear-gradient(${dir>0?90:270}deg,rgba(255,240,210,.0),rgba(255,240,210,.35) 70%,rgba(30,15,5,.4))`;
-  giro.append(viejo,dorso,luzG);mesa.appendChild(giro);
-  sombra=document.createElement('div');sombra.className='sombra-giro';if(dir<0)sombra.style.transform='scaleX(-1)';mesa.appendChild(sombra);
-  const T=600,ease='cubic-bezier(.45,.05,.3,1)';
-  base.animate([{opacity:1},{opacity:1,offset:.25},{opacity:0}],{duration:T*.8,easing:'ease-in-out',fill:'forwards'});
-  sombra.animate([{opacity:0},{opacity:1,offset:.45},{opacity:0}],{duration:T,easing:'ease-in-out'});
-  luzG.animate([{opacity:0},{opacity:.9,offset:.4},{opacity:0,offset:.5},{opacity:0}],{duration:T,easing:'linear'});
-  giro.animate([{transform:'rotateY(0deg) skewY(0deg)'},{transform:`rotateY(${-dir*70}deg) skewY(${dir*1.6}deg)`,offset:.4},{transform:`rotateY(${-dir*180}deg) skewY(0deg)`}],{duration:T,easing:ease,fill:'forwards'}).onfinish=fin;
+let G=null; /* la vuelta en curso */
+function limpiaIds(el){el.removeAttribute('id');el.querySelectorAll('[id]').forEach(e=>e.removeAttribute('id'));return el}
+function crearGiro(dir){
+  const destino=n+dir;if(destino<1||destino>PAGS.length)return null;
+  const viejo=limpiaIds(vista.cloneNode(true)),q=geo.q,W0=geo.w,H0=geo.h,desde=n;
+  const xL=Math.min(q[0][0],q[3][0]),xR=Math.max(q[1][0],q[2][0]),yT=Math.min(q[0][1],q[1][1]),yB=Math.max(q[2][1],q[3][1]),W=xR-xL,H=yB-yT,sw=W/NF;
+  const yt=x=>q[0][1]+(q[1][1]-q[0][1])*(x-q[0][0])/(q[1][0]-q[0][0]),yb=x=>q[3][1]+(q[2][1]-q[3][1])*(x-q[3][0])/(q[2][0]-q[3][0]);
+  n=destino;acomodar(); /* la página nueva queda abajo, esperando */
+  /* la mesa de antes, sin la página (agujereada donde está la hoja), se desvanece mientras la hoja gira */
+  const base=limpiaIds(viejo.cloneNode(true));base.className='vista velo-viejo';base.querySelectorAll('.pag').forEach(e=>e.remove());
+  base.style.clipPath=`path(evenodd,'M0 0H${W0}V${H0}H0Z M${q.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' L')}Z')`;
+  const giro=document.createElement('div');giro.className='giro';
+  const franjas=[];
+  for(let i=0;i<NF;i++){
+    const x0=xL+i*sw,x1=x0+sw+.7,f=document.createElement('div');f.className='franja';
+    f.style.cssText=`left:${x0.toFixed(2)}px;top:${yT.toFixed(2)}px;width:${(x1-x0).toFixed(2)}px;height:${H.toFixed(2)}px;transform-origin:${dir>0?'0':'100%'} 50%`;
+    const corte=`polygon(0 ${(yt(x0)-yT).toFixed(1)}px,100% ${(yt(x1)-yT).toFixed(1)}px,100% ${(yb(x1)-yT).toFixed(1)}px,0 ${(yb(x0)-yT).toFixed(1)}px)`;
+    const cara=document.createElement('div'),reves=document.createElement('div');reves.className='reves';
+    cara.style.clipPath=corte;reves.style.clipPath=`polygon(0 ${(yt(x1)-yT).toFixed(1)}px,100% ${(yt(x0)-yT).toFixed(1)}px,100% ${(yb(x0)-yT).toFixed(1)}px,0 ${(yb(x1)-yT).toFixed(1)}px)`;
+    const c1=i?viejo.cloneNode(true):viejo;c1.className='copia';c1.style.cssText=`left:${(-x0).toFixed(2)}px;top:${(-yT).toFixed(2)}px;width:${W0}px;height:${H0}px`;
+    /* el dorso: la misma hoja espejada y lavada con el color del papel: el texto de atrás apenas se adivina */
+    const c2=c1.cloneNode(true);c2.style.transform=`scaleX(-1)`;c2.style.transformOrigin=`${(x0+(x1-x0)/2).toFixed(2)}px 0`;
+    const tono=document.createElement('div');tono.className='tono';const brillo=document.createElement('div');brillo.className='brillo';
+    const tono2=document.createElement('div');tono2.className='tono';
+    cara.append(c1,tono,brillo);const lav=document.createElement('div');lav.className='lavado';reves.append(c2,lav,tono2);
+    f.append(cara,reves);giro.appendChild(f);franjas.push({f,tono,brillo,tono2});
+  }
+  if(dir<0)franjas.reverse(); /* hacia atrás, la hoja gira sobre su borde derecho: se cuenta desde ahí */
+  const sombra=document.createElement('div');sombra.className='sombra-giro';
+  sombra.style.cssText=`left:0;top:${yT.toFixed(1)}px;width:${(W*.42).toFixed(1)}px;height:${H.toFixed(1)}px;background:linear-gradient(${dir>0?90:270}deg,rgba(14,6,2,.62),rgba(14,6,2,.22) 35%,rgba(14,6,2,0))`;
+  mesa.append(base,sombra,giro);
+  const R=W*.17;
+  function pintar(p){
+    p=Math.max(0,Math.min(1,p));
+    const fold=(1-p)*W-p*PI*R;let X=0,Z=0;
+    franjas.forEach((s,i)=>{
+      const sIni=i*sw,th=Math.max(0,Math.min(PI,(sIni+sw/2-fold)/R));
+      const tx=dir>0?X-sIni:-(X-sIni);
+      s.f.style.transform=`translate3d(${tx.toFixed(2)}px,0,${Z.toFixed(2)}px) rotateY(${(dir>0?-th:th).toFixed(4)}rad)`;
+      s.tono.style.opacity=(th<PI/2?.42*th/(PI/2):0).toFixed(3);
+      s.brillo.style.opacity=(th>0&&th<PI*.6?.32*Math.sin(th*1.6):0).toFixed(3);
+      s.tono2.style.opacity=(th>PI/2?.4*(1-(th-PI/2)/(PI/2)):0).toFixed(3);
+      X+=sw*Math.cos(th);Z+=sw*Math.sin(th)});
+    const fx=dir>0?xL+Math.max(0,fold):xR-Math.max(0,fold)-W*.42;
+    sombra.style.transform=`translateX(${fx.toFixed(1)}px)`;sombra.style.opacity=(Math.sin(p*PI)*.95).toFixed(3);
+    base.style.opacity=(1-p).toFixed(3);
+  }
+  pintar(0);
+  return {dir,desde,W,pintar,fin(){[base,sombra,giro].forEach(e=>e.remove())}};
 }
-document.getElementById('adelante').addEventListener('click',()=>ir(n+1));
-document.getElementById('atras').addEventListener('click',()=>ir(n-1));
-let x0=null,y0=0;
-mesa.addEventListener('pointerdown',e=>{x0=e.clientX;y0=e.clientY});
-mesa.addEventListener('pointerup',e=>{if(x0===null)return;const dx=e.clientX-x0,dy=e.clientY-y0;x0=null;if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.4)ir(n+(dx<0?1:-1))});
+/* lleva la vuelta de p0 a p1 en «dur» ms (curva suave) y al final la cierra */
+function animar(g,p0,p1,dur,alFin){
+  const t0=performance.now(),ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+  const tic=now=>{const t=Math.min(1,(now-t0)/dur),p=p0+(p1-p0)*ease(t);g.pintar(p);if(t<1)requestAnimationFrame(tic);else alFin()};
+  requestAnimationFrame(tic);
+}
+function terminar(g,p,ok){
+  g.p=p;
+  if(ok)return()=>{g.fin();G=null};
+  return()=>{g.fin();n=g.desde;acomodar();G=null};
+}
+/* pasar la hoja de una (esquinas, teclado, índice) */
+function ir(destino){
+  if(G||destino===n||destino<1||destino>PAGS.length)return;
+  if(quieto()){fundido(destino);return}
+  if(Math.abs(destino-n)>1){fundido(destino);return}
+  const g=crearGiro(destino>n?1:-1);if(!g)return;G=g;
+  animar(g,0,1,600,terminar(g,1,true));
+}
+function fundido(destino){
+  const viejo=limpiaIds(vista.cloneNode(true));viejo.className='vista velo-viejo';n=destino;acomodar();mesa.appendChild(viejo);
+  if(!viejo.animate){viejo.remove();return}
+  viejo.animate([{opacity:1},{opacity:0}],{duration:300,easing:'ease-in-out'}).onfinish=()=>viejo.remove();
+}
+document.getElementById('adelante').addEventListener('click',()=>{if(!arrastro)ir(n+1)});
+document.getElementById('atras').addEventListener('click',()=>{if(!arrastro)ir(n-1)});
 document.addEventListener('keydown',e=>{if(e.key==='ArrowRight')ir(n+1);if(e.key==='ArrowLeft')ir(n-1)});
 vista.addEventListener('click',e=>{const b=e.target.closest('[data-ir]');if(b)ir(+b.dataset.ir)});
+/* ---- con el dedo: la hoja se levanta y acompaña al dedo; al soltar, si pasó un 35 % del ancho o el gesto fue rápido, termina ---- */
+let toque=null,arrastro=false;
+mesa.addEventListener('pointerdown',e=>{if(G)return;try{getSelection().removeAllRanges()}catch(x){}toque={x:e.clientX,y:e.clientY,id:e.pointerId,pts:[[e.clientX,performance.now()]]};arrastro=false});
+mesa.addEventListener('pointermove',e=>{
+  if(!toque||e.pointerId!==toque.id)return;const dx=e.clientX-toque.x,dy=e.clientY-toque.y;
+  toque.pts.push([e.clientX,performance.now()]);if(toque.pts.length>8)toque.pts.shift();
+  if(!arrastro){
+    if(Math.abs(dx)<10||Math.abs(dx)<Math.abs(dy)*1.2)return;
+    const dir=dx<0?1:-1;if(n+dir<1||n+dir>PAGS.length){toque=null;return}
+    arrastro=true;try{mesa.setPointerCapture(e.pointerId)}catch(x){}
+    if(quieto()){toque.quieto=dir;return}
+    G=crearGiro(dir);if(!G){toque=null;return}
+  }
+  if(G)G.pintar(Math.max(0,-G.dir*dx)/G.W);
+});
+function soltar(e){
+  if(!toque||e.pointerId!==toque.id)return;const t=toque;toque=null;
+  if(!arrastro)return;setTimeout(()=>{arrastro=false},0);
+  if(t.quieto){fundido(n+t.quieto);return}
+  const g=G;if(!g)return;
+  const a=t.pts[0],b=t.pts[t.pts.length-1],v=(b[0]-a[0])/Math.max(1,b[1]-a[1]),dx=e.clientX-t.x,p=Math.max(0,Math.min(1,-g.dir*dx/g.W)),rapido=-g.dir*v>.45;
+  if(p>.35||rapido){const vel=Math.max(Math.abs(v),.55),dur=Math.max(450*(1-p)+60,Math.min(700,(1-p)*g.W/vel*1.6));animar(g,p,1,Math.min(700,dur),terminar(g,1,true))}
+  else animar(g,p,0,Math.max(160,Math.min(450,p*g.W/.7)),terminar(g,0,false));
+}
+mesa.addEventListener('pointerup',soltar);mesa.addEventListener('pointercancel',soltar);
 
 /* ---- armado ---- */
 if(Q.get('monto')==='6767')document.getElementById('monto').textContent='$ 6.767';
 PAGS.forEach(p=>[...p.childNodes].forEach(aPluma));
+/* una gota mínima de tinta cerca de los números grandes, como las que deja la pluma */
+[['heroe',[[.93,.2,3.2],[.06,.86,2.2]]],['dias21',[[1.04,.32,2],[.5,.98,1.5]]]].forEach(([id,gs])=>{const el=document.getElementById(id);if(!el)return;gs.forEach(([x,y,r])=>{const g=document.createElement('span');g.className='gota';g.setAttribute('aria-hidden','true');g.style.cssText=`left:${x*100}%;top:${y*100}%;width:calc(${r}px*var(--s));height:calc(${(r*.86).toFixed(2)}px*var(--s))`;el.appendChild(g)})});
 vista.querySelectorAll('.sub').forEach((b,i)=>b.insertAdjacentHTML('beforeend',trazo(50+i*13,b.closest('.rojo')?'#7a2014':'#4a2c14')));
 manchar();
 

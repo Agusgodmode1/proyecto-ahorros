@@ -464,7 +464,7 @@ function montar(){
   /* el aviso con «deshacer» se escribe al pie de la hoja */
   /* (2.66) Ajustes: si cambia la página de siempre, se vuelve a leer */
   var oa=new MutationObserver(function(){if(capActual()==='ajustes')programar()});
-  ['#p-ajustes','#aj-cats'].forEach(function(q){var x=$(q);if(x)oa.observe(x,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['hidden','aria-pressed','disabled','class','open']})});
+  ['#p-ajustes','#aj-cats'].forEach(function(q){var x=$(q);if(x)oa.observe(x,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['hidden','aria-pressed','disabled','class','open','src']})});
   var ts=$('#toast');if(ts)new MutationObserver(leerAviso).observe(ts,{attributes:true,attributeFilter:['hidden'],childList:true,characterData:true,subtree:true});
 }
 /* el teclado tapa la parte de abajo: la mesa sube lo justo para que el renglón se vea */
@@ -884,7 +884,7 @@ function conLetras(){
 (function(){
   function vigilar(){
     var mo=new MutationObserver(function(){if(capActual()||capVieja||capArmada)programar()});
-    ['lb-hojas','wiz','indice','gasto-sheet','postal-sheet','voz','p-sueldo','p-gastos','p-fijos','p-logros','p-guardado'].forEach(function(id){var x=document.getElementById(id);if(x)mo.observe(x,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['hidden','aria-pressed','disabled','class','open']})});
+    ['lb-hojas','wiz','indice','gasto-sheet','postal-sheet','voz','p-sueldo','p-gastos','p-fijos','p-logros','p-guardado'].forEach(function(id){var x=document.getElementById(id);if(x)mo.observe(x,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['hidden','aria-pressed','disabled','class','open','src']})});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',vigilar);else vigilar();
 })();

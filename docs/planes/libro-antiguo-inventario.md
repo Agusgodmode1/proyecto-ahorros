@@ -1,5 +1,7 @@
 # Libro antiguo: inventario (fase 0)
 
+**Estado:** hecho. Fase 1 en 2.66, fase 2 en 2.67, fase 3 en 2.68 (ver `docs/referencia-tecnica.md`). Las decisiones de «Para decidir» se aprobaron como están propuestas.
+
 Todo lo que hoy se puede abrir desde el libro individual, a dónde va en el libro y con qué pieza.
 Las piezas son las de la sección 2 del pedido: **cambiar un dato** (tachar y escribir debajo, «anotar · dejar»), **palabra subrayada** (botón), **opciones con óvalo** («10 % · 20 % · 30 %»), **renglón** (campo de texto), **capítulo** (una pregunta o un bloque por página, termina en Hoy), **«¿Lo tachamos?»** (borrar, con «deshacer»).
 

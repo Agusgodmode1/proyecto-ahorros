@@ -14,12 +14,12 @@ export function texto(x){
   var o=[];(function r(n){
     if(n.nodeType===3){o.push(n.textContent);return}
     if(n.nodeType!==1)return;
-    if(/^(BUTTON|INPUT|SELECT|TEXTAREA|SCRIPT|STYLE|svg)$/i.test(n.tagName)||n.hidden||n.getAttribute('aria-hidden')==='true')return;
+    if(/^(BUTTON|INPUT|SELECT|TEXTAREA|SCRIPT|STYLE|svg|A)$/i.test(n.tagName)||n.hidden||n.getAttribute('aria-hidden')==='true')return;
     o.push(' ');[].forEach.call(n.childNodes,r);o.push(' ');
   })(x);
   return o.join('').replace(/\s+/g,' ').replace(/\s([.,:;])/g,'$1').trim();
 }
-function interactivo(x){return !!x.querySelector('button,input,select,textarea')}
+function interactivo(x){return !!x.querySelector('button,input,select,textarea,a[href]')}
 function minuscula(t){return t&&/^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]/.test(t)?t.charAt(0).toLowerCase()+t.slice(1):t}
 function nombreBoton(x){
   var bb=x.querySelector('b'),sm=x.querySelector('small');if(!sm||!bb||sm.parentNode!==bb.parentNode)bb=null;  /* (título y aclaración juntos: solo el título) */var t=bb?texto(bb):[].map.call(x.childNodes,function(n){return n.nodeType===3?n.textContent:n.nodeType===1?texto(n):''}).join(' ').replace(/\s+/g,' ').trim();  /* (un botón con título y aclaración: solo el título) */if(!t||SIMB.test(t))t=x.getAttribute('aria-label')||'';
@@ -98,6 +98,9 @@ export function espejo(raiz,o){  /* (o.ctrls: para juntar los controles de varia
       });
       if(filas.length)poner('<div class="hl-cuenta">'+filas.join('')+'</div>');return;
     }
+    /* una imagen (la postal) va como imagen; un enlace (guardar la imagen) es una palabra más */
+    if(tg==='IMG'){if(x.getAttribute('src'))poner('<img class="hl-postal" alt="'+e(x.alt||'')+'" src="'+e(x.src)+'">');return}
+    if(tg==='A'&&x.hasAttribute('href')){var na=nombreBoton(x);if(na)fila.push(b(na,{ex:ctrl({el:x,tipo:'btn'})}));return}
     if(tg==='BUTTON'){if(x.disabled)return;var n=nombreBoton(x);if(n)fila.push(b(n,{ex:ctrl({el:x,tipo:'btn'})}));return}
     if(tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA'){campo(x);return}
     if(tg==='LABEL'){
@@ -112,7 +115,7 @@ export function espejo(raiz,o){  /* (o.ctrls: para juntar los controles de varia
       [].forEach.call(x.children,function(y){if(y.tagName!=='SUMMARY')andar(y)});cerrar();return}
     if(/^H[1-6]$/.test(tg)){var th=texto(x);if(th)poner(tg==='H1'||x.classList.contains('aj-grupo')?'<h2 class="hl-titulo hl-rojo">'+e(th)+'</h2>':'<p class="hl-cabeza hl-centro hl-libro hl-bloque">'+e(th)+'</p>');return}
     if(esGrupo(x)){grupo(x);return}
-    if(!interactivo(x)&&!x.querySelector('h1,h2,h3,h4,p,div,ul,ol')){var tx=texto(x);if(tx)texto_(tx,x.matches('.note,small,.src,.lb-p.chico,.welcome-sub,.voz-msg,.lb-p')||!!x.closest('small,.note'));return}
+    if(!interactivo(x)&&!x.querySelector('h1,h2,h3,h4,p,div,ul,ol,img')){var tx=texto(x);if(tx)texto_(tx,x.matches('.note,small,.src,.lb-p.chico,.welcome-sub,.voz-msg,.lb-p')||!!x.closest('small,.note'));return}
     /* un renglón de una lista (una categoría, una copia, un feriado): todo junto, en la misma página */
     if(tg==='LI'){cerrar();var antes=out.length;[].forEach.call(x.childNodes,andar);cerrar();var partes=out.splice(antes);if(partes.length)out.push('<div class="hl-item">'+partes.join('')+'</div>');return}
     [].forEach.call(x.childNodes,andar);

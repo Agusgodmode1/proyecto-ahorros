@@ -22,7 +22,7 @@ export function texto(x){
 function interactivo(x){return !!x.querySelector('button,input,select,textarea')}
 function minuscula(t){return t&&/^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]/.test(t)?t.charAt(0).toLowerCase()+t.slice(1):t}
 function nombreBoton(x){
-  var bb=x.querySelector('b'),t=bb?texto(bb):[].map.call(x.childNodes,function(n){return n.nodeType===3?n.textContent:n.nodeType===1?texto(n):''}).join(' ').replace(/\s+/g,' ').trim();  /* (un botón con título y aclaración: solo el título) */if(!t||SIMB.test(t))t=x.getAttribute('aria-label')||'';
+  var bb=x.querySelector('b'),sm=x.querySelector('small');if(!sm||!bb||sm.parentNode!==bb.parentNode)bb=null;  /* (título y aclaración juntos: solo el título) */var t=bb?texto(bb):[].map.call(x.childNodes,function(n){return n.nodeType===3?n.textContent:n.nodeType===1?texto(n):''}).join(' ').replace(/\s+/g,' ').trim();  /* (un botón con título y aclaración: solo el título) */if(!t||SIMB.test(t))t=x.getAttribute('aria-label')||'';
   return minuscula(t.replace(/^[‹+·✦•\s]+/,'').replace(/[\s·]*[›»]$/,'').trim());
 }
 function etiquetaDe(c,raiz,soloVisible){

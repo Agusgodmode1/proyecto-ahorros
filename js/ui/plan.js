@@ -553,6 +553,8 @@ export function textoSaldo(v){
 /* «Actualizar saldo» (desde «Tenés» o desde el aviso de un gasto): la página «¿Cuánta plata tenés hoy?» del prólogo, lista para cambiar.
    Después de cobrar (fuera del plan) se usa la tarjeta de siempre. */
 function abrirSaldo(){
+  /* (2.68) en El Libro del Ahorro se actualiza en la hoja (ui/hoy-libro.js) */
+  if(ctx.saldoEnLibro&&ctx.saldoEnLibro())return;
   var c=$('#saldo-card'),i=$('#saldo-in');if(!c||!i)return;
   if(anota()&&today()<ctx.state.plan.cobro){irAlPacto('tenes');return}
   /* (2.45) sin anotar gastos, es la acción de todos los días: se abre acá mismo */

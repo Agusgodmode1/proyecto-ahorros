@@ -23,7 +23,7 @@ function interactivo(x){return !!x.querySelector('button,input,select,textarea')
 function minuscula(t){return t&&/^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]/.test(t)?t.charAt(0).toLowerCase()+t.slice(1):t}
 function nombreBoton(x){
   var bb=x.querySelector('b'),t=bb?texto(bb):[].map.call(x.childNodes,function(n){return n.nodeType===3?n.textContent:n.nodeType===1?texto(n):''}).join(' ').replace(/\s+/g,' ').trim();  /* (un botón con título y aclaración: solo el título) */if(!t||SIMB.test(t))t=x.getAttribute('aria-label')||'';
-  return minuscula(t.replace(/^[‹+]\s*/,'').replace(/\s*[›»]$/,'').trim());
+  return minuscula(t.replace(/^[‹+·✦•\s]+/,'').replace(/[\s·]*[›»]$/,'').trim());
 }
 function etiquetaDe(c,raiz,soloVisible){
   var t='',id=c.id;
@@ -81,7 +81,12 @@ export function espejo(raiz,o){  /* (o.ctrls: para juntar los controles de varia
     if(o.forzar&&x.matches(o.forzar)){[].forEach.call(x.children,andar);return}
     if(oculto(x)||o.saltar&&x.matches(o.saltar))return;
     var tg=x.tagName;
-    if(/^(SCRIPT|STYLE|TEMPLATE|CANVAS|svg|SVG)$/.test(tg))return;
+    if(o.especial&&o.especial(x,{poner:poner,ctrl:ctrl,fila:fila,cerrar:cerrar,andar:andar}))return;
+    /* un dibujo (un gráfico con su descripción): se copia y se pinta a pluma */
+    if(x.getAttribute('role')==='img'&&x.querySelector&&(tg.toLowerCase()==='svg'||x.querySelector('svg'))){poner('<div class="hl-graf" role="img" aria-label="'+e(x.getAttribute('aria-label')||'')+'">'+x.outerHTML.replace(/\s(id|role|aria-label)="[^"]*"/g,'')+'</div>');return}
+    /* una imagen dibujada (la postal): va como imagen */
+    if(tg==='CANVAS'){try{poner('<img class="hl-postal" alt="La postal" src="'+x.toDataURL('image/png')+'">')}catch(er){}return}
+    if(/^(SCRIPT|STYLE|TEMPLATE|svg|SVG)$/.test(tg))return;
     if(tg==='SPAN'&&x.parentElement&&x.parentElement.matches('.money,.lb-monto')&&!interactivo(x))return;
     /* una lista sin botones (el pacto, un resumen): como un libro de cuentas, lo que es a la izquierda y la cifra a la derecha */
     if((tg==='UL'||tg==='OL')&&!interactivo(x)){
@@ -93,7 +98,6 @@ export function espejo(raiz,o){  /* (o.ctrls: para juntar los controles de varia
       });
       if(filas.length)poner('<div class="hl-cuenta">'+filas.join('')+'</div>');return;
     }
-    if(o.especial&&o.especial(x,{poner:poner,ctrl:ctrl,fila:fila,cerrar:cerrar,andar:andar}))return;
     if(tg==='BUTTON'){if(x.disabled)return;var n=nombreBoton(x);if(n)fila.push(b(n,{ex:ctrl({el:x,tipo:'btn'})}));return}
     if(tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA'){campo(x);return}
     if(tg==='LABEL'){

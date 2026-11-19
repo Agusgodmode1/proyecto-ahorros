@@ -24,6 +24,7 @@ import {frecuentes} from '../logica/frecuentes.js';
 import {parse,addDays,iso,diffDays,DIA,MES} from '../logica/fechas.js';
 import {num} from '../logica/util.js';
 import {cicloTerminado} from '../logica/ciclo.js';
+import {tienePacto,HERRAMIENTAS} from '../logica/herramientas.js';
 import {sugerir,catDe,guardarGasto,avisoAnotado,anotarFrecuente,borrarGasto,diasHasta} from './gastos.js';
 import {confirmarSaldo,textoSaldo} from './plan.js';
 import {e,b,puntos,opciones,renglon} from './hl-piezas.js';
@@ -304,7 +305,19 @@ function capSemana(pc,i,t){
 /* ---------- (2.66) los capítulos leídos de la página de siempre: el prólogo, Ajustes y el perfil ---------- */
 function prologoAbierto(){var h=$('#lb-hojas');return !!h&&!h.hidden&&raiz.classList.contains('lb-en-libro')}
 function perfilAbierto(){var w=$('#wiz');return !!w&&!w.hidden&&libroEnUso()==='solo'}
-function capActual(){return perfilAbierto()?'perfil':prologoAbierto()?'prologo':ctx.ajustesEnLibro&&datos?'ajustes':null}
+/* (2.68) lo que se abre encima (el perfil, Herramientas, un gasto, el micrófono, la postal) y los capítulos de siempre */
+var OVER=[['gasto','#gasto-sheet','#gasto-box','El gasto'],['voz','#voz','#voz-box','Dictar'],['postal','#postal-sheet','#postal-sheet .sheet-in','La postal'],['perfil','#wiz','#wiz-box','Mi perfil'],['herr','#indice','#indice-box','Herramientas']];
+var TABS={sueldo:'Tu sueldo',gastos:'Tu tarjeta',fijos:'Tus fijos',logros:'Tus logros',guardado:'Lo guardado'};
+function encima(){if(libroEnUso()!=='solo')return null;for(var i=0;i<OVER.length;i++){var x=$(OVER[i][1]);if(x&&!x.hidden)return OVER[i]}return null}
+function capActual(){
+  var o=encima();if(o)return 'ov:'+o[0];
+  if(prologoAbierto())return 'prologo';
+  if(ctx.state&&TABS[ctx.capEnLibro])return 'tab:'+ctx.capEnLibro;
+  if(ctx.ajustesEnLibro&&datos)return 'ajustes';
+  if(ctx.state&&libroEnUso()==='solo'&&!tienePacto(ctx.state))return 'inv';
+  return null;
+}
+function esEncima(k){return !!k&&(k==='prologo'||k.indexOf('ov:')===0)}
 /* el sello del pacto, a tinta roja */
 var SELLO='<svg class="hl-sello" viewBox="0 0 120 120" aria-hidden="true"><g fill="none" style="stroke:var(--hl-trazo-rojo)" stroke-linecap="round"><circle cx="60" cy="60" r="52" stroke-width="3"/><circle cx="60" cy="60" r="44" stroke-width="1.4"/></g>'
   +'<path d="M60 34 L66 52 L85 52 L70 63 L76 82 L60 70 L44 82 L50 63 L35 52 L54 52Z" style="fill:var(--hl-trazo-rojo)" opacity=".9"/></svg>';
@@ -337,7 +350,25 @@ function capEspejo(k){
     for(var i=0;i<pos.total;i++)C.push({id:'pro-'+i,titulo:'',bloques:i===pos.idx?r.bloques:[],cabeza:pos.modo==='ciclo'?'pacto nuevo':'prólogo'});
     return C;
   }
-  if(k==='perfil'){var box=$('#wiz-box'),r2=espejo(box,{ctrls:EX,saltar:'.wiz-dots'});EXraiz=box;return [{id:'perfil',titulo:'Mi perfil',bloques:r2.bloques,cabeza:'mi perfil'}]}
+  if(k.indexOf('ov:')===0){
+    var o=OVER.filter(function(q){return 'ov:'+q[0]===k})[0],box=$(o[2]),r2=box?espejo(box,{ctrls:EX,saltar:'.wiz-dots,.sheet-top>h2,.lb-cab>.lb-cap,#ix-t'}):{bloques:[]};EXraiz=box;
+    return [{id:k,titulo:o[3],bloques:r2.bloques,cabeza:o[3].toLowerCase()}];
+  }
+  /* un capítulo de siempre (Sueldo, Tarjeta, Fijos, Logros, Lo guardado), leído de su página */
+  if(k.indexOf('tab:')===0){
+    var t=k.slice(4),pn=$('#p-'+t),r4=pn?espejo(pn,{ctrls:EX,saltar:'.panel-head,.cap-intro'}):{bloques:[]};EXraiz=pn;
+    r4.bloques.push(FLOR,'<p class="hl-nota">'+b('volver a Hoy',{a:'caps-cerrar'})+'</p>');
+    return [{id:k,titulo:TABS[t],bloques:r4.bloques,cabeza:TABS[t].toLowerCase()}];
+  }
+  /* sin pacto: la invitación a armarlo, y las herramientas que andan sin él */
+  if(k==='inv'){
+    EXraiz=null;
+    return [{id:'inv',titulo:'El libro del ahorro',cabeza:'el libro del ahorro',bloques:[
+      '<p class="hl-renglon">Para ver tu día, armá tu pacto: son tres preguntas.</p>',
+      '<p class="hl-acciones hl-nota"><button class="hl-toc hl-sub" type="button" data-pacto-armar>armar mi pacto</button></p>',FLOR,
+      '<p class="hl-nota hl-cur hl-suave">o usá una herramienta suelta:</p>'
+    ].concat(HERRAMIENTAS.map(function(h){return '<p class="hl-acciones hl-nota"><button class="hl-toc hl-sub" type="button" data-herr data-h="'+e(h.id)+'">'+e(h.t.charAt(0).toLowerCase()+h.t.slice(1))+'</button></p>'}))}];
+  }
   /* Ajustes: un capítulo por grupo («Tu libro», «Sonido»…); las categorías van con «Tus gastos» */
   var aj=$('#p-ajustes'),G0=[],act=null;EXraiz=aj;
   [].forEach.call(aj.children,function(x){
@@ -362,8 +393,21 @@ function capEspejo(k){
     FLOR,'<p class="hl-nota">'+b('volver a Hoy',{a:'aj-cerrar'})+'</p>']});
   return C2;
 }
-function abrirAjustes(){parar();edit=null;tachar=null;ctx.ajustesEnLibro=true;irPrimera=true;ctx.renderAll()}
-function cerrarAjustes(){ctx.ajustesEnLibro=false;irPrimera=true;ctx.renderAll()}
+function abrirAjustes(){parar();edit=null;tachar=null;ctx.capEnLibro=null;ctx.ajustesEnLibro=true;irPrimera=true;ctx.renderAll()}
+function cerrarAjustes(){cerrarCaps()}
+function cerrarCaps(){parar();edit=null;ctx.ajustesEnLibro=false;ctx.capEnLibro=null;irPrimera=true;ctx.renderAll()}
+function cerrarCapsSilencio(){if(ctx.capEnLibro||ctx.ajustesEnLibro){ctx.capEnLibro=null;ctx.ajustesEnLibro=false;irPrimera=false}}
+function abrirTab(t){parar();edit=null;tachar=null;ctx.ajustesEnLibro=false;ctx.capEnLibro=t;irPrimera=true;ctx.renderAll()}
+/* (2.68) ir a otro capítulo desde cualquier lado (un aviso, Herramientas, «ver fijos»…): se abre dentro del libro */
+function irEnLibro(t){
+  if(libroEnUso()!=='solo'||!ctx.state||!el||ctx.tab!=='resumen')return false;
+  if(t==='resumen'){cerrarCaps();return true}
+  if(t==='ajustes'){abrirAjustes();return true}
+  if(TABS[t]){abrirTab(t);return true}
+  var m=/^w(\d+)$/.exec(String(t));
+  if(m&&datos){ctx.capEnLibro=null;ctx.ajustesEnLibro=false;semana=Number(m[1]);edit=null;armar();var kq=PAGS.findIndex(function(pg){return pg.dataset.cap==='semana'});if(kq>=0)fundido(kq+1);return true}
+  return false;
+}
 /* la página de siempre cambió (otra pregunta, un botón, un aviso): se vuelve a leer; si cambió de pregunta, se pasa la hoja */
 function programar(){clearTimeout(reloj);reloj=setTimeout(refrescar,50)}
 function refrescar(){
@@ -371,8 +415,9 @@ function refrescar(){
   var a=document.activeElement;if(a&&el.contains(a)&&a.matches('.hl-input')){trasFoco=true;return}
   if(G){pendiente=true;return}
   var k=capActual(),pos=k==='prologo'?prologoPos():null,tit=$('#wiz-t');
-  var marca=(k||'hoy')+':'+(pos?pos.idx:k==='perfil'?(tit?tit.textContent:''):'');
-  var pasa=!el.hidden&&PAGS.length&&k&&k===capVieja&&marcaVieja!=null&&marca!==marcaVieja&&(k==='prologo'||k==='perfil');
+  var h1=k&&k.indexOf('ov:')===0&&EXraiz?EXraiz.querySelector('h1,h2'):null;
+  var marca=(k||'hoy')+':'+(pos?pos.idx:k==='ov:perfil'?(tit?tit.textContent:''):h1?h1.textContent:'');
+  var pasa=!el.hidden&&PAGS.length&&k&&k===capVieja&&marcaVieja!=null&&marca!==marcaVieja&&esEncima(k);
   var dir=pos?(pos.idx>=idxViejo?1:-1):1,pre=pasa?{viejo:limpiaIds(vista.cloneNode(true)),geo:geo}:null;
   if(k!==capVieja)irPrimera=true;
   capVieja=k;marcaVieja=marca;idxViejo=pos?pos.idx:0;
@@ -461,7 +506,6 @@ function clic(ev){
 /* un control de la página de siempre (algunos se quedan en el libro: Ajustes y su «volver a Hoy») */
 function tocarEx(v){
   var m=/^[xcrs]?(\d+)/.exec(String(v)),c=m&&EX[Number(m[1])];if(!c)return;
-  if(c.el.matches('[data-goto="ajustes"],[data-ix-go="ajustes"]')){abrirAjustes();return}
   tocar(EX,v);
 }
 function escribe(ev){
@@ -517,7 +561,8 @@ function accion(a,v){
   if(a==='semana'){semana=Number(v);edit=null;armar();var k=PAGS.findIndex(function(pg){return pg.dataset.cap==='semana'});if(k>=0)ir(k+1);return}
   if(a==='volver-hoy'){semana=null;edit=null;fundido(1);setTimeout(function(){if(!G)armar()},320);return}
   if(a==='ir'){if(v==='ajustes'){abrirAjustes();return}if(ctx.go)ctx.go(v);return}
-  if(a==='ajustes'){if(capActual()==='ajustes')cerrarAjustes();else abrirAjustes();return}
+  if(a==='ajustes'){var kk=capActual();if(kk==='ajustes'||kk&&kk.indexOf('tab:')===0)cerrarCaps();else abrirAjustes();return}
+  if(a==='caps-cerrar'){cerrarCaps();return}
   if(a==='aj-cerrar'){cerrarAjustes();return}
   if(a==='cap'){var kc=PAGS.findIndex(function(pg){return pg.dataset.cap===v});if(kc>=0)ir(kc+1);return}
   if(a==='meta-bajar'){st.plan.ahorro=Number(v)||0;ctx.persist();ctx.syncInputs();ctx.renderAll();toast('Meta bajada a '+money(st.plan.ahorro));return}
@@ -610,7 +655,8 @@ function revisar(){
 }
 /* el libro se ve en Hoy del libro «solo», con el pacto armado, y cuando la página clásica no hace falta */
 function activo(){
-  var k=capActual();if((k==='prologo'||k==='perfil')&&!tourAbierto())return true;
+  var k=capActual();if(esEncima(k)&&!tourAbierto())return true;
+  if(k&&ctx.tab==='resumen'&&libroEnUso()==='solo'&&!clasico&&!tourAbierto()&&!document.getElementById('app').hidden)return true;
   return !!datos&&ctx.tab==='resumen'&&libroEnUso()==='solo'&&!clasico&&!tourAbierto()
     &&!document.querySelector('#hoja.sin-pacto,.sin-pacto#hoja')&&!!ctx.state&&!document.getElementById('app').hidden;
 }
@@ -619,9 +665,9 @@ function mostrar(){
   var a=activo(),v=$('#hl-volver');
   if(v)v.hidden=!(clasico&&ctx.tab==='resumen'&&libroEnUso()==='solo');
   raiz.classList.toggle('hoy-libro',a);
-  var k=a?capActual():null;raiz.classList.toggle('hl-wiz',k==='perfil');el.classList.toggle('hl-sinacc',k==='prologo'||k==='perfil');
-  var aj=el.querySelector('.hl-ajustes');if(aj)aj.textContent=k==='ajustes'?'hoy':'ajustes';
-  if(!a&&ctx.tab!=='resumen'&&ctx.ajustesEnLibro)ctx.ajustesEnLibro=false;
+  var k=a?capActual():null;raiz.classList.toggle('hl-cubre',a);el.classList.toggle('hl-sinacc',esEncima(k));
+  var aj=el.querySelector('.hl-ajustes');if(aj)aj.textContent=k==='ajustes'||k&&k.indexOf('tab:')===0?'hoy':'ajustes';
+  if(!a&&ctx.tab!=='resumen'){ctx.ajustesEnLibro=false;ctx.capEnLibro=null}
   if(a&&el.hidden){el.hidden=false;conLetras()}
   else if(!a&&!el.hidden){el.hidden=true;parar();edit=null;tachar=null}
 }
@@ -662,6 +708,8 @@ function armar(){
   pags.querySelectorAll('.hl-antes .hl-m').forEach(function(x,i){x.insertAdjacentHTML('afterend',tachadura(201+i))});
   var tapado=discreto.on;
   pags.querySelectorAll('.hl-m').forEach(function(x,i){x.style.setProperty('--mancha',MANCHAS[i%MANCHAS.length]);x.classList.toggle('hl-tapada',tapado);if(tapado){x.setAttribute('role','img');x.setAttribute('aria-label','monto oculto')}});
+  /* lo leído de la página de siempre trae el monto oculto como «$ •••»: también lleva su mancha */
+  if(tapado)pags.querySelectorAll('.hl-w').forEach(function(w,i){if(/•••/.test(w.textContent)){w.classList.add('hl-m','hl-tapada');w.style.setProperty('--mancha',MANCHAS[i%MANCHAS.length]);w.setAttribute('role','img');w.setAttribute('aria-label','monto oculto')}});
   pags.querySelectorAll('[data-gotas]').forEach(function(x,i){if(tapado)return;[[.93,.2,3.2],[.06,.86,2.2]].forEach(function(g,j){var d=document.createElement('span');d.className='hl-gota';d.setAttribute('aria-hidden','true');var r=g[2]*(i?.65:1);d.style.cssText='left:'+(g[0]*100)+'%;top:'+(g[1]*100)+'%;width:calc('+r+'px*var(--s));height:calc('+(r*.86).toFixed(2)+'px*var(--s))';x.appendChild(d)})});
   /* lo recién anotado se escribe de a una letra (unos 0,4 s) */
   if(recien){pags.querySelectorAll('[data-nuevo="'+recien+'"],[data-nuevo="1"]').forEach(function(x){var ls=x.querySelectorAll('.hl-l');x.style.setProperty('--nl',String(Math.max(1,ls.length)));x.classList.add('hl-escribe')});recien=null}
@@ -815,6 +863,8 @@ function iniciarDedo(){
 
 /* ---------- lo que llama ui/plan.js ---------- */
 export function initHoyLibro(){
+  ctx.irEnLibro=irEnLibro;
+  ctx.saldoEnLibro=function(){if(libroEnUso()!=='solo'||!el||!datos)return false;cerrarCapsSilencio();var k=PAGS.findIndex(function(pg){return pg.dataset.cap==='plata'});if(k>=0)n=k+1;accion('tenes','plata');return true};
   ctx.libroHoy=function(D){
     if(D)datos=D;
     if(!D&&ctx.tab!=='resumen'){clasico=false;auto=false}
@@ -833,8 +883,8 @@ function conLetras(){
 /* (2.66) el prólogo y el perfil pueden abrirse antes de que haya datos (la primera vez): el libro los vigila desde el arranque */
 (function(){
   function vigilar(){
-    var mo=new MutationObserver(function(){if(prologoAbierto()||perfilAbierto()||capVieja==='prologo'||capVieja==='perfil'||capArmada==='prologo'||capArmada==='perfil')programar()});
-    ['lb-hojas','wiz'].forEach(function(id){var x=document.getElementById(id);if(x)mo.observe(x,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['hidden','aria-pressed','disabled','class','open']})});
+    var mo=new MutationObserver(function(){if(capActual()||capVieja||capArmada)programar()});
+    ['lb-hojas','wiz','indice','gasto-sheet','postal-sheet','voz','p-sueldo','p-gastos','p-fijos','p-logros','p-guardado'].forEach(function(id){var x=document.getElementById(id);if(x)mo.observe(x,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['hidden','aria-pressed','disabled','class','open']})});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',vigilar);else vigilar();
 })();

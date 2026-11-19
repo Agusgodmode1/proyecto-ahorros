@@ -102,7 +102,8 @@ function renderAll(){
   /* (2.59) en pareja: el grupo de Fijos y lo que cobra cada uno se mantienen al día solos */
   document.documentElement.classList.toggle('modo-pareja',hayPareja(ctx.state));
   if(sincronizarGrupo(ctx.state,today()))persist();marcarPareja();
-  if(ctx.tab==='resumen')renderDuoHoy();if(ctx.tab==='fijos')renderCuentas();
+  var en=ctx.capEnLibro; /* (2.68) el capítulo que el libro tiene abierto también se dibuja */
+  if(ctx.tab==='resumen')renderDuoHoy();if(ctx.tab==='fijos'||en==='fijos')renderCuentas();
   var pc=planNow();
   if(/^w\d+$/.test(ctx.tab)&&Number(ctx.tab.slice(1))>=pc.weeks.length)ctx.tab='resumen';
   try{localStorage.setItem(TK,ctx.tab)}catch(e){}
@@ -119,11 +120,11 @@ function renderAll(){
   /* (2.15) cada capítulo se dibuja solo cuando se ve (pasar de página no rehace los que están ocultos) */
   if(ctx.tab==='resumen'){renderAvisoTarjeta();agruparNotas()}
   if(/^w\d+$/.test(ctx.tab))renderWeek(pc);
-  if(ctx.tab==='sueldo'){renderSueldo();renderRecibos()}
-  if(ctx.tab==='gastos'){renderGastos();renderCategorias()}
-  if(ctx.tab==='fijos')renderFijos(pc);
-  if(ctx.tab==='logros')renderLogros(pc);
-  if(ctx.tab==='guardado')renderGuardado();
+  if(ctx.tab==='sueldo'||en==='sueldo'){renderSueldo();renderRecibos()}
+  if(ctx.tab==='gastos'||en==='gastos'){renderGastos();renderCategorias()}
+  if(ctx.tab==='fijos'||en==='fijos')renderFijos(pc);
+  if(ctx.tab==='logros'||en==='logros')renderLogros(pc);
+  if(ctx.tab==='guardado'||en==='guardado')renderGuardado();
   var vh=$('#volver-hoy');if(vh)vh.hidden=ctx.tab==='resumen';
   actualizarFlechas();
   /* la introducción del capítulo: completa la primera vez, después en una línea */
@@ -191,6 +192,8 @@ function pasarA(t,dir,blancas){
 function go(t,opt){
   if(t==='prologo'){abrirPrologo('pacto',null,-1);return}
   if(t==='semanas')t='w'+curWeek(planNow(),today());
+  /* (2.68) en El Libro del Ahorro, los capítulos se abren dentro del libro (ui/hoy-libro.js) */
+  if(ctx.irEnLibro&&ctx.irEnLibro(t))return;
   var antes=ctx.tab,dir=orden(t)>=orden(antes)?1:-1;
   if(antes===t){terminarPase();renderAll();return}
   /* desde el índice, si el salto es lejos, pasan varias hojas en abanico (el mismo giro, ≤ 700 ms) */

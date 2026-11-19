@@ -2042,7 +2042,7 @@ html.hoy-libro body{overflow:hidden}
 .hl-dias{display:flex;justify-content:center;flex-wrap:wrap;gap:0 calc(5px*var(--s));margin-top:calc(10px*var(--s)*var(--a,1))}
 .hl-hoy{position:relative;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.2em}
 /* el libro de cuentas: lo que es a la izquierda, la cifra a la derecha */
-.hl-cuenta{display:grid;row-gap:calc(6px*var(--s)*var(--a,1));text-align:left;margin-top:calc(8px*var(--s)*var(--a,1))}
+.hl-cuenta{display:grid;row-gap:calc(4px*var(--s)*var(--a,1));text-align:left;margin-top:calc(8px*var(--s)*var(--a,1))}
 .hl .hl-par{display:flex;justify-content:space-between;align-items:baseline;gap:calc(10px*var(--s))}
 .hl-par>.hl-cifra,.hl-par>.hl-m{margin-left:auto}
 .hl-par.hl-nota{margin-top:calc(-4px*var(--s))}
@@ -2117,3 +2117,41 @@ html.hoy-libro body{overflow:hidden}
 .hl-volver{position:fixed;z-index:36;left:50%;top:calc(8px + env(safe-area-inset-top));transform:translateX(-50%);min-height:44px;padding:0 18px;border-radius:22px;border:1px solid var(--line);
   background:var(--surface);color:var(--ink);font:600 15px/1 var(--f-body);box-shadow:0 6px 18px rgba(0,0,0,.4);cursor:pointer}
 .hl-volver[hidden]{display:none}
+/* ---------- 2.67: el prólogo, Ajustes y el perfil, escritos en el libro (ui/hl-espejo.js) ---------- */
+/* las hojas de siempre siguen trabajando, pero no se ven: el libro las escribe a tinta */
+html.lb-en-libro #lb-hojas,html.hl-wiz #wiz{opacity:0!important;pointer-events:none!important}
+.hl.hl-sinacc .hl-acc{display:none}
+.hl-item{display:flex;flex-direction:column;align-items:center;margin-top:calc(8px*var(--s)*var(--a,1))}
+.hl-item>p{margin:0}
+.hl-dias-mes{column-gap:0;max-width:100%}
+.hl-dias-mes .hl-op{min-width:44px;padding:0}
+.hl-dias-mes .hl-pt{padding:0 .05em}
+.hl-firma{display:flex;flex-direction:column;align-items:center;margin-top:calc(8px*var(--s))}
+.hl svg.hl-sello{width:calc(58px*var(--s));height:calc(58px*var(--s));transform:rotate(-8deg)}
+.hl-firma .hl-nota{margin-top:calc(2px*var(--s))}
+.hl-cuenta .hl-par.hl-nota{margin-top:calc(-6px*var(--s))}
+@media (prefers-reduced-motion:no-preference){.hl svg.hl-sello{animation:hl-sella .52s cubic-bezier(.2,.7,.2,1) both}}
+@keyframes hl-sella{from{opacity:0;transform:translateY(-14px) scale(1.5) rotate(-16deg)}to{opacity:1;transform:rotate(-8deg)}}
+/* el PIN al abrir El Libro del Ahorro: una hoja de papel sobre la mesa, escrita a tinta (antes de que el libro exista) */
+html[data-libro="solo"] #pin{background:var(--hl-mesa)}
+html[data-libro="solo"] #pin .pin-in{background:radial-gradient(120% 90% at 50% 45%,#EBDDB9 55%,#D8C08E 82%,#A9834B 100%);color:var(--hl-tinta);
+  border-radius:4px;box-shadow:0 18px 50px rgba(0,0,0,.7);padding:28px 22px;font-family:'IM Fell English',Georgia,serif;font-variant-numeric:oldstyle-nums}
+html[data-libro="solo"] #pin h1{font-family:'IM Fell SC',Georgia,serif;font-weight:400;color:var(--hl-rojo);background:none;-webkit-text-fill-color:var(--hl-rojo)}
+html[data-libro="solo"] #pin .welcome-sun{display:none}
+html[data-libro="solo"] #pin .pin-dots i{background:transparent;border:1.5px solid var(--hl-tinta);box-shadow:none}
+html[data-libro="solo"] #pin .pin-dots i.on{background:var(--hl-tinta)}
+html[data-libro="solo"] #pin .pin-k{background:transparent;border:0;box-shadow:none;color:var(--hl-tinta);font:400 28px/1 'IM Fell English',Georgia,serif;min-height:52px}
+html[data-libro="solo"] #pin .btn,html[data-libro="solo"] #pin .pin-msg,html[data-libro="solo"] #pin p{background:transparent;border:0;box-shadow:none;color:var(--hl-tinta);font-family:'IM Fell English',Georgia,serif;font-style:italic;text-decoration:underline;text-underline-offset:.2em}
+html[data-libro="solo"] #pin p{text-decoration:none}
+html[data-libro="solo"] #pin .btn.danger{color:var(--hl-rojo)}
+.hl-chk{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:center;column-gap:.5em;margin-top:calc(4px*var(--s)*var(--a,1))}
+.hl-chk>.hl-opciones{margin-top:0}
+/* (2.67) cada renglón de palabras mide 44 px de alto y el toque de cada palabra no pasa de su renglón:
+   así tocar una palabra nunca aprieta la del renglón de arriba o de abajo */
+.hl .hl-acciones,.hl .hl-opciones{min-height:44px;align-items:center;align-content:center}
+.hl .hl-acciones .hl-toc::after,.hl .hl-opciones .hl-toc::after{height:44px}
+.hl-item{margin-top:0}
+.hl-item>.hl-acciones,.hl-item>.hl-opciones{margin-top:0}
+.hl .hl-acciones{row-gap:24px}
+html[data-libro="solo"] #pin .pin-k[data-pink="⌫"]{font-size:0}
+html[data-libro="solo"] #pin .pin-k[data-pink="⌫"]::after{content:"borrar";font:italic 400 18px/1 'IM Fell English',Georgia,serif;text-decoration:underline;text-underline-offset:.2em}

@@ -1,6 +1,7 @@
 /* Tour guiado: globos paso a paso sobre la pantalla real. Se muestra la primera vez y se repite desde Ajustes.
    Lo que ya se vio queda en este aparato (localStorage pa-tour), no en los datos. */
 import {ctx,$,anota} from './comun.js';
+import {libroEnUso} from '../estado.js';
 
 var KEY='pa-tour';
 export function marcarTour(){try{localStorage.setItem(KEY,'pendiente')}catch(e){}}
@@ -77,6 +78,8 @@ export function initTour(){
 /* La primera vez: cuando no hay otra pantalla encima, arranca solo */
 export function tourSiPendiente(){
   if(corre||!tourPendiente()||!ctx.booted)return;
+  /* (2.67) en El Libro del Ahorro no hay globos sobre la pantalla: lo explica la página «Cómo se usa este libro» (Ajustes) */
+  if(libroEnUso()==='solo'){hecho();return}
   var tapa=['#wiz','#pin','#estante','#lb-hojas','#indice'].some(function(s){var x=$(s);return x&&!x.hidden});
   /* el prólogo todavía se está cerrando (o hay algo encima): se prueba de nuevo en un rato, así arranca solo */
   if(tapa){clearTimeout(reint);reint=setTimeout(tourSiPendiente,900);return}

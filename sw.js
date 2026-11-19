@@ -1,7 +1,7 @@
 /* Service worker: guarda la app para que funcione sin internet y avisa cuando hay una versión nueva.
    CADA CAMBIO EN LA APP: subí VERSION (y la de js/version.js). Así cambia el nombre del caché y el
    teléfono descarga la versión nueva. Si agregás un archivo, sumalo a ARCHIVOS (una prueba lo controla). */
-var VERSION='2.66.0';
+var VERSION='2.67.0';
 var CACHE='ahorros-'+VERSION;
 var FUENTES='ahorros-fuentes';
 var ARCHIVOS=[
@@ -56,7 +56,9 @@ var ARCHIVOS=[
   'js/ui/estante.js',
   'js/ui/escena3d.js',
   'js/logica/estante3d.js',
-  'js/ui/hoy-libro.js','js/logica/hoy-libro.js','js/logica/fondos-hoy.js',
+  'js/ui/hoy-libro.js',
+  'js/ui/hl-piezas.js',
+  'js/ui/hl-espejo.js','js/logica/hoy-libro.js','js/logica/fondos-hoy.js',
   'icons/hoy/fondo-izq-alto.webp','icons/hoy/fondo-izq-corto.webp','icons/hoy/fondo-der-alto.webp','icons/hoy/fondo-der-corto.webp',
   'js/logica/cinematica.js','js/logica/perf3d.js','js/logica/recorte.js','js/logica/pendiente.js','js/logica/fotos-escena.js','js/ui/escena3d-texturas.js','js/ui/escena3d-libro.js','icons/escena/inicio.webp','icons/escena/menu.webp','icons/escena/tapa-solo.webp','icons/escena/tapa-duo.webp',
   'js/logica/saldo.js',

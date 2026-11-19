@@ -26,12 +26,16 @@ import {num} from '../logica/util.js';
 import {cicloTerminado} from '../logica/ciclo.js';
 import {sugerir,catDe,guardarGasto,avisoAnotado,anotarFrecuente,borrarGasto,diasHasta} from './gastos.js';
 import {confirmarSaldo,textoSaldo} from './plan.js';
+import {e,b,puntos,opciones,renglon} from './hl-piezas.js';
+import {espejo,tocar,escribir,confirmar} from './hl-espejo.js';
+import {prologoPos,prologoPasar} from './libro.js';
 
 var raiz=document.documentElement,el=null,vista=null,mesa=null,img=null,luz=null,PAGS=[],n=1,geo=null,datos=null,G=null;
 var clasico=false,auto=false,ultimo=null;
 /* lo que se está escribiendo en la hoja, el gasto por tachar, la semana abierta, lo que dice el pie, lo recién escrito */
 var edit=null,tachar=null,semana=null,pie=null,recien=null,anchoArmado=0;
-function e(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+/* (2.66) los capítulos que el libro lee de la página de siempre (ui/hl-espejo.js): el prólogo, Ajustes y el perfil */
+var capArmada=null,EX=[],EXraiz=null,capVieja=null,marcaVieja=null,idxViejo=0,irPrimera=false,trasFoco=false,reloj=null;
 function quieto(){try{return matchMedia('(prefers-reduced-motion: reduce)').matches}catch(x){return false}}
 function azar(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
@@ -115,20 +119,6 @@ function m(v,clase,nuevo){return '<span class="hl-cifra '+(clase||'hl-fuerte')+'
 function mm(v){return '<span class="hl-m">'+e(money(v))+'</span>'}
 /* la cifra de antes, chica y tachada (hasta mañana) */
 function viejo(clave){var v=tachadoDe(clave);return v==null?'':' <span class="hl-antes hl-nota hl-suave" aria-label="antes: '+e(money(v))+'"><span class="hl-m">'+e(money(v))+'</span></span>'}
-/* un botón: una palabra escrita y subrayada. o.a = qué hace (data-a), o.v = un valor; o.p = aprieta un botón de siempre */
-function b(txt,o,clase){o=o||{};return '<button class="hl-toc hl-sub'+(clase?' '+clase:'')+'" type="button"'+(o.a?' data-a="'+e(o.a)+'"':'')+(o.v!=null?' data-v="'+e(o.v)+'"':'')+(o.p?' data-p="'+e(o.p)+'"':'')+(o.lab?' aria-label="'+e(o.lab)+'"':'')+'>'+e(txt)+'</button>'}
-function puntos(l){return l.filter(Boolean).join('<span class="hl-pt" aria-hidden="true">·</span>')}
-/* elegir entre opciones: palabras separadas por «·»; la elegida, rodeada con un óvalo de tinta */
-function opciones(nombre,etiqueta,lista,elegido,extra){
-  return '<p class="hl-opciones hl-nota" role="radiogroup" aria-label="'+e(etiqueta)+'">'+puntos(lista.map(function(o){
-    return '<button class="hl-toc hl-op" type="button" role="radio" aria-checked="'+(String(o[0])===String(elegido))+'" data-op="'+e(nombre)+'" data-v="'+e(o[0])+'"'+(extra?' '+extra(o):'')+'>'+e(o[1])+'</button>'}))+'</p>';
-}
-/* un renglón para escribir (letra de 16 px o más) */
-function renglon(id,etiqueta,valor,num_,clase,ph){
-  return '<label class="hl-campo'+(clase?' '+clase:'')+'" for="'+id+'"><span class="hl-oculto">'+e(etiqueta)+'</span>'+(num_?'<span class="hl-signo" aria-hidden="true">'+(num_==='USD'?'US$':'$')+'</span>':'')
-    +'<input id="'+id+'" class="hl-input'+(num_?' hl-num':'')+'" type="text" '+(num_?'inputmode="decimal"':'inputmode="text" autocapitalize="sentences"')+' enterkeyhint="done" autocomplete="off" spellcheck="false"'+(ph?' placeholder="'+e(ph)+'"':'')+' value="'+e(valor==null?'':valor)+'">'
-    +'</label>';
-}
 function error(){return edit&&edit.err?'<p class="hl-nota hl-cur hl-rojo hl-err" role="alert">'+e(edit.err)+'</p>':''}
 function acciones(si,no){return '<p class="hl-acciones hl-nota">'+puntos([b(si||'anotar',{a:'anotar'}),b(no||'dejar',{a:'dejar'})])+'</p>'}
 
@@ -175,6 +165,7 @@ function filaGasto(g){
 
 /* ---------- las páginas ---------- */
 function capitulos(D){
+  var k=capActual();if(k)return capEspejo(k);
   var H=D.hoy.H,t=D.hoy.t,st=ctx.state,C=[],x=[];
   /* ---- i · Hoy ---- */
   var neg=H.queda<0,co=cobro(t,D.hoy.cobro),aqui=edit&&edit.donde==='hoy';
@@ -310,12 +301,94 @@ function capSemana(pc,i,t){
   return {id:'semana',titulo:'Semana '+romano(i+1),bloques:x};
 }
 
+/* ---------- (2.66) los capítulos leídos de la página de siempre: el prólogo, Ajustes y el perfil ---------- */
+function prologoAbierto(){var h=$('#lb-hojas');return !!h&&!h.hidden&&raiz.classList.contains('lb-en-libro')}
+function perfilAbierto(){var w=$('#wiz');return !!w&&!w.hidden&&libroEnUso()==='solo'}
+function capActual(){return perfilAbierto()?'perfil':prologoAbierto()?'prologo':ctx.ajustesEnLibro&&datos?'ajustes':null}
+/* el sello del pacto, a tinta roja */
+var SELLO='<svg class="hl-sello" viewBox="0 0 120 120" aria-hidden="true"><g fill="none" style="stroke:var(--hl-trazo-rojo)" stroke-linecap="round"><circle cx="60" cy="60" r="52" stroke-width="3"/><circle cx="60" cy="60" r="44" stroke-width="1.4"/></g>'
+  +'<path d="M60 34 L66 52 L85 52 L70 63 L76 82 L60 70 L44 82 L50 63 L35 52 L54 52Z" style="fill:var(--hl-trazo-rojo)" opacity=".9"/></svg>';
+function especialProl(x,api){
+  /* el cobro: el mes, y sus días como palabras (el elegido con el óvalo; los que ya pasaron no están) */
+  if(x.classList.contains('lb-cal')){
+    var mes=x.querySelector('.lb-cal-h b'),fila=[];
+    [['-1','mes anterior'],['1','mes siguiente']].forEach(function(d){var y=x.querySelector('[data-lb="mes"][data-d="'+d[0]+'"]');if(y&&!y.disabled)fila.push(b(d[1],{ex:api.ctrl({el:y,tipo:'btn'})}))});
+    api.poner('<p class="hl-cabeza hl-centro hl-libro">'+e(mes?mes.textContent:'')+'</p>'+(fila.length?'<p class="hl-acciones hl-nota">'+puntos(fila)+'</p>':''));
+    /* los días cerca del sugerido (o del elegido); cualquier otro, escribiendo el número */
+    var dias=[].filter.call(x.querySelectorAll('.lb-dia'),function(y){return !y.disabled}),ref=x.querySelector('.lb-dia[aria-pressed="true"]')||x.querySelector('.lb-dia.sug')||dias[0],i0=Math.max(0,dias.indexOf(ref)-3);
+    var sel=null,lista=dias.slice(i0,i0+7).map(function(y){var k=api.ctrl({el:y,tipo:'btn'});if(y.getAttribute('aria-pressed')==='true')sel='x'+k;var dl=y.getAttribute('aria-label')||'';return ['x'+k,dl.split(' ')[0].slice(0,3)+' '+y.textContent.trim()]});
+    if(lista.length)api.poner(opciones('ex','El día que cobrás',lista,sel));
+    var kd=api.ctrl({tipo:'dia',el:x,dias:dias});
+    api.poner('<p class="hl-nota hl-cur hl-suave">otro día de '+e(mes?mes.textContent.split(' ')[0]:'este mes')+':</p>'+renglon('hl-ex-'+kd,'Otro día del mes','','num',null,'día',' data-ex="'+kd+'"'));
+    return true;
+  }
+  /* la firma: con el pacto sellado, el sello a tinta roja */
+  if(x.classList.contains('lb-firma')){var t=x.querySelector('.lb-sellado');if(x.querySelector('.lb-sello.puesto'))api.poner('<div class="hl-firma">'+SELLO+(t&&t.textContent?'<p class="hl-nota hl-cur">'+e(t.textContent)+'</p>':'')+'</div>');return true}
+  /* el deslizador del ahorro no va: está el renglón y las opciones */
+  if(x.classList.contains('lb-rango'))return true;
+  return false;
+}
+function capEspejo(k){
+  EX=[];
+  if(k==='prologo'){
+    var pos=prologoPos(),pag=document.querySelector('#lb-pila .lb-pag:last-child'),C=[];
+    var r=pag?espejo(pag,{ctrls:EX,saltar:'.lb-folio,.lb-brote,.lb-cal-ley,.lb-cap,.lb-letra-in>#lb-letra-plan:empty',especial:especialProl}):{bloques:[]};
+    EXraiz=pag;
+    for(var i=0;i<pos.total;i++)C.push({id:'pro-'+i,titulo:'',bloques:i===pos.idx?r.bloques:[],cabeza:pos.modo==='ciclo'?'pacto nuevo':'prólogo'});
+    return C;
+  }
+  if(k==='perfil'){var box=$('#wiz-box'),r2=espejo(box,{ctrls:EX,saltar:'.wiz-dots'});EXraiz=box;return [{id:'perfil',titulo:'Mi perfil',bloques:r2.bloques,cabeza:'mi perfil'}]}
+  /* Ajustes: un capítulo por grupo («Tu libro», «Sonido»…); las categorías van con «Tus gastos» */
+  var aj=$('#p-ajustes'),G0=[],act=null;EXraiz=aj;
+  [].forEach.call(aj.children,function(x){
+    if(x.matches('.panel-head,.aj-ind'))return;
+    if(x.matches('h3.aj-grupo')){act={id:'aj-'+G0.length,titulo:x.textContent.trim(),el:[]};G0.push(act);return}
+    if(x.id==='aj-g-app'){act={id:'aj-'+G0.length,titulo:'Sobre la app',el:[]};G0.push(act)}
+    if(!act){act={id:'aj-0',titulo:'Ajustes',el:[]};G0.push(act)}
+    act.el.push(x);
+    if(x.id==='aj-anotar'){var c=$('#aj-cats');if(c)act.el.push(c)}
+  });
+  var C2=G0.map(function(g){
+    var falso={childNodes:g.el,ownerDocument:document,querySelector:function(q){return aj.querySelector(q)||document.querySelector(q)}};
+    var r=espejo(falso,{ctrls:EX,forzar:'#plan-aj-casa',saltar:'#aj-tour,.field:has(.cat-ic),.cat-ic,#exp-close,#aj-g-app>h2,.aj-sobre>h2'});
+    if(g.id==='aj-0')r.bloques.push('<p class="hl-nota">'+b('¿cómo se usa este libro?',{a:'cap',v:'aj-como'})+'</p>');
+    return {id:g.id,titulo:g.titulo,bloques:r.bloques,cabeza:'ajustes'};
+  });
+  C2.push({id:'aj-como',titulo:'Cómo se usa este libro',cabeza:'ajustes',bloques:[
+    '<p class="hl-renglon">Pasá la hoja con el dedo, o tocando la esquina de abajo.</p>',
+    '<p class="hl-renglon hl-bloque">Lo subrayado se toca. Lo que tiene un óvalo es lo elegido.</p>',
+    '<p class="hl-renglon hl-bloque">Para cambiar una cifra, tocá «actualizar»: la vieja se tacha y escribís la nueva.</p>',
+    '<p class="hl-renglon hl-bloque">Arriba, sobre la mesa: ocultar los montos, herramientas, ajustes y volver.</p>',
+    FLOR,'<p class="hl-nota">'+b('volver a Hoy',{a:'aj-cerrar'})+'</p>']});
+  return C2;
+}
+function abrirAjustes(){parar();edit=null;tachar=null;ctx.ajustesEnLibro=true;irPrimera=true;ctx.renderAll()}
+function cerrarAjustes(){ctx.ajustesEnLibro=false;irPrimera=true;ctx.renderAll()}
+/* la página de siempre cambió (otra pregunta, un botón, un aviso): se vuelve a leer; si cambió de pregunta, se pasa la hoja */
+function programar(){clearTimeout(reloj);reloj=setTimeout(refrescar,50)}
+function refrescar(){
+  montar();mostrar();if(!activo())return;
+  var a=document.activeElement;if(a&&el.contains(a)&&a.matches('.hl-input')){trasFoco=true;return}
+  if(G){pendiente=true;return}
+  var k=capActual(),pos=k==='prologo'?prologoPos():null,tit=$('#wiz-t');
+  var marca=(k||'hoy')+':'+(pos?pos.idx:k==='perfil'?(tit?tit.textContent:''):'');
+  var pasa=!el.hidden&&PAGS.length&&k&&k===capVieja&&marcaVieja!=null&&marca!==marcaVieja&&(k==='prologo'||k==='perfil');
+  var dir=pos?(pos.idx>=idxViejo?1:-1):1,pre=pasa?{viejo:limpiaIds(vista.cloneNode(true)),geo:geo}:null;
+  if(k!==capVieja)irPrimera=true;
+  capVieja=k;marcaVieja=marca;idxViejo=pos?pos.idx:0;
+  armar();
+  if(pre){
+    if(quieto()||!pre.geo){pre.viejo.className='hl-vista hl-viejo';mesa.appendChild(pre.viejo);if(pre.viejo.animate)pre.viejo.animate([{opacity:1},{opacity:0}],{duration:300}).onfinish=function(){pre.viejo.remove()};else pre.viejo.remove();return}
+    var g=crearGiro(dir,pre);if(g){G=g;animar(g,0,1,600,terminar(g,true))}
+  }
+}
+
 /* ---------- armar el libro ---------- */
 function montar(){
   if(el)return;
   el=document.createElement('div');el.className='hl';el.id='hoy-libro';el.hidden=true;
   el.innerHTML='<div class="hl-vista"><img class="hl-fondo" alt="" aria-hidden="true"><div class="hl-luz" aria-hidden="true"></div><div class="hl-pags"></div></div>'
-    +'<nav class="hl-acc" aria-label="Acciones">'+['<button type="button" data-p="#discreto" class="hl-ocultar">ocultar</button>','<button type="button" data-p="#herr-abrir">herramientas</button>','<button type="button" data-a="ir" data-v="ajustes">ajustes</button>','<button type="button" data-p="#libro-cerrar">volver</button>'].join('<span class="hl-pt" aria-hidden="true">·</span>')+'</nav>'
+    +'<nav class="hl-acc" aria-label="Acciones">'+['<button type="button" data-p="#discreto" class="hl-ocultar">ocultar</button>','<button type="button" data-p="#herr-abrir">herramientas</button>','<button type="button" data-a="ajustes" class="hl-ajustes">ajustes</button>','<button type="button" data-p="#libro-cerrar">volver</button>'].join('<span class="hl-pt" aria-hidden="true">·</span>')+'</nav>'
     +'<button class="hl-esq" type="button" data-esq="-1" aria-label="Volver una página"></button><button class="hl-esq" type="button" data-esq="1" aria-label="Pasar la hoja"></button>'
     +'<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>'
     +'<g id="hl-floritura" style="fill:var(--hl-trazo)"><path d="M4 12.8 C 26 11, 44 5.6, 62 9.6 C 72 11.8, 80 16, 90 13.4 C 82 17.8, 71 14.8, 61 11.8 C 44 7.4, 26 13.6, 4 12.8z"/><path d="M216 11.6 C 194 12.4, 176 6.8, 158 9.4 C 148 11.2, 140 15.2, 130 13.6 C 138 17.2, 149 14.2, 159 11.4 C 176 8.4, 194 12.6, 216 11.6z"/><path d="M62 9.6 C 64 3.2, 74 2.6, 75 8 C 75.6 12, 69.6 12.6, 69.4 9 C 69.4 7.4, 71.2 6.8, 71.8 8 C 71.2 7.6, 70.4 8, 70.6 9 C 71 11, 74 10.4, 73.8 8 C 73.4 4.4, 66 4.6, 62 9.6z"/><path d="M158 9.4 C 156 3.2, 146 2.6, 145 8 C 144.4 12, 150.4 12.6, 150.6 9 C 150.6 7.4, 148.8 6.8, 148.2 8 C 148.8 7.6, 149.6 8, 149.4 9 C 149 11, 146 10.4, 146.2 8 C 146.6 4.4, 154 4.6, 158 9.4z"/><path d="M110 5.4 C 112.4 9, 114.4 10.6, 117.4 12 C 114.4 13.4, 112.4 15, 110 18.6 C 107.6 15, 105.6 13.4, 102.6 12 C 105.6 10.6, 107.6 9, 110 5.4z" style="fill:var(--hl-trazo-oro)"/><circle cx="97" cy="12.8" r="1.3"/><circle cx="123" cy="12.4" r="1.2"/></g>'
@@ -328,9 +401,10 @@ function montar(){
   tintas();MANCHAS=[3,11,19,29,41].map(mancha);
   el.addEventListener('click',clic);
   el.addEventListener('input',escribe);
-  el.addEventListener('keydown',function(ev){if(ev.key==='Enter'&&ev.target.matches('.hl-input')){ev.preventDefault();accion('anotar',null)}if(ev.key==='Escape'&&edit){ev.preventDefault();accion('dejar',null)}});
+  el.addEventListener('change',function(ev){var t=ev.target;if(t.matches('.hl-input[data-ex]'))escribir(EX,t.getAttribute('data-ex'),t.value,true)});
+  el.addEventListener('keydown',function(ev){if(ev.key==='Enter'&&ev.target.matches('.hl-input[data-ex]')){ev.preventDefault();var ki=ev.target.getAttribute('data-ex');ev.target.blur();trasFoco=false;confirmar(EX,ki,EXraiz);programar();return}if(ev.key==='Enter'&&ev.target.matches('.hl-input')){ev.preventDefault();accion('anotar',null)}if(ev.key==='Escape'&&edit){ev.preventDefault();accion('dejar',null)}});
   el.addEventListener('focusin',function(){setTimeout(subir,60)});
-  el.addEventListener('focusout',function(){setTimeout(subir,60)});
+  el.addEventListener('focusout',function(){setTimeout(function(){subir();if(trasFoco&&!(el.contains(document.activeElement)&&document.activeElement.matches('.hl-input'))){trasFoco=false;programar()}},60)});
   if(window.visualViewport)visualViewport.addEventListener('resize',subir);
   el.querySelectorAll('[data-esq]').forEach(function(x){x.addEventListener('click',function(){if(!arrastro)ir(n+Number(x.getAttribute('data-esq')))})});
   iniciarDedo();
@@ -343,6 +417,9 @@ function montar(){
   var sc=$('#saldo-card');if(sc)mo.observe(sc,{attributes:true,attributeFilter:['hidden']});
   mo.observe(document.body,{childList:true});
   /* el aviso con «deshacer» se escribe al pie de la hoja */
+  /* (2.66) Ajustes: si cambia la página de siempre, se vuelve a leer */
+  var oa=new MutationObserver(function(){if(capActual()==='ajustes')programar()});
+  ['#p-ajustes','#aj-cats'].forEach(function(q){var x=$(q);if(x)oa.observe(x,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['hidden','aria-pressed','disabled','class','open']})});
   var ts=$('#toast');if(ts)new MutationObserver(leerAviso).observe(ts,{attributes:true,attributeFilter:['hidden'],childList:true,characterData:true,subtree:true});
 }
 /* el teclado tapa la parte de abajo: la mesa sube lo justo para que el renglón se vea */
@@ -372,15 +449,24 @@ function ponerPie(){
 function clic(ev){
   var x=ev.target.closest('button');if(!x||!el.contains(x))return;
   var op=x.getAttribute('data-op');
+  if(op==='ex'){tocarEx(x.getAttribute('data-v'));return}
   if(op){elegir(op,x.getAttribute('data-v'),x);return}
+  if(x.hasAttribute('data-ex')){tocarEx(x.getAttribute('data-ex'));return}
   var a=x.getAttribute('data-a');
   if(a){accion(a,x.getAttribute('data-v'));return}
   if(x.hasAttribute('data-cero'))return;  /* lo maneja app.js (borrar el ejemplo) */
   var p=x.getAttribute('data-p'),dest=p?document.querySelector(p):null;
   if(dest)dest.click();
 }
+/* un control de la página de siempre (algunos se quedan en el libro: Ajustes y su «volver a Hoy») */
+function tocarEx(v){
+  var m=/^[xcrs]?(\d+)/.exec(String(v)),c=m&&EX[Number(m[1])];if(!c)return;
+  if(c.el.matches('[data-goto="ajustes"],[data-ix-go="ajustes"]')){abrirAjustes();return}
+  tocar(EX,v);
+}
 function escribe(ev){
-  if(!edit)return;var t=ev.target;
+  var t=ev.target;if(t.matches('.hl-input[data-ex]')){escribir(EX,t.getAttribute('data-ex'),t.value,false);return}
+  if(!edit)return;
   if(t.id==='hl-in-valor'){edit.valor=t.value;if(edit.tipo==='tenes'&&!(anota()&&today()<ctx.state.plan.cobro)){var g=el.querySelector('.hl-guia');if(g)g.textContent=t.value===''?'':textoSaldo(String(num(t.value)))}}
   if(t.id==='hl-in-monto')edit.monto=t.value;
   if(t.id==='hl-in-nota'){edit.nota=t.value;if(!edit.catTocada){var c=sugerir(t.value);if(c!==edit.cat){edit.cat=c;pintarOpcion('cat',c)}}}
@@ -430,7 +516,10 @@ function accion(a,v){
   if(a==='frecuente'){anotarFrecuente(Number(v),t);return}
   if(a==='semana'){semana=Number(v);edit=null;armar();var k=PAGS.findIndex(function(pg){return pg.dataset.cap==='semana'});if(k>=0)ir(k+1);return}
   if(a==='volver-hoy'){semana=null;edit=null;fundido(1);setTimeout(function(){if(!G)armar()},320);return}
-  if(a==='ir'){if(ctx.go)ctx.go(v);return}
+  if(a==='ir'){if(v==='ajustes'){abrirAjustes();return}if(ctx.go)ctx.go(v);return}
+  if(a==='ajustes'){if(capActual()==='ajustes')cerrarAjustes();else abrirAjustes();return}
+  if(a==='aj-cerrar'){cerrarAjustes();return}
+  if(a==='cap'){var kc=PAGS.findIndex(function(pg){return pg.dataset.cap===v});if(kc>=0)ir(kc+1);return}
   if(a==='meta-bajar'){st.plan.ahorro=Number(v)||0;ctx.persist();ctx.syncInputs();ctx.renderAll();toast('Meta bajada a '+money(st.plan.ahorro));return}
   if(a==='entro'||a==='noentro'){
     var cambio=function(){ctx.persist();ctx.syncInputs();ctx.renderAll()},u;
@@ -521,6 +610,7 @@ function revisar(){
 }
 /* el libro se ve en Hoy del libro «solo», con el pacto armado, y cuando la página clásica no hace falta */
 function activo(){
+  var k=capActual();if((k==='prologo'||k==='perfil')&&!tourAbierto())return true;
   return !!datos&&ctx.tab==='resumen'&&libroEnUso()==='solo'&&!clasico&&!tourAbierto()
     &&!document.querySelector('#hoja.sin-pacto,.sin-pacto#hoja')&&!!ctx.state&&!document.getElementById('app').hidden;
 }
@@ -529,13 +619,16 @@ function mostrar(){
   var a=activo(),v=$('#hl-volver');
   if(v)v.hidden=!(clasico&&ctx.tab==='resumen'&&libroEnUso()==='solo');
   raiz.classList.toggle('hoy-libro',a);
+  var k=a?capActual():null;raiz.classList.toggle('hl-wiz',k==='perfil');el.classList.toggle('hl-sinacc',k==='prologo'||k==='perfil');
+  var aj=el.querySelector('.hl-ajustes');if(aj)aj.textContent=k==='ajustes'?'hoy':'ajustes';
+  if(!a&&ctx.tab!=='resumen'&&ctx.ajustesEnLibro)ctx.ajustesEnLibro=false;
   if(a&&el.hidden){el.hidden=false;conLetras()}
   else if(!a&&!el.hidden){el.hidden=true;parar();edit=null;tachar=null}
 }
 
 /* reparte cada capítulo en páginas: si un bloque no entra, sigue en la página siguiente (con el mismo título) */
 function armar(){
-  if(!datos||G)return;
+  if((!datos&&!capActual())||G)return;
   var pags=el.querySelector('.hl-pags'),cap=PAGS[n-1]&&PAGS[n-1].dataset.cap;
   pags.innerHTML='';PAGS=[];semilla=0;
   var w=mesa.clientWidth,h=mesa.clientHeight,s=Math.min(1,Math.max(.85,.85+(w-320)/70*.15));raiz.style.setProperty('--s',s.toFixed(3));anchoArmado=w;
@@ -546,12 +639,12 @@ function armar(){
     pg.style.width=tam[lado].pw+'px';pg.style.height=tam[lado].ph+'px';pg.style.setProperty('--a',String(c.min||.3));
     pg.setAttribute('aria-label','Página '+romano(k).toLowerCase()+(c.titulo?': '+c.titulo:''));
     /* el encabezado corrido: a la izquierda, el libro; a la derecha, el día */
-    pg.insertAdjacentHTML('beforeend','<p class="hl-corrido hl-libro hl-suave" aria-hidden="'+(c.id==='hoy'?'false':'true')+'">'+e(lado==='izq'?'el libro del ahorro':fecha)+'</p>');
+    pg.insertAdjacentHTML('beforeend','<p class="hl-corrido hl-libro hl-suave" aria-hidden="'+(c.id==='hoy'?'false':'true')+'">'+e(lado==='izq'?'el libro del ahorro':c.cabeza||fecha)+'</p>');
     if(c.titulo)pg.insertAdjacentHTML('beforeend','<h2 class="hl-titulo hl-rojo">'+e(c.titulo)+'</h2>'+ADORNITO+(sigue?'<p class="hl-nota hl-cur hl-suave">sigue</p>':''));
     [].slice.call(pg.childNodes).forEach(aPluma);
     pags.appendChild(pg);PAGS.push(pg);return pg;
   }
-  var C=capitulos(datos);
+  var C=capitulos(datos);if(!C.length)return;
   C.forEach(function(c){
     var pg=nueva(c,false),puestos=0;
     c.bloques.forEach(function(html){
@@ -576,6 +669,10 @@ function armar(){
   /* se queda en la misma página (o, si cambió de lugar, en el primer lugar de su capítulo) */
   if(!(PAGS[n-1]&&PAGS[n-1].dataset.cap===cap)){var k=cap?PAGS.findIndex(function(pg){return pg.dataset.cap===cap}):-1;n=k>=0?k+1:Math.min(Math.max(1,n),PAGS.length)}
   if(n>PAGS.length)n=PAGS.length;
+  var kA=capActual();if(kA!==capArmada){irPrimera=true;capArmada=kA}
+  if(irPrimera){n=1;irPrimera=false}
+  /* el prólogo: la hoja de la pregunta que está abierta */
+  if(capActual()==='prologo'){var pp=prologoPos(),kp=PAGS.findIndex(function(pg){return pg.dataset.cap==='pro-'+pp.idx});if(kp>=0&&!(PAGS[n-1]&&PAGS[n-1].dataset.cap==='pro-'+pp.idx))n=kp+1}
   ultimo=datos;acomodar();
 }
 function medidas(lado,w,h){
@@ -623,12 +720,12 @@ function curvar(pag,w){
 /* ---------- la vuelta de hoja ---------- */
 var NF=16,PI=Math.PI;
 function limpiaIds(x){x.removeAttribute('id');x.querySelectorAll('[id]').forEach(function(y){y.removeAttribute('id')});return x}
-function crearGiro(dir){
-  var destino=n+dir;if(destino<1||destino>PAGS.length)return null;
-  var viejo=limpiaIds(vista.cloneNode(true)),q=geo.q,W0=geo.w,H0=geo.h,desde=n;
+function crearGiro(dir,pre){
+  var destino=n+dir;if(!pre&&(destino<1||destino>PAGS.length))return null;
+  var g0=pre?pre.geo:geo,viejo=pre?pre.viejo:limpiaIds(vista.cloneNode(true)),q=g0.q,W0=g0.w,H0=g0.h,desde=n;
   var xL=Math.min(q[0][0],q[3][0]),xR=Math.max(q[1][0],q[2][0]),yT=Math.min(q[0][1],q[1][1]),yB=Math.max(q[2][1],q[3][1]),W=xR-xL,H=yB-yT,sw=W/NF;
   var yt=function(x){return q[0][1]+(q[1][1]-q[0][1])*(x-q[0][0])/(q[1][0]-q[0][0])},yb=function(x){return q[3][1]+(q[2][1]-q[3][1])*(x-q[3][0])/(q[2][0]-q[3][0])};
-  n=destino;acomodar();
+  if(!pre){n=destino;acomodar()}
   var base=limpiaIds(viejo.cloneNode(true));base.className='hl-vista hl-viejo';base.querySelectorAll('.hl-pag').forEach(function(x){x.remove()});
   base.style.clipPath="path(evenodd,'M0 0H"+W0+"V"+H0+"H0Z M"+q.map(function(p){return p[0].toFixed(1)+' '+p[1].toFixed(1)}).join(' L')+"Z')";
   var giro=document.createElement('div');giro.className='hl-giro';var tiras=[];
@@ -669,7 +766,11 @@ function animar(g,p0,p1,dur,alFin){
 function terminar(g,ok){return function(){g.fin();if(!ok){n=g.desde;acomodar()}G=null;if(pendiente){pendiente=false;armar()}}}
 var pendiente=false;
 function ir(destino){
-  if(G||destino===n||destino<1||destino>PAGS.length)return;
+  if(G||destino===n)return;
+  /* en el prólogo, pasar a otra pregunta es lo mismo que tocar «seguir» o «atrás» (valida lo que escribiste) */
+  var kc=capActual();
+  if(kc==='prologo'&&!(PAGS[destino-1]&&PAGS[n-1]&&PAGS[destino-1].dataset.cap===PAGS[n-1].dataset.cap)){prologoPasar(destino>n?1:-1);return}
+  if(destino<1||destino>PAGS.length)return;
   if(edit){parar();edit=null;armar()}
   if(quieto()||Math.abs(destino-n)>1){fundido(destino);return}
   var g=crearGiro(destino>n?1:-1);if(!g)return;G=g;animar(g,0,1,600,terminar(g,true));
@@ -689,7 +790,10 @@ function iniciarDedo(){
     toque.pts.push([ev.clientX,performance.now()]);if(toque.pts.length>8)toque.pts.shift();
     if(!arrastro){
       if(Math.abs(dx)<10||Math.abs(dx)<Math.abs(dy)*1.2)return;
-      var dir=dx<0?1:-1;if(n+dir<1||n+dir>PAGS.length){toque=null;return}
+      var dir=dx<0?1:-1;
+      /* en el prólogo, otra pregunta: se pasa al soltar, como «seguir» o «atrás» */
+      if(capActual()==='prologo'&&!(PAGS[n-1+dir]&&PAGS[n-1+dir].dataset.cap===PAGS[n-1].dataset.cap)){toque.prol=dir;arrastro=true;return}
+      if(n+dir<1||n+dir>PAGS.length){toque=null;return}
       arrastro=true;try{mesa.setPointerCapture(ev.pointerId)}catch(x){}
       if(quieto()){toque.quieto=dir;return}
       G=crearGiro(dir);if(!G){toque=null;return}
@@ -699,6 +803,7 @@ function iniciarDedo(){
   function soltar(ev){
     if(!toque||ev.pointerId!==toque.id)return;var t=toque;toque=null;
     if(!arrastro)return;setTimeout(function(){arrastro=false},0);
+    if(t.prol){if(Math.abs(ev.clientX-t.x)>50)prologoPasar(t.prol);return}
     if(t.quieto){fundido(n+t.quieto);return}
     var g=G;if(!g)return;
     var a=t.pts[0],z=t.pts[t.pts.length-1],v=(z[0]-a[0])/Math.max(1,z[1]-a[1]),dx=ev.clientX-t.x,p=Math.max(0,Math.min(1,-g.dir*dx/g.W));
@@ -721,6 +826,15 @@ export function initHoyLibro(){
 /* se arma con la letra ya cargada (si no, las medidas salen con la letra de reemplazo) y una sola vez por cada dibujo de Hoy;
    mientras escribís en un renglón no se rearma (se perdería lo escrito y el teclado) */
 function conLetras(){
-  var ya=function(){if(!activo())return;if(G){pendiente=true;return}if(edit&&PAGS.length&&el.contains(document.activeElement))return;if(ultimo!==datos||!PAGS.length)armar()};
+  var ya=function(){if(!activo())return;if(G){pendiente=true;return}if(edit&&PAGS.length&&el.contains(document.activeElement))return;if(ultimo!==datos||!PAGS.length||capActual())armar()};
   if(document.fonts&&document.fonts.load)Promise.all([document.fonts.load('400 20px "IM Fell English"'),document.fonts.load('italic 400 20px "IM Fell English"'),document.fonts.load('400 20px "IM Fell SC"')]).catch(function(){}).then(ya);else ya();
 }
+
+/* (2.66) el prólogo y el perfil pueden abrirse antes de que haya datos (la primera vez): el libro los vigila desde el arranque */
+(function(){
+  function vigilar(){
+    var mo=new MutationObserver(function(){if(prologoAbierto()||perfilAbierto()||capVieja==='prologo'||capVieja==='perfil'||capArmada==='prologo'||capArmada==='perfil')programar()});
+    ['lb-hojas','wiz'].forEach(function(id){var x=document.getElementById(id);if(x)mo.observe(x,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['hidden','aria-pressed','disabled','class','open']})});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',vigilar);else vigilar();
+})();

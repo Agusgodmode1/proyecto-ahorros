@@ -500,6 +500,8 @@ function abrirHojas(pagina,dir){
          listo(estado), alImportar(estado), alEjemplo(), alHerramienta(estado,id), alSaltar(estado), alCerrar(dir), alGuardar(v), alApartado(), antes(estado)} */
 export function abrirLibro(opt){
   o=opt;st=opt.estado;E={edit:null};
+  /* (2.66) en El Libro del Ahorro, estas hojas no se ven: el libro las escribe a tinta (ui/hoy-libro.js, ui/hl-espejo.js) */
+  document.documentElement.classList.toggle('lb-en-libro',libroEnUso()==='solo');
   aplicarFeriados(st);
   var sg=sugerirCobro(st,today()),c=parse(sg.fecha);
   D={nombre:null,pesos:'',usd:'',cotiz:cotizacion(st)?String(cotizacion(st)):'',conUsd:false,ahorro:null,cobro:sg.fecha,mes:[c.getFullYear(),c.getMonth()],hayAp:null,ap:[]};
@@ -522,6 +524,14 @@ export function cerrarHojas(){
 /* (2.58.4) Si el prólogo está abierto y sin nada a medio editar, vuelve a escribir la página que se ve (después de un «Deshacer», mostraba el valor viejo) */
 export function redibujarPrologo(){var h=$('#lb-hojas');if(h&&!h.hidden&&E&&!E.edit)irA(idx,0)}
 export function libroAbierto(){var h=$('#lb-hojas');return !!h&&!h.hidden}
+/* (2.66) dónde está el prólogo: el libro de tinta lo usa para pasar la hoja hacia adelante o hacia atrás */
+export function prologoPos(){return {idx:idx,total:PAGS.length,id:PAGS[idx],modo:o&&o.modo,edit:E&&E.edit}}
+/* (2.66) pasar la hoja desde el libro de tinta: lo mismo que deslizar en estas hojas */
+export function prologoPasar(dir){
+  var pag=$('#lb-pila .lb-pag:last-child');if(!pag||E.edit)return;
+  if(dir>0&&hojear()&&idx===PAGS.length-1){cerrarTodo(1);if(o.alCerrar)o.alCerrar(1);return}
+  var btn=pag.querySelector(dir>0?'[data-lb="sig"]':'[data-lb="atras"]');if(btn)btn.click();
+}
 
 export function initLibro(){
   var h=$('#lb-hojas');

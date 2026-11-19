@@ -128,7 +128,8 @@ function renderAll(){
   actualizarFlechas();
   /* la introducción del capítulo: completa la primera vez, después en una línea */
   var capA=capituloDe(ctx.tab);if(capA&&capA.id!=="resumen")introCapitulo($(capA.id==="semanas"?"#p-semana":PANELES[capA.id]),capA.id);else if(ctx.tab==='ajustes')introCapitulo($('#p-ajustes'),'ajustes');
-  if(ctx.tab==='ajustes'){renderAjustes(guardado);renderFeriados();renderAjustesPin();marcarSonido();
+  /* (2.66) Ajustes también se dibuja cuando lo abrís desde el libro (ui/hoy-libro.js lo escribe a tinta) */
+  if(ctx.tab==='ajustes'||ctx.ajustesEnLibro){if(ctx.ajustesEnLibro)renderCategorias();renderAjustes(guardado);renderFeriados();renderAjustesPin();marcarSonido();
     document.querySelectorAll('[data-sobrante]').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-sobrante')===(ctx.state.plan.sobrante||'siguiente')))});renderCopias();$('#aj-perfil').innerHTML=resumenPerfil(ctx.state)}
   tourSiPendiente();
 }

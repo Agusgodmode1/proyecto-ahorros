@@ -13,10 +13,12 @@ Cómo se quiere ver y sentir la app. Pedido de Agus: «un cambio grande, un camb
 - **Movimiento:** entrada de la cámara en arco (2,6 s); al elegir, el libro se inclina, sale del lomo, sube en arco y gira de frente (2,2 s), con un destello suave del hueco y el fondo desenfocado; un brillo cruza la tapa una vez; al abrir, la tapa gira sobre el lomo y la cámara entra en la página (2,0 s). Nada se mueve en línea recta ni arranca de golpe.
 - **Letra:** los nombres bajo los libros son texto de la página (Fraunces, marfil) con una etiqueta corta en dorado («Solo» / «En pareja»).
 
-## Hoy del libro individual (2.65): a la luz de una vela
+## El libro individual (2.65; libro antiguo desde 2.66): a la luz de una vela
 - **Principio:** el libro abierto sobre una mesa vieja, de noche; la hoja clara dentro de una escena oscura. Lo único que brilla es la vela (en las páginas impares, a la derecha).
 - **La hoja:** papel viejo en proporción 2:3, una página por pantalla, con su número en romanos («— i —»). Fondos renderizados de nuestra escena (`icons/hoy/`), uno por lado y por alto de pantalla.
-- **La letra:** a mano en Charm, cinco tamaños (72/24/20/17/13 px a 390; nunca menos de 13), cada letra con su pluma un poco distinta; encabezados y romanos en IM Fell English SC. La plata en sepia cargada, títulos y notas en rojo, el tiempo y lo guardado en oro (tonos `--hl-*` de `css/papel.css`).
+- **La letra y la tinta (2.66):** un libro antiguo. IM Fell English (texto), su itálica (notas) e IM Fell English SC (títulos, encabezados, romanos), con números antiguos. Cinco tamaños (72/24/20/17/14 px a 390; nada bajo 13). Tinta ferrogálica azul-negra para todo, unas palabras más cargadas que otras, multiplicada sobre el papel; rojo de rúbrica solo en títulos y «te pasaste»; oro solo en adornos chicos y en «21 días». Cada letra varía un poco (±1°, ±0,6 px), siempre igual.
+- **La página:** encabezado corrido arriba en versalitas (el libro a la izquierda, el día a la derecha), título rojo centrado con un adorno fino, mucho margen, cifras alineadas como en un libro de cuentas y el número abajo («— i —»).
+- **Cómo se hace cada cosa:** botón = una palabra subrayada a pluma (44 px de toque); elegir = palabras separadas por «·», la elegida con un óvalo de tinta; cambiar un dato = la cifra vieja tachada y un renglón fino debajo, con «anotar · dejar», y la nueva se escribe de a una letra (0,4 s); borrar = «¿Lo tachamos? sí · no» y «deshacer» al pie. Nada de ventanas, deslizadores ni íconos.
 - **Movimiento:** la hoja se pasa siguiendo el dedo (16 franjas que se curvan, 0,45 a 0,7 s al soltar). Con «reducir movimiento», un fundido.
 - **Modo discreto:** cada monto queda tapado con una mancha de tinta.
 

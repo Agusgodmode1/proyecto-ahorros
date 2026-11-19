@@ -57,3 +57,13 @@ export function franjas(p,W,nf,r){
 export function pasa(p,vel){return p>.35||vel>.45}
 /* cuánto tarda en terminar sola, siguiendo la velocidad del dedo: entre 0,45 y 0,7 s */
 export function duracion(p,vel,W){var v=Math.max(Math.abs(vel||0),.55);return Math.round(Math.min(700,Math.max(450,(1-p)*W/v*1.6,450*(1-p)+60)))}
+
+/* ---- (2.66) el libro antiguo ---- */
+/* un número entre 0 y 1 que sale siempre igual de los mismos dos enteros (para que nada cambie al recargar) */
+export function hash2(x,y){var h=(Math.imul(x|0,374761393)+Math.imul(y|0,668265263))|0;h=Math.imul(h^(h>>>13),1274126177);return((h^(h>>>16))>>>0)/4294967296}
+/* la variación chica de cada letra: giro de ±1° y corrida de la línea de ±0,6 px; sale de la palabra (k), el lugar (i) y la letra */
+export function variacion(k,i,codigo){
+  return {giro:+((hash2(k*31+i,codigo)-.5)*2).toFixed(2),linea:+((hash2(i*17+k,codigo+3)-.5)*1.2).toFixed(2)};
+}
+/* la cifra vieja tachada se ve hasta el día siguiente: ¿sigue a la vista hoy? */
+export function vigente(reg,hoy){return !!(reg&&reg.f===hoy)}

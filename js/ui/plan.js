@@ -258,7 +258,6 @@ function consejosHoy(pc,t){
     +'<div class="sob-in"><p class="note">Lo que no es de todos los días sale de acá y no de la semana. Lo que no uses queda como ahorro.</p>'
     +'<form class="sob-f" data-sobf autocomplete="off"><div class="money"><span>$</span><input id="sob-monto" type="number" inputmode="numeric" min="0" step="100" value="'+(C||'')+'" placeholder="3000" aria-label="Plata para el sobre de compras"></div><button class="btn quiet" type="submit">Guardar</button></form>'
     +(C>0?'<button class="btn quiet sob-g" type="button" data-sobgasto><span aria-hidden="true">+</span> Compra del sobre</button>':'')+'</div></details>':'';
-  LIB.consejos={pcts:pcts,pal:pal,ideas:[['Al cobrar,','separá el ahorro.'],['Primero','pagá los fijos.'],anota()?['Anotá','cada gasto al toque.']:['Actualizá','cada vez que entrás.'],['¿Compra no planeada?','Esperá un día.'],['Al súper,','con lista.'],['El domingo,','mirá cuánto sobró.']]};
   var mas='<ul class="cj-tips cj-cortos">'
     +'<li><b>Al cobrar:</b> separá el ahorro.</li>'
     +'<li><b>Primero</b> pagá los fijos.</li>'
@@ -530,8 +529,12 @@ function abrirPlan(){irAlPacto('tenes')}
 function abrirMeta(){irAlPacto('ahorro')}
 /* ---------- Actualizar saldo: decís cuánta plata tenés y la app anota la diferencia ---------- */
 function saldoPrev(){
-  var st=ctx.state,i=$('#saldo-in'),pv=$('#saldo-prev');if(!i||!pv)return;
-  var v=i.value,p=previaSaldo(st,v===''?null:num(v),today()),d=money(Math.max(0,p.disponible)),t;
+  var i=$('#saldo-in'),pv=$('#saldo-prev');if(!i||!pv)return;
+  pv.textContent=textoSaldo(i.value);
+}
+/* (2.66) lo que explica la página de «lo que tenés» mientras escribís; la usa también el libro (ui/hoy-libro.js) */
+export function textoSaldo(v){
+  var st=ctx.state,p=previaSaldo(st,v===''?null:num(v),today()),d=money(Math.max(0,p.disponible)),t;
   var sa=!anota(),des=p.desde?(p.desde===p.hasta?(p.desde===today()?'hoy':'el '+fCorta(p.desde)):'entre el '+fCorta(p.desde)+' y el '+fCorta(p.hasta)):'';
   if(sa&&v==='')t='La última vez tenías '+d+'. Poné lo que tenés ahora en la cuenta y en efectivo.';
   else if(sa&&p.tipo==='gasto')t='Gastaste '+money(p.diff)+' ('+des+'). Se recalcula todo.';
@@ -545,7 +548,7 @@ function saldoPrev(){
   else if(p.tipo==='monto')t='Todavía no anotaste gastos: tu plata del plan pasa de '+d+' a '+money(num(v))+' y se recalcula todo.';
   else if(p.tipo==='gasto')t='Según lo anotado tenés '+d+'. Faltan '+money(p.diff)+' de gastos: los anoto como «Ajuste de saldo» y se recalcula todo.';
   else t='Tenés '+money(p.diff)+' más de lo anotado: lo sumo a tu plata disponible y se recalcula todo.';
-  pv.textContent=t;
+  return t;
 }
 /* «Actualizar saldo» (desde «Tenés» o desde el aviso de un gasto): la página «¿Cuánta plata tenés hoy?» del prólogo, lista para cambiar.
    Después de cobrar (fuera del plan) se usa la tarjeta de siempre. */
@@ -569,7 +572,7 @@ function initSaldo(){
   });
 }
 /* Aplica un saldo nuevo y recalcula todo. Devuelve false si no había nada para cambiar. */
-function confirmarSaldo(real){
+export function confirmarSaldo(real){
   var st=ctx.state,p=previaSaldo(st,real,today());
   if(p.tipo==='invalido'||p.tipo==='fuera')return false;
   if(p.tipo==='igual'&&anota())return false;

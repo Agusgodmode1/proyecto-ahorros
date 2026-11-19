@@ -9,7 +9,7 @@ Todo lo que la app usa y no escribimos nosotros, con su origen y su licencia. El
 - **Three.js r187:** licencia MIT. Copia en `prototipo/vendor/` y en `vendor/three-r187/` con su `LICENSE`.
 - **Fotos de respaldo (`icons/escena/*.webp`):** capturas de esa misma escena, hechas por nosotros.
 
-## Hoy a la luz de la vela (2.65; prueba en `prototipo/hoy/`)
+## El libro individual a la luz de la vela (2.65; libro antiguo desde 2.66; prueba en `prototipo/hoy/`)
 - **El fondo (mesa, libro abierto, tintero y vela; una imagen por cada página del libro):** imagen renderizada por nosotros desde una escena hecha por código (`prototipo/hoy/escena-hoy.js` y `render.html`), con el mismo cuero de la cinemática; en la app, `icons/hoy/fondo-*.webp`. No se usó ninguna foto: las imágenes que Agus mandó como referencia de ambiente no están en el repositorio.
-- **Letras:** Charm 5.3.0, peso 400 (The Charm Project Authors), para todo lo escrito a mano; e IM Fell English SC 5.3.0 (Igino Marini; distribución de Google Inc.), versalitas de libro antiguo, solo para encabezados y números romanos. Las dos con SIL Open Font License 1.1; copias y licencias en `vendor/charm-5.3.0/` y `vendor/im-fell-english-sc-5.3.0/` (y en `prototipo/hoy/fuentes/`). Bajadas de los paquetes `@fontsource/charm` y `@fontsource/im-fell-english-sc`.
+- **Letras:** IM Fell English 5.3.0, normal e itálica, para todo el texto, e IM Fell English SC 5.3.0, versalitas, para títulos, encabezados y números romanos (Igino Marini; distribución de Google Inc.). SIL Open Font License 1.1; copias y licencias en `vendor/im-fell-english-5.3.0/` y `vendor/im-fell-english-sc-5.3.0/`. Bajadas de los paquetes `@fontsource/im-fell-english` y `@fontsource/im-fell-english-sc`. (Hasta 2.65 se usó Charm; ya no está en la app, solo en `prototipo/hoy/fuentes/`.)
 - **Tinta, trazos de pluma, la manito (☞), las manchas y la vuelta de hoja:** dibujados por código en `js/ui/hoy-libro.js` (prueba: `prototipo/hoy/index.html`).

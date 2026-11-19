@@ -1953,107 +1953,147 @@ html[data-libro="duo"] #aj-pareja .seg:has([data-pareja]){display:none}
 /* (2.64.1) con ?perf3d=1: por qué no se ve la 3D */
 .es-aviso3d{position:fixed;z-index:80;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top));margin:0;padding:12px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--tapa-oro);color:var(--ink);font:14px/1.4 var(--f-body)}
 
-/* ---------- 2.65: Hoy del libro individual, el libro abierto a la luz de una vela (ui/hoy-libro.js) ---------- */
+/* ---------- 2.65 / 2.66: el libro individual, un libro antiguo a la luz de una vela (ui/hoy-libro.js) ---------- */
 /* La hoja clara dentro de una escena oscura. El fondo es una imagen quieta sacada de la escena 3D; lo escrito se MULTIPLICA
    sobre ella (la tinta oscurece el papel y se ven sus fibras). Solo se animan transform y opacity. Todas las clases llevan
-   «hl-» para no chocar con las de la app. Las tintas son pares base/agua: la tinta cargada y la aguada de cada color. */
+   «hl-» para no chocar con las de la app. Las tintas son pares base/agua: la tinta cargada y la aguada de cada color.
+   (2.66) Dentro del libro manda esta regla de colores, no la de la app: tinta ferrogálica azul-negra para todo el texto
+   y los números; rojo de rúbrica solo para títulos y «te pasaste»; oro solo en adornos chicos y en «21 días»; nada de verde.
+   tests/hoy-libro.test.js mide el contraste de cada tinta sobre la parte más oscura del papel. */
 :root{
   --hl-mesa:#030201;--hl-luz:#E6CD9C;--hl-dorso:#E2CFA4;--hl-sombra:#120802;--hl-brillo:#FFF3DC;
-  --hl-sepia:#3C220F;--hl-sepia-agua:#643E20;--hl-suave:#3E2511;--hl-suave-agua:#623E21;--hl-fuerte:#2E1809;--hl-fuerte-agua:#563218;
-  --hl-cargada:#1A0C04;--hl-cargada-agua:#4A2A11;--hl-rojo:#68120A;--hl-rojo-agua:#8A2E1E;--hl-oro:#4E2E02;--hl-oro-agua:#7E5008;
-  --hl-verde:#0A3A20;--hl-verde-agua:#2C603E;
-  --hl-trazo:#4A2C14;--hl-trazo-rojo:#7A2014;--hl-trazo-oro:#9A6C14;--hl-trazo-hoy:#0F4A2A;--hl-gota:#3A1C08
+  --hl-tinta:#24304A;--hl-tinta-agua:#36435F;--hl-suave:#2A3652;--hl-suave-agua:#3E4B68;--hl-fuerte:#1D2740;--hl-fuerte-agua:#2E3A56;
+  --hl-cargada:#121A2E;--hl-cargada-agua:#222C46;--hl-rojo:#6E1C12;--hl-rojo-agua:#8A2B1D;--hl-oro:#4A350A;--hl-oro-agua:#644A12;
+  --hl-trazo:#2A3550;--hl-trazo-rojo:#8A2B1D;--hl-trazo-oro:#8C6A1E;--hl-gota:#1D2740
 }
-@font-face{font-family:'Charm';font-weight:400;font-display:block;src:url(../vendor/charm-5.3.0/charm-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'IM Fell English';font-style:normal;font-weight:400;font-display:block;src:url(../vendor/im-fell-english-5.3.0/im-fell-english-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'IM Fell English';font-style:italic;font-weight:400;font-display:block;src:url(../vendor/im-fell-english-5.3.0/im-fell-english-latin-400-italic.woff2) format('woff2')}
 @font-face{font-family:'IM Fell SC';font-weight:400;font-display:block;src:url(../vendor/im-fell-english-sc-5.3.0/im-fell-english-sc-latin-400-normal.woff2) format('woff2')}
-.hl{--hl-pluma:'Charm','Iowan Old Style',Georgia,serif;--hl-libro:'IM Fell SC','Iowan Old Style',Georgia,serif;
+.hl{--hl-pluma:'IM Fell English','Iowan Old Style',Georgia,serif;--hl-libro:'IM Fell SC','Iowan Old Style',Georgia,serif;
   position:fixed;inset:0;z-index:30;overflow:hidden;background:var(--hl-mesa);touch-action:none;perspective:1700px;
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .hl[hidden]{display:none}
 .hl *{-webkit-user-select:none;user-select:none}
-/* con el libro a la vista, lo de la página clásica que queda por encima se esconde (las flechas de capítulos y la barra) */
+/* con el libro a la vista, lo de la página clásica que queda por encima se esconde (flechas, barra, micrófono y el aviso:
+   el aviso se escribe al pie de la hoja) */
 html.hoy-libro .flechas,html.hoy-libro .tabs{visibility:hidden}
-html.hoy-libro .mic{z-index:31}
+html.hoy-libro .mic{display:none}
+html.hoy-libro #toast{opacity:0!important;pointer-events:none}
 html.hoy-libro body{overflow:hidden}
-.hl-vista{position:absolute;inset:0;isolation:isolate}
+.hl-vista{position:absolute;inset:0;isolation:isolate;transition:transform .25s ease-out}
 .hl-fondo{position:absolute;left:0;top:0;transform-origin:0 0;max-width:none;display:block;pointer-events:none}
 .hl-luz{position:absolute;width:10px;height:10px;border-radius:50%;pointer-events:none;
   background:radial-gradient(circle,rgba(255,200,130,.5) 0%,rgba(255,165,85,.2) 28%,rgba(255,150,70,0) 70%);
   transform:translate(-50%,-50%) scale(var(--r,30));opacity:.5;animation:hl-titila 5.3s ease-in-out infinite}
 @keyframes hl-titila{0%,100%{opacity:.4}18%{opacity:.58}31%{opacity:.36}47%{opacity:.55}63%{opacity:.45}80%{opacity:.62}}
-@media (prefers-reduced-motion:reduce){.hl-luz{animation:none}}
-/* arriba, sobre la mesa: ocultar · volver · ajustes */
+@media (prefers-reduced-motion:reduce){.hl-luz{animation:none}.hl-vista{transition:none}}
+/* arriba, sobre la mesa: ocultar · herramientas · ajustes · volver, en versalitas */
 .hl-acc{position:absolute;z-index:6;left:0;right:0;top:calc(4px + env(safe-area-inset-top));display:flex;justify-content:center;align-items:center;
-  font:400 max(13.4px,calc(13px*var(--s,1)))/1 var(--hl-libro);letter-spacing:.06em;color:var(--hl-luz);text-shadow:0 1px 3px #000,0 0 10px rgba(0,0,0,.9)}
-.hl .hl-acc button{all:unset;cursor:pointer;min-width:44px;min-height:44px;padding:0 10px;display:grid;place-items:center}
+  font:400 max(13.4px,calc(13px*var(--s,1)))/1 var(--hl-libro);letter-spacing:.05em;color:var(--hl-luz);text-shadow:0 1px 3px #000,0 0 10px rgba(0,0,0,.9)}
+.hl .hl-acc button{all:unset;cursor:pointer;min-width:44px;min-height:44px;padding:0 calc(8px*var(--s,1));display:grid;place-items:center}
 .hl-acc button:focus-visible{outline:1.5px solid var(--hl-luz);outline-offset:-6px;border-radius:6px}
 .hl-acc .hl-pt{opacity:.7}
 /* la página: deformada para calzar sobre la página de la foto; lo escrito se multiplica sobre el papel */
-.hl-pag{position:absolute;left:0;top:0;transform-origin:0 0;box-sizing:border-box;mix-blend-mode:multiply;filter:blur(.25px);
-  font:400 calc(17px*var(--s))/1.34 var(--hl-pluma);color:var(--hl-sepia);text-align:center;
-  padding:calc(30px*var(--s)) calc(28px*var(--s)) calc(58px*var(--s));display:none;flex-direction:column}
+.hl-pag{position:absolute;left:0;top:0;transform-origin:0 0;box-sizing:border-box;mix-blend-mode:multiply;filter:blur(.2px);
+  font:400 calc(17px*var(--s))/1.36 var(--hl-pluma);color:var(--hl-tinta);text-align:center;
+  font-variant-numeric:oldstyle-nums proportional-nums;font-feature-settings:"onum" 1;
+  padding:calc(20px*var(--s)) calc(28px*var(--s)) calc(62px*var(--s));display:none;flex-direction:column}
 .hl-pag.hl-ver,.hl-pag.hl-mide{display:flex}
 .hl-pag.hl-mide{visibility:hidden;transform:none!important;mix-blend-mode:normal}
-/* nada se aplasta: si algo no entra, se nota (y sigue en la página siguiente) */
 .hl-pag>*{flex-shrink:0}
 .hl-pag :where(p,ol,li){margin:0;padding:0;font:inherit;list-style:none}
-/* (el título de la app pesa más que una clase sola: este le gana) */
-.hl .hl-pag h2.hl-titulo{margin:0;padding:0;font-family:inherit;font-weight:400;font-style:normal;font-size:calc(24px*var(--s));line-height:1.15;letter-spacing:normal;text-wrap:wrap}
-/* la tinta: cada palabra con su carga de tinta; cada letra con su textura, un poco girada, corrida y de otro tamaño */
+.hl .hl-pag h2.hl-titulo{margin:0;padding:0;font-family:var(--hl-libro);font-weight:400;font-style:normal;font-size:calc(24px*var(--s));line-height:1.15;letter-spacing:.02em;text-wrap:wrap}
+/* el encabezado corrido, arriba, en versalitas chicas */
+.hl-corrido{font-size:max(13.4px,calc(13px*var(--s)));letter-spacing:.06em;margin-bottom:calc(12px*var(--s)*var(--a,1))}
+.hl-cabeza{font-size:max(13.4px,calc(13px*var(--s)));letter-spacing:.06em;text-align:left}
+.hl-cabeza.hl-centro{text-align:center}
+/* la tinta: cada palabra con su carga (unas más cargadas, otras más claras); cada letra con su textura y su variación chica */
 .hl-w,.hl-m{display:inline-block;white-space:nowrap;opacity:var(--carga,1);
   transform:translateY(calc(var(--dy,0px) + var(--cy,0px))) rotate(calc(var(--g,0deg) + var(--cg,0deg)))}
-.hl-l{display:inline-block;background-image:var(--tt,var(--hl-t-sepia));background-size:160px 160px;background-position:var(--bx,0) var(--by,0);
+.hl-l{display:inline-block;background-image:var(--tt,var(--hl-t-tinta));background-size:160px 160px;background-position:var(--bx,0) var(--by,0);
   -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;padding:.3em .16em .34em;margin:-.3em -.16em -.34em;
-  transform:translateY(var(--ly,0)) rotate(var(--lr,0deg)) scale(var(--le,1))}
+  transform:translateY(var(--ly,0)) rotate(var(--lr,0deg))}
 .hl-suave{--tt:var(--hl-t-suave)} .hl-fuerte{--tt:var(--hl-t-fuerte)} .hl-rojo{--tt:var(--hl-t-rojo)} .hl-oro{--tt:var(--hl-t-oro)} .hl-cargada{--tt:var(--hl-t-cargada)}
-.hl-heroe .hl-l{-webkit-text-stroke:var(--sk,.5px) rgba(34,16,5,.5)}
+/* «$ 967»: grande, en la misma tinta y más cargada, como impresa en la hoja */
+.hl-heroe .hl-l{-webkit-text-stroke:.6px rgba(18,26,46,.55)}
 .hl-gota{position:absolute;border-radius:50%;background:radial-gradient(circle at 40% 35%,var(--hl-gota),transparent 72%);pointer-events:none}
 .hl button{all:unset;position:relative;cursor:pointer;font:inherit}
 .hl .hl-toc{z-index:1}
 /* la hoja se ve achicada en la foto: el área del dedo es más grande que la letra para que en la pantalla mida 44 px o más */
-.hl .hl-toc::after{content:"";position:absolute;left:50%;top:50%;width:max(calc(100% + 16px),60px);height:60px;transform:translate(-50%,-50%)}
-.hl .hl-pag .hl-renglon:has(> .hl-toc){padding:calc(12px*var(--s)) 0}
-.hl .hl-pag button:focus-visible{outline:1.5px solid var(--hl-sepia);outline-offset:3px;border-radius:3px}
+.hl .hl-toc::after{content:"";position:absolute;left:50%;top:50%;width:calc(100% + 8px);height:60px;transform:translate(-50%,-50%)}
+/* (las palabras cortas, «sí», «no», «ver», miden 44 px de ancho: así el toque de una no tapa a la de al lado) */
+.hl .hl-sub,.hl .hl-op{display:inline-block;min-width:44px;text-align:center}
+.hl .hl-pag button:focus-visible{outline:1.5px solid var(--hl-tinta);outline-offset:3px;border-radius:3px}
 .hl svg.hl-trazo{position:absolute;left:-3%;bottom:-.24em;width:106%;height:.5em;overflow:visible;pointer-events:none}
-/* los cinco tamaños (a 390 px; a 320, todo al 85 %; las notas nunca bajo 13 px) */
-.hl-heroe{font-size:calc(72px*var(--s));line-height:1.02;white-space:nowrap;position:relative}
+.hl-pt{padding:0 .3em}
+/* los cinco tamaños (a 390 px; a 320, todo al 85 %; nada bajo 13 px) */
+.hl-heroe{font-size:calc(72px*var(--s));line-height:1.02;white-space:nowrap;position:relative;margin:calc(2px*var(--s)) 0 calc(4px*var(--s))}
 .hl-titulo{font-size:calc(24px*var(--s));line-height:1.15}
 .hl-cifra{font-size:calc(20px*var(--s))}
-.hl-nota{font-size:max(13.4px,calc(13px*var(--s)));line-height:1.4}
+.hl-nota{font-size:max(13.4px,calc(14px*var(--s)));line-height:1.4}
 .hl-libro{font-family:var(--hl-libro);letter-spacing:.05em}
 .hl-cur{font-style:italic}
-/* el aire: título rojo, adorno de pluma y aire generoso (nada de rayas ni recuadros) */
-.hl-encab{margin-bottom:calc(22px*var(--s)*var(--a,1))}
-.hl-adorno{display:block;width:46%;height:calc(14px*var(--s));margin:calc(22px*var(--s)*var(--a,1)) auto}
+/* el aire: margen generoso, título rojo con su adorno fino (nada de rayas ni recuadros) */
+.hl-adorno{display:block;width:46%;height:calc(14px*var(--s));margin:calc(18px*var(--s)*var(--a,1)) auto}
 .hl-adornito{display:block;width:30%;height:calc(10px*var(--s));margin:calc(4px*var(--s)) auto calc(14px*var(--s)*var(--a,1))}
-.hl-bloque{margin-top:calc(8px*var(--s)*var(--a,1))}
+.hl-bloque{margin-top:calc(10px*var(--s)*var(--a,1))}
 .hl-renglon+.hl-renglon{margin-top:calc(6px*var(--s)*var(--a,1))}
 .hl-folio{position:absolute;left:0;right:0;bottom:calc(16px*var(--s));font-size:max(13.4px,calc(13px*var(--s)))}
-.hl-dias{display:flex;justify-content:center;flex-wrap:wrap;gap:0 calc(14px*var(--s));margin-top:calc(10px*var(--s)*var(--a,1))}
-.hl-hoy{position:relative}
-.hl-hoy svg.hl-trazo path{fill:var(--hl-trazo-hoy)}
-/* la lista de semanas: la única con dos columnas, como un libro de cuentas */
-.hl-cuentas{margin-top:calc(14px*var(--s)*var(--a,1));text-align:left;padding-left:calc(26px*var(--s))}
+.hl-dias{display:flex;justify-content:center;flex-wrap:wrap;gap:0 calc(5px*var(--s));margin-top:calc(10px*var(--s)*var(--a,1))}
+.hl-hoy{position:relative;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.2em}
+/* el libro de cuentas: lo que es a la izquierda, la cifra a la derecha */
+.hl-cuenta{display:grid;row-gap:calc(6px*var(--s)*var(--a,1));text-align:left;margin-top:calc(8px*var(--s)*var(--a,1))}
+.hl .hl-par{display:flex;justify-content:space-between;align-items:baseline;gap:calc(10px*var(--s))}
+.hl-par>.hl-cifra,.hl-par>.hl-m{margin-left:auto}
+.hl-par.hl-nota{margin-top:calc(-4px*var(--s))}
+.hl-suma{border-top:1px solid color-mix(in srgb,var(--hl-tinta) 45%,transparent);padding-top:calc(4px*var(--s));margin-top:calc(2px*var(--s))}
+.hl-cta{text-align:left}
+.hl-der{text-align:right}.hl-izq{text-align:left}
+.hl-cuentas{margin-top:calc(10px*var(--s)*var(--a,1));text-align:left;padding-left:calc(26px*var(--s))}
 .hl-cuentas li+li{margin-top:calc(14px*var(--s)*var(--a,1))}
 .hl .hl-sem{display:grid;grid-template-columns:calc(26px*var(--s)) 1fr auto;column-gap:calc(8px*var(--s));align-items:baseline;width:100%;position:relative}
 .hl-sem .hl-rom{grid-row:1/3;text-align:right;font-size:calc(17px*var(--s))}
 .hl-sem .hl-det{grid-column:2/4}
 .hl-mano{position:absolute;left:calc(-30px*var(--s));top:.36em;width:calc(27px*var(--s));height:calc(15px*var(--s))}
-.hl-modo{display:flex;justify-content:center;gap:calc(10px*var(--s))}
-.hl-opcion[aria-pressed="false"] svg.hl-trazo{display:none}
-/* la nota al margen: tinta roja, itálica, con una línea vertical roja al costado */
-.hl-margen{margin:calc(4px*var(--s)) auto 0;padding-left:calc(14px*var(--s));text-align:left;font-style:italic;position:relative;max-width:100%}
-.hl-margen::before{content:"";position:absolute;left:0;top:.2em;bottom:.2em;width:1.6px;background:var(--hl-trazo-rojo);border-radius:1px;transform:rotate(.4deg)}
-.hl-margen+.hl-margen{margin-top:calc(16px*var(--s)*var(--a,1))}
-.hl-acciones{display:flex;flex-wrap:wrap;gap:0 calc(14px*var(--s));margin-top:calc(6px*var(--s)*var(--a,1))}
-.hl-indice{margin-top:calc(10px*var(--s)*var(--a,1));text-align:left}
-.hl .hl-entrada{display:flex;justify-content:space-between;align-items:baseline;width:100%;padding:calc(14px*var(--s)) 0}
-.hl-entrada .hl-libro{font-size:max(13.4px,calc(15px*var(--s)))}
-.hl-mes,.hl-ideas{margin-top:calc(12px*var(--s)*var(--a,1));text-align:left;display:grid;row-gap:calc(14px*var(--s)*var(--a,1))}
-.hl-mes{width:max-content;margin-left:auto;margin-right:auto}
-.hl-mes li,.hl-ideas li{display:grid;grid-template-columns:calc(34px*var(--s)) 1fr;align-items:baseline}
-.hl-rom2{font-size:max(13.8px,calc(15px*var(--s)));text-align:left}
-.hl-pag[data-lado="der"] .hl-ideas{padding-left:calc(18px*var(--s))}
+.hl-libroc{text-align:left;margin-top:calc(4px*var(--s))}
+.hl .hl-fila{display:flex;align-items:center;gap:calc(8px*var(--s));min-height:52px}
+/* en un renglón, cada toque ocupa el alto del renglón (52 px) y no tapa al de arriba ni al de abajo */
+.hl .hl-fila .hl-toc::after{height:52px}
+.hl .hl-fila .hl-q{flex:1 1 auto;min-width:0;text-align:left;overflow:hidden;text-overflow:ellipsis}
+.hl-tachar{margin-left:calc(4px*var(--s))}
+/* elegir: palabras separadas por «·»; la elegida, con un óvalo de tinta */
+.hl-opciones{display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;row-gap:26px;margin-top:calc(8px*var(--s)*var(--a,1))}
+.hl .hl-op{padding:0 .25em}
+.hl .hl-op::after{height:calc(100% + 24px)}
+.hl svg.hl-ovalo{position:absolute;left:-7%;right:-7%;top:-18%;width:114%;height:136%;overflow:visible;pointer-events:none}
+/* cambiar un dato: la cifra vieja tachada; un renglón fino a pluma para escribir la nueva */
+.hl-tachada,.hl-antes{position:relative;display:inline-block}
+.hl svg.hl-tacha{position:absolute;left:-6%;top:40%;width:112%;height:.42em;overflow:visible;pointer-events:none}
+.hl-antes{margin-left:.35em;opacity:.85}
+.hl-form{display:flex;flex-direction:column;align-items:center;gap:calc(4px*var(--s));margin-top:calc(8px*var(--s))}
+.hl-campo{position:relative;display:flex;align-items:baseline;justify-content:center;gap:.3em;width:78%;margin:calc(6px*var(--s)) auto 0;font-size:max(16px,calc(22px*var(--s)))}
+.hl-campo-texto{width:88%;font-size:max(16px,calc(18px*var(--s)))}
+.hl-signo{font-size:inherit}
+/* (los campos de la app pesan más: este les gana y saca la caja, el borde y la sombra) */
+.v2 .hl .hl-pag input.hl-input,.v2 .hl .hl-pag input.hl-input:focus{background:transparent;border:0;border-radius:0;box-shadow:none;outline:none;margin:0;-webkit-appearance:none;appearance:none}
+.hl .hl-input{all:unset;flex:1 1 auto;min-width:0;width:100%;box-sizing:border-box;padding:calc(4px*var(--s)) 0 calc(2px*var(--s));min-height:44px;
+  font:400 max(16px,1em)/1.2 var(--hl-pluma);font-variant-numeric:oldstyle-nums;color:var(--hl-fuerte);-webkit-text-fill-color:var(--hl-fuerte);caret-color:var(--hl-fuerte);
+  text-align:left;-webkit-user-select:text;user-select:text;touch-action:manipulation}
+.v2 .hl .hl-pag input.hl-input{padding:calc(4px*var(--s)) 0 calc(2px*var(--s));min-height:44px;font:400 max(16px,1em)/1.2 var(--hl-pluma);color:var(--hl-fuerte);text-align:left}
+.v2 .hl .hl-pag input.hl-num{text-align:center}
+.hl svg.hl-raya{position:absolute;left:0;right:0;bottom:calc(2px*var(--s));width:100%;height:.36em;overflow:visible;pointer-events:none}
+.hl .hl-input::placeholder{color:var(--hl-suave);-webkit-text-fill-color:var(--hl-suave);opacity:.7;font-style:italic}
+.hl-oculto{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.hl-acciones{display:flex;flex-wrap:wrap;justify-content:center;gap:0 calc(6px*var(--s));margin-top:calc(10px*var(--s))}
+.hl-err{max-width:92%}
+.hl-guia{max-width:92%;min-height:1.4em}
+/* el aviso con «deshacer»: una línea escrita al pie de la hoja */
+.hl-pie{position:absolute;left:calc(26px*var(--s));right:calc(26px*var(--s));bottom:calc(38px*var(--s));text-align:center}
+/* lo recién anotado se escribe de a una letra (unos 0,4 s); con «reducir movimiento», solo aparece */
+.hl-escribe .hl-l{animation:hl-pluma .16s ease-out both;animation-delay:calc(var(--li,0)*.4s/var(--nl,8))}
+@keyframes hl-pluma{from{opacity:0;transform:translateY(calc(var(--ly,0px) + 1px)) rotate(var(--lr,0deg)) scale(.92)}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.hl-escribe .hl-l{animation:none}.hl-escribe{animation:hl-funde .3s ease-out both}}
+@keyframes hl-funde{from{opacity:0}}
 /* modo discreto: el monto no está escrito; en su lugar, una mancha de tinta */
 .hl-m.hl-tapada{position:relative;min-width:3.2em}
 .hl-m.hl-tapada .hl-l{background-image:none}
@@ -2073,7 +2113,7 @@ html.hoy-libro body{overflow:hidden}
 .hl-franja .hl-brillo{position:absolute;inset:0;background:var(--hl-brillo);opacity:0;will-change:opacity}
 .hl-viejo{position:absolute;inset:0;z-index:3;pointer-events:none;will-change:opacity}
 .hl-sombra-giro{position:absolute;z-index:3;pointer-events:none;opacity:0;will-change:transform,opacity}
-/* cuando hay que usar la página clásica (un formulario, algo largo): un botón para volver al libro */
+/* cuando hay que usar la página clásica (algo que todavía no está en el libro): un botón para volver al libro */
 .hl-volver{position:fixed;z-index:36;left:50%;top:calc(8px + env(safe-area-inset-top));transform:translateX(-50%);min-height:44px;padding:0 18px;border-radius:22px;border:1px solid var(--line);
   background:var(--surface);color:var(--ink);font:600 15px/1 var(--f-body);box-shadow:0 6px 18px rgba(0,0,0,.4);cursor:pointer}
 .hl-volver[hidden]{display:none}

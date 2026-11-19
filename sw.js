@@ -1,7 +1,7 @@
 /* Service worker: guarda la app para que funcione sin internet y avisa cuando hay una versión nueva.
    CADA CAMBIO EN LA APP: subí VERSION (y la de js/version.js). Así cambia el nombre del caché y el
    teléfono descarga la versión nueva. Si agregás un archivo, sumalo a ARCHIVOS (una prueba lo controla). */
-var VERSION='2.65.0';
+var VERSION='2.66.0';
 var CACHE='ahorros-'+VERSION;
 var FUENTES='ahorros-fuentes';
 var ARCHIVOS=[
@@ -113,7 +113,8 @@ var ARCHIVOS=[
   'vendor/pdfjs-6.3.289/pdf.worker.min.js',
   'vendor/fraunces-5.3.0/fraunces-latin-full-normal.woff2',
   'vendor/fraunces-5.3.0/fraunces-latin-full-italic.woff2',
-  'vendor/charm-5.3.0/charm-latin-400-normal.woff2',
+  'vendor/im-fell-english-5.3.0/im-fell-english-latin-400-normal.woff2',
+  'vendor/im-fell-english-5.3.0/im-fell-english-latin-400-italic.woff2',
   'vendor/im-fell-english-sc-5.3.0/im-fell-english-sc-latin-400-normal.woff2',
   'vendor/nunito-5.3.0/nunito-latin-wght-normal.woff2',
   'vendor/caveat-5.3.0/caveat-latin-wght-normal.woff2',

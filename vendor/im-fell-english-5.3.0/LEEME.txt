@@ -1,0 +1,3 @@
+IM Fell English 5.3.0 (normal e itálica, latin), del paquete @fontsource/im-fell-english.
+Licencia SIL Open Font License 1.1 (LICENSE). Todo el texto del libro individual (2.66); la itálica, para notas y aclaraciones.
+Va dentro del repo y la guarda el service worker, así funciona sin internet.

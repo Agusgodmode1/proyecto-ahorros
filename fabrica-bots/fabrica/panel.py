@@ -86,10 +86,12 @@ def datos_panel(torre: Torre) -> dict:
     for r in cal:
         ultimos[r["control"]] = r
     eventos = [dict(r) for r in torre.q("SELECT t, ciclo, actor, texto FROM eventos ORDER BY id DESC LIMIT 40")]
-    tareas = [dict(r) for r in torre.q("SELECT rol, texto, estado FROM tareas ORDER BY id DESC LIMIT 8")]
-    espera = [dict(r) for r in torre.q("SELECT id, ciclo, estrategia FROM familias WHERE estado='congelada'")]
-    listas = [dict(r) for r in torre.q("SELECT id, ciclo, estrategia, params_json FROM bots WHERE estacion=6")]
-    fallos = torre.uno("SELECT COUNT(*) FROM bots WHERE motivo='fallo_tecnico'")[0]
+    tareas = [dict(r) for r in torre.q("SELECT rol, texto, estado FROM tareas GROUP BY rol, texto ORDER BY MAX(id) DESC LIMIT 5")]
+    # lo operativo no mezcla los controles de calibración (son sintéticos y ya se firmaron solos)
+    reales = "(SELECT id FROM ciclos WHERE nombre NOT LIKE 'Control %' AND nombre NOT LIKE 'Calibración%')"
+    espera = [dict(r) for r in torre.q(f"SELECT id, ciclo, estrategia FROM familias WHERE estado='congelada' AND ciclo IN {reales}")]
+    listas = [dict(r) for r in torre.q(f"SELECT id, ciclo, estrategia, params_json FROM bots WHERE estacion=6 AND ciclo IN {reales}")]
+    fallos = torre.uno(f"SELECT COUNT(*) FROM bots WHERE motivo='fallo_tecnico' AND ciclo IN {reales}")[0]
     return {"generado": dt.datetime.now().strftime("%d/%m/%Y %H:%M"), "version": VERSION, "ciclos": ciclos,
             "calibracion": list(ultimos.values()), "eventos": eventos, "tareas": tareas, "espera": espera, "listas": listas,
             "fallos": fallos, "motivos": MOTIVOS, "n_estrategias": len(CATALOGO), "n_indicadores": len(INDICADORES),
@@ -239,7 +241,7 @@ svg.eq text{fill:var(--muted);font-family:var(--f-mono);font-size:11px}
 <section class="sec" aria-labelledby="cal-h">
   <div class="sec-head"><span class="kicker">Fase 1 · calibración</span><h2 id="cal-h">¿La fábrica distingue?</h2>
   <p class="muted">A–F son casos con respuesta conocida: si alguno sale mal, ningún resultado sobre datos reales es confiable. G–I repiten el catálogo en muchos mercados y miden cuánto aprueba por azar y cuánto encuentra.</p></div>
-  <div class="tbl-wrap"><table><thead><tr><th></th><th>Control</th><th>Debería</th><th>Obtuvo</th></tr></thead><tbody id="cal"></tbody></table></div>
+  <div class="tbl-wrap"><table style="min-width:640px"><thead><tr><th></th><th>Control</th><th>Debería</th><th>Obtuvo</th></tr></thead><tbody id="cal"></tbody></table></div>
 </section>
 
 <section class="sec" aria-labelledby="cic-h">
@@ -332,7 +334,7 @@ function mostrar(i){
    <p class="muted">${esc(c.nombre)} · ${c.calidad.velas?.toLocaleString("es-UY")} velas, ${c.calidad.dias} días, datos ${esc(c.calidad.veredicto)} · ${c.pruebas} pruebas registradas</p>
    <div class="funnel">${emb.map(([k,v],j)=>`<div class="cnt" style="--c:${j<4?"var(--flow)":j<6?"var(--claude)":"var(--you)"}"><span class="n">${v}</span><span class="l">E${j+1} · ${esc(k)}</span></div>`).join("")}</div>
    <div class="grid2">
-    <div class="tbl-wrap"><table><thead><tr><th>Familia</th><th>Estrategia</th><th class="num">Var.</th><th class="num">Pasan E4</th><th class="num">DSR</th><th class="num">PF fuera</th><th>Estado</th></tr></thead><tbody>
+    <div class="tbl-wrap"><table style="min-width:560px"><thead><tr><th>Familia</th><th>Estrategia</th><th class="num">Var.</th><th class="num">Pasan E4</th><th class="num">DSR</th><th class="num">PF fuera</th><th>Estado</th></tr></thead><tbody>
      ${fams.map(f=>`<tr><td class="mono nowrap">${f.id}</td><td>${esc(nom(f.estrategia))}</td><td class="num">${f.variantes}</td><td class="num">${f.pasaron_e4}</td><td class="num">${num(f.dsr,3)}</td><td class="num">${num(f.pf_fuera)}</td><td>${estadoChip(f.estado)}</td></tr>`).join("")}
     </tbody></table></div>
     <div class="card panel"><h4>Por qué salieron los bots</h4>${Object.keys(MOT).map(k=>{const v=c.motivos[k]||0;return `<div class="brow"><div><span>${MOT[k][1]}</span><div class="bar" style="--c:var(${MOT[k][0]})"><i style="width:${100*v/tot}%"></i></div></div><span>${v}</span></div>`}).join("")}
@@ -340,7 +342,7 @@ function mostrar(i){
    </div>
    ${conE5.length?`<div class="pick" role="group" aria-label="Familias que llegaron a E5">${conE5.map((f,j)=>`<button type="button" data-j="${j}" aria-pressed="${j===pick}">${f.id} · ${esc(nom(f.estrategia))}</button>`).join("")}</div><div id="ficha">${ficha(conE5[pick],c)}</div>`:`<p class="card panel muted">Ninguna familia de este ciclo llegó a robustez.</p>`}
    <details class="card panel"><summary style="cursor:pointer;min-height:24px"><b>Bots del ciclo</b> <span class="muted">(${c.total_bots}${c.total_bots>c.bots.length?`, se muestran ${c.bots.length}`:""})</span></summary>
-    <div class="tbl-wrap" style="margin-top:10px"><table><thead><tr><th>Bot</th><th>Estrategia</th><th>Parámetros</th><th class="num">Est.</th><th class="num">PF entr.</th><th class="num">Op.</th><th>Estado</th><th>Detalle</th></tr></thead><tbody>
+    <div class="tbl-wrap" style="margin-top:10px"><table style="min-width:820px"><thead><tr><th>Bot</th><th>Estrategia</th><th>Parámetros</th><th class="num">Est.</th><th class="num">PF entr.</th><th class="num">Op.</th><th>Estado</th><th>Detalle</th></tr></thead><tbody>
     ${c.bots.map(b=>`<tr><td class="mono nowrap">${b.id}</td><td>${esc(b.estrategia)}</td><td class="mono" style="font-size:.76rem">${esc(params(b.params))}</td><td class="num">E${b.estacion}</td><td class="num">${num(b.pf)}</td><td class="num">${b.ops??"—"}</td><td>${estadoChip(b.estado)}</td><td class="muted" style="font-size:.8rem;min-width:220px">${esc(b.detalle)}</td></tr>`).join("")}
     </tbody></table></div></details>`;
   document.querySelectorAll(".pick button").forEach(b=>b.addEventListener("click",()=>{

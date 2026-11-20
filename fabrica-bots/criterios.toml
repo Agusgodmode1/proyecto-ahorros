@@ -1,0 +1,51 @@
+# Criterios de la fábrica (Fase 0). Se escriben ANTES de correr nada.
+# La torre guarda la huella de este archivo en cada ciclo. Si lo cambiás después de ver
+# resultados, el ciclo viejo no se puede seguir (firmar un holdout lo rechaza): hay que abrir un ciclo nuevo.
+# Estos valores son una PROPUESTA inicial. Revisalos, cambiá lo que quieras y firmá abajo.
+
+[firma]
+nombre = ""            # tu nombre: firma que aceptás estos criterios
+fecha = ""
+
+[ciclo]
+fraccion_holdout = 0.30      # el último 30% de los datos queda reservado y no se mira hasta E5
+dias_min = 400               # menos días de datos: «datos insuficientes»
+riesgo_por_operacion = 0.01  # 1% del saldo por cada R
+
+[costos]                     # perfil de costos del bróker, en pips
+spread = 1.0
+comision = 0.7
+deslizamiento = 0.2
+
+[E1]                         # ideas
+largo_max_logica = 220       # la lógica se explica en una frase
+
+[E3]                         # control técnico
+puntos_truncado = 6          # en cuántos puntos se comprueba que la señal no mira el futuro
+
+[E4]                         # rentabilidad en entrenamiento, con costos
+pf_min = 1.15
+operaciones_min = 60
+costo_max_r = 0.20           # los costos no pueden comerse más de 0,2 R por operación
+caida_max_pct = 25.0         # viabilidad para la cuenta
+racha_max = 25               # viabilidad: pérdidas seguidas que se toleran
+
+[E5]                         # robustez
+umbral_familia = 0.5         # correlación desde la que dos pruebas cuentan como una
+dsr_min = 0.95
+varianza_sr = "nula"         # V de la fórmula: "nula" = 1/(T−1), lo que varía el Sharpe por puro azar.
+                             # "transversal" = varianza entre las pruebas; la calibración mostró que mezcla
+                             # diferencias reales entre familias y rechaza hasta la ventaja plantada (Control A).
+pf_fuera_min = 1.10          # en el tramo reservado
+operaciones_fuera_min = 20
+wf_pliegues = 5
+wf_eficiencia_min = 0.30
+prob_perdida_max = 0.25      # CSCV: probabilidad de que la elegida pierda fuera de muestra
+pbo_max = 0.60               # informativo cuando todas las variantes son parecidas
+mc_neto_p5_min = 0.0         # Monte Carlo: el peor 5% no puede perder
+ruido_replicas = 12
+ruido_fraccion = 0.25        # cuánto se mueve cada vela, en rangos típicos
+ruido_aprobadas_min = 0.70   # proporción de réplicas con PF > 1
+azar_replicas = 150
+azar_percentil_min = 90.0    # mejor que el 90% de las estrategias al azar
+vecindario_min = 0.60        # proporción de vecinos de la grilla con neto positivo

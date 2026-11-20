@@ -1,0 +1,4 @@
+# Todo lo que genera la fábrica al correr: base, evidencia y panel
+salida/
+__pycache__/
+*.pyc

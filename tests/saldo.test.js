@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {defaults} from '../js/estado.js';
 import {planear,proximo,planCalc} from '../js/logica/plan.js';
 import {disponible,cabeGasto,previaSaldo,ajustarSaldo,deshacerAjuste,maxAhorro,fijosPendientes} from '../js/logica/saldo.js';
+import {hoyPodes} from '../js/logica/plan.js';
+import {gastosDelDia} from '../js/logica/sobres.js';
 
 /* Números inventados, igual que el resto de las pruebas */
 function estado(){
@@ -45,10 +47,12 @@ test('sin gastos ni fijos pagados: lo que decís pasa a ser la plata del plan (n
   assert.equal(s.plan.monto,40000);
 });
 
-test('el ajuste nunca cae antes del inicio del plan',function(){
+test('el ajuste nunca cae antes del inicio del plan (2.70: ni en hoy; el primer día corrige la plata del plan)',function(){
   var s=estado();
   var r=ajustarSaldo(s,30000,'2026-10-12');
-  assert.equal(s.gastos.filter(function(x){return x.id===r.id})[0].fecha,'2026-10-12');
+  assert.equal(r.tipo,'monto');
+  assert.ok(s.gastos.every(function(x){return x.src!=='ajuste'}),'ningún gasto de ajuste');
+  assert.equal(disponible(s),30000);
 });
 
 test('actualizar saldo con más plata: se suma a lo que tenías, y se puede deshacer',function(){
@@ -91,11 +95,14 @@ test('(2.45) lo gastado se reparte entre los días desde la última vez que actu
   assert.equal(s.plan.saldoFecha,'2026-10-15','y vuelve la fecha de antes');
 });
 
-test('(2.45) si ya actualizaste hoy, lo nuevo cae hoy; nunca antes del inicio del plan',function(){
+test('(2.70) si ya actualizaste hoy, lo nuevo cae entero en ayer (nunca hoy); nunca antes del inicio del plan',function(){
   var s=estado();
   ajustarSaldo(s,36000,'2026-10-15');
   var r=ajustarSaldo(s,35500,'2026-10-15');
-  assert.equal(s.gastos.filter(function(g){return g.id===r.id})[0].fecha,'2026-10-15');
+  var gs=s.gastos.filter(function(g){return r.ids.indexOf(g.id)>=0});
+  assert.deepEqual(gs.map(function(g){return g.fecha}),['2026-10-14'],'la segunda diferencia va a ayer');
+  assert.deepEqual(gs.map(function(g){return g.monto}),[500]);
+  assert.equal(disponible(s),35500,'lo que tenés es lo que escribiste');
   var t=estado();t.plan.saldoFecha='2026-10-01';
   var q=ajustarSaldo(t,36000,'2026-10-14');
   assert.deepEqual(t.gastos.filter(function(g){return q.ids.indexOf(g.id)>=0}).map(function(g){return g.fecha}),['2026-10-12','2026-10-13']);
@@ -152,4 +159,54 @@ test('máximo a guardar: lo que tenés menos los fijos que faltan pagar',functio
   s.fijosPagos['2026-11-09']={c:{monto:1200,fecha:'2026-10-20'}};
   assert.equal(maxAhorro(s),35800,'con el celular pagado');
   assert.equal(fijosPendientes(s),0);
+});
+
+/* ---------- (2.70) el ajuste de saldo nunca cuenta como gasto de hoy ---------- */
+function hoyDe(s){var hoy=Array.from(arguments)[1];return hoyPodes(planCalc(s),gastosDelDia(s.gastos),hoy)}
+function ajustesDe(s){return s.gastos.filter(function(g){return g.src==='ajuste'})}
+test('(2.70) ningún ajuste lleva la fecha de hoy, en ningún caso',function(){
+  var hoy='2026-10-15';
+  var a=estado();ajustarSaldo(a,36000,hoy);ajustarSaldo(a,35000,hoy);ajustarSaldo(a,34000,hoy);
+  assert.ok(ajustesDe(a).length>0);assert.ok(ajustesDe(a).every(function(g){return g.fecha!==hoy}),'actualizando varias veces el mismo día');
+  var b=estado();b.plan.saldoFecha='2026-10-12';ajustarSaldo(b,30000,hoy);
+  assert.ok(ajustesDe(b).every(function(g){return g.fecha>='2026-10-12'&&g.fecha<hoy}),'repartido entre la última vez y ayer');
+  assert.equal(disponible(b),30000);
+});
+test('(2.70) el primer día del plan, con menos plata: baja la plata del plan y no aparece ningún gasto',function(){
+  var s=estado(),hoy='2026-10-12';  /* el plan empieza hoy: no hay un ayer dentro del plan */
+  s.gastos=[{id:'g0',fecha:hoy,monto:2000,nota:'súper',cat:'Comida'}];  /* ya anotaste algo hoy */
+  assert.equal(disponible(s),38000);
+  var p=previaSaldo(s,35000,hoy);assert.equal(p.tipo,'monto');
+  var r=ajustarSaldo(s,35000,hoy);
+  assert.equal(r.tipo,'monto');assert.equal(s.plan.monto,37000,'40.000 − 3.000 de diferencia');
+  assert.equal(ajustesDe(s).length,0,'ningún gasto «Ajuste de saldo»');
+  assert.equal(disponible(s),35000,'lo que tenés es lo que escribiste');
+  assert.equal(hoyDe(s,hoy).gastadoHoy,2000,'hoy gastaste sigue siendo solo lo que anotaste');
+  deshacerAjuste(s,r);
+  assert.equal(s.plan.monto,40000);assert.equal(disponible(s),38000);assert.equal(s.plan.saldoFecha,undefined);
+});
+test('(2.70) un «Ajuste de saldo» viejo con la fecha de hoy no cuenta en «hoy gastaste» (pero sí baja lo de la semana)',function(){
+  var s=estado(),hoy='2026-10-15';
+  var antes=hoyDe(s,hoy);
+  s.gastos.push({id:'v1',fecha:hoy,monto:1650,nota:'Ajuste de saldo',cat:'Otros',src:'ajuste'});
+  var H=hoyDe(s,hoy);
+  assert.equal(H.gastadoHoy,0,'no es un gasto de hoy');
+  assert.ok(H.queda>=0,'no dice «te pasaste» por un ajuste');
+  assert.equal(Math.round(H.semanaQueda),Math.round(antes.semanaQueda-1650),'lo de la semana sí baja');
+  assert.ok(H.porDia<antes.porDia,'y lo de cada día se recalcula desde hoy');
+});
+test('(2.70) deshacer deja todo como estaba en los tres casos',function(){
+  function foto(s){return JSON.stringify({g:s.gastos,m:s.plan.monto,f:s.plan.saldoFecha})}
+  /* normal: repartido hasta ayer */
+  var a=estado();a.plan.saldoFecha='2026-10-12';var fa=foto(a),ra=ajustarSaldo(a,30000,'2026-10-15');assert.equal(ra.tipo,'gasto');deshacerAjuste(a,ra);assert.equal(foto(a),fa);
+  /* ya actualizaste hoy: a ayer */
+  var b=estado();ajustarSaldo(b,36000,'2026-10-15');var fb=foto(b),rb=ajustarSaldo(b,35000,'2026-10-15');assert.equal(rb.tipo,'gasto');deshacerAjuste(b,rb);assert.equal(foto(b),fb);
+  /* el primer día del plan: la plata del plan */
+  var c=estado();var fc=foto(c),rc=ajustarSaldo(c,30000,'2026-10-12');assert.equal(rc.tipo,'monto');deshacerAjuste(c,rc);assert.equal(foto(c),fc);
+});
+test('(2.70) después de actualizar, lo que tenés es el número que escribiste (más o menos plata, cualquier día)',function(){
+  [['2026-10-12',30000],['2026-10-12',45000],['2026-10-15',30000],['2026-10-15',45000]].forEach(function(c){
+    var s=estado();ajustarSaldo(s,c[1],c[0]);assert.equal(disponible(s),c[1],c[0]+' → '+c[1]);
+    ajustarSaldo(s,c[1]-700,c[0]);assert.equal(disponible(s),c[1]-700,'y otra vez el mismo día');
+  });
 });

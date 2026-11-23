@@ -46,5 +46,6 @@ export function aplicarSobres(state,pc){
   return Object.assign({},pc,{weeks:out,sobres:{reparto:vacio.reparto,compras:C,usado:usado,queda:C-usado}});
 }
 
-/* Los gastos que cuentan para el día (los del sobre de compras no bajan lo de hoy) */
-export function gastosDelDia(gastos){return gastos.filter(function(g){return !esDeCompras(g)})}
+/* Los gastos que cuentan para el día: los del sobre de compras no bajan lo de hoy, y (2.70) un «Ajuste de saldo»
+   tampoco, aunque tenga la fecha de hoy: no es algo que gastaste hoy (igual baja lo que te queda de la semana) */
+export function gastosDelDia(gastos){return gastos.filter(function(g){return !esDeCompras(g)&&g.src!=='ajuste'})}

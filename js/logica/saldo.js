@@ -6,7 +6,10 @@
      si tenés más, se suma a lo que tenías (plata que te entró).
    - topes: nunca un saldo negativo, y un gasto nuevo no puede ser mayor que lo disponible.
    - (2.45) Sin anotar cada gasto (lo de siempre desde 2.45): lo que falta se reparte en partes iguales entre los días
-     desde la última vez que actualizaste (`plan.saldoFecha`) hasta ayer; si ya actualizaste hoy, cae hoy. */
+     desde la última vez que actualizaste (`plan.saldoFecha`) hasta ayer.
+   - (2.70) El ajuste nunca cae en hoy: si ya actualizaste hoy, lo nuevo va entero a ayer; si hoy es el primer día del plan
+     (no hay un ayer dentro del plan), no se anota gasto: baja la plata del plan (`plan.monto`), igual que sube cuando tenés más.
+     Lo de cada día y cada semana se recalcula solo desde hoy (logica/plan.js, sin cambios). */
 import {num,uid} from './util.js';
 import {addDays,parse,iso} from './fechas.js';
 import {fijosPeriodo,cuentaEnPresupuesto,isPagado,pagoDe,montoDelPeriodo,parteDelPeriodo,planCalc} from './plan.js';
@@ -56,10 +59,11 @@ export function cabeGasto(state,monto){
    'monto' = todavía no anotaste gastos ni pagaste fijos: lo que decís pasa a ser la plata del plan (no hay nada que ajustar). */
 /* (2.45) ¿Anotás cada gasto? Si no (lo de siempre), la app funciona con lo que tenés. */
 export function anotaGastos(state){return !!(state.perfil&&state.perfil.anotarGastos)}
-/* Los días en que se reparte lo gastado: [desde, hasta] */
+/* Los días en que se reparte lo gastado: [desde, hasta], nunca hoy. null = hoy es el primer día del plan (no hay un ayer) */
 export function diasDelAjuste(state,hoy){
   var ini=state.plan.inicio,u=state.plan.saldoFecha,ayer=iso(addDays(parse(hoy),-1));
-  if(!u||u>=hoy||ayer<ini){var f=u&&u>=hoy?hoy:(ayer<ini?ini:ayer);if(f<ini)f=ini;return [f,f]}
+  if(ayer<ini)return null;
+  if(!u||u>=hoy)return [ayer,ayer];   /* nunca actualizaste, o ya actualizaste hoy: entero a ayer */
   return [u<ini?ini:u,ayer];
 }
 function partes(total,n){
@@ -76,7 +80,9 @@ export function previaSaldo(state,real,hoy){
   /* sin movimientos todavía: el primer día del plan, lo que decís pasa a ser la plata del plan */
   var sinMov=planCalc(state).spentInPlan===0&&fijosPagados(state)===0&&(anotaGastos(state)||hoy<=state.plan.inicio);
   var dd=diasDelAjuste(state,hoy);
-  return {tipo:sinMov?'monto':(diff>0?'gasto':'ingreso'),diff:Math.abs(diff),disponible:d,desde:dd[0],hasta:dd[1]};
+  /* el primer día del plan, lo que falta no es un gasto de hoy: corrige la plata del plan */
+  var tipo=sinMov||(diff>0&&!dd)?'monto':(diff>0?'gasto':'ingreso');
+  return {tipo:tipo,diff:Math.abs(diff),disponible:d,desde:dd?dd[0]:null,hasta:dd?dd[1]:null};
 }
 /* Aplica el ajuste. Devuelve {tipo, diff, id?, montoAntes?} para poder deshacerlo. */
 export function ajustarSaldo(state,real,hoy){
@@ -94,7 +100,8 @@ export function ajustarSaldo(state,real,hoy){
   }
   if(p.tipo==='ingreso'||p.tipo==='monto'){
     var antes=num(state.plan.monto);
-    state.plan.monto=p.tipo==='monto'?r2(real):r2(antes+p.diff);
+    /* 'monto': la plata del plan cambia lo justo para que lo que tenés sea lo que escribiste */
+    state.plan.monto=p.tipo==='monto'?r2(antes-(p.disponible-real)):r2(antes+p.diff);
     return {tipo:p.tipo,diff:p.diff,montoAntes:antes,fechaAntes:antesF};
   }
   return {tipo:p.tipo,diff:0,fechaAntes:antesF};

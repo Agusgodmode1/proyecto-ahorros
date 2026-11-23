@@ -529,7 +529,7 @@ function saldoPrev(){
   else if(p.tipo==='invalido')t='Poné cuánta plata tenés. No puede ser negativa.';
   else if(p.tipo==='fuera')t='Ya cobraste: cerrá el mes en Logros para arrancar uno nuevo.';
   else if(p.tipo==='igual')t='Coincide con lo que tenés anotado ('+d+'). No hay nada para cambiar.';
-  else if(p.tipo==='monto')t='Todavía no anotaste gastos: tu plata del plan pasa de '+d+' a '+money(num(v))+' y se recalcula todo.';
+  else if(p.tipo==='monto')t='Tu plata pasa de '+d+' a '+money(num(v))+' y se recalcula todo desde hoy.';
   else if(p.tipo==='gasto')t='Según lo anotado tenés '+d+'. Faltan '+money(p.diff)+' de gastos: los anoto como «Ajuste de saldo» y se recalcula todo.';
   else t='Tenés '+money(p.diff)+' más de lo anotado: lo sumo a tu plata disponible y se recalcula todo.';
   pv.textContent=t;

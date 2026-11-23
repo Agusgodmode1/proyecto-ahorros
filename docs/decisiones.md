@@ -37,3 +37,4 @@ Una línea por decisión. Lo nuevo va arriba. El detalle técnico de cada una es
 - `sueldo.js`, `plan.js`, `extracto.js` y `logros.js` no se tocan sin pedido explícito.
 - Repo público: jamás datos reales de nadie.
 - Se descarta el skin de libro/pergamino para las pantallas de la app (nov 2026, 2.69.0). La cinemática se mantiene. Vuelve el papel de la interfaz anterior.
+- El ajuste de saldo nunca cae en hoy: se reparte en los días anteriores y se recalcula lo de cada día y semana (2.69.1).

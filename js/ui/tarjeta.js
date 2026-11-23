@@ -20,7 +20,7 @@ export function renderGastos(){
   if(V){V.render();return}
   if(!hayTexto()){$('#gas-stat').textContent='';$('#gas-out').innerHTML='';return}
   $('#gas-out').innerHTML='<div class="empty" aria-busy="true">Leyendo tu extracto…</div>';
-  cargar().then(function(m){if(ctx.tab==='gastos'||ctx.capEnLibro==='gastos')m.render()}).catch(function(){$('#gas-out').innerHTML='<div class="empty">No pude abrir esta parte. Revisá la conexión la primera vez y probá de nuevo.</div>'});
+  cargar().then(function(m){if(ctx.tab==='gastos')m.render()}).catch(function(){$('#gas-out').innerHTML='<div class="empty">No pude abrir esta parte. Revisá la conexión la primera vez y probá de nuevo.</div>'});
 }
 /* Hoy: una nota al margen con lo más importante que encontró el detector (si hay extracto) */
 var avisoPedido=false;

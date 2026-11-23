@@ -21,9 +21,7 @@ export function listaHerrHTML(cls,attr){
 /* Ir a la herramienta: su capítulo y, ya dibujado, la parte que importa (abierta si es un desplegable) */
 export function mostrarHerramienta(id){
   var h=herramienta(id);if(!h)return;
-  var el=$(h.ancla);if(!el||el.hidden)return;
-  /* (2.68) en el libro, el capítulo está escondido pero se lee igual: se abre la parte que importa */
-  if(el.offsetParent===null){if(ctx.capEnLibro===h.tab)abrirDetalle(el);return}
+  var el=$(h.ancla);if(!el||el.hidden||el.offsetParent===null)return;
   abrirDetalle(el);
   try{el.scrollIntoView({block:'start',behavior:'smooth'})}catch(e){el.scrollIntoView()}
 }

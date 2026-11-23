@@ -32,9 +32,6 @@ function rankTxt(s){
 /* El número grande: el signo de pesos va chico, la cifra enorme */
 function grande(m){var x=/^(\S{1,3})[\s\u00a0]+(.+)$/.exec(m);return x?'<span class="hh-cur">'+esc(x[1])+'</span>'+esc(x[2]):esc(m)}
 /* Cuando cambia «Hoy podés gastar» (al anotar un gasto), la cifra cuenta hasta el valor nuevo (≤ 400 ms) */
-/* (2.65) Lo que muestra el libro de Hoy: los mismos datos de esta página, anotados en el momento en que se calculan.
-   Al final de renderResumen se le pasan al libro (ui/hoy-libro.js), que no hace ninguna cuenta por su cuenta. */
-var LIB={};
 var ultimoHoy=null;
 function contar(el,v){
   var de=ultimoHoy;ultimoHoy=v;
@@ -60,8 +57,6 @@ function heroMini(pc,H){
 function heroChips(pc){
   var state=ctx.state,L=liqNow(true),t=today(),H=hoyPodes(pc,gastosDelDia(state.gastos),t),el=$('#hoy-hero');
   var sinPlan=!(num(state.plan.monto)>0);
-  LIB={hoy:{sinPlan:sinPlan,t:t,cobro:state.plan.cobro,inicio:state.plan.inicio,H:H,resto:pc.gastar-pc.spentInPlan,anota:anota(),ajuste:pc.ajuste||null},
-    plata:{tenes:Math.max(0,disponible(state,pc)),cuando:anota()?'':cuando(state.plan.saldoFecha,t),ahorro:pc.ahorro,apartado:totalApartado(state)}};
   if(sinPlan)el.innerHTML='<span class="hh-l">Para saber cuánto podés gastar por día</span><span class="hh-s"><button class="linklike" type="button" id="hoy-empezar">armá tu plan</button>: cuánta plata tenés y cuánto querés guardar.</span>';
   else{
     /* (2.41) arriba de todo, lo que te queda para gastar hasta el cobro (lo mismo que «Tu plan») */
@@ -332,9 +327,6 @@ function semanasHoy(pc,t){
   var seg=varias?'<div class="seg sem-rep" role="group" aria-label="Cómo se reparte tu plata entre las semanas">'
     +'<button type="button" data-reparto="parejo" aria-pressed="'+!rec+'">Parejo</button><button type="button" data-reparto="recomendado" aria-pressed="'+rec+'">Optimizado</button></div>':'';
   var pp=varias?porcentajes(pc.weeks):[];
-  LIB.semanas={rec:rec,varias:varias,ws:pc.weeks.map(function(w,k){var cur=t>=w.start&&t<=w.end,past=t>w.end,over=w.left<0;
-    return {i:w.i,fechas:fechasSemana(w),budget:w.budget,pct:varias?pp[k]:null,cur:cur,past:past,over:over,
-      lab:over?'te pasaste '+money(-w.left):past?'sobró '+money(w.left):cur?'quedan '+money(w.left):money(w.budget/Math.max(1,w.days))+' por día'}})};
   return '<section class="sem-hoy" aria-labelledby="sem-hoy-t"><h2 class="plan-h" id="sem-hoy-t">Tus semanas</h2>'+seg
     +(varias?'<p class="note sem-rep-n">'+(rec?'Menos al principio, más al final.':'Igual todos los días.')+' Tocá una para verla.</p>':'')
     +'<div class="sem-car" role="list" aria-label="Tus semanas" data-nodeslizar>'+pc.weeks.map(function(x,k){return '<div class="sem-li" role="listitem">'+fichaSemana(x,t,varias?pp[k]:null)+'</div>'}).join('')+'</div></section>';
@@ -393,7 +385,7 @@ export function renderResumen(pc){
   syncMontoCampo(pc);ahorroNote();heroChips(pc);renderAlertaMeta(pc);
   var sum=$('#plan-aj-sum');if(sum)sum.textContent=num(state.plan.monto)>0?money(Math.max(0,disponible(state,pc)))+' disponibles · guardás '+money(pc.ahorro)+' · hasta el '+fCorta(state.plan.cobro):'Completá los tres pasos';
   /* (2.15) la página de Hoy se dibuja solo cuando se ve: así pasar a otro capítulo no la rehace cada vez */
-  if(ctx.tab!=='resumen'){if(ctx.libroHoy)ctx.libroHoy(null);return}
+  if(ctx.tab!=='resumen')return;
   renderCierre(pc);renderHoy(pc);renderEntradas();renderSuperv(pc);renderRitmo(pc);
   /* (2.35) Semana por semana, justo debajo de «Hoy podés gastar»: cada semana con lo que te queda; tocarla abre su detalle. */
   var sh=$('#sem-hoy');if(sh){var scl=sh.querySelector('.sem-car'),sl0=scl?scl.scrollLeft:null;sh.innerHTML=semanasHoy(pc,today());var nc=sh.querySelector('.sem-car');if(nc&&sl0)nc.scrollLeft=sl0;else centrarFicha(sh,false)}
@@ -416,7 +408,6 @@ export function renderResumen(pc){
      y, si sé tu cobro, la misma barra para cuando cobres. Las tres partes siempre suman el total. */
   h+=foldIni('plan','tone-mint','Tu plan','en qué se reparte tu plata'+(L.liquido>0?' y cuando cobres':''));
   var gas=Math.max(0,pc.gastar);
-  LIB.plan={total:pc.fijos+pc.ahorro+gas,fijos:pc.fijos,hayFijos:state.fijos.length>0,pend:pend,ahorro:pc.ahorro,cobro:p.cobro,gastar:gas,gastaste:pc.spentInPlan,resto:resto,fuera:pc.spentAll-pc.spentInPlan,cobrar:null};
   h+=reparto('Tu plata del pacto',pc.fijos+pc.ahorro+gas,[
     {k:'f',n:'Fijos',v:pc.fijos,s:!state.fijos.length?'sin cargar':pend>0?'faltan '+money(pend):pc.fijos>0?'todos pagos':'ninguno antes del cobro'},
     {k:'a',n:'Guardás',v:pc.ahorro,s:pc.ahorro>0?'hasta el '+fCorta(p.cobro):'nada todavía'},
@@ -431,7 +422,6 @@ export function renderResumen(pc){
     var AG=aguinaldo(state,t),conAg=AG.pago>=p.cobro&&AG.pago<nx.nc&&AG.liquido>0;
     if(conAg){nx=Object.assign({},nx,{libre:nx.libre+AG.liquido});nx.dia=nx.libre/nx.dias;nx.semana=nx.libre*7/nx.dias}
     var entra=L.liquido+(conAg?AG.liquido:0)+(nx.ingresos||0);
-    LIB.plan.cobrar={real:!!L.real,aguinaldo:conAg,entra:entra,fijos:nx.fij,meta:nx.meta,metaPedida:nx.metaPedida,libre:nx.libre,semana:nx.semana};
     h+='<div class="tp-sep"></div>';
     h+=reparto((L.real?'Cuando cobres':'Cuando cobres, estimado')+(conAg?' (con aguinaldo)':''),entra,[
       {k:'f',n:'Fijos',v:nx.fij,s:'del mes'},
@@ -439,16 +429,14 @@ export function renderResumen(pc){
       {k:'g',n:'Para gastar',v:Math.max(0,nx.libre),s:nx.libre>0?money(nx.semana)+' por semana':'no alcanza'}]);
     if(nx.libre<0)h+='<p class="err tp-n">No te alcanza para la meta: faltan '+money(-nx.libre)+'.</p>';
     var sd=sensibilidadDolar(L);
-    if(sd)LIB.plan.cobrar.dolar=sd;
     if(sd)h+='<p class="note tp-n">Si el dólar se mueve un '+sd.pct+' %, lo libre cambia ≈ '+money(sd.cambio)+'.</p>';
     /* (2.51) lo que llevás de horas extra este mes (ya está dentro de lo que vas a cobrar) */
     var Rh=reglasHoras(state);
-    if(Rh.activo!==false&&tieneHorario(Rh)){var ext=(L.estimado||L).liquido-liqNow(false).liquido;if(ext>0)LIB.plan.cobrar.extra=ext;if(ext>0)h+='<p class="note tp-n">Este mes llevás <b>+ '+money(ext)+'</b> de horas extra.</p>'}
+    if(Rh.activo!==false&&tieneHorario(Rh)){var ext=(L.estimado||L).liquido-liqNow(false).liquido;if(ext>0)h+='<p class="note tp-n">Este mes llevás <b>+ '+money(ext)+'</b> de horas extra.</p>'}
     h+='<div class="row-btns tp-ir"><button class="btn quiet" type="button" data-goto="sueldo">Ver tu cobro</button></div>';
   }
   h+='</div></details>';
   $('#resumen-out').innerHTML=h;
-  if(ctx.libroHoy)ctx.libroHoy(LIB);
 }
 
 /* ---------- Formulario del plan ---------- */
@@ -529,12 +517,8 @@ function abrirPlan(){irAlPacto('tenes')}
 function abrirMeta(){irAlPacto('ahorro')}
 /* ---------- Actualizar saldo: decís cuánta plata tenés y la app anota la diferencia ---------- */
 function saldoPrev(){
-  var i=$('#saldo-in'),pv=$('#saldo-prev');if(!i||!pv)return;
-  pv.textContent=textoSaldo(i.value);
-}
-/* (2.66) lo que explica la página de «lo que tenés» mientras escribís; la usa también el libro (ui/hoy-libro.js) */
-export function textoSaldo(v){
-  var st=ctx.state,p=previaSaldo(st,v===''?null:num(v),today()),d=money(Math.max(0,p.disponible)),t;
+  var st=ctx.state,i=$('#saldo-in'),pv=$('#saldo-prev');if(!i||!pv)return;
+  var v=i.value,p=previaSaldo(st,v===''?null:num(v),today()),d=money(Math.max(0,p.disponible)),t;
   var sa=!anota(),des=p.desde?(p.desde===p.hasta?(p.desde===today()?'hoy':'el '+fCorta(p.desde)):'entre el '+fCorta(p.desde)+' y el '+fCorta(p.hasta)):'';
   if(sa&&v==='')t='La última vez tenías '+d+'. Poné lo que tenés ahora en la cuenta y en efectivo.';
   else if(sa&&p.tipo==='gasto')t='Gastaste '+money(p.diff)+' ('+des+'). Se recalcula todo.';
@@ -548,13 +532,11 @@ export function textoSaldo(v){
   else if(p.tipo==='monto')t='Todavía no anotaste gastos: tu plata del plan pasa de '+d+' a '+money(num(v))+' y se recalcula todo.';
   else if(p.tipo==='gasto')t='Según lo anotado tenés '+d+'. Faltan '+money(p.diff)+' de gastos: los anoto como «Ajuste de saldo» y se recalcula todo.';
   else t='Tenés '+money(p.diff)+' más de lo anotado: lo sumo a tu plata disponible y se recalcula todo.';
-  return t;
+  pv.textContent=t;
 }
 /* «Actualizar saldo» (desde «Tenés» o desde el aviso de un gasto): la página «¿Cuánta plata tenés hoy?» del prólogo, lista para cambiar.
    Después de cobrar (fuera del plan) se usa la tarjeta de siempre. */
 function abrirSaldo(){
-  /* (2.68) en El Libro del Ahorro se actualiza en la hoja (ui/hoy-libro.js) */
-  if(ctx.saldoEnLibro&&ctx.saldoEnLibro())return;
   var c=$('#saldo-card'),i=$('#saldo-in');if(!c||!i)return;
   if(anota()&&today()<ctx.state.plan.cobro){irAlPacto('tenes');return}
   /* (2.45) sin anotar gastos, es la acción de todos los días: se abre acá mismo */
@@ -574,7 +556,7 @@ function initSaldo(){
   });
 }
 /* Aplica un saldo nuevo y recalcula todo. Devuelve false si no había nada para cambiar. */
-export function confirmarSaldo(real){
+function confirmarSaldo(real){
   var st=ctx.state,p=previaSaldo(st,real,today());
   if(p.tipo==='invalido'||p.tipo==='fuera')return false;
   if(p.tipo==='igual'&&anota())return false;

@@ -21,7 +21,6 @@ import {registrarSW,buscarVersion} from './pwa.js';
 import {initVoz} from './ui/voz.js';
 import {abrirPerfil,initPerfil,resumenPerfil} from './ui/perfil.js';
 import {abrirLibro,initLibro,redibujarPrologo,cerrarHojas} from './ui/libro.js';
-import {initHoyLibro} from './ui/hoy-libro.js';
 import {copiaVisible,girar,terminar as terminarPase} from './ui/pase.js';
 import {introCapitulo,olvidarIntros} from './ui/intro.js';
 import {initIndice,abrirIndice} from './ui/indice.js';
@@ -102,8 +101,7 @@ function renderAll(){
   /* (2.59) en pareja: el grupo de Fijos y lo que cobra cada uno se mantienen al día solos */
   document.documentElement.classList.toggle('modo-pareja',hayPareja(ctx.state));
   if(sincronizarGrupo(ctx.state,today()))persist();marcarPareja();
-  var en=ctx.capEnLibro; /* (2.68) el capítulo que el libro tiene abierto también se dibuja */
-  if(ctx.tab==='resumen')renderDuoHoy();if(ctx.tab==='fijos'||en==='fijos')renderCuentas();
+  if(ctx.tab==='resumen')renderDuoHoy();if(ctx.tab==='fijos')renderCuentas();
   var pc=planNow();
   if(/^w\d+$/.test(ctx.tab)&&Number(ctx.tab.slice(1))>=pc.weeks.length)ctx.tab='resumen';
   try{localStorage.setItem(TK,ctx.tab)}catch(e){}
@@ -120,17 +118,16 @@ function renderAll(){
   /* (2.15) cada capítulo se dibuja solo cuando se ve (pasar de página no rehace los que están ocultos) */
   if(ctx.tab==='resumen'){renderAvisoTarjeta();agruparNotas()}
   if(/^w\d+$/.test(ctx.tab))renderWeek(pc);
-  if(ctx.tab==='sueldo'||en==='sueldo'){renderSueldo();renderRecibos()}
-  if(ctx.tab==='gastos'||en==='gastos'){renderGastos();renderCategorias()}
-  if(ctx.tab==='fijos'||en==='fijos')renderFijos(pc);
-  if(ctx.tab==='logros'||en==='logros')renderLogros(pc);
-  if(ctx.tab==='guardado'||en==='guardado')renderGuardado();
+  if(ctx.tab==='sueldo'){renderSueldo();renderRecibos()}
+  if(ctx.tab==='gastos'){renderGastos();renderCategorias()}
+  if(ctx.tab==='fijos')renderFijos(pc);
+  if(ctx.tab==='logros')renderLogros(pc);
+  if(ctx.tab==='guardado')renderGuardado();
   var vh=$('#volver-hoy');if(vh)vh.hidden=ctx.tab==='resumen';
   actualizarFlechas();
   /* la introducción del capítulo: completa la primera vez, después en una línea */
   var capA=capituloDe(ctx.tab);if(capA&&capA.id!=="resumen")introCapitulo($(capA.id==="semanas"?"#p-semana":PANELES[capA.id]),capA.id);else if(ctx.tab==='ajustes')introCapitulo($('#p-ajustes'),'ajustes');
-  /* (2.66) Ajustes también se dibuja cuando lo abrís desde el libro (ui/hoy-libro.js lo escribe a tinta) */
-  if(ctx.tab==='ajustes'||ctx.ajustesEnLibro){if(ctx.ajustesEnLibro)renderCategorias();renderAjustes(guardado);renderFeriados();renderAjustesPin();marcarSonido();
+  if(ctx.tab==='ajustes'){renderAjustes(guardado);renderFeriados();renderAjustesPin();marcarSonido();
     document.querySelectorAll('[data-sobrante]').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-sobrante')===(ctx.state.plan.sobrante||'siguiente')))});renderCopias();$('#aj-perfil').innerHTML=resumenPerfil(ctx.state)}
   tourSiPendiente();
 }
@@ -192,8 +189,6 @@ function pasarA(t,dir,blancas){
 function go(t,opt){
   if(t==='prologo'){abrirPrologo('pacto',null,-1);return}
   if(t==='semanas')t='w'+curWeek(planNow(),today());
-  /* (2.68) en El Libro del Ahorro, los capítulos se abren dentro del libro (ui/hoy-libro.js) */
-  if(ctx.irEnLibro&&ctx.irEnLibro(t))return;
   var antes=ctx.tab,dir=orden(t)>=orden(antes)?1:-1;
   if(antes===t){terminarPase();renderAll();return}
   /* desde el índice, si el salto es lejos, pasan varias hojas en abanico (el mismo giro, ≤ 700 ms) */
@@ -452,7 +447,7 @@ function initEstante(){
   });
 }
 (async function boot(){
-  initPerfil();initTour();initPin();initLibro();initIndice();initHoyLibro();
+  initPerfil();initTour();initPin();initLibro();initIndice();
   initFlechas({ir:function(d){go(d)},capitulos:function(){return {}}});
   registrarSW(function(){return ctx.state?flush():null});
   /* (2.52) Ajustes → Sobre la app → «Buscar una versión nueva» */

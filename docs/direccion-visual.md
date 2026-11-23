@@ -13,15 +13,9 @@ Cómo se quiere ver y sentir la app. Pedido de Agus: «un cambio grande, un camb
 - **Movimiento:** entrada de la cámara en arco (2,6 s); al elegir, el libro se inclina, sale del lomo, sube en arco y gira de frente (2,2 s), con un destello suave del hueco y el fondo desenfocado; un brillo cruza la tapa una vez; al abrir, la tapa gira sobre el lomo y la cámara entra en la página (2,0 s). Nada se mueve en línea recta ni arranca de golpe.
 - **Letra:** los nombres bajo los libros son texto de la página (Fraunces, marfil) con una etiqueta corta en dorado («Solo» / «En pareja»).
 
-## El libro individual (2.65; libro antiguo desde 2.66): a la luz de una vela
-- **Principio:** el libro abierto sobre una mesa vieja, de noche; la hoja clara dentro de una escena oscura. Lo único que brilla es la vela (en las páginas impares, a la derecha).
-- **La hoja:** papel viejo en proporción 2:3, una página por pantalla, con su número en romanos («— i —»). Fondos renderizados de nuestra escena (`icons/hoy/`), uno por lado y por alto de pantalla.
-- **La letra y la tinta (2.66):** un libro antiguo. IM Fell English (texto), su itálica (notas) e IM Fell English SC (títulos, encabezados, romanos), con números antiguos. Cinco tamaños (72/24/20/17/14 px a 390; nada bajo 13). Tinta ferrogálica azul-negra para todo, unas palabras más cargadas que otras, multiplicada sobre el papel; rojo de rúbrica solo en títulos y «te pasaste»; oro solo en adornos chicos y en «21 días». Cada letra varía un poco (±1°, ±0,6 px), siempre igual.
-- **La página:** encabezado corrido arriba en versalitas (el libro a la izquierda, el día a la derecha), título rojo centrado con un adorno fino, mucho margen, cifras alineadas como en un libro de cuentas y el número abajo («— i —»).
-- **Cómo se hace cada cosa:** botón = una palabra subrayada a pluma (44 px de toque); elegir = palabras separadas por «·», la elegida con un óvalo de tinta; cambiar un dato = la cifra vieja tachada y un renglón fino debajo, con «anotar · dejar», y la nueva se escribe de a una letra (0,4 s); borrar = «¿Lo tachamos? sí · no» y «deshacer» al pie. Nada de ventanas, deslizadores ni íconos.
-- **Todo el libro (2.67–2.68):** el prólogo, Ajustes, el perfil, Herramientas, Sueldo, Tarjeta, Fijos, Logros y Lo guardado son capítulos con estas mismas piezas; lo que se abre encima (un gasto, el micrófono, la postal) es una hoja más. Los gráficos se dibujan a pluma en una sola tinta. El PIN al abrir es una hoja de papel. Solo quedan del iPhone el teclado, los selectores de archivo y de fecha y «Compartir». La postal para compartir sigue siendo la imagen de siempre.
-- **Movimiento:** la hoja se pasa siguiendo el dedo (16 franjas que se curvan, 0,45 a 0,7 s al soltar). Con «reducir movimiento», un fundido.
-- **Modo discreto:** cada monto queda tapado con una mancha de tinta.
+## Las pantallas de la app: el papel «Noche dorada»
+- **Desde 2.69.0:** después de la cinemática (el libro se abre y funde), la app es el papel oscuro de siempre, «Noche dorada» (tokens en `:root` de `css/papel.css`), con su jerarquía de colores: jade = la plata disponible, oro = el tiempo y lo guardado, coral = te pasaste, marfil = acción.
+- **Se probó y se descartó** (2.65 a 2.68.1) vestir las pantallas como un libro antiguo escrito a tinta sobre una mesa a la luz de una vela. Queda en el historial de git y en `prototipo/hoy/`; ver `docs/decisiones.md`.
 
 ## Reglas para todo lo visual
 - Un solo foco de color vivo por pantalla: lo mágico. Todo lo demás, apagado.

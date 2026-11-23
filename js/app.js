@@ -39,6 +39,7 @@ import {renderCategorias,initCategorias} from './ui/categorias.js';
 import {renderRecibos,initRecibos} from './ui/recibos.js';
 import {activarPareja,sincronizarGrupo,hayPareja,parejaVacia,nombrePareja} from './logica/pareja.js';
 import {pinActivo,pedirPin,initPin,renderAjustesPin,initAjustesPin} from './ui/pin.js';
+import {limpiarRestos} from './logica/limpieza.js';
 
 /* ---------- Guardado en IndexedDB ---------- */
 var timer=null,saving=false,pending=false,borrando=false,guardado={donde:null,persistente:null};
@@ -447,6 +448,8 @@ function initEstante(){
   });
 }
 (async function boot(){
+  /* (2.69) lo que dejó en este aparato el libro de tinta, que ya no está */
+  try{limpiarRestos(localStorage)}catch(e){}
   initPerfil();initTour();initPin();initLibro();initIndice();
   initFlechas({ir:function(d){go(d)},capitulos:function(){return {}}});
   registrarSW(function(){return ctx.state?flush():null});

@@ -36,3 +36,4 @@ Una línea por decisión. Lo nuevo va arriba. El detalle técnico de cada una es
 - **Three.js va copiado en `vendor/three-r187/`, sin npm ni compilación.** Desde 2.64 solo el núcleo (`three.module.js` y `three.core.js`): la escena no usa complementos.
 - `sueldo.js`, `plan.js`, `extracto.js` y `logros.js` no se tocan sin pedido explícito.
 - Repo público: jamás datos reales de nadie.
+- Se descarta el skin de libro/pergamino para las pantallas de la app (nov 2026, 2.69.0). La cinemática se mantiene. Vuelve el papel de la interfaz anterior.

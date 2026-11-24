@@ -3,27 +3,46 @@ import {iso,parse,addDays,diffDays,bizRank} from './fechas.js';
 import {num} from './util.js';
 import {miParte} from './reparto.js';
 
-/* Para gastar = plata − fijos que vencen antes de cobrar − ahorro. Semanas de 7 días desde el inicio;
-   presupuesto de cada una = para gastar × días ÷ días totales, y lo que sobra o falta pasa a la siguiente. */
-export function planear(plan,gastos,fijosRes){
+/* Para gastar = plata − fijos que vencen antes de cobrar − ahorro.
+   (2.70) Las semanas se arman desde el punto de partida (el pacto, o la última vez que actualizaste «Tenés»:
+   `desde`) hasta el día anterior al cobro, parejas (`semanasParejas`). La plata de las semanas es «para gastar»
+   menos todo lo que ya salió antes del punto de partida (y los «Ajuste de saldo», que nunca son de una semana):
+   así, después de actualizar, es tu saldo − los fijos que faltan − el ahorro, y nada se cuenta dos veces.
+   Presupuesto de cada semana = esa plata × sus días ÷ los días, y lo que sobra o falta pasa a la siguiente.
+   Lo del período entero (total, gastar, spentInPlan) no cambia: es lo que usan «Tenés» y «Tu plan». */
+export function semanasParejas(dias){
+  dias=Math.max(1,Math.round(dias));
+  var n=Math.max(1,Math.round(dias/7));
+  if(Math.ceil(dias/n)>9)n=Math.ceil(dias/9);  /* ninguna semana de más de 9 días (10 días son 5 + 5) */
+  var b=Math.floor(dias/n),r=dias%n,out=[];
+  for(var i=0;i<n;i++)out.push(b+(i<r?1:0));   /* las más largas primero */
+  return out;
+}
+/* El punto de partida: el más reciente entre el inicio del plan y la última actualización del saldo */
+export function puntoDePartida(plan){var s=plan.saldoFecha;return s&&s>plan.inicio&&s<plan.cobro?s:plan.inicio}
+function esAjuste(g){return g&&g.src==='ajuste'}
+export function planear(plan,gastos,fijosRes,desde){
   var total=Math.max(1,diffDays(plan.inicio,plan.cobro));
   /* Tope: no se puede guardar más de lo que queda después de los fijos (si no, "para gastar" daría negativo) */
   var tope=Math.max(0,plan.monto-(fijosRes||0));
   var pedido=plan.modo==='monto'?Math.max(0,Math.round(plan.ahorro||0)):Math.round(plan.monto*plan.pct/100);
   var ahorro=Math.min(pedido,tope),gastar=plan.monto-ahorro-(fijosRes||0);
-  var weeks=[],off=0,w=0,carry=0;
-  while(off<total){
-    var len=Math.min(7,total-off),s=addDays(parse(plan.inicio),off),e=addDays(s,len-1);
-    var si=iso(s),ei=iso(e),spent=0;
-    for(var k=0;k<gastos.length;k++){var g=gastos[k];if(g.fecha>=si&&g.fecha<=ei)spent+=g.monto}
-    var budget=gastar*len/total,avail=budget+carry,left=avail-spent;
+  var fin=iso(addDays(parse(plan.cobro),-1)),P=desde&&desde>plan.inicio&&desde<plan.cobro?desde:plan.inicio;
+  /* lo gastado en todo el período (para «Tenés») y lo que ya salió antes del punto de partida */
+  var inPlan=0,antes=0,all=0;
+  for(var q=0;q<gastos.length;q++){var gq=gastos[q];all+=gq.monto;
+    if(gq.fecha>=plan.inicio&&gq.fecha<=fin){inPlan+=gq.monto;if(gq.fecha<P||esAjuste(gq))antes+=gq.monto}}
+  var dias=Math.max(1,diffDays(P,plan.cobro)),dinero=gastar-antes;
+  var weeks=[],off=0,carry=0;
+  semanasParejas(dias).forEach(function(len,w){
+    var s=addDays(parse(P),off),e=addDays(s,len-1),si=iso(s),ei=iso(e),spent=0;
+    for(var k=0;k<gastos.length;k++){var g=gastos[k];if(g.fecha>=si&&g.fecha<=ei&&!esAjuste(g))spent+=g.monto}
+    var budget=dinero*len/dias,avail=budget+carry,left=avail-spent;
     weeks.push({i:w,start:si,end:ei,days:len,budget:budget,carry:carry,avail:avail,spent:spent,left:left});
-    carry=left;off+=len;w++;
-  }
-  var inPlan=0;
-  for(var j=0;j<weeks.length;j++)inPlan+=weeks[j].spent;
-  var all=0;for(var q=0;q<gastos.length;q++)all+=gastos[q].monto;
-  return {total:total,ahorro:ahorro,ahorroPedido:pedido,fijos:fijosRes||0,gastar:gastar,daily:gastar/total,weeks:weeks,spentInPlan:inPlan,spentAll:all};
+    carry=left;off+=len;
+  });
+  return {total:total,ahorro:ahorro,ahorroPedido:pedido,fijos:fijosRes||0,gastar:gastar,daily:gastar/total,weeks:weeks,spentInPlan:inPlan,spentAll:all,
+    desde:P,dias:dias,gastarDesde:dinero};
 }
 
 /* Fijos: vencen en el período si su día cae entre el inicio (incluido) y el cobro (excluido).
@@ -73,7 +92,7 @@ export function fijosPeriodoTotal(state){var t=0;fijosPeriodo(state.fijos,state.
    y los compartidos cuentan solo tu parte. */
 export function totalFijos(fijos,state){var t=0;fijos.forEach(function(f){if(cuentaEnPresupuesto(f))t+=state?miParte(state,f,montoEsperado(state,f)):num(f.monto)});return t}
 
-export function planCalc(state){return planear(state.plan,state.gastos,fijosPeriodoTotal(state))}
+export function planCalc(state){return planear(state.plan,state.gastos,fijosPeriodoTotal(state),puntoDePartida(state.plan))}
 /* Cuánto podés gastar hoy: lo que le queda a la semana (sumando lo que ya gastaste hoy), repartido parejo
    en los días que le quedan, menos lo de hoy. Fuera del plan devuelve el promedio diario. */
 export function hoyPodes(pc,gastos,hoy){
@@ -83,6 +102,20 @@ export function hoyPodes(pc,gastos,hoy){
   gastos.forEach(function(g){if(g.fecha===hoy)gh+=num(g.monto)});
   var porDia=(w.left+gh)/rem;
   return {dentro:true,semana:i,dias:rem,gastadoHoy:gh,porDia:porDia,queda:porDia-gh,semanaQueda:w.left,fin:w.end};
+}
+/* (2.70) Lo de ayer, dentro de la misma semana (y desde el punto de partida, que es donde empiezan las semanas):
+   lo que podías gastar ayer era lo que le quedaba a la semana ÷ los días que le faltaban; si gastaste menos, te sobró
+   y ya se sumó a los días que quedan (hoyPodes lo reparte); si gastaste más, se descuenta. El primer día de la semana
+   no hay nada que avisar: lo de la semana anterior ya pasó a esta. gastos = los que cuentan para el día (gastosDelDia). */
+export function ayerEnSemana(pc,gastos,hoy){
+  var i=semanaDe(pc,hoy);if(i<0)return null;
+  var w=pc.weeks[i],ayer=iso(addDays(parse(hoy),-1));
+  if(ayer<w.start)return null;
+  var antes=0,deAyer=0;
+  gastos.forEach(function(g){if(g.fecha>=w.start&&g.fecha<ayer)antes+=num(g.monto);if(g.fecha===ayer)deAyer+=num(g.monto)});
+  var podia=(w.avail-antes)/(diffDays(ayer,w.end)+1),dif=podia-deAyer;
+  if(Math.abs(dif)<1)return null;
+  return {sobro:dif>0,monto:Math.abs(dif),podia:podia,gastaste:deAyer};
 }
 export function curWeek(pc,hoy){var idx=0;pc.weeks.forEach(function(w,i){if(hoy>=w.start)idx=i});return idx}
 /* Índice de la semana del plan donde cae una fecha, o -1 si queda afuera. */

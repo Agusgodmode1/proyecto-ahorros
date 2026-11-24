@@ -38,3 +38,5 @@ Una línea por decisión. Lo nuevo va arriba. El detalle técnico de cada una es
 - Repo público: jamás datos reales de nadie.
 - Se descarta el skin de libro/pergamino para las pantallas de la app (nov 2026, 2.69.0). La cinemática se mantiene. Vuelve el papel de la interfaz anterior.
 - El ajuste de saldo nunca cae en hoy: se reparte en los días anteriores y se recalcula lo de cada día y semana (2.69.1).
+- Las semanas se arman desde la última actualización de saldo (o desde el pacto) hasta el cobro, parejas: ninguna difiere en más de un día (2.70.0).
+- Lo no gastado de un día se reparte entre los días que quedan de la semana, y Hoy lo avisa (2.70.0).

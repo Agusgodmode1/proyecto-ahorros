@@ -192,7 +192,8 @@ test('(2.70) un «Ajuste de saldo» viejo con la fecha de hoy no cuenta en «hoy
   var H=hoyDe(s,hoy);
   assert.equal(H.gastadoHoy,0,'no es un gasto de hoy');
   assert.ok(H.queda>=0,'no dice «te pasaste» por un ajuste');
-  assert.equal(Math.round(H.semanaQueda),Math.round(antes.semanaQueda-1650),'lo de la semana sí baja');
+  /* (2.70) un ajuste nunca es de una semana: baja la plata total, repartida entre todos los días que quedan */
+  assert.ok(H.semanaQueda<antes.semanaQueda&&H.semanaQueda>antes.semanaQueda-1650,'la semana baja solo su parte');
   assert.ok(H.porDia<antes.porDia,'y lo de cada día se recalcula desde hoy');
 });
 test('(2.70) deshacer deja todo como estaba en los tres casos',function(){

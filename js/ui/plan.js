@@ -2,7 +2,7 @@
 import {gastosDelDia,pesoSemana,guiaReparto} from '../logica/sobres.js';
 import {parse,diffDays,bizRank,MESL,addDays,iso,DIA} from '../logica/fechas.js';
 import {num} from '../logica/util.js';
-import {fijosPeriodo,totalFijos,proximo,hoyPodes,planCalc,semanaDe} from '../logica/plan.js';
+import {fijosPeriodo,totalFijos,proximo,hoyPodes,planCalc,semanaDe,ayerEnSemana} from '../logica/plan.js';
 import {disponible,fijosPagadosParte,maxAhorro,previaSaldo,ajustarSaldo,deshacerAjuste} from '../logica/saldo.js';
 import {balanceHTML} from './fijos.js';
 import {mesTrabajo,mins,reglasHoras,ingresoDe} from '../logica/sueldo.js';
@@ -69,6 +69,9 @@ function heroChips(pc){
       var mismo=Math.round(H.semanaQueda)===Math.round(resto),sq=H.semanaQueda<0?'Esta semana te pasaste por '+money(-H.semanaQueda):mismo?'':'Esta semana te quedan '+money(H.semanaQueda)+' hasta el '+esc(fLarga(H.fin));
       var hg=H.gastadoHoy>0?(sq?' · hoy':'Hoy')+' gastaste '+money(H.gastadoHoy):'';
       if(sq||hg)h+='<span class="hh-s">'+sq+hg+'</span>';
+      /* (2.70) lo de ayer: lo que no gastaste se suma a los días que quedan de la semana (y lo que te pasaste, se descuenta) */
+      var ay=ayerEnSemana(pc,gastosDelDia(state.gastos),t);
+      if(ay)h+='<span class="hh-s hh-ayer'+(ay.sobro?'':' neg')+'">'+(ay.sobro?'Ayer te sobraron '+money(ay.monto)+': se suman a los días que quedan':'Ayer te pasaste '+money(ay.monto)+': se descuenta de los días que quedan')+'</span>';
       h+=''
         +(pc.ajuste&&pc.ajuste.estado==='minimo'?'<span class="hh-s">El objetivo ya no se alcanza: esto cuida tu mínimo de '+money(pc.ajuste.minimo)+'.</span>':'')
         +(pc.ajuste&&pc.ajuste.estado==='nada'?'<span class="hh-s neg">Para tu mínimo faltan '+money(pc.ajuste.falta)+' aunque no gastes nada más.</span>':'')

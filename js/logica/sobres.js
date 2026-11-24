@@ -25,10 +25,16 @@ export function aplicarSobres(state,pc){
   if(!n)return Object.assign({},pc,{sobres:vacio});
   var gastar=Math.max(0,pc.gastar);
   var C=Math.min(Math.max(0,Math.round(num(p.compras))),gastar);
-  var base=gastar-C,desde=ws[0].start,hasta=ws[n-1].end,den=0;
+  var desde=ws[0].start,hasta=ws[n-1].end,den=0;
   ws.forEach(function(w,i){den+=w.days*(rec?pesoSemana(i,n):1)});
+  /* (2.70) las semanas arrancan en el punto de partida: lo que ya salió del sobre antes de esa fecha no vuelve;
+     la plata de las semanas es la del punto de partida (pc.gastarDesde) menos lo que le queda al sobre */
+  var usadoAntes=0;
+  if(pc.gastarDesde!==undefined)state.gastos.forEach(function(g){if(esDeCompras(g)&&g.fecha>=p.inicio&&g.fecha<desde)usadoAntes+=num(g.monto)});
+  usadoAntes=Math.min(C,usadoAntes);
+  var base=pc.gastarDesde!==undefined?Math.max(0,pc.gastarDesde)-(C-usadoAntes):gastar-C;
   /* lo que salió del sobre de compras, en orden; lo que pasa del sobre va a la semana de ese gasto */
-  var extra={},usado=0;
+  var extra={},usado=usadoAntes;
   state.gastos.filter(function(g){return esDeCompras(g)&&g.fecha>=desde&&g.fecha<=hasta})
     .sort(function(a,b){return a.fecha<b.fecha?-1:a.fecha>b.fecha?1:0})
     .forEach(function(g){
@@ -37,7 +43,7 @@ export function aplicarSobres(state,pc){
     });
   var carry=0,out=ws.map(function(w,i){
     var spent=0;
-    state.gastos.forEach(function(g){if(!esDeCompras(g)&&g.fecha>=w.start&&g.fecha<=w.end)spent+=num(g.monto)});
+    state.gastos.forEach(function(g){if(!esDeCompras(g)&&g.src!=='ajuste'&&g.fecha>=w.start&&g.fecha<=w.end)spent+=num(g.monto)});
     Object.keys(extra).forEach(function(f){if(f>=w.start&&f<=w.end)spent+=extra[f]});
     var budget=base*w.days*(rec?pesoSemana(i,n):1)/den,avail=budget+carry,left=avail-spent;
     carry=left;

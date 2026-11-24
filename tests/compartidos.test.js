@@ -22,7 +22,10 @@ var casa={id:'g1',nombre:'Casa',personas:[{id:YO,nombre:'Vos',ingreso:60000},{id
 test('con todo «Solo mío» el plan da exactamente lo mismo que antes (los números de la versión 2.10)',function(){
   var st=base(),pc=planCalc(st);
   assert.equal(pc.gastar,15050);assert.equal(pc.ahorro,6000);assert.equal(pc.fijos,20950);
-  assert.equal(pc.weeks[0].left,4647.058823529412);assert.equal(pc.weeks[1].left,8744.117647058823);
+  /* (2.70) 17 días hasta el cobro: semanas parejas de 9 y 8 (antes 7 + 7 + 3).
+     Semana 1: 15.050 × 9 ÷ 17 − 3.650 gastados; semana 2: lo que sobra de la 1 + 15.050 × 8 ÷ 17 */
+  assert.deepEqual(pc.weeks.map(function(w){return w.days}),[9,8]);
+  assert.ok(Math.abs(pc.weeks[0].left-(15050*9/17-3650))<1e-6);assert.ok(Math.abs(pc.weeks[1].left-(15050-3650))<1e-6);
   assert.equal(fijosPeriodoTotal(st),20950);assert.equal(totalFijos(st.fijos,st),22350);
   assert.equal(disponible(st,pc),35400);assert.equal(fijosPagados(st),2950);assert.equal(fijosPendientes(st,pc),18000);assert.equal(maxAhorro(st,pc),17400);
   assert.equal(montoEsperado(st,st.fijos[1]),2450);
